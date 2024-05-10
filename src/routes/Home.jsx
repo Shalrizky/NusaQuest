@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Home.css';
+import '../style/Home.css';
 import Init from '../firebase-init';
 import { getDatabase, ref, onValue } from 'firebase/database';
 

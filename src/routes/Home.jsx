@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import '../style/Home.css';
+import { useState, useEffect } from 'react';
 import Init from '../firebase-init';
 import { getDatabase, ref, onValue } from 'firebase/database';
+import '../style/Home.css';
+import { Container, Row, Col} from "react-bootstrap";
+import Header from '../components/Header'
 
 function Home() {
   const [data, setData] = useState(null);
@@ -20,7 +22,8 @@ function Home() {
   }, []);
 
   return (
-    <div className="container-home">
+    <Container fluid id='home-container'>
+      <Header />
       <h1>NusaQuest</h1>
       {data && (
         <div>
@@ -29,7 +32,7 @@ function Home() {
           <p>Umur: {data.umur}</p>
         </div>
       )}
-    </div>
+    </Container>
   );
 }
 

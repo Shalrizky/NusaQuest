@@ -1,9 +1,13 @@
 import "../style/Login.css";
+//TODO Import firebase belum dideklarasikan untuk kebutuhan login
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import NusaQuestLogo from "../assets/nusaQuest-logo.png";
 import GoogleLogo from "../assets/google-logo.png";
 
 function Login ()  {
+
+  //TODO: Membuat logika login dengan firebase
+
   return (
     <Container fluid id="login-container">
       <Row className="justify-content-center pb-5 pt-2">

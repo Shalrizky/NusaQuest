@@ -4,4 +4,14 @@
   background-position: center;
   background-size: cover;
   min-height: 100vh;
+
 }
+
+#nusaquest-logo {
+  position: absolute;
+  top: 20px; /* Atur posisi vertikalnya */
+  left: 50%; /* Pusatkan secara horizontal */
+  transform: translateX(-50%); /* Pusatkan secara horizontal */
+  z-index: 2; 
+}
+

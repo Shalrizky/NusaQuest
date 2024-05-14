@@ -1,6 +1,6 @@
 import { Row, Col } from "react-bootstrap";
-import SifLogo from "../assets/sif-logo.png";
-import UpjLogo from "../assets/upj-logo.png";
+import SifLogo from "../assets/general/sif-logo.png";
+import UpjLogo from "../assets/general/upj-logo.png";
 
 function Header() {
   return (

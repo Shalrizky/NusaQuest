@@ -1,8 +1,8 @@
 import "../style/Login.css";
 //TODO Import firebase belum dideklarasikan untuk kebutuhan login
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import NusaQuestLogo from "../assets/nusaQuest-logo.png";
-import GoogleLogo from "../assets/google-logo.png";
+import NusaQuestLogo from "../assets/general/nusaQuest-logo.png";
+import GoogleLogo from "../assets/general/google-logo.png";
 
 function Login ()  {
 

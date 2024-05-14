@@ -6,13 +6,12 @@ import "../style/Home.css";
 import { Container, Row, Col } from "react-bootstrap";
 import Header from "../components/Header";
 import Maps from "../components/Maps";
-import NusaQuestLogoHome from "../assets/nusaQuest-logo-home.png";
+import NusaQuestLogoHome from "../assets/general/nusaQuest-logo-home.png";
 
 function Home() {
   const [logoLoaded, setLogoLoaded] = useState(false);
 
   useEffect(() => {
-    // Mengatur state saat gambar NusaQuest logo telah dimuat
     const img = new window.Image();
     img.onload = () => {
       setLogoLoaded(true);
@@ -35,7 +34,6 @@ function Home() {
           )}
         </Col>
       </Row>
-
       <Maps />
     </Container>
   );

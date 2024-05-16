@@ -1,12 +1,13 @@
-/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import Init from "../firebase-init";
 import { getDatabase, ref, onValue } from "firebase/database";
 import "../style/Home.css";
 import { Container, Row, Col } from "react-bootstrap";
+import Batu from "../assets/general/batu.png";
+import NusaQuestLogo from "../assets/general/nusaQuest-logo.png"; // Import gambar NusaQuest Logo
 import Header from "../components/Header";
-import Maps from "../components/Maps";
-import NusaQuestLogoHome from "../assets/general/nusaQuest-logo-home.png";
+import NusaMaps from "../components/Maps";
+import Footer from "../components/Footer";
 
 function Home() {
   const [logoLoaded, setLogoLoaded] = useState(false);
@@ -16,25 +17,30 @@ function Home() {
     img.onload = () => {
       setLogoLoaded(true);
     };
-    img.src = NusaQuestLogoHome;
+    img.src = Batu;
   }, []);
 
   return (
     <Container fluid id="home-container">
       <Header />
       <Row>
-        <Col md={12}>
+        <Col lg={12}>
           {logoLoaded && (
             <img
-              src={NusaQuestLogoHome}
-              alt="NusaQuest Logo"
-              id="nusaquest-logo"
-              width={450}
+              src={Batu}
+              alt="Batu Logo"
+              id="batu"
             />
           )}
+          <img
+            src={NusaQuestLogo}
+            alt="NusaQuest Logo"
+            id="nusa-quest-logo"
+          />
         </Col>
       </Row>
-      <Maps />
+      <NusaMaps />
+      <Footer />
     </Container>
   );
 }

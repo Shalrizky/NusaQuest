@@ -1,42 +1,85 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Stage, Layer, Image, Text } from "react-konva";
 import { useNavigate } from "react-router-dom";
 import { Row, Col } from "react-bootstrap";
-import MapsBackground from "../assets/maps/maps-bg.png";
+import gsap from "gsap";
+import Konva from "konva";
+
 import WilayahDarat from "../assets/maps/darat.png";
 import WilayahDaerah from "../assets/maps/daerah.png";
 import WilayahBahari from "../assets/maps/bahari.png";
 import WilayahPermainan from "../assets/maps/permainan.png";
 import WilayahKuliner from "../assets/maps/kuliner.png";
 import WilayahInformasi from "../assets/maps/informasi.png";
-import gsap from "gsap";
 
-function Maps() {
+import "../components/styles/NusaMaps.css";
+
+const IMAGE_SOURCES = [
+  WilayahDarat,
+  WilayahDaerah,
+  WilayahBahari,
+  WilayahPermainan,
+  WilayahKuliner,
+  WilayahInformasi,
+];
+
+const IMAGE_SIZES = [
+  { width: 300, height: 280 },
+  { width: 300, height: 260 },
+  { width: 330, height: 240 },
+  { width: 270, height: 150 },
+  { width: 432, height: 302 },
+  { width: 380, height: 219 },
+];
+
+const TEXT_CONTENT = [
+  "Pariwisata Darat",
+  "Daerah Jawa Barat",
+  "Pariwisata Bahari",
+  "Permainan Daerah",
+  "Kuliner Jawa Barat",
+  "Informasi",
+];
+
+const TEXT_POSITIONS = [
+  { x: -100, y: -30 },
+  { x: -100, y: 10 },
+  { x: -90, y: -20 },
+  { x: -90, y: 10 },
+  { x: -50, y: -20 },
+  { x: 50, y: 10 },
+];
+
+function NusaMaps() {
   const imageRefs = useRef([]);
   const navigate = useNavigate();
+
   const [images, setImages] = useState([]);
   const [stageHeight, setStageHeight] = useState(window.innerHeight * 0.75);
   const [stageWidth, setStageWidth] = useState(window.innerWidth);
   const [allImagesLoaded, setAllImagesLoaded] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [animationIn, setAnimationIn] = useState(false);
 
+  const imagePositions = useMemo(
+    () => [
+      { x: 0, y: 0 },
+      { x: 0, y: stageHeight - 260 },
+      { x: (stageWidth - 300) / 2, y: (stageHeight - 250) / 2 },
+      { x: (stageWidth - 300) / 3, y: stageHeight - 150 },
+      { x: stageWidth - 411, y: -32 },
+      { x: stageWidth - 405, y: stageHeight - 220 },
+    ],
+    [stageHeight, stageWidth]
+  );
 
   useEffect(() => {
-    const imagesToLoad = [
-      WilayahDarat,
-      WilayahDaerah,
-      WilayahBahari,
-      WilayahPermainan,
-      WilayahKuliner,
-      WilayahInformasi,
-    ];
-
     const loadImages = () => {
-      const loadedImages = imagesToLoad.map((src, index) => {
+      const loadedImages = IMAGE_SOURCES.map((src, index) => {
         const img = new window.Image();
         img.src = src;
         img.onload = () => {
-          if (index === imagesToLoad.length - 1) {
+          if (index === IMAGE_SOURCES.length - 1) {
             setAllImagesLoaded(true);
           }
         };
@@ -48,40 +91,46 @@ function Maps() {
     loadImages();
   }, []);
 
+  const animateImages = useCallback(() => {
+    gsap.fromTo(
+      [imageRefs.current[0], imageRefs.current[1]],
+      { x: -stageWidth },
+      { x: imagePositions[0].x, duration: 1, ease: "power3.out", stagger: 0.2 }
+    );
+
+    gsap.fromTo(
+      imageRefs.current[2],
+      { y: -stageHeight },
+      { y: imagePositions[2].y, duration: 1, ease: "power3.out" }
+    );
+
+    gsap.fromTo(
+      imageRefs.current[3],
+      { y: stageHeight },
+      { y: imagePositions[3].y, duration: 1, ease: "power3.out" }
+    );
+
+    gsap.fromTo(
+      imageRefs.current[4],
+      { x: stageWidth },
+      { x: imagePositions[4].x, duration: 1, ease: "power3.out" }
+    );
+
+    gsap
+      .fromTo(
+        imageRefs.current[5],
+        { x: stageWidth },
+        { x: imagePositions[5].x, duration: 1, ease: "power3.out" }
+      )
+      .delay(0.2);
+  }, [imagePositions, stageHeight, stageWidth]);
+
   useEffect(() => {
-    if (allImagesLoaded) {
-      console.log("Semua gambar telah dimuat!");
-  
-      // Animasi masuk untuk image 0 dan 1 dari kiri
-      gsap.fromTo(
-        [imageRefs.current[0], imageRefs.current[1]],
-        { x: -stageWidth }, // Mulai dari luar layar kiri
-        { x: imagePositions[0].x, duration: 1, ease: "power3.out", stagger: 0.2 } // Geser ke posisi yang ditentukan
-      );
-  
-      // Animasi masuk untuk image 2 dari atas
-      gsap.fromTo(
-        imageRefs.current[2],
-        { y: -stageHeight }, // Mulai dari luar layar atas
-        { y: imagePositions[2].y, duration: 1, ease: "power3.out" } // Geser ke posisi yang ditentukan
-      );
-  
-      // Animasi masuk untuk image 3 dari bawah
-      gsap.fromTo(
-        imageRefs.current[3],
-        { y: stageHeight }, // Mulai dari luar layar bawah
-        { y: imagePositions[3].y, duration: 1, ease: "power3.out" } // Geser ke posisi yang ditentukan
-      );
-  
-      // Animasi masuk untuk image 4 dan 5 dari kanan
-      gsap.fromTo(
-        [imageRefs.current[4], imageRefs.current[5]],
-        { x: stageWidth }, // Mulai dari luar layar kanan
-        { x: imagePositions[4].x, duration: 1, ease: "power3.out", stagger: 0.2 } // Geser ke posisi yang ditentukan
-      );
+    if (allImagesLoaded && !animationIn) {
+      animateImages();
+      setAnimationIn(true);
     }
-  }, [allImagesLoaded]);
-  
+  }, [allImagesLoaded, animationIn, animateImages]);
 
   useEffect(() => {
     const updateStageSize = () => {
@@ -89,146 +138,112 @@ function Maps() {
       setStageHeight(window.innerHeight * 0.75);
     };
 
-    // Tambahkan event listener untuk menangani perubahan ukuran jendela
     window.addEventListener("resize", updateStageSize);
-
-    // Hapus event listener saat komponen dibongkar
     return () => window.removeEventListener("resize", updateStageSize);
   }, []);
 
   const handleMouseEnter = (index) => {
     setHoveredIndex(index);
-    if (imageRefs.current[index]) {
-      gsap.to(imageRefs.current[index], {
+    const targetImage = imageRefs.current[index];
+    if (targetImage) {
+      targetImage.cache();
+      targetImage.filters([Konva.Filters.Brighten]);
+      targetImage.brightness(-0.2);
+      targetImage.getLayer().batchDraw();
+
+      gsap.to(targetImage, {
         scaleX: 1.1,
         scaleY: 1.1,
-        duration: 0.3,
-        ease: "power3.inOut",
+        duration: 0.5,
+        ease: "power1.inOut",
       });
     }
   };
 
   const handleMouseLeave = () => {
-    setHoveredIndex(null);
-    if (imageRefs.current[hoveredIndex]) {
-      gsap.to(imageRefs.current[hoveredIndex], {
+    const hoveredImage = imageRefs.current[hoveredIndex];
+    if (hoveredImage) {
+      gsap.to(hoveredImage, {
         scaleX: 1,
         scaleY: 1,
-        duration: 0.3,
-        ease: "power2.inOut",
+        duration: 0.5,
+        ease: "power1.inOut",
       });
     }
-  };
 
-  const imageSizes = [
-    { width: 300, height: 280 }, // Image 0
-    { width: 300, height: 260 }, // Image 1
-    { width: 330, height: 230 }, // Image 2
-    { width: 270, height: 150 }, // Image 3
-    { width: 439, height: 302 }, // Image 4
-    { width: 390, height: 219 }, // Image 5
-  ];
+    imageRefs.current.forEach((imageRef) => {
+      if (imageRef) {
+        imageRef.filters([]);
+        imageRef.cache();
+      }
+    });
 
-  const imagePositions = [
-    { x: 0, y: 0 },
-    { x: 0, y: stageHeight - 260 },
-    { x: (stageWidth - 300) / 2, y: stageHeight * 0.23 },
-    { x: (stageWidth - 250) / 3, y: stageHeight * 0.69 },
-    { x: stageWidth - 419, y: -32 },
-    { x: stageWidth - 416, y: stageHeight - 220 },
-  ];
-
-  const textOffsets = [
-    { x: -100, y: -30 }, // Image 0
-    { x: -100, y: 10 }, // Image 0
-    { x: -90, y: -20 }, // Image 2
-    { x: -120, y: 10 }, // Image 3
-    { x: -50, y: -20 }, // Image 4
-    { x: 0, y: 0 }, // Image 5
-  ];
-
-
-  const renderImages = () => {
-    return images.map((image, index) => (
-      <>
-        <Image
-          image={image}
-          x={imagePositions[index].x}
-          y={imagePositions[index].y}
-          width={imageSizes[index].width}
-          height={imageSizes[index].height}
-          onMouseEnter={() => handleMouseEnter(index)}
-          onMouseLeave={handleMouseLeave}
-          ref={(ref) => (imageRefs.current[index] = ref)}
-          onClick={() => navigate('/login')}
-        />
-        {hoveredIndex === index && (
-          <Text
-            text={getTooltipContent(index)}
-            x={
-              imagePositions[index].x +
-              imageSizes[index].width / 2 +
-              textOffsets[index].x
-            }
-            y={
-              imagePositions[index].y +
-              imageSizes[index].height / 2 +
-              textOffsets[index].y
-            }
-            onMouseEnter={() => handleMouseEnter(index)}
-            onMouseLeave={handleMouseLeave}
-            onClick={() => navigate('/login')}
-            fontSize={20}
-            fill="#fff"
-            align="center"
-            fontStyle="bold"
-            fontFamily="Potta One"
-            shadowColor="#000000"
-            shadowBlur={10}
-            shadowOffsetX={8}
-            shadowOffsetY={8}
-          />
-        )}
-      </>
-    ));
-  };
-
-  const getTooltipContent = (index) => {
-    switch (index) {
-      case 0:
-        return "Pariwisata Darat";
-      case 1:
-        return "Daerah Jawa Barat";
-      case 2:
-        return "Pariwisata Bahari";
-      case 3:
-        return "Permainan Jawa Barat";
-      case 4:
-        return "Kuliner Jawa Barat";
-      case 5:
-        return "Informasi";
-      default:
-        return "";
+    const layer = imageRefs.current[0]?.getLayer();
+    if (layer) {
+      layer.batchDraw();
     }
+
+    setHoveredIndex(null);
   };
+
+  const renderImages = () =>
+    images.map((image, index) => (
+      <Image
+        key={`image-${index}`}
+        image={image}
+        x={imagePositions[index].x}
+        y={imagePositions[index].y}
+        width={IMAGE_SIZES[index].width}
+        height={IMAGE_SIZES[index].height}
+        onMouseEnter={() => handleMouseEnter(index)}
+        onMouseLeave={handleMouseLeave}
+        ref={(ref) => (imageRefs.current[index] = ref)}
+        onClick={() => navigate("/login")}
+      />
+    ));
+
+  const renderTexts = () =>
+    hoveredIndex !== null && (
+      <Text
+        key={`text-${hoveredIndex}`}
+        text={TEXT_CONTENT[hoveredIndex]}
+        x={
+          imagePositions[hoveredIndex].x +
+          IMAGE_SIZES[hoveredIndex].width / 2 +
+          TEXT_POSITIONS[hoveredIndex].x
+        }
+        y={
+          imagePositions[hoveredIndex].y +
+          IMAGE_SIZES[hoveredIndex].height / 2 +
+          TEXT_POSITIONS[hoveredIndex].y
+        }
+        onMouseEnter={() => handleMouseEnter(hoveredIndex)}
+        onMouseLeave={handleMouseLeave}
+        onClick={() => navigate("/login")}
+        fontSize={20}
+        fill="#fff"
+        align="center"
+        fontStyle="bold"
+        fontFamily="Potta One"
+        shadowColor="#000000"
+        shadowBlur={10}
+        shadowOffsetX={8}
+        shadowOffsetY={8}
+      />
+    );
 
   return (
     <Row>
-      <Col className="pb-5">
-        <Stage
-          width={stageWidth}
-          height={stageHeight}
-          style={{
-            borderRadius: "20px",
-            backgroundImage: `url(${MapsBackground})`,
-            overflow: "hidden",
-          }}
-        >
-          <Layer>{renderImages()}</Layer>
+      <Col id="canvas-wrapper">
+        <Stage id="stage-canvas" width={stageWidth} height={stageHeight}>
+          <Layer>
+            {renderImages()}
+            {renderTexts()}
+          </Layer>
         </Stage>
       </Col>
     </Row>
   );
 }
 
-export default Maps;
+export default NusaMaps;

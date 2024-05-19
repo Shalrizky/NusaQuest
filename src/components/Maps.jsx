@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Stage, Layer, Image, Text } from "react-konva";
 import { useNavigate } from "react-router-dom";
 import { Row, Col } from "react-bootstrap";
+import { useAuth } from "../util/AuthContext";
 import gsap from "gsap";
 import Konva from "konva";
 
@@ -12,7 +13,7 @@ import WilayahPermainan from "../assets/maps/permainan.png";
 import WilayahKuliner from "../assets/maps/kuliner.png";
 import WilayahInformasi from "../assets/maps/informasi.png";
 
-import "../components/styles/NusaMaps.css";
+import "../style/components/NusaMaps.css";
 
 const IMAGE_SOURCES = [
   WilayahDarat,
@@ -50,7 +51,8 @@ const TEXT_POSITIONS = [
   { x: 50, y: 10 },
 ];
 
-function NusaMaps() {
+function NusaMaps({ setShowModal }) {
+  const { isLoggedIn } = useAuth();
   const imageRefs = useRef([]);
   const navigate = useNavigate();
 
@@ -60,6 +62,14 @@ function NusaMaps() {
   const [allImagesLoaded, setAllImagesLoaded] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [animationIn, setAnimationIn] = useState(false);
+
+  const handleImageClick = (index) => {
+    if (index === 5) {
+      navigate("/information");
+    } else {
+      isLoggedIn ? setShowModal(true) : navigate("/login");
+    }
+  };
 
   const imagePositions = useMemo(
     () => [
@@ -198,7 +208,7 @@ function NusaMaps() {
         onMouseEnter={() => handleMouseEnter(index)}
         onMouseLeave={handleMouseLeave}
         ref={(ref) => (imageRefs.current[index] = ref)}
-        onClick={() => navigate("/login")}
+        onClick={() => handleImageClick(index)}
       />
     ));
 
@@ -219,7 +229,7 @@ function NusaMaps() {
         }
         onMouseEnter={() => handleMouseEnter(hoveredIndex)}
         onMouseLeave={handleMouseLeave}
-        onClick={() => navigate("/login")}
+        onClick={() => handleImageClick(hoveredIndex)} // Mengirimkan indeks
         fontSize={20}
         fill="#fff"
         align="center"
@@ -234,7 +244,7 @@ function NusaMaps() {
 
   return (
     <Row>
-      <Col id="canvas-wrapper">
+      <Col id="canvas-container">
         <Stage id="stage-canvas" width={stageWidth} height={stageHeight}>
           <Layer>
             {renderImages()}

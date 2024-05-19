@@ -1,46 +1,35 @@
-import { useState, useEffect } from "react";
-import Init from "../firebase-init";
-import { getDatabase, ref, onValue } from "firebase/database";
-import "../style/Home.css";
+import { useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import Batu from "../assets/general/batu.png";
-import NusaQuestLogo from "../assets/general/nusaQuest-logo.png"; // Import gambar NusaQuest Logo
 import Header from "../components/Header";
 import NusaMaps from "../components/Maps";
 import Footer from "../components/Footer";
+import Batu from "../assets/general/batu.png";
+import ModalGame from "../components/ModalGame";
+import NusaQuestLogo from "../assets/general/nusaQuest-logo.png";
+import ImageLoader from "../util/ImageLoader";
+import "../style/routes/Home.css";
 
 function Home() {
-  const [logoLoaded, setLogoLoaded] = useState(false);
-
-  useEffect(() => {
-    const img = new window.Image();
-    img.onload = () => {
-      setLogoLoaded(true);
-    };
-    img.src = Batu;
-  }, []);
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <Container fluid id="home-container">
-      <Header />
-      <Row>
-        <Col lg={12}>
-          {logoLoaded && (
+      <Header layout="home" />
+      <ImageLoader srcList={[Batu, NusaQuestLogo]}>
+        <Row>
+          <Col lg={12}>
+            <img src={Batu} alt="Batu Logo" id="batu" />
             <img
-              src={Batu}
-              alt="Batu Logo"
-              id="batu"
+              src={NusaQuestLogo}
+              alt="NusaQuest Logo"
+              id="nusa-quest-logo"
             />
-          )}
-          <img
-            src={NusaQuestLogo}
-            alt="NusaQuest Logo"
-            id="nusa-quest-logo"
-          />
-        </Col>
-      </Row>
-      <NusaMaps />
-      <Footer />
+          </Col>
+        </Row>
+      </ImageLoader>
+      <NusaMaps setShowModal={setShowModal} />
+      <ModalGame show={showModal} onHide={() => setShowModal(false)} />
+      <Footer textColor={"#222"} />
     </Container>
   );
 }

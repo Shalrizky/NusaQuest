@@ -1,35 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import '../style/Home.css';
-import Init from '../firebase-init';
-import { getDatabase, ref, onValue } from 'firebase/database';
+import { useState } from "react";
+import { Container, Row, Col } from "react-bootstrap";
+import Header from "../components/Header";
+import NusaMaps from "../components/Maps";
+import Footer from "../components/Footer";
+import Batu from "../assets/general/batu.png";
+import ModalGame from "../components/ModalGame";
+import NusaQuestLogo from "../assets/general/nusaQuest-logo.png";
+import ImageLoader from "../util/ImageLoader";
+import "../style/routes/Home.css";
 
 function Home() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-   
-    const db = getDatabase(Init);
-    const dataRef = ref(db, 'users');
-
-    // Membaca data dari Firebase Realtime Database
-    onValue(dataRef, (snapshot) => {
-      const firebaseData = snapshot.val();
-      setData(firebaseData);
-      console.log(firebaseData)
-    });
-  }, []);
+  const [showModal, setShowModal] = useState(false);
 
   return (
-    <div className="container-home">
-      <h1>NusaQuest</h1>
-      {data && (
-        <div>
-          <p>Nama: {data.nama}</p>
-          <p>Tinggal: {data.tinggal}</p>
-          <p>Umur: {data.umur}</p>
-        </div>
-      )}
-    </div>
+    <Container fluid id="home-container">
+      <Header layout="home" />
+      <ImageLoader srcList={[Batu, NusaQuestLogo]}>
+        <Row>
+          <Col lg={12}>
+            <img src={Batu} alt="Batu Logo" id="batu" />
+            <img
+              src={NusaQuestLogo}
+              alt="NusaQuest Logo"
+              id="nusa-quest-logo"
+            />
+          </Col>
+        </Row>
+      </ImageLoader>
+      <NusaMaps setShowModal={setShowModal} />
+      <ModalGame show={showModal} onHide={() => setShowModal(false)} />
+      <Footer textColor={"#222"} />
+    </Container>
   );
 }
 

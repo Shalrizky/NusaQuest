@@ -1,0 +1,28 @@
+#home-container {
+  background-image: url('../../assets/general/home-bg.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  min-height: 100vh;
+
+}
+
+#batu, #nusa-quest-logo {
+  position: absolute;
+  top: 10px; 
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+#batu {
+  z-index: 1;
+  width: 50%;
+  max-width: 510px;
+}
+
+#nusa-quest-logo {
+  z-index: 3;
+  width: 25%;
+  max-width: 230px;
+}
+

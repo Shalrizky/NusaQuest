@@ -9,7 +9,7 @@ function Home() {
   useEffect(() => {
    
     const db = getDatabase(Init);
-    const dataRef = ref(db, 'example');
+    const dataRef = ref(db, 'users');
 
     // Membaca data dari Firebase Realtime Database
     onValue(dataRef, (snapshot) => {

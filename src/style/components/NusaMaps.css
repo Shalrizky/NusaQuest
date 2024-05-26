@@ -4,7 +4,7 @@
 }
 
 #stage-canvas {
-   background-image: url('../../assets/maps/maps-bg.png');
+   background-image: url('../../assets/nusaMaps/maps-bg.png');
    border-radius: 20px;
    overflow: hidden;
 }

@@ -1,61 +1,37 @@
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { getDatabase, ref, set } from "firebase/database";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../util/AuthContext";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import NusaQuestLogo from "../assets/general/nusaQuest-logo.png";
-import GoogleLogo from "../assets/general/google-logo.png";
-import ImageLoader from "../util/ImageLoader";
-import "../style/routes/Login.css";
 import { useState, useEffect } from "react";
-import app from "../firebaseConfig";
+import useAuth from "../lib/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { Container, Row, Col, Card, Button, Alert } from "react-bootstrap";
+import ImageLoader from "../components/common/ImageLoader";
+import NusaQuestLogo from "../assets/common/nusaQuest-logo.png";
+import GoogleLogo from "../assets/common/google-logo.png";
+import "../style/routes/Login.css";
 
 function Login() {
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setIsLoggedIn, setUser } = useAuth();
+  const { signInWithGoogle } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleGoogleSignIn = async () => {
+  const handleSignIn = async () => {
     setLoading(true);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-
+    setError(null); 
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userDetails = {
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-        uid: user.uid,
-      };
-
-      saveUserData(userDetails);
+      await signInWithGoogle();
+      if (localStorage.getItem("isLoggedIn") === "true") {
+        navigate("/");
+      }
     } catch (error) {
-      console.error("Error signing in with Google:", error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        console.log("User cancelled the sign-in process");
+        setError("Sign-in cancelled. Please try again.");
+      } else {
+        console.error("Error signing in:", error);
+        setError("Failed to sign in. Please try again.");
+      }
+    } finally {
       setLoading(false);
     }
-  };
-
-  const saveUserData = (userDetails) => {
-    const db = getDatabase(app);
-    const usersRef = ref(db, "users/" + userDetails.uid);
-
-    set(usersRef, userDetails)
-      .then(() => {
-        console.log("User data saved successfully!");
-        setLoading(false);
-        setIsLoggedIn(true);
-        setUser(userDetails);
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("user", JSON.stringify(userDetails));
-        navigate("/");
-      })
-      .catch((error) => {
-        console.error("Error saving user data: ", error);
-        setLoading(false);
-      });
   };
 
   useEffect(() => {
@@ -78,10 +54,11 @@ function Login() {
                 <Card.Title className="title-card pb-4">
                   Welcome to <strong>Nusa Quest</strong>
                 </Card.Title>
+                {error && <Alert variant="danger">{error}</Alert>}
                 <Button
                   variant="primary"
                   className="btn-login fs-6"
-                  onClick={handleGoogleSignIn}
+                  onClick={handleSignIn}
                   disabled={loading}
                 >
                   {loading ? (

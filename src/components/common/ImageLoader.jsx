@@ -23,8 +23,7 @@ function ImageLoader({ srcList, children }) {
       img.onload = checkIfAllLoaded;
       img.onerror = checkIfAllLoaded; 
     });
-
-  
+    
     checkIfAllLoaded();
 
     return () => {

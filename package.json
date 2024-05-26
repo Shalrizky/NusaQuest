@@ -10,6 +10,7 @@
     "firebase": "^10.11.1",
     "gsap": "^3.12.5",
     "konva": "^9.3.6",
+    "lucide-react": "^0.379.0",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.2",
     "react-dom": "^18.3.1",

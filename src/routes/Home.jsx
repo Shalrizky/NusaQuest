@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import Header from "../components/Header";
-import NusaMaps from "../components/Maps";
-import Footer from "../components/Footer";
-import Batu from "../assets/general/batu.png";
-import ModalGame from "../components/ModalGame";
-import NusaQuestLogo from "../assets/general/nusaQuest-logo.png";
-import ImageLoader from "../util/ImageLoader";
+import ImageLoader from "../components/common/ImageLoader";
+import Header from "../components/common/Header";
+import NusaMaps from "../components/common/NusaMaps";
+import Footer from "../components/common/Footer";
+import ModalGame from "../components/common/ModalGame";
+import NusaQuestLogo from "../assets/common/nusaQuest-logo.png";
+import Batu from "../assets/common/batu.png";
 import "../style/routes/Home.css";
 
 function Home() {

@@ -1,19 +1,18 @@
+// import Library
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Stage, Layer, Image, Text } from "react-konva";
 import { useNavigate } from "react-router-dom";
 import { Row, Col } from "react-bootstrap";
-import { useAuth } from "../util/AuthContext";
 import gsap from "gsap";
 import Konva from "konva";
-
-import WilayahDarat from "../assets/maps/darat.png";
-import WilayahDaerah from "../assets/maps/daerah.png";
-import WilayahBahari from "../assets/maps/bahari.png";
-import WilayahPermainan from "../assets/maps/permainan.png";
-import WilayahKuliner from "../assets/maps/kuliner.png";
-import WilayahInformasi from "../assets/maps/informasi.png";
-
-import "../style/components/NusaMaps.css";
+import useAuth from "../../lib/hooks/useAuth";
+import WilayahDarat from "../../assets/nusaMaps/darat.png";
+import WilayahDaerah from "../../assets/nusaMaps/daerah.png";
+import WilayahBahari from "../../assets/nusaMaps/bahari.png";
+import WilayahPermainan from "../../assets/nusaMaps/permainan.png";
+import WilayahKuliner from "../../assets/nusaMaps/kuliner.png";
+import WilayahInformasi from "../../assets/nusaMaps/informasi.png";
+import "../../style/components/NusaMaps.css";
 
 const IMAGE_SOURCES = [
   WilayahDarat,
@@ -24,6 +23,7 @@ const IMAGE_SOURCES = [
   WilayahInformasi,
 ];
 
+// ! Mendeklarasikan ukuran image, posisi text, dan text kontent pada gambar maps 
 const IMAGE_SIZES = [
   { width: 300, height: 280 },
   { width: 300, height: 260 },
@@ -63,6 +63,7 @@ function NusaMaps({ setShowModal }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [animationIn, setAnimationIn] = useState(false);
 
+  // ! Autentikasi pengguna login berdasarkan handle klik
   const handleImageClick = (index) => {
     if (index === 5) {
       navigate("/information");
@@ -70,6 +71,7 @@ function NusaMaps({ setShowModal }) {
       isLoggedIn ? setShowModal(true) : navigate("/login");
     }
   };
+
 
   const imagePositions = useMemo(
     () => [
@@ -229,7 +231,7 @@ function NusaMaps({ setShowModal }) {
         }
         onMouseEnter={() => handleMouseEnter(hoveredIndex)}
         onMouseLeave={handleMouseLeave}
-        onClick={() => handleImageClick(hoveredIndex)} // Mengirimkan indeks
+        onClick={() => handleImageClick(hoveredIndex)} 
         fontSize={20}
         fill="#fff"
         align="center"

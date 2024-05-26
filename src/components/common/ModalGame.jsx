@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Modal, CloseButton } from "react-bootstrap";
 import gsap from "gsap";
-import ImageLoader from "../util/ImageLoader";
-import nucaLogo from "../assets/general/nuca-logo.png";
-import ulerTanggaLogo from "../assets/general/uler-tangga-logo.png";
-import "../style/components/ModalGame.css";
+import ImageLoader from "./ImageLoader"
+import nucaLogo from "../../assets/common/nuca-logo.png";
+import ulerTanggaLogo from "../../assets/common/uler-tangga-logo.png";
+import "../../style/components/ModalGame.css";
 
 function ModalGame({ show, onHide }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);

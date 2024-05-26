@@ -1,16 +1,15 @@
-import React from "react";
+import useAuth from "../../lib/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Row, Col } from "react-bootstrap";
-import { useAuth } from "../util/AuthContext";
-import ImageLoader from "../util/ImageLoader";
-import SifLogo from "../assets/general/sif-logo.png";
-import UpjLogo from "../assets/general/upj-logo.png";
-import userProfile from "../assets/general/user-icon.png";
-import transleteIcon from "../assets/general/translete-icon.png";
+import { UserRound } from "lucide-react";
+import ImageLoader from "./ImageLoader";
+import SifLogo from "../../assets/common/sif-logo.png";
+import UpjLogo from "../../assets/common/upj-logo.png";
+import transleteIcon from "../../assets/common/translete-icon.png";
 
 function Header({ layout, backIcon, profileText }) {
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
 
   const handleProfileClick = () => {
     if (isLoggedIn) {
@@ -27,7 +26,7 @@ function Header({ layout, backIcon, profileText }) {
   return (
     <Row className="py-4 px-2 d-flex align-items-center ">
       <ImageLoader
-        srcList={[backIcon, UpjLogo, SifLogo, transleteIcon, userProfile]}
+        srcList={[backIcon, UpjLogo, SifLogo, transleteIcon, UserRound]}
       >
         {layout === "profile" && backIcon && (
           <Col
@@ -78,15 +77,37 @@ function Header({ layout, backIcon, profileText }) {
             height={51}
             className="pt-1"
           />
-          <img
-            src={userProfile}
-            alt="User Icon"
-            width={45}
-            height={45}
-            className="ms-4"
-            onClick={handleProfileClick}
-            style={{ cursor: "pointer" }}
-          />
+          {isLoggedIn ? ( // Cek jika pengguna sudah login
+            <img
+              src={user.photoURL || UserRound} // Gunakan foto profil pengguna jika tersedia, jika tidak, gunakan gambar avatar default
+              alt="User Avatar"
+              width={40}
+              className="pt-1 rounded-circle"
+              onClick={handleProfileClick}
+              style={{ cursor: "pointer" }}
+            />
+          ) : (
+            <div // Tampilan ikon profil default jika pengguna belum login
+              className="ms-4"
+              onClick={handleProfileClick}
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: "50%",
+                padding: "4px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                cursor: "pointer",
+              }}
+            >
+              <UserRound
+                fill="#D8D8D4"
+                strokeWidth={0}
+                width={40}
+                height={40}
+              />
+            </div>
+          )}
         </Col>
       </ImageLoader>
     </Row>

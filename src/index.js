@@ -9,6 +9,7 @@ import Home from './routes/Home';
 import Profile from './routes/Profile';
 import Information from './routes/InformationDestination';
 import ProtectedRoute from './util/ProtectedRoute';
+import RoomUtangga from './routes/RoomUtangga';
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
   {
     path: '/information',
     element: <Information />
+  },
+  {
+    path: '/RoomUtangga',
+    element: <RoomUtangga />
   }
 ]);
 

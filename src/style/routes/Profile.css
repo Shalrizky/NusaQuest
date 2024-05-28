@@ -1,5 +1,5 @@
 #profile-container {
-   background-image: url('../../assets/general/profile-bg.png');
+   background-image: url('../../assets/common/water-big-dark-bg.png');
    background-repeat: no-repeat;
    background-position: center;
    background-size: cover;
@@ -11,7 +11,7 @@
    border: 2px solid #fff;
    border-radius: 30px;
    overflow: hidden;
-   background-image: url('../../assets/maps/maps-bg.png');
+   background-image: url('../../assets/nusaMaps/maps-bg.png');
    background-size: cover;
    background-position: center;
 }

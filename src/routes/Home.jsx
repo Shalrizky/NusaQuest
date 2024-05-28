@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import ImageLoader from "../components/common/ImageLoader";
 import Header from "../components/common/Header";
 import NusaMaps from "../components/common/NusaMaps";
 import Footer from "../components/common/Footer";
@@ -15,18 +14,12 @@ function Home() {
   return (
     <Container fluid id="home-container">
       <Header layout="home" />
-      <ImageLoader srcList={[Batu, NusaQuestLogo]}>
-        <Row>
-          <Col lg={12}>
-            <img src={Batu} alt="Batu Logo" id="batu" />
-            <img
-              src={NusaQuestLogo}
-              alt="NusaQuest Logo"
-              id="nusa-quest-logo"
-            />
-          </Col>
-        </Row>
-      </ImageLoader>
+      <Row>
+        <Col lg={12}>
+          <img src={Batu} alt="Batu Logo" id="batu" />
+          <img src={NusaQuestLogo} alt="NusaQuest Logo" id="nusa-quest-logo" />
+        </Col>
+      </Row>
       <NusaMaps setShowModal={setShowModal} />
       <ModalGame show={showModal} onHide={() => setShowModal(false)} />
       <Footer textColor={"#222"} />

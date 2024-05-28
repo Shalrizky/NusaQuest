@@ -1,4 +1,3 @@
-// import Library
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Stage, Layer, Image, Text } from "react-konva";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +12,9 @@ import WilayahPermainan from "../../assets/nusaMaps/permainan.png";
 import WilayahKuliner from "../../assets/nusaMaps/kuliner.png";
 import WilayahInformasi from "../../assets/nusaMaps/informasi.png";
 import "../../style/components/NusaMaps.css";
+import { throttle } from 'lodash';
 
+// Image sources and metadata
 const IMAGE_SOURCES = [
   WilayahDarat,
   WilayahDaerah,
@@ -23,7 +24,6 @@ const IMAGE_SOURCES = [
   WilayahInformasi,
 ];
 
-// ! Mendeklarasikan ukuran image, posisi text, dan text kontent pada gambar maps 
 const IMAGE_SIZES = [
   { width: 300, height: 280 },
   { width: 300, height: 260 },
@@ -51,6 +51,12 @@ const TEXT_POSITIONS = [
   { x: 50, y: 10 },
 ];
 
+/**
+ * NusaMaps component to display game maps component at home.
+ *
+ * @param {Object} props - Component props.
+ * @param {boolean} props.setShowModal - control the visibility of the Modal choice game.
+ */
 function NusaMaps({ setShowModal }) {
   const { isLoggedIn } = useAuth();
   const imageRefs = useRef([]);
@@ -63,7 +69,7 @@ function NusaMaps({ setShowModal }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [animationIn, setAnimationIn] = useState(false);
 
-  // ! Autentikasi pengguna login berdasarkan handle klik
+  // Handle click events on images
   const handleImageClick = (index) => {
     if (index === 5) {
       navigate("/information");
@@ -71,7 +77,6 @@ function NusaMaps({ setShowModal }) {
       isLoggedIn ? setShowModal(true) : navigate("/login");
     }
   };
-
 
   const imagePositions = useMemo(
     () => [
@@ -86,6 +91,7 @@ function NusaMaps({ setShowModal }) {
   );
 
   useEffect(() => {
+    // Load images
     const loadImages = () => {
       const loadedImages = IMAGE_SOURCES.map((src, index) => {
         const img = new window.Image();
@@ -154,7 +160,7 @@ function NusaMaps({ setShowModal }) {
     return () => window.removeEventListener("resize", updateStageSize);
   }, []);
 
-  const handleMouseEnter = (index) => {
+  const handleMouseEnter = throttle((index) => {
     setHoveredIndex(index);
     const targetImage = imageRefs.current[index];
     if (targetImage) {
@@ -170,9 +176,9 @@ function NusaMaps({ setShowModal }) {
         ease: "power1.inOut",
       });
     }
-  };
+  }, 100);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = throttle(() => {
     const hoveredImage = imageRefs.current[hoveredIndex];
     if (hoveredImage) {
       gsap.to(hoveredImage, {
@@ -196,7 +202,7 @@ function NusaMaps({ setShowModal }) {
     }
 
     setHoveredIndex(null);
-  };
+  }, 100);
 
   const renderImages = () =>
     images.map((image, index) => (
@@ -231,12 +237,12 @@ function NusaMaps({ setShowModal }) {
         }
         onMouseEnter={() => handleMouseEnter(hoveredIndex)}
         onMouseLeave={handleMouseLeave}
-        onClick={() => handleImageClick(hoveredIndex)} 
+        onClick={() => handleImageClick(hoveredIndex)}
         fontSize={20}
         fill="#fff"
         align="center"
         fontStyle="bold"
-        fontFamily="Potta One"
+        fontFamily="'Potta One', sans-serif"
         shadowColor="#000000"
         shadowBlur={10}
         shadowOffsetX={8}

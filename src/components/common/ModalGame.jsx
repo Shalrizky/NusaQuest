@@ -26,8 +26,11 @@ function ModalGame({ show, onHide }) {
     }
   };
 
-  const handleKartuKlik = () => {
+  const handleUtanggaClick = () => {
     navigate("/LobbyUtangga");
+  };
+  const handleNucaClick = () => {
+    navigate("/LobbyNuca");
   };
 
   useEffect(() => {
@@ -63,7 +66,7 @@ function ModalGame({ show, onHide }) {
               style={{ cursor: "pointer", transform: hoveredIndex === 0 ? "scale(1.1)" : "scale(1)" }}
               onMouseEnter={() => handleMouseEnter(0)}
               onMouseLeave={() => handleMouseLeave(0)}
-              onClick={handleKartuKlik}
+              onClick={handleUtanggaClick}
             />
             <span className="text-white fw-bold">Ular Tangga</span>
           </div>
@@ -76,6 +79,7 @@ function ModalGame({ show, onHide }) {
               style={{ cursor: "pointer", transform: hoveredIndex === 1 ? "scale(1.1)" : "scale(1)" }}
               onMouseEnter={() => handleMouseEnter(1)}
               onMouseLeave={() => handleMouseLeave(1)}
+              onClick={handleNucaClick}
             />
             <span className="text-white fw-bold ">Nuca</span>
           </div>

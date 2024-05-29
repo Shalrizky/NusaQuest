@@ -10,6 +10,7 @@ const Login = lazy(() => import('./routes/Login'));
 const Home = lazy(() => import('./routes/Home'));
 const Profile = lazy(() => import('./routes/Profile'));
 const LobbyUtangga = lazy(() => import('./routes/LobbyUtangga'));
+const LobbyNuca = lazy(() => import('./routes/LobbyNuca'));
 const Information = lazy(() => import('./routes/InformationDestination'));
 const ProtectedRoute = lazy(() => import('./components/common/ProtectedRoute'));
 
@@ -40,6 +41,13 @@ const App = () => {
           path: '/lobbyUtangga', element: (
             <ProtectedRoute>
               <LobbyUtangga />
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/lobbyNuca', element: (
+            <ProtectedRoute>
+              <LobbyNuca />
             </ProtectedRoute>
           )
         },

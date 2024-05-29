@@ -7,6 +7,11 @@
   overflow: hidden;
 }
 
+#heading-utangga {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+  font-family: Potta One, sans-serif;
+}
+
 .btn-lobby-uTangga {
   background-color: rgba(180, 180, 180, 0.228) !important;
   border: 2px solid #ffffff8a !important;

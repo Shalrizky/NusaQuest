@@ -9,6 +9,7 @@ import Loader from './util/Loader';
 const Login = lazy(() => import('./routes/Login'));
 const Home = lazy(() => import('./routes/Home'));
 const Profile = lazy(() => import('./routes/Profile'));
+const LobbyUtangga = lazy(() => import('./routes/LobbyUtangga'));
 const Information = lazy(() => import('./routes/InformationDestination'));
 const ProtectedRoute = lazy(() => import('./components/common/ProtectedRoute'));
 
@@ -34,7 +35,15 @@ const App = () => {
             </ProtectedRoute>
           )
         },
-        { path: '/information', element: <Information /> }
+        { path: '/information', element: <Information /> },
+        {
+          path: '/lobbyUtangga', element: (
+            <ProtectedRoute>
+              <LobbyUtangga />
+            </ProtectedRoute>
+          )
+        },
+
       ]
     }
   ]);

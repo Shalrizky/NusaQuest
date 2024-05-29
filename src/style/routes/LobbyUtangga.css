@@ -1,0 +1,29 @@
+.room-utangga-container {
+  background-image: url('../../assets/common/lobby-bg.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.btn-lobby-uTangga {
+  background-color: rgba(180, 180, 180, 0.228) !important;
+  border: 2px solid #ffffff8a !important;
+  width: 200px;
+  font-weight: bold;
+  border-radius: 10px;
+  margin: 0 30px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3),
+    5px 5px 6px rgba(0, 0, 0, 1);
+}
+
+.btn-lobby-uTangga:hover {
+  background-color: rgba(180, 180, 180, 0.55) !important;
+  border: 2px solid #fffffff5 !important; 
+  width: 200px;
+  border-radius: 10px;
+  margin: 0 30px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3),
+    5px 5px 6px rgba(0, 0, 0, 1);
+}

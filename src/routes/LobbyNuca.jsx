@@ -35,7 +35,7 @@ function LobbyNuca() {
           <img
             src={NucaLobbyLogo}
             alt="Nusa Quest Logo"
-            className="img-fluid d-none d-sm-block"
+            className="img-fluid d-none d-md-block"
             width={545}
           />
         </Col>

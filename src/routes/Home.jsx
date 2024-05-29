@@ -13,7 +13,7 @@ function Home() {
 
   return (
     <Container fluid id="home-container">
-      <Header layout="home" />
+      <Header layout="home"  showBackIcon={false} />
       <Row>
         <Col lg={12}>
           <img src={Batu} alt="Batu Logo" id="batu" />

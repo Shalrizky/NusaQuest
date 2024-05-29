@@ -27,7 +27,7 @@ function ModalGame({ show, onHide }) {
   };
 
   const handleKartuKlik = () => {
-    navigate("/RoomUtangga");
+    navigate("/LobbyUtangga");
   };
 
   useEffect(() => {
@@ -46,34 +46,40 @@ function ModalGame({ show, onHide }) {
       centered
       backdrop="true"
     >
-      <Modal.Body className="d-flex flex-column justify-content-center align-items-center py-3 gap-5">
-        <div className="d-flex justify-content-between align-items-center pt-2 w-100">
+      <Modal.Body className="d-flex flex-column justify-content-center align-items-center gap-4">
+        <div className="d-flex justify-content-between align-items-center w-100">
           <Modal.Title className="mx-auto fw-bold text-white">
             PILIH PERMAINAN
           </Modal.Title>
           <CloseButton variant="white" aria-label="Close" onClick={onHide} />
         </div>
-          <div className="d-flex pb-2 gap-5">
+        <div className="d-flex py-2 gap-5">
+          <div className="d-flex flex-column align-items-center ">
             <img
               src={ulerTanggaLogo}
               alt="Uler Tangga Logo"
-              width={200}  // Sesuaikan ukuran gambar logo
-              className={`game-image game-image-0`}
+              width={160} 
+              className={`game-image-0`}
               style={{ cursor: "pointer", transform: hoveredIndex === 0 ? "scale(1.1)" : "scale(1)" }}
               onMouseEnter={() => handleMouseEnter(0)}
               onMouseLeave={() => handleMouseLeave(0)}
               onClick={handleKartuKlik}
             />
+            <span className="text-white fw-bold">Ular Tangga</span>
+          </div>
+          <div className="d-flex flex-column align-items-center text-center pt-2 gap-2">
             <img
               src={nucaLogo}
               alt="Nuca Logo"
-              width={180}  // Sesuaikan ukuran gambar logo
-              className={`game-image game-image-1`}
+              width={135}  
+              className={` game-image-1`}
               style={{ cursor: "pointer", transform: hoveredIndex === 1 ? "scale(1.1)" : "scale(1)" }}
               onMouseEnter={() => handleMouseEnter(1)}
               onMouseLeave={() => handleMouseLeave(1)}
             />
+            <span className="text-white fw-bold ">Nuca</span>
           </div>
+        </div>
       </Modal.Body>
     </Modal>
   );

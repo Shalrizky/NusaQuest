@@ -1,0 +1,56 @@
+/* InformationDestination.css */
+#information-container {
+  min-height: 100vh;
+  background-image: url('../../assets/common/sec-map-bg.png');
+  background-repeat: no-repeat;
+  background-color: #0D009E; /* Warna latar belakang */
+  background-position: center;
+  background-size: cover;
+  position: relative;
+  overflow: hidden; /* Mencegah efek blur menyebar ke konten lain */
+}
+
+.information-content {
+  position: relative; /* Tetapkan posisi relatif untuk konten */
+  z-index: 1; /* Pastikan konten berada di atas latar belakang */
+}
+
+#information-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(5px); /* Efek blur hanya pada latar belakang */
+  z-index: 0.5; /* Letakkan latar belakang di bawah konten */
+}
+
+#destination-tabs {
+  font-weight: bold;
+}
+
+
+.custom-tab {
+  border: 2px solid #fff;
+  border-radius: 5px;
+  margin-right: 2px;
+  color: #fff;
+}
+
+.custom-tab:hover {
+  color: #fff !important;
+  background-color: #009DD7 !important;
+}
+
+.custom-tab.active {
+  background-color: #009DD7 !important; /* Active tab background color */
+  color: white !important; /* Active tab text color */
+  border: none !important;
+  border: 2px solid #fff !important;
+}
+
+.custom-tabh, h3 {
+  color: #fff;
+}
+

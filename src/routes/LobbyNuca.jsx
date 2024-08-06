@@ -7,7 +7,7 @@ import Header from '../components/common/Header';
 function LobbyNuca() {
   return (
     <Container fluid className="room-utangga-container">
-      <Header layout="profile" showLogos={false} showIcons={false} showBackIcon={true} />
+      <Header layout="lobby" showLogoIcon={false} showIcons={false} showBackIcon={true} />
       <Row>
         <Col md={12} className="text-white ps-5 pt-2">
           <h1 className="fw-bold display-5 display-md-3 display-sm-2" id="heading-utangga">

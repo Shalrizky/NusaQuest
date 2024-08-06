@@ -227,6 +227,29 @@ export const AuthProvider = ({ children }) => {
     [showToastMessage]
   );
 
+  // Add beforeunload event listener for automatic logout on browser close
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem("isReloading", "true");
+    };
+
+    const handleUnload = () => {
+      if (sessionStorage.getItem("isReloading") === "true") {
+        sessionStorage.removeItem("isReloading");
+      } else {
+        logout();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("unload", handleUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("unload", handleUnload);
+    };
+  }, [logout]);
+
   // Style for session expiration overlay
   const overlayStyle = {
     position: "fixed",

@@ -8,8 +8,8 @@ function LobbyUtangga() {
   return (
     <Container fluid className="room-utangga-container">
       <Header
-        layout="profile"
-        showLogos={false}
+        layout="lobby"
+        showLogoIcon={false}
         showIcons={false}
         showBackIcon={true}
       />

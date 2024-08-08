@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Container, Row, Col, Tabs, Tab } from "react-bootstrap";
-import { database, ref, onValue } from "../config/firebaseConfig";
+import { database, ref, onValue } from "../firebaseConfig";
 import "../style/routes/InformationDestination.css";
-import Header from "../components/common/Header";
+import Header from "../components/Header";
 import ScrollableSection from "../components/ScrollableSection";
 
 const InformationDestination = () => {

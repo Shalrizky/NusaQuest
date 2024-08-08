@@ -2,7 +2,7 @@ import React from "react";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import NucaLobbyLogo from "../assets/common/nuca-lobby-logo.png";
 import "../style/routes/LobbyNuca.css";
-import Header from '../components/common/Header';
+import Header from '../components/Header';
 
 function LobbyNuca() {
   return (

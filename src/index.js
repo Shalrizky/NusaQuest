@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
-import { AuthProvider } from './lib/context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import Loader from './util/Loader';
 
 const Login = lazy(() => import('./routes/Login'));
@@ -12,7 +12,7 @@ const Profile = lazy(() => import('./routes/Profile'));
 const LobbyUtangga = lazy(() => import('./routes/LobbyUtangga'));
 const LobbyNuca = lazy(() => import('./routes/LobbyNuca'));
 const Information = lazy(() => import('./routes/InformationDestination'));
-const ProtectedRoute = lazy(() => import('./components/common/ProtectedRoute'));
+const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'));
 
 const App = () => {
   const AuthLayout = () => (

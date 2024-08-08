@@ -1,15 +1,14 @@
 import React from "react";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import useAuth from "../lib/hooks/useAuth";
-import useUserPhoto from "../lib/hooks/useUserPhoto";
-import { UserRound } from "lucide-react";
-import Header from "../components/common/Header";
-import Footer from "../components/common/Footer";
+import { Container, Row, Col, Card, Button, Image } from "react-bootstrap";
+import useAuth from "../hooks/useAuth";
+import useUserPhoto from "../hooks/useUserPhoto";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import "../style/routes/Profile.css";
 
 function Profile() {
   const { logout, user } = useAuth();
-  const [userPhoto, handlePhotoError] = useUserPhoto(user, UserRound);
+  const [userPhoto, handlePhotoError] = useUserPhoto(user);
 
   if (!user) {
     return null;
@@ -26,24 +25,15 @@ function Profile() {
         <Col md={4} className="d-flex align-items-center">
           <Card id="profile-card" className="w-100 h-100 text-center py-4">
             <Card.Body id="profile-card-content" className="d-grid gap-5">
-              {userPhoto === UserRound ? (
-                <UserRound
-                  fill="#D8D8D4"
-                  strokeWidth={0}
-                  width={100}
-                  height={100}
-                />
-              ) : (
-                <img
-                  id="img-profile"
-                  src={userPhoto}
-                  className="mx-auto"
-                  onError={handlePhotoError}
-                  alt="Profile"
-                  width={100}
-                  height={100}
-                />
-              )}
+              <Image
+                id="img-profile"
+                src={userPhoto}
+                className="mx-auto"
+                onError={handlePhotoError}
+                alt="Profile"
+                width={100}
+                height={100}
+              />
               <Card.Title className="text-white">
                 <h3>{user.displayName}</h3>
                 <h5>{user.email}</h5>

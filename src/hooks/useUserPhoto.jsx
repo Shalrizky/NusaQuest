@@ -1,22 +1,27 @@
-// hooks/useUserPhoto.js
 import { useState, useEffect } from 'react';
 
 const useUserPhoto = (user, defaultPhoto) => {
-  const [userPhoto, setUserPhoto] = useState(defaultPhoto);
+  const [userPhoto, setUserPhoto] = useState(user?.photoURL || defaultPhoto);
   const [photoLoadError, setPhotoLoadError] = useState(false);
 
   useEffect(() => {
     if (user && user.photoURL && !photoLoadError) {
-      setUserPhoto(user.photoURL);
+      if (user.photoURL !== userPhoto) {
+        setUserPhoto(user.photoURL);
+      }
     } else {
-      setUserPhoto(defaultPhoto);
+      if (userPhoto !== defaultPhoto) {
+        setUserPhoto(defaultPhoto);
+      }
     }
-  }, [user, photoLoadError, defaultPhoto]);
+  }, [user, photoLoadError, defaultPhoto, userPhoto]);
 
   const handlePhotoError = () => {
-    setPhotoLoadError(true);
-    setUserPhoto(defaultPhoto);
-    console.error("Failed to load user photo, using default.");
+    if (!photoLoadError) {
+      setPhotoLoadError(true);
+      setUserPhoto(defaultPhoto);
+      console.error("Failed to load user photo, using default.");
+    }
   };
 
   return [userPhoto, handlePhotoError];

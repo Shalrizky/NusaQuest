@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useCallback, useRef } from "react";
+import { createContext, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   auth,
@@ -10,9 +10,16 @@ import {
   set,
 } from "../firebaseConfig";
 import CustomToast from "../components/CustomToast";
-
-// Constants
-const SESSION_TIMEOUT = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
+import {
+  getLocalStorageItem,
+  setLocalStorageItem,
+  removeLocalStorageItem,
+} from "../utils/localStorageUtil"; // Adjust the path to your utility file
+import {
+  startSessionTimeout,
+  resetSessionTimeout,
+  clearSessionTimeout,
+} from "../utils/sessionUtil"; // Adjust the path to your utility file
 
 // Context
 const AuthContext = createContext();
@@ -27,15 +34,7 @@ export const AuthProvider = ({ children }) => {
   const [toastBgColor, setToastBgColor] = useState("light");
   const [toastActionType, setToastActionType] = useState("");
   const [sessionExpired, setSessionExpired] = useState(false);
-  const sessionTimeoutRef = useRef(null);
   const navigate = useNavigate();
-
-  // Utility function to clear session storage
-  const clearSessionStorage = useCallback(() => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("user");
-    localStorage.removeItem("sessionExpired");
-  }, []);
 
   // Utility function to show toast message
   const showToastMessage = useCallback((title, message, bgColor) => {
@@ -56,47 +55,37 @@ export const AuthProvider = ({ children }) => {
     setToastActionType("warning");
     setShowToast(true);
     setSessionExpired(true);
-    localStorage.setItem("sessionExpired", "true");
+    setLocalStorageItem("sessionExpired", "true");
   }, []);
-
-  // Reset the session timeout
-  const resetSessionTimeout = useCallback(() => {
-    if (sessionTimeoutRef.current) {
-      clearTimeout(sessionTimeoutRef.current);
-    }
-    if (user) {
-      sessionTimeoutRef.current = setTimeout(
-        handleSessionExpiration,
-        SESSION_TIMEOUT
-      );
-    }
-  }, [user, handleSessionExpiration]);
 
   // Logout user and clear session
   const logout = useCallback(() => {
     setIsLoggedIn(false);
     setUser(null);
     signOut(auth);
-    navigate("/");
-    clearSessionStorage();
+    navigate("/login");
+
+    // Hapus hanya item terkait sesi pengguna
+    removeLocalStorageItem("isLoggedIn");
+    removeLocalStorageItem("user");
+    removeLocalStorageItem("sessionExpired");
+
     showToastMessage(
       "Logout Successful",
       "You have been logged out.",
       "success"
     );
     setSessionExpired(false);
-    if (sessionTimeoutRef.current) {
-      clearTimeout(sessionTimeoutRef.current);
-    }
-  }, [navigate, clearSessionStorage, showToastMessage]);
+    clearSessionTimeout();
+  }, [navigate, showToastMessage]);
 
   // Extend session by resetting the timeout
   const extendSession = useCallback(() => {
     setShowToast(false);
     setSessionExpired(false);
-    localStorage.removeItem("sessionExpired");
-    resetSessionTimeout();
-  }, [resetSessionTimeout]);
+    removeLocalStorageItem("sessionExpired");
+    resetSessionTimeout(handleSessionExpiration);
+  }, [handleSessionExpiration]);
 
   // Handle session cancel action
   const handleCancelSession = useCallback(() => {
@@ -105,43 +94,44 @@ export const AuthProvider = ({ children }) => {
 
   // Check session state on mount
   useEffect(() => {
-    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    const sessionExpired = localStorage.getItem("sessionExpired") === "true";
+    const loggedIn = getLocalStorageItem("isLoggedIn") === "true";
+    const storedUser = getLocalStorageItem("user");
+    const sessionExpired = getLocalStorageItem("sessionExpired") === "true";
 
     if (sessionExpired) {
       logout();
     } else if (loggedIn && storedUser) {
       setUser(storedUser);
       setIsLoggedIn(true);
+      startSessionTimeout(handleSessionExpiration); 
     }
     setInitialized(true);
-  }, [logout]);
+  }, [logout, handleSessionExpiration]);
 
   // Set up activity listeners to reset session timeout
   useEffect(() => {
-    const handleUserActivity = () => {
-      if (!sessionExpired) {
-        resetSessionTimeout();
-      }
-    };
+    if (isLoggedIn) {
+      const handleUserActivity = () => {
+        if (!sessionExpired) {
+          resetSessionTimeout(handleSessionExpiration);
+        }
+      };
 
-    const activityEvents = ["mousemove", "mousedown", "keydown", "touchstart"];
+      const activityEvents = ["mousemove", "mousedown", "keydown", "touchstart"];
 
-    activityEvents.forEach((event) => {
-      window.addEventListener(event, handleUserActivity);
-    });
-
-    resetSessionTimeout();
-    return () => {
-      if (sessionTimeoutRef.current) {
-        clearTimeout(sessionTimeoutRef.current);
-      }
       activityEvents.forEach((event) => {
-        window.removeEventListener(event, handleUserActivity);
+        window.addEventListener(event, handleUserActivity);
       });
-    };
-  }, [user, sessionExpired, resetSessionTimeout]);
+
+      startSessionTimeout(handleSessionExpiration);
+      return () => {
+        clearSessionTimeout();
+        activityEvents.forEach((event) => {
+          window.removeEventListener(event, handleUserActivity);
+        });
+      };
+    }
+  }, [isLoggedIn, sessionExpired, handleSessionExpiration]);
 
   // Sign in with Google and handle success or failure
   const signInWithGoogle = async () => {
@@ -180,24 +170,22 @@ export const AuthProvider = ({ children }) => {
         email: userData.email,
         photoURL: userData.photoURL,
       });
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          displayName: userData.displayName,
-          email: userData.email,
-          photoURL: userData.photoURL,
-        })
-      );
-      localStorage.removeItem("sessionExpired");
+      setLocalStorageItem("isLoggedIn", "true");
+      setLocalStorageItem("user", {
+        displayName: userData.displayName,
+        email: userData.email,
+        photoURL: userData.photoURL,
+      });
+      removeLocalStorageItem("sessionExpired");
       showToastMessage(
         "Login Successful",
         `Welcome ${userData.displayName}!`,
         "success"
       );
       setSessionExpired(false);
+      startSessionTimeout(handleSessionExpiration); // Start session timeout after login
     },
-    [showToastMessage]
+    [showToastMessage, handleSessionExpiration]
   );
 
   // Handle sign-in errors
@@ -215,35 +203,12 @@ export const AuthProvider = ({ children }) => {
         showToastMessage(
           "Sign-in Failed",
           "Failed to sign in. Please try again later or contact our support team",
-          "danger",
+          "danger"
         );
       }
     },
     [showToastMessage]
   );
-
-  // Add beforeunload event listener for automatic logout on browser close
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      sessionStorage.setItem("isReloading", "true");
-    };
-
-    const handleUnload = () => {
-      if (sessionStorage.getItem("isReloading") === "true") {
-        sessionStorage.removeItem("isReloading");
-      } else {
-        logout();
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("unload", handleUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      window.removeEventListener("unload", handleUnload);
-    };
-  }, [logout]);
 
   // Style for session expiration overlay
   const overlayStyle = {
@@ -253,7 +218,7 @@ export const AuthProvider = ({ children }) => {
     right: 0,
     bottom: 0,
     backgroundColor: "rgba(128, 128, 128, 0.5)",
-    zIndex: 4, // Ensure it's lower than the toast's z-index
+    zIndex: 4,
     display: sessionExpired ? "block" : "none",
   };
 

@@ -1,11 +1,12 @@
 import { Navigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import Loader from '../utils/Loader';
 
 const ProtectedRoute = ({ children }) => {
   const { isLoggedIn, user, initialized } = useAuth();
 
   if (!initialized) {
-    return null; 
+    return <Loader />; 
   }
 
   if (!isLoggedIn || !user) {

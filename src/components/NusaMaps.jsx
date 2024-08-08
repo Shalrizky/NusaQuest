@@ -51,12 +51,6 @@ const TEXT_POSITIONS = [
   { x: 50, y: 10 },
 ];
 
-/**
- * NusaMaps component to display game maps component at home.
- *
- * @param {Object} props - Component props.
- * @param {boolean} props.setShowModal - control the visibility of the Modal choice game.
- */
 function NusaMaps({ setShowModal }) {
   const { isLoggedIn } = useAuth();
   const imageRefs = useRef([]);
@@ -168,7 +162,11 @@ function NusaMaps({ setShowModal }) {
       targetImage.filters([Konva.Filters.Brighten]);
       targetImage.brightness(-0.2);
       targetImage.getLayer().batchDraw();
-
+  
+      // Set cursor to pointer
+      const container = targetImage.getStage().container();
+      container.style.cursor = 'pointer';
+  
       gsap.to(targetImage, {
         scaleX: 1.1,
         scaleY: 1.1,
@@ -177,7 +175,7 @@ function NusaMaps({ setShowModal }) {
       });
     }
   }, 100);
-
+  
   const handleMouseLeave = throttle(() => {
     const hoveredImage = imageRefs.current[hoveredIndex];
     if (hoveredImage) {
@@ -187,22 +185,26 @@ function NusaMaps({ setShowModal }) {
         duration: 0.5,
         ease: "power1.inOut",
       });
+  
+      const container = hoveredImage.getStage().container();
+      container.style.cursor = 'default';
     }
-
+  
     imageRefs.current.forEach((imageRef) => {
       if (imageRef) {
         imageRef.filters([]);
         imageRef.cache();
       }
     });
-
+  
     const layer = imageRefs.current[0]?.getLayer();
     if (layer) {
       layer.batchDraw();
     }
-
+  
     setHoveredIndex(null);
   }, 100);
+  
 
   const renderImages = () =>
     images.map((image, index) => (

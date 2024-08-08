@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import useAuth from "../hooks/useAuth";
 import NusaQuestLogo from "../assets/common/nusaQuest-logo.png";
@@ -7,19 +6,9 @@ import GoogleLogo from "../assets/common/google-logo.png";
 import "../style/routes/Login.css";
 
 function Login() {
-  const navigate = useNavigate();
   const { signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  // Check if user is already logged in, if so, redirect to home page
-  useEffect(() => {
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-    if (isLoggedIn) {
-      navigate("/");
-    }
-  }, [navigate]);
-
-  // Handle Google sign-in
   const handleSignIn = async () => {
     setLoading(true);
     try {

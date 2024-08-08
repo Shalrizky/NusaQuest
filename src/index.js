@@ -1,18 +1,35 @@
-import React, { Suspense, lazy } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 import { AuthProvider } from './context/AuthContext';
-import Loader from './util/Loader';
+import Loader from './utils/Loader';
 
-const Login = lazy(() => import('./routes/Login'));
-const Home = lazy(() => import('./routes/Home'));
-const Profile = lazy(() => import('./routes/Profile'));
-const LobbyUtangga = lazy(() => import('./routes/LobbyUtangga'));
-const LobbyNuca = lazy(() => import('./routes/LobbyNuca'));
-const Information = lazy(() => import('./routes/InformationDestination'));
-const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'));
+import Login from './routes/Login';
+import Home from './routes/Home';
+import Profile from './routes/Profile';
+import LobbyUtangga from './routes/LobbyUtangga';
+import LobbyNuca from './routes/LobbyNuca';
+import Information from './routes/InformationDestination';
+import ProtectedRoute from './components/ProtectedRoute';
+
+const withLoader = (Component) => {
+  return (props) => {
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+      const timer = setTimeout(() => setIsLoading(false), 1000); 
+      return () => clearTimeout(timer);
+    }, []);
+
+    if (isLoading) {
+      return <Loader />;
+    }
+
+    return <Component {...props} />;
+  };
+};
 
 const App = () => {
   const AuthLayout = () => (
@@ -26,41 +43,38 @@ const App = () => {
       path: '/',
       element: <AuthLayout />,
       children: [
-        { path: '/', element: <Home /> },
-        { path: '/login', element: <Login /> },
+        { path: '/', element: withLoader(Home)() },
+        { path: '/login', element: withLoader(Login)() },
         {
           path: '/profile',
           element: (
             <ProtectedRoute>
-              <Profile />
+              {withLoader(Profile)()}
             </ProtectedRoute>
           )
         },
-        { path: '/information', element: <Information /> },
+        { path: '/information', element: withLoader(Information)() },
         {
           path: '/lobbyUtangga', element: (
             <ProtectedRoute>
-              <LobbyUtangga />
+              {withLoader(LobbyUtangga)()}
             </ProtectedRoute>
           )
         },
         {
           path: '/lobbyNuca', element: (
             <ProtectedRoute>
-              <LobbyNuca />
+              {withLoader(LobbyNuca)()}
             </ProtectedRoute>
           )
         },
-
       ]
     }
   ]);
 
   return (
     <React.StrictMode>
-      <Suspense fallback={<Loader />}>
-        <RouterProvider router={router} />
-      </Suspense>
+      <RouterProvider router={router} />
     </React.StrictMode>
   );
 };

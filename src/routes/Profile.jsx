@@ -10,10 +10,6 @@ function Profile() {
   const { logout, user } = useAuth();
   const [userPhoto, handlePhotoError] = useUserPhoto(user);
 
-  if (!user) {
-    return null;
-  }
-
   const handleLogOut = () => {
     logout();
   };

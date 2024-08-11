@@ -5,21 +5,24 @@ import {
   googleProvider,
   signInWithPopup,
   signOut,
-  database,
-  ref,
-  set,
 } from "../firebaseConfig";
-import CustomToast from "../components/CustomToast";
+import {
+  saveNewUserData,
+  checkIfUserExists,
+  getUserDataFromDatabase,
+  updateUserData,
+} from "../utils/authUtils";
 import {
   getLocalStorageItem,
   setLocalStorageItem,
   removeLocalStorageItem,
-} from "../utils/localStorageUtil"; // Adjust the path to your utility file
+} from "../utils/localStorageUtil";
 import {
   startSessionTimeout,
   resetSessionTimeout,
   clearSessionTimeout,
-} from "../utils/sessionUtil"; // Adjust the path to your utility file
+} from "../utils/sessionUtil";
+import CustomToast from "../components/CustomToast";
 
 // Context
 const AuthContext = createContext();
@@ -36,7 +39,6 @@ export const AuthProvider = ({ children }) => {
   const [sessionExpired, setSessionExpired] = useState(false);
   const navigate = useNavigate();
 
-  // Utility function to show toast message
   const showToastMessage = useCallback((title, message, bgColor) => {
     setToastTitle(title);
     setToastMessage(message);
@@ -45,41 +47,27 @@ export const AuthProvider = ({ children }) => {
     setShowToast(true);
   }, []);
 
-  // Handle session expiration
   const handleSessionExpiration = useCallback(() => {
-    setToastTitle("Session Expired");
-    setToastMessage(
-      "Your session is about to expire. Would you like to extend it?"
-    );
-    setToastBgColor("warning");
-    setToastActionType("warning");
-    setShowToast(true);
+    showToastMessage("Session Expired", "Your session is about to expire. Would you like to extend it?", "warning");
     setSessionExpired(true);
     setLocalStorageItem("sessionExpired", "true");
-  }, []);
+  }, [showToastMessage]);
 
-  // Logout user and clear session
   const logout = useCallback(() => {
     setIsLoggedIn(false);
     setUser(null);
     signOut(auth);
     navigate("/login");
 
-    // Hapus hanya item terkait sesi pengguna
     removeLocalStorageItem("isLoggedIn");
     removeLocalStorageItem("user");
     removeLocalStorageItem("sessionExpired");
 
-    showToastMessage(
-      "Logout Successful",
-      "You have been logged out.",
-      "success"
-    );
+    showToastMessage("Logout Successful", "You have been logged out.", "success");
     setSessionExpired(false);
     clearSessionTimeout();
   }, [navigate, showToastMessage]);
 
-  // Extend session by resetting the timeout
   const extendSession = useCallback(() => {
     setShowToast(false);
     setSessionExpired(false);
@@ -87,12 +75,10 @@ export const AuthProvider = ({ children }) => {
     resetSessionTimeout(handleSessionExpiration);
   }, [handleSessionExpiration]);
 
-  // Handle session cancel action
   const handleCancelSession = useCallback(() => {
     logout();
   }, [logout]);
 
-  // Check session state on mount
   useEffect(() => {
     const loggedIn = getLocalStorageItem("isLoggedIn") === "true";
     const storedUser = getLocalStorageItem("user");
@@ -103,12 +89,11 @@ export const AuthProvider = ({ children }) => {
     } else if (loggedIn && storedUser) {
       setUser(storedUser);
       setIsLoggedIn(true);
-      startSessionTimeout(handleSessionExpiration); 
+      startSessionTimeout(handleSessionExpiration);
     }
     setInitialized(true);
   }, [logout, handleSessionExpiration]);
 
-  // Set up activity listeners to reset session timeout
   useEffect(() => {
     if (isLoggedIn) {
       const handleUserActivity = () => {
@@ -133,11 +118,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, [isLoggedIn, sessionExpired, handleSessionExpiration]);
 
-  // Sign in with Google and handle success or failure
-  const signInWithGoogle = async () => {
+  const handleSignIn = async () => {
     setShowToast(false);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider); // Ensure auth is passed
       const userData = result.user;
 
       const userDetails = {
@@ -147,7 +131,17 @@ export const AuthProvider = ({ children }) => {
         uid: userData.uid,
       };
 
-      await saveUserDataToDatabase(userDetails);
+      const userExists = await checkIfUserExists(userDetails.uid);
+
+      if (!userExists) {
+        await saveNewUserData(userDetails);
+      } else {
+        const existingUserData = await getUserDataFromDatabase(userDetails.uid);
+        if (existingUserData) {
+          Object.assign(userDetails, existingUserData);
+        }
+      }
+
       updateUserLoginStatus(userDetails);
       navigate("/");
     } catch (error) {
@@ -155,49 +149,25 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Save user data to the database
-  const saveUserDataToDatabase = async (userData) => {
-    const usersRef = ref(database, "users/" + userData.uid);
-    await set(usersRef, userData);
-  };
-
-  // Update user login status
   const updateUserLoginStatus = useCallback(
     (userData) => {
       setIsLoggedIn(true);
-      setUser({
-        displayName: userData.displayName,
-        email: userData.email,
-        photoURL: userData.photoURL,
-      });
+      setUser(userData);
       setLocalStorageItem("isLoggedIn", "true");
-      setLocalStorageItem("user", {
-        displayName: userData.displayName,
-        email: userData.email,
-        photoURL: userData.photoURL,
-      });
+      setLocalStorageItem("user", userData);
       removeLocalStorageItem("sessionExpired");
-      showToastMessage(
-        "Login Successful",
-        `Welcome ${userData.displayName}!`,
-        "success"
-      );
+      showToastMessage("Login Successful", `Welcome ${userData.displayName}!`, "success");
       setSessionExpired(false);
-      startSessionTimeout(handleSessionExpiration); // Start session timeout after login
+      startSessionTimeout(handleSessionExpiration);
     },
     [showToastMessage, handleSessionExpiration]
   );
 
-  // Handle sign-in errors
   const handleSignInError = useCallback(
     (error) => {
       if (error.code === "auth/popup-closed-by-user") {
         console.log("User cancelled the sign-in process");
-        showToastMessage(
-          "Sign-in Cancelled",
-          "Sign-in cancelled. Please try again.",
-          "danger"
-        );
+        showToastMessage("Sign-in Cancelled", "Sign-in cancelled. Please try again.", "danger");
       } else {
         console.error("Error signing in:", error);
         showToastMessage(
@@ -210,7 +180,6 @@ export const AuthProvider = ({ children }) => {
     [showToastMessage]
   );
 
-  // Style for session expiration overlay
   const overlayStyle = {
     position: "fixed",
     top: 0,
@@ -228,9 +197,11 @@ export const AuthProvider = ({ children }) => {
         isLoggedIn,
         user,
         initialized,
-        signInWithGoogle,
+        signInWithGoogle: handleSignIn,
         logout,
         extendSession,
+        updateUserData,
+        updateUserLoginStatus,
       }}
     >
       <div style={overlayStyle}></div>

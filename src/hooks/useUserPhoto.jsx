@@ -5,21 +5,16 @@ const useUserPhoto = (user, defaultPhoto) => {
   const [photoLoadError, setPhotoLoadError] = useState(false);
 
   useEffect(() => {
-    if (user && user.photoURL && !photoLoadError) {
-      if (user.photoURL !== userPhoto) {
-        setUserPhoto(user.photoURL);
-      }
-    } else {
-      if (userPhoto !== defaultPhoto) {
-        setUserPhoto(defaultPhoto);
-      }
+    if (photoLoadError || !user?.photoURL) {
+      setUserPhoto(defaultPhoto);
+    } else if (user.photoURL !== userPhoto) {
+      setUserPhoto(user.photoURL);
     }
   }, [user, photoLoadError, defaultPhoto, userPhoto]);
 
   const handlePhotoError = () => {
     if (!photoLoadError) {
       setPhotoLoadError(true);
-      setUserPhoto(defaultPhoto);
       console.error("Failed to load user photo, using default.");
     }
   };

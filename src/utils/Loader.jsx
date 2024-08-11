@@ -1,5 +1,5 @@
 import React from "react";
-import '../style/util/Loader.css'
+import '../style/utils/Loader.css'
 
 const Loader = () => (
   <div className="loader-container">

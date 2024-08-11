@@ -37,7 +37,7 @@ function LogoIcons({ layout }) {
       xs={layout === "home" ? 6 : 4}
       className="d-flex justify-content-start align-items-center"
     >
-      <Image src={UpjLogo} alt="UPJ Logo" className="me-4" />
+      <Image src={UpjLogo} alt="UPJ Logo" className="me-3" />
       <Image src={SifLogo} alt="SIF Logo" />
     </Col>
   );
@@ -81,6 +81,7 @@ function ProfileIcons({
           src={userPhoto}
           alt="Profile icon"
           width={45}
+          height={45}
           className="rounded-circle"
           onClick={handleProfileClick}
           onError={handlePhotoError}

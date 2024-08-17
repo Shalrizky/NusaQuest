@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, Spinner } from "react-bootstrap";
 import useAuth from "../hooks/useAuth";
 import NusaQuestLogo from "../assets/common/nusaQuest-logo.png";
 import GoogleLogo from "../assets/common/google-logo.png";
@@ -37,7 +37,10 @@ function Login() {
                 disabled={loading}
               >
                 {loading ? (
-                  "Signing In..."
+                   <>
+                   <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                   {" "}Signing In...
+                 </>
                 ) : (
                   <>
                     <img src={GoogleLogo} alt="Google Logo" width={25} /> Sign

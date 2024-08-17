@@ -11,7 +11,7 @@ import {
   checkIfUserExists,
   getUserDataFromDatabase,
   updateUserData,
-} from "../utils/authUtils";
+} from "../services/userDataService";
 import {
   getLocalStorageItem,
   setLocalStorageItem,

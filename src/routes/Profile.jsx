@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -8,14 +8,20 @@ import {
   Image,
   Modal,
   Form,
+  Spinner,
 } from "react-bootstrap";
-import { LogOut, UserPen } from "lucide-react";
-import { setLocalStorageItem } from "../utils/localStorageUtil";
+import {
+  updateUserData,
+  uploadPhoto,
+  deletePreviousPhoto,
+} from "../services/userDataService";
 import useAuth from "../hooks/useAuth";
 import useUserPhoto from "../hooks/useUserPhoto";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CustomToast from "../components/CustomToast";
+import { setLocalStorageItem } from "../utils/localStorageUtil";
+import { LogOut, UserPen, SaveAll } from "lucide-react";
 import {
   validateUsername,
   hasChanges,
@@ -23,41 +29,42 @@ import {
 } from "../utils/formValidationUtil";
 import "../style/routes/Profile.css";
 
-// Import Firebase modules
-import { database, storage } from "../firebaseConfig";
-import { ref as databaseRef, set } from "firebase/database";
-import {
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject,
-} from "firebase/storage";
-
 function Profile() {
-  const { user, logout, updateUserData } = useAuth();
+  const { user, logout } = useAuth();
   const [userData, setUserData] = useState(user);
   const [userPhoto, handlePhotoError] = useUserPhoto(userData);
   const [show, setShow] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
-  const [previewPhoto, setPreviewPhoto] = useState(userData.photoURL);
+  const [loading, setLoading] = useState(false);
 
-  // Form states for username and photo
   const [newUsername, setNewUsername] = useState(user?.displayName || "");
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [previewPhoto, setPreviewPhoto] = useState(userData.photoURL);
   const [usernameError, setUsernameError] = useState(null);
   const [photoError, setPhotoError] = useState(null);
+  const [hasChangesState, setHasChangesState] = useState(false);
+
+  useEffect(() => {
+    setHasChangesState(
+      hasChanges(userData.displayName, newUsername) || selectedPhoto !== null
+    );
+  }, [newUsername, selectedPhoto, userData.displayName]);
 
   const handleClose = () => {
     setShow(false);
     setSelectedPhoto(null);
     setPreviewPhoto(userData.photoURL);
     setUsernameError(null);
+    setNewUsername(userData.displayName);
     setPhotoError(null);
   };
 
-  const handleShowModalEdit = () => setShow(true);
+  const handleShowModalEdit = () => {
+    setPreviewPhoto(userData.photoURL);
+    setShow(true);
+  };
 
   const toggleShowToast = (message, variant = "success") => {
     setToastMessage(message);
@@ -75,107 +82,86 @@ function Profile() {
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
-    const validationError = validatePhoto(file, userData.photoURL);
-
-    if (validationError) {
-      setPhotoError(validationError);
+  
+    if (!file) {
+      setSelectedPhoto(null);
+      setPreviewPhoto(userData.photoURL);
       return;
     }
-
-    setPhotoError(null); // Clear any previous errors
-    setSelectedPhoto(file);
-
+  
+    // Preview the photo first
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewPhoto(reader.result);
+  
+      const validationError = validatePhoto(file);
+  
+      if (validationError) {
+        setPhotoError(validationError);
+        setSelectedPhoto(null); 
+      } else {
+        setPhotoError(null);
+        setSelectedPhoto(file);
+      }
     };
     reader.readAsDataURL(file);
   };
-
-  const uploadPhoto = async (file, userId) => {
-    try {
-      const fileRef = storageRef(
-        storage,
-        `profilePhotos/${userId}/${file.name}`
-      );
-      const snapshot = await uploadBytes(fileRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      return downloadURL;
-    } catch (error) {
-      console.error("Error uploading file: ", error);
-      throw error;
-    }
-  };
-
-  const deletePreviousPhoto = async (photoURL) => {
-    try {
-      const photoRef = storageRef(storage, photoURL);
-      await deleteObject(photoRef);
-    } catch (error) {
-      console.error("Error deleting previous photo: ", error);
-    }
-  };
-
-  const updateUserPhotoURL = async (userId, downloadURL) => {
-    try {
-      const dbRef = databaseRef(database, `users/${userId}`);
-      await set(dbRef, { photoURL: downloadURL });
-    } catch (error) {
-      console.error("Error updating user data: ", error);
-      throw error;
-    }
-  };
-
+  
   const handleSaveChanges = async (event) => {
     event.preventDefault();
+
+    setLoading(true);
 
     const usernameValidation = validateUsername(newUsername);
     if (usernameValidation) {
       setUsernameError(usernameValidation);
+      setLoading(false);
       return;
     }
 
     if (photoError) {
-      return; // Prevent save if there's an error with the photo
-    }
-
-    let updatedUserData = {
-      ...userData,
-      displayName: newUsername,
-    };
-
-    if (!hasChanges(userData.displayName, newUsername) && !selectedPhoto) {
-      setUsernameError("Tidak ada perubahan yang dilakukan.");
+      setLoading(false);
       return;
     }
 
     try {
+      const updatedUserData = {
+        ...userData,
+        displayName: newUsername,
+      };
+
       if (selectedPhoto) {
-        // If there's a previous photo, delete it
-        if (userData.photoURL) {
-          await deletePreviousPhoto(userData.photoURL);
+        if (userData.photoPath) {
+          await deletePreviousPhoto(userData.photoPath);
         }
-        const downloadURL = await uploadPhoto(selectedPhoto, userData.uid);
+
+        const { downloadURL, filePath } = await uploadPhoto(
+          selectedPhoto,
+          userData.uid
+        );
         updatedUserData.photoURL = downloadURL;
-        await updateUserPhotoURL(userData.uid, downloadURL);
+        updatedUserData.photoPath = filePath;
       }
 
+      // Perbarui data pengguna di database
       await updateUserData(updatedUserData);
       setLocalStorageItem("user", updatedUserData);
       setUserData(updatedUserData);
 
-      toggleShowToast("Data profil berhasil diperbarui!", "success");
+      toggleShowToast("Profile updated successfully!", "success");
 
-      // Reload the page after any changes
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 500);
     } catch (error) {
-      console.error("Error updating profile:", error);
-      toggleShowToast("Gagal memperbarui profil. Coba lagi nanti.", "danger");
+      toggleShowToast(
+        "Failed to update profile. Please try again later.",
+        "danger"
+      );
+    } finally {
+      setLoading(false);
+      handleClose();
     }
-
-    handleClose();
   };
 
   return (
@@ -188,7 +174,7 @@ function Profile() {
               <div className="profile-info py-3">
                 <Image
                   id="img-profile"
-                  src={userData?.photoURL || userPhoto}
+                  src={userPhoto}
                   className="mx-auto"
                   onError={handlePhotoError}
                   alt="Profile"
@@ -225,12 +211,27 @@ function Profile() {
         </Col>
       </Row>
 
-      <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Profile</Modal.Title>
+      {/* Modal Section */}
+      <Modal
+        id="modal-edit-profile"
+        show={show}
+        onHide={handleClose}
+        size="md"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+        backdrop="true"
+      >
+        <Modal.Header>
+          <Modal.Title className="fw-bold text-center w-100">
+            Edit Profile
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form onSubmit={handleSaveChanges} noValidate>
+          <Form
+            onSubmit={handleSaveChanges}
+            noValidate
+            className="d-grid gap-2"
+          >
             <Form.Group controlId="formUsername" className="mb-3">
               <Form.Label>Username</Form.Label>
               <Form.Control
@@ -245,32 +246,54 @@ function Profile() {
               </Form.Control.Feedback>
             </Form.Group>
 
-            <Form.Group controlId="formProfilePhoto" className="mb-3">
+            <Form.Group controlId="formProfilePhoto" className="mb-4">
               <Form.Label>Profile Photo</Form.Label>
-              <div className="mb-3">
+              <div className="d-flex align-items-center">
                 <Image
                   src={previewPhoto}
                   alt="Preview"
                   width={100}
-                  className="img-thumbnail"
+                  className="me-3"
+                  style={{
+                    borderRadius: "100%",
+                    width: "100px",
+                    height: "100px",
+                  }}
+                />
+                <Form.Control
+                  type="file"
+                  accept="image/png, image/jpg, image/jpeg"
+                  onChange={handlePhotoChange}
+                  isInvalid={!!photoError}
                 />
               </div>
-              <Form.Control
-                type="file"
-                accept="image/png, image/jpg, image/jpeg"
-                onChange={handlePhotoChange}
-                isInvalid={!!photoError}
-              />
-              <Form.Control.Feedback type="invalid">
+              <Form.Control.Feedback type="invalid" className="d-block mt-2">
                 {photoError}
               </Form.Control.Feedback>
             </Form.Group>
+
             <Modal.Footer>
-              <Button variant="secondary" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button variant="primary" type="submit">
-                Save Changes
+              <Button
+                type="submit"
+                className="btn-edit-profile text-center d-flex align-items-center justify-content-center gap-2"
+                disabled={!hasChangesState || loading}
+              >
+                {loading ? (
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                    />{" "}
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <SaveAll /> Save Changes
+                  </>
+                )}
               </Button>
             </Modal.Footer>
           </Form>

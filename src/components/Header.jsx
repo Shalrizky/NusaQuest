@@ -1,11 +1,10 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Row, Col, Image } from "react-bootstrap";
 import useAuth from "../hooks/useAuth";
 import useUserPhoto from "../hooks/useUserPhoto";
-import { Row, Col, Image } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
 import SifLogo from "../assets/common/sif-logo.svg";
 import UpjLogo from "../assets/common/upj-logo.svg";
-import iconProfile from "../assets/common/icon-profile.svg";
 import transleteIcon from "../assets/common/translete-flag.svg";
 import BackIcon from "../assets/common/back-icon.png";
 import "../style/components/Header.css";
@@ -58,7 +57,6 @@ function TextHeader({ layout, showTextHeader }) {
 
 function ProfileIcons({
   layout,
-  isLoggedIn,
   userPhoto,
   handleProfileClick,
   handlePhotoError,
@@ -76,26 +74,16 @@ function ProfileIcons({
         width={45}
         className="me-3"
       />
-      {isLoggedIn ? (
-        <Image
-          src={userPhoto}
-          alt="Profile icon"
-          width={45}
-          height={45}
-          className="rounded-circle"
-          onClick={handleProfileClick}
-          onError={handlePhotoError}
-          style={{ cursor: "pointer" }}
-        />
-      ) : (
-        <Image
-          src={iconProfile}
-          id="default-profile-icon"
-          onClick={handleProfileClick}
-          style={{ cursor: "pointer" }}
-          width={45}
-        />
-      )}
+      <Image
+        src={userPhoto}
+        alt="Profile icon"
+        width={45}
+        height={45}
+        className="rounded-circle"
+        onClick={handleProfileClick}
+        onError={handlePhotoError}
+        style={{ cursor: "pointer" }}
+      />
     </Col>
   );
 }

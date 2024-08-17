@@ -89,3 +89,40 @@
    background-color: #fe4545;
    border: none;
 }
+
+/* Modal Section */
+#modal-edit-profile .modal-content {
+   color: #00000087;
+   font-weight: bold;
+   background-color: #dad8c1;
+   border: 3px solid #898879;
+   border-radius: 20px;
+   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.957),
+      0 0 20px rgba(70, 70, 70, 0.616);
+}
+
+
+#modal-edit-profile .modal-footer {
+   display: flex;
+   justify-content: center;
+   padding: 1rem 0;
+}
+
+#modal-edit-profile .modal-footer .btn-edit-profile {
+   width: 100%;
+}
+
+#modal-edit-profile .modal-footer .btn-edit-profile {
+   background-color: #a9a9a9;
+   border: 2px solid #000f2a;
+   border-radius: 20px;
+   color: #ffffff;
+   font-weight: bold;
+   font-size: 1.1rem;
+}
+
+#modal-edit-profile .modal-footer .btn-edit-profile:hover {
+   background-color: #f3f3f300;
+   border: 2px solid #000f2a;
+   color: #00000087;
+}

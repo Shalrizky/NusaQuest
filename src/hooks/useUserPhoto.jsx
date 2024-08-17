@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
+import defaultProfileIcon from '../assets/common/icon-profile.svg'; 
 
-const useUserPhoto = (user, defaultPhoto) => {
-  const [userPhoto, setUserPhoto] = useState(user?.photoURL || defaultPhoto);
+const useUserPhoto = (user) => {
+  const [userPhoto, setUserPhoto] = useState(user?.photoURL || defaultProfileIcon);
   const [photoLoadError, setPhotoLoadError] = useState(false);
 
   useEffect(() => {
     if (photoLoadError || !user?.photoURL) {
-      setUserPhoto(defaultPhoto);
+      setUserPhoto(defaultProfileIcon);
     } else if (user.photoURL !== userPhoto) {
       setUserPhoto(user.photoURL);
     }
-  }, [user, photoLoadError, defaultPhoto, userPhoto]);
+  }, [user, photoLoadError, userPhoto]);
 
   const handlePhotoError = () => {
     if (!photoLoadError) {

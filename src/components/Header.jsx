@@ -12,7 +12,7 @@ import "../style/components/Header.css";
 function BackButton({ onClick, layout }) {
   return (
     <Col
-      md={layout === "information" ? 4 : 1}
+      md={layout === "home" ? 1 : 4}
       sm={1}
       xs={1}
       className="d-flex justify-content-start align-items-center ps-4"
@@ -45,9 +45,9 @@ function LogoIcons({ layout }) {
 function TextHeader({ layout, showTextHeader }) {
   return (
     <Col
-      md={layout === "home" ? 4 : layout === "information" ? 4 : 3}
-      sm={layout === "home" ? 4 : 3}
-      xs={layout === "home" ? 4 : 3}
+      md={4}
+      sm={4}
+      xs={4}
       className="d-flex justify-content-center align-items-center"
     >
       <h2 className="fw-bold text-white">{showTextHeader}</h2>

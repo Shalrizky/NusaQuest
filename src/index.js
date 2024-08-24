@@ -12,6 +12,7 @@ import Profile from './routes/Profile';
 import LobbyUtangga from './routes/LobbyUtangga';
 import LobbyNuca from './routes/LobbyNuca';
 import Information from './routes/InformationDestination';
+import DestinationDetail from './routes/DestinationDetail';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const withLoader = (Component) => {
@@ -54,6 +55,7 @@ const App = () => {
           )
         },
         { path: '/information', element: withLoader(Information)() },
+        { path: '/destination/:id', element: withLoader(DestinationDetail)() },
         {
           path: '/lobbyUtangga', element: (
             <ProtectedRoute>

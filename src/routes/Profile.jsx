@@ -166,7 +166,7 @@ function Profile() {
 
   return (
     <Container fluid id="profile-container">
-      <Header layout="profile" showTextHeader="PROFILE" showBackIcon={true} />
+      <Header  showTextHeader="PROFILE" showBackIcon={true} showLogoIcon={false} />
       <Row className="d-flex justify-content-center py-2 ">
         <Col md={3} className="d-flex align-items-center ">
           <Card id="profile-card">

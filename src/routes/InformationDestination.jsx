@@ -1,153 +1,135 @@
 import { useEffect, useState } from "react";
-import { Container, Row, Col, Tabs, Tab } from "react-bootstrap";
-import { database, ref, onValue } from "../firebaseConfig";
+import { Container, Row, Col, Tabs, Tab, Spinner } from "react-bootstrap";
 import "../style/routes/InformationDestination.css";
 import Header from "../components/Header";
-import ScrollableSection from "../components/ScrollableSection";
+import CardInformation from "../components/CardInformation";
+import {
+  fetchDestinations,
+  fetchTopics,
+} from "../services/destinationDataServices";
 
 const InformationDestination = () => {
   const [destinations, setDestinations] = useState([]);
+  const [topics, setTopics] = useState({});
+  const [loadingTabs, setLoadingTabs] = useState({});
+  const [activeTab, setActiveTab] = useState(
+    localStorage.getItem('activeTab') || "daerah_jawa_barat"
+  );
 
   useEffect(() => {
-    const destinationsRef = ref(database, "destination");
+    // Hapus localStorage saat halaman di-refresh atau ditutup
+    window.onbeforeunload = () => {
+      localStorage.removeItem('activeTab');
+    };
 
-    onValue(destinationsRef, (snapshot) => {
-      const data = snapshot.val();
-      const destinations = data ? Object.values(data) : [];
+    fetchTopics((fetchedTopics) => {
+      setTopics(fetchedTopics);
 
-      setDestinations(destinations);
+      const initialLoadingTabs = Object.keys(fetchedTopics).reduce(
+        (acc, key) => {
+          acc[key] = true;
+          return acc;
+        },
+        {}
+      );
+
+      setLoadingTabs(initialLoadingTabs);
+
+      fetchDestinations((fetchedDestinations) => {
+        setDestinations(fetchedDestinations);
+        const updatedLoadingTabs = { ...initialLoadingTabs };
+        Object.keys(fetchedTopics).forEach((topicKey) => {
+          updatedLoadingTabs[topicKey] = false;
+        });
+
+        setLoadingTabs(updatedLoadingTabs);
+      });
     });
   }, []);
 
-  const groupByTopic = (destinations) => {
-    return destinations.reduce((grouped, destination) => {
-      const { topic } = destination;
+  // Fungsi untuk mengelompokkan destinasi berdasarkan topik dan tipe
+  const groupByTopicAndType = (destinations) => {
+    const grouped = {};
+
+    Object.entries(destinations).forEach(([key, destination]) => {
+      const { topic, type } = destination;
+
       if (!grouped[topic]) {
-        grouped[topic] = [];
+        grouped[topic] = {};
       }
-      grouped[topic].push(destination);
-      return grouped;
-    }, {});
+
+      if (!grouped[topic][type]) {
+        grouped[topic][type] = [];
+      }
+
+      grouped[topic][type].push({ ...destination, id: key });
+    });
+
+    return grouped;
   };
 
-  const groupedDestinations = groupByTopic(destinations);
+  const groupedDestinations = groupByTopicAndType(destinations);
 
-  const shortenDescription = (desc, maxLength = 15) => {
-    if (!desc) return "";
-    return desc.split(" ").slice(0, maxLength).join(" ") + "...";
-  };
-
-  const filterDestinations = (destinations, category) => {
-    return destinations.filter(
-      (destination) => destination.kategori === category
-    );
+  const handleTabSelect = (tabKey) => {
+    setActiveTab(tabKey);
+    localStorage.setItem('activeTab', tabKey);
   };
 
   return (
     <Container fluid id="information-container">
-      <Row className="information-content">
-        <Col md={12}>
-          <Header
-            layout="information"
-            showTextHeader="INFORMATION"
-            showLogoIcon={false}
-            showBackIcon={true}
-          />
-        </Col>
-        <Col md={12}>
+      <Header
+        showTextHeader="INFORMATION"
+        showLogoIcon={false}
+        showBackIcon={true}
+      />
+      <Row className="information-content my-3">
+        <Col md={12} className="px-5">
           <Tabs
             justify
-            defaultActiveKey="pariwisata_darat"
+            activeKey={activeTab} 
+            onSelect={handleTabSelect}
             variant="pills"
             id="destination-tabs"
-            className="gap-4"
+            className="gap-4 pb-2"
           >
-            <Tab
-              eventKey="pariwisata_darat"
-              title="PARIWISATA DARAT"
-              tabClassName="custom-tab"
-            >
-              <h3>Most Popular</h3>
-              <ScrollableSection
-                topicId="pariwisata_darat"
-                category="popular"
-                destinations={filterDestinations(
-                  groupedDestinations["pariwisata_darat"] || [],
-                  "popular"
+            {Object.keys(topics).map((key) => (
+              <Tab
+                key={key}
+                eventKey={key}
+                title={topics[key].name}
+                tabClassName="custom-tab"
+              >
+                {loadingTabs[key] ? (
+                  <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ height: "200px" }}
+                  >
+                    <Spinner animation="border" variant="primary" />
+                  </div>
+                ) : Object.entries(groupedDestinations[key] || {}).length >
+                  0 ? (
+                  Object.keys(groupedDestinations[key]).map((typeKey) => (
+                    <div
+                      key={typeKey}
+                      className="d-grid align-items-center justify-content-start my-4 pb-3"
+                    >
+                      <h3>{typeKey}</h3>
+                      <CardInformation
+                        type={typeKey}
+                        destinations={groupedDestinations[key][typeKey] || []}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ height: "200px", color: "#fff", fontWeight: "bold" }}
+                  >
+                    <h4>Not Found 😪</h4>
+                  </div>
                 )}
-                shortenDescription={shortenDescription}
-              />
-              <h3>Most Recommended</h3>
-              <ScrollableSection
-                topicId="pariwisata_darat"
-                category="recomended"
-                destinations={filterDestinations(
-                  groupedDestinations["pariwisata_darat"] || [],
-                  "recomended"
-                )}
-                shortenDescription={shortenDescription}
-              />
-            </Tab>
-            <Tab
-              eventKey="permainan_daerah"
-              title="PERMAINAN DAERAH"
-              tabClassName="custom-tab"
-            >
-              <ScrollableSection
-                topicId="permainan_daerah"
-                category="recomended"
-                destinations={filterDestinations(
-                  groupedDestinations["permainan_daerah"] || [],
-                  "recomended"
-                )}
-                shortenDescription={shortenDescription}
-              />
-            </Tab>
-            <Tab
-              eventKey="daerah_jawa_barat"
-              title="DAERAH JAWA BARAT"
-              tabClassName="custom-tab"
-            >
-              <ScrollableSection
-                topicId="daerah_jawa_barat"
-                category="recomended"
-                destinations={filterDestinations(
-                  groupedDestinations["daerah_jawa_barat"] || [],
-                  "recomended"
-                )}
-                shortenDescription={shortenDescription}
-              />
-            </Tab>
-            <Tab
-              eventKey="kuliner_jawa_barat"
-              title="KULINER JAWA BARAT"
-              tabClassName="custom-tab"
-            >
-              <ScrollableSection
-                topicId="kuliner_jawa_barat"
-                category="recomended"
-                destinations={filterDestinations(
-                  groupedDestinations["kuliner_jawa_barat"] || [],
-                  "recomended"
-                )}
-                shortenDescription={shortenDescription}
-              />
-            </Tab>
-            <Tab
-              eventKey="pariwisata_bahari"
-              title="PARIWISATA BAHARI"
-              tabClassName="custom-tab"
-            >
-              <ScrollableSection
-                topicId="pariwisata_bahari"
-                category="recomended"
-                destinations={filterDestinations(
-                  groupedDestinations["pariwisata_bahari"] || [],
-                  "recomended"
-                )}
-                shortenDescription={shortenDescription}
-              />
-            </Tab>
+              </Tab>
+            ))}
           </Tabs>
         </Col>
       </Row>

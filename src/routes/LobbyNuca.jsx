@@ -2,12 +2,12 @@ import React from "react";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import NucaLobbyLogo from "../assets/common/nuca-lobby-logo.png";
 import "../style/routes/LobbyNuca.css";
-import Header from '../components/common/Header';
+import Header from '../components/Header';
 
 function LobbyNuca() {
   return (
     <Container fluid className="room-utangga-container">
-      <Header layout="profile" showLogos={false} showIcons={false} showBackIcon={true} />
+      <Header showLogoIcon={false} showIcons={false} showBackIcon={true} />
       <Row>
         <Col md={12} className="text-white ps-5 pt-2">
           <h1 className="fw-bold display-5 display-md-3 display-sm-2" id="heading-utangga">

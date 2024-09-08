@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import Header from "../components/common/Header";
-import NusaMaps from "../components/common/NusaMaps";
-import Footer from "../components/common/Footer";
-import ModalGame from "../components/common/ModalGame";
+import Header from "../components/Header";
+import NusaMaps from "../components/NusaMaps";
+import Footer from "../components/Footer";
+import ModalGame from "../components/ModalGame";
 import NusaQuestLogo from "../assets/common/nusaQuest-logo.png";
 import Batu from "../assets/common/batu.png";
 import "../style/routes/Home.css";

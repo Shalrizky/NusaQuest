@@ -2,14 +2,14 @@ import React from "react";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import roomUtanggaLogo from "../assets/common/utangga-lobby-logo.png";
 import "../style/routes/LobbyUtangga.css";
-import Header from "../components/common/Header";
+import Header from "../components/Header";
 
 function LobbyUtangga() {
   return (
     <Container fluid className="room-utangga-container">
       <Header
-        layout="profile"
-        showLogos={false}
+        layout="lobby"
+        showLogoIcon={false}
         showIcons={false}
         showBackIcon={true}
       />

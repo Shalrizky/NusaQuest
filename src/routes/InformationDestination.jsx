@@ -1,63 +1,146 @@
-import React, { useEffect, useState } from 'react';
-import { database, ref } from '../config/firebaseConfig';
-import { onValue } from 'firebase/database';
+import { useEffect, useState } from "react";
+import { Container, Row, Col, Tabs, Tab, Spinner } from "react-bootstrap";
+import "../style/routes/InformationDestination.css";
+import Header from "../components/Header";
+import CardInformation from "../components/CardInformation";
+import {
+  fetchDestinations,
+  fetchTopics,
+} from "../services/destinationDataServices";
+import {
+  getLocalStorageItem,
+  setLocalStorageItem,
+  removeLocalStorageItem,
+} from "../utils/localStorageUtil"; 
 
-const InformationDestination = () => {
+const InformationDestination = () => { 
   const [destinations, setDestinations] = useState([]);
   const [topics, setTopics] = useState({});
+  const [loadingTabs, setLoadingTabs] = useState({});
+  const [activeTab, setActiveTab] = useState(
+    getLocalStorageItem('lastActiveTab') || "daerah_jawa_barat" 
+  );
 
   useEffect(() => {
-    const destinationsRef = ref(database, 'destination');
-    const topicsRef = ref(database, 'topic');
+    // Simpan tab terakhir saat user beralih tab
+    window.onbeforeunload = () => {
+      removeLocalStorageItem('lastActiveTab'); 
+    };
 
-    // Fetch destinations data
-    onValue(destinationsRef, (snapshot) => {
-      const data = snapshot.val();
-      setDestinations(data ? Object.values(data) : []);
-    });
+    fetchTopics((fetchedTopics) => {
+      setTopics(fetchedTopics);
 
-    // Fetch topics data
-    onValue(topicsRef, (snapshot) => {
-      const data = snapshot.val();
-      setTopics(data || {});
+      const initialLoadingTabs = Object.keys(fetchedTopics).reduce(
+        (acc, key) => {
+          acc[key] = true;
+          return acc;
+        },
+        {}
+      );
+
+      setLoadingTabs(initialLoadingTabs);
+
+      fetchDestinations((fetchedDestinations) => {
+        setDestinations(fetchedDestinations);
+        const updatedLoadingTabs = { ...initialLoadingTabs };
+        Object.keys(fetchedTopics).forEach((topicKey) => {
+          updatedLoadingTabs[topicKey] = false;
+        });
+
+        setLoadingTabs(updatedLoadingTabs);
+      });
     });
   }, []);
 
-  // Helper function to group destinations by topic_id
-  const groupByTopic = (destinations) => {
-    return destinations.reduce((grouped, destination) => {
-      const { topic_id } = destination;
-      if (!grouped[topic_id]) {
-        grouped[topic_id] = [];
+
+  // Fungsi untuk mengelompokkan destinasi berdasarkan topik dan tipe
+  const groupByTopicAndType = (destinations) => {
+    const grouped = {};
+
+    Object.entries(destinations).forEach(([key, destination]) => {
+      const { topic, type } = destination;
+
+      if (!grouped[topic]) {
+        grouped[topic] = {};
       }
-      grouped[topic_id].push(destination);
-      return grouped;
-    }, {});
+
+      if (!grouped[topic][type]) {
+        grouped[topic][type] = [];
+      }
+
+      grouped[topic][type].push({ ...destination, id: key });
+    });
+
+    return grouped;
   };
 
-  const groupedDestinations = groupByTopic(destinations);
+  const groupedDestinations = groupByTopicAndType(destinations);
+
+  const handleTabSelect = (tabKey) => {
+    setActiveTab(tabKey);
+    setLocalStorageItem('lastActiveTab', tabKey);
+  };
 
   return (
-    <div>
-      <h1>Informasi Seputar Pariwisata</h1>
-      {Object.keys(groupedDestinations).map((topicId) => (
-        <div key={topicId}>
-          <h2>{topics[topicId]?.name || topicId}</h2>
-          {groupedDestinations[topicId].map((destination, index) => (
-            <div key={index}>
-              <h3>{destination.name}</h3>
-              <p>{destination.desc}</p>
-              {destination.img ? (
-                <img src={destination.img} alt={destination.name} />
-              ) : (
-                <p>Gambar tidak tersedia</p>
-              )}
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
+    <Container fluid id="information-container">
+      <Header
+        showTextHeader="INFORMATION"
+        showLogoIcon={false}
+        showBackIcon={true}
+      />
+      <Row className="information-content my-3">
+        <Col md={12} className="px-5">
+          <Tabs
+            justify
+            activeKey={activeTab}
+            onSelect={handleTabSelect}
+            variant="pills"
+            id="destination-tabs"
+            className="gap-4 pb-2"
+          >
+            {Object.keys(topics).map((key) => (
+              <Tab
+                key={key}
+                eventKey={key}
+                title={topics[key].name}
+                tabClassName="custom-tab"
+              >
+                {loadingTabs[key] ? (
+                  <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ height: "200px"}}
+                  >
+                    <Spinner animation="border" variant="light" />
+                  </div>
+                ) : Object.entries(groupedDestinations[key] || {}).length >
+                  0 ? (
+                  Object.keys(groupedDestinations[key]).map((typeKey) => (
+                    <div
+                      key={typeKey}
+                      className="d-grid align-items-center justify-content-start my-4 pb-3"
+                    >
+                      <h3>{typeKey}</h3>
+                      <CardInformation
+                        type={typeKey}
+                        destinations={groupedDestinations[key][typeKey] || []}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ height: "200px", color: "#fff", fontWeight: "bold" }}
+                  >
+                    <h4>Data Not Found 😪</h4>
+                  </div>
+                )}
+              </Tab>
+            ))}
+          </Tabs>
+        </Col>
+      </Row>
+    </Container>
   );
-}
+};
 
 export default InformationDestination;

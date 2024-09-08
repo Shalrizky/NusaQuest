@@ -1,42 +1,128 @@
 #profile-container {
-   background-image: url('../../assets/common/water-big-dark-bg.png');
+   background-image: url('../../assets/common/maps-bg.png');
    background-repeat: no-repeat;
    background-position: center;
    background-size: cover;
    min-height: 100vh;
 }
 
-#profile-card {
-   position: relative;
-   border: 2px solid #fff;
+#profile-card,
+#profile-card-Achievement {
+   border: 3px solid #4d4d4dba;
    border-radius: 30px;
    overflow: hidden;
-   background-image: url('../../assets/nusaMaps/maps-bg.png');
+   background-image: url('../../assets/common/water-bg.png');
    background-size: cover;
    background-position: center;
-}
-
-#profile-card::before {
-   content: '';
-   position: absolute;
-   top: 0;
-   right: 0;
-   bottom: 0;
-   left: 0;
-   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
-   background-image: inherit;
-   background-size: inherit;
-   background-position: inherit;
-   filter: blur(2px);
-   z-index: 1;
-}
-
-#profile-card-content {
-   position: relative;
-   z-index: 1;
+   flex-grow: 1;
+   padding: 10px;
+   min-height: 72vh;
+   height: auto;
 }
 
 #img-profile {
    border-radius: 100%;
-   width: 120px;
+   margin-bottom: 20px;
+}
+
+#profile-card-content {
+   border: 3px solid #4D4C4C;
+   border-radius: 20px;
+   display: flex;
+   flex-direction: column;
+   justify-content: space-between;
+   height: 100%;
+   overflow: hidden;
+}
+
+#profile-card-Achievement-content {
+   border: 3px solid #4D4C4C;
+   border-radius: 20px;
+   display: flex;
+   flex-direction: column;
+   justify-content: start;
+   padding: 25px 30px;
+   height: 100%;
+}
+
+.profile-info {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+}
+
+.profile-info h1 {
+   font-size: 1.4rem;
+   font-weight: bolder;
+}
+
+.profile-info p {
+   font-size: 1rem;
+   color: #b1b1b1;
+   text-indent: inherit;
+
+}
+
+#profile-container .btn-edit,
+#profile-container .btn-logout {
+   padding: 6px;
+   border-radius: 20px;
+   width: 100%;
+}
+
+#profile-container .btn-edit {
+   background-color: #0C48A8;
+   border: none;
+}
+
+#profile-container .btn-edit:hover {
+   background-color: #073276;
+   border: none;
+}
+
+#profile-container .btn-logout {
+   background-color: #f37070;
+   border: none;
+}
+
+#profile-container .btn-logout:hover {
+   background-color: #fe4545;
+   border: none;
+}
+
+/* Modal Section */
+#modal-edit-profile .modal-content {
+   color: #00000087;
+   font-weight: bold;
+   background-color: #dad8c1;
+   border: 3px solid #898879;
+   border-radius: 20px;
+   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.957),
+      0 0 20px rgba(70, 70, 70, 0.616);
+}
+
+
+#modal-edit-profile .modal-footer {
+   display: flex;
+   justify-content: center;
+   padding: 1rem 0;
+}
+
+#modal-edit-profile .modal-footer .btn-edit-profile {
+   width: 100%;
+}
+
+#modal-edit-profile .modal-footer .btn-edit-profile {
+   background-color: #a9a9a9;
+   border: 2px solid #000f2a;
+   border-radius: 20px;
+   color: #ffffff;
+   font-weight: bold;
+   font-size: 1.1rem;
+}
+
+#modal-edit-profile .modal-footer .btn-edit-profile:hover {
+   background-color: #f3f3f300;
+   border: 2px solid #000f2a;
+   color: #00000087;
 }

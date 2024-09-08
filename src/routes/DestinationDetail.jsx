@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Container, Row, Col, Card } from 'react-bootstrap';
-import { fetchDestinationById } from '../services/destinationDataServices'; 
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Container, Row, Col, Card } from "react-bootstrap";
+import { fetchDestinationById } from "../services/destinationDataServices"; 
+import Header from "../components/Header";
+import "../style/routes/DetailDestination.css";
 
 const DestinationDetail = () => {
   const { id } = useParams(); // Mengambil id dari URL
@@ -19,7 +21,11 @@ const DestinationDetail = () => {
   }
 
   return (
-    <Container>
+    <Container fluid id="detail-destination-container">
+      <Header 
+        showBackIcon={true}  // Tampilkan Back Button
+        showLogoIcon={false} // Sembunyikan logo kalau perlu
+      />
       <Row>
         <Col>
           <Card>

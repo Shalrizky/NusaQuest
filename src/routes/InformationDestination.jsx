@@ -7,19 +7,24 @@ import {
   fetchDestinations,
   fetchTopics,
 } from "../services/destinationDataServices";
+import {
+  getLocalStorageItem,
+  setLocalStorageItem,
+  removeLocalStorageItem,
+} from "../utils/localStorageUtil"; 
 
-const InformationDestination = () => {
+const InformationDestination = () => { 
   const [destinations, setDestinations] = useState([]);
   const [topics, setTopics] = useState({});
   const [loadingTabs, setLoadingTabs] = useState({});
   const [activeTab, setActiveTab] = useState(
-    localStorage.getItem('activeTab') || "daerah_jawa_barat"
+    getLocalStorageItem('lastActiveTab') || "daerah_jawa_barat" 
   );
 
   useEffect(() => {
-    // Hapus localStorage saat halaman di-refresh atau ditutup
+    // Simpan tab terakhir saat user beralih tab
     window.onbeforeunload = () => {
-      localStorage.removeItem('activeTab');
+      removeLocalStorageItem('lastActiveTab'); 
     };
 
     fetchTopics((fetchedTopics) => {
@@ -47,6 +52,7 @@ const InformationDestination = () => {
     });
   }, []);
 
+
   // Fungsi untuk mengelompokkan destinasi berdasarkan topik dan tipe
   const groupByTopicAndType = (destinations) => {
     const grouped = {};
@@ -72,7 +78,7 @@ const InformationDestination = () => {
 
   const handleTabSelect = (tabKey) => {
     setActiveTab(tabKey);
-    localStorage.setItem('activeTab', tabKey);
+    setLocalStorageItem('lastActiveTab', tabKey);
   };
 
   return (
@@ -86,7 +92,7 @@ const InformationDestination = () => {
         <Col md={12} className="px-5">
           <Tabs
             justify
-            activeKey={activeTab} 
+            activeKey={activeTab}
             onSelect={handleTabSelect}
             variant="pills"
             id="destination-tabs"
@@ -102,9 +108,9 @@ const InformationDestination = () => {
                 {loadingTabs[key] ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
-                    style={{ height: "200px" }}
+                    style={{ height: "200px"}}
                   >
-                    <Spinner animation="border" variant="primary" />
+                    <Spinner animation="border" variant="light" />
                   </div>
                 ) : Object.entries(groupedDestinations[key] || {}).length >
                   0 ? (
@@ -125,7 +131,7 @@ const InformationDestination = () => {
                     className="d-flex justify-content-center align-items-center"
                     style={{ height: "200px", color: "#fff", fontWeight: "bold" }}
                   >
-                    <h4>Not Found 😪</h4>
+                    <h4>Data Not Found 😪</h4>
                   </div>
                 )}
               </Tab>

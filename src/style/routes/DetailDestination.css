@@ -1,0 +1,8 @@
+#detail-destination-container {
+   background-image: url('../../assets/common/maps-bg.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    background-attachment: fixed;
+    min-height: 100vh;
+  }

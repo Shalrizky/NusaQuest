@@ -61,6 +61,7 @@ export const AuthProvider = ({ children }) => {
 
     removeLocalStorageItem("isLoggedIn");
     removeLocalStorageItem("user");
+    removeLocalStorageItem("lastActiveTab");
     removeLocalStorageItem("sessionExpired");
 
     showToastMessage("Logout Successful", "You have been logged out.", "success");

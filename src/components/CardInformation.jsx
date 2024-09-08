@@ -5,26 +5,38 @@ import { gsap } from "gsap";
 import "../style/components/cardInformation.css";
 
 const CardInformation = ({ destinations }) => {
-  const scrollRef = useRef();
+  const scrollRef = useRef(null);
   const navigate = useNavigate();
   const imageRefs = useRef([]);
 
   useEffect(() => {
-    imageRefs.current.forEach((img, index) => {
+    const images = imageRefs.current;
+
+    // Setup GSAP animations for image hover
+    const handleMouseEnter = (img) => gsap.to(img, { scale: 1.1, duration: 0.3 });
+    const handleMouseLeave = (img) => gsap.to(img, { scale: 1, duration: 0.3 });
+
+    images.forEach((img) => {
       if (img) {
         gsap.set(img, { scale: 1 });
-        img.addEventListener("mouseenter", () => {
-          gsap.to(img, { scale: 1.1, duration: 0.3 });
-        });
-        img.addEventListener("mouseleave", () => {
-          gsap.to(img, { scale: 1, duration: 0.3 });
-        });
+        img.addEventListener("mouseenter", () => handleMouseEnter(img));
+        img.addEventListener("mouseleave", () => handleMouseLeave(img));
       }
     });
+
+    // Cleanup event listeners on unmount
+    return () => {
+      images.forEach((img) => {
+        if (img) {
+          img.removeEventListener("mouseenter", () => handleMouseEnter(img));
+          img.removeEventListener("mouseleave", () => handleMouseLeave(img));
+        }
+      });
+    };
   }, []);
 
-  const handleCardClick = (key) => {
-    navigate(`/destination/${key}`);
+  const handleCardClick = (id) => {
+    navigate(`/destination/${id}`);
   };
 
   const handleDragScroll = () => {
@@ -34,24 +46,19 @@ const CardInformation = ({ destinations }) => {
 
     const mouseDownHandler = (e) => {
       e.preventDefault();
-      e.stopPropagation();
       isDragging = true;
       startX = e.pageX - scrollRef.current.offsetLeft;
       scrollLeft = scrollRef.current.scrollLeft;
-      scrollRef.current.style.userSelect = "none";
     };
 
     const mouseLeaveOrUpHandler = () => {
       isDragging = false;
-      scrollRef.current.style.userSelect = "";
     };
 
     const mouseMoveHandler = (e) => {
       if (!isDragging) return;
-      e.preventDefault();
-      e.stopPropagation();
       const x = e.pageX - scrollRef.current.offsetLeft;
-      const walk = (x - startX) * 2;
+      const walk = (x - startX) * 2; 
       scrollRef.current.scrollLeft = scrollLeft - walk;
     };
 
@@ -63,21 +70,18 @@ const CardInformation = ({ destinations }) => {
     };
   };
 
-  const handlers = handleDragScroll();
+  const dragHandlers = handleDragScroll();
 
   const shortenDescription = (desc, maxLength = 15) => {
     if (!desc) return "";
-    return desc.split(" ").slice(0, maxLength).join(" ") + " ";
+    return `${desc.split(" ").slice(0, maxLength).join(" ")} `;
   };
 
   return (
     <div
       className="scrollable-container"
-      onMouseDown={handlers.onMouseDown}
-      onMouseLeave={handlers.onMouseLeave}
-      onMouseUp={handlers.onMouseUp}
-      onMouseMove={handlers.onMouseMove}
       ref={scrollRef}
+      {...dragHandlers}
     >
       {destinations.map((destination, index) => (
         <div key={destination.id} className="scrollable-item">

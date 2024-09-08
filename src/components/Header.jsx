@@ -13,8 +13,8 @@ function BackButton({ onClick, layout }) {
   return (
     <Col
       md={layout === "home" ? 1 : 4}
-      sm={1}
-      xs={1}
+      sm={2}
+      xs={2}  // Pastikan kolom tidak terlalu kecil di perangkat kecil
       className="d-flex justify-content-start align-items-center ps-4"
     >
       <Image
@@ -46,9 +46,9 @@ function TextHeader({ layout, showTextHeader }) {
   return (
     <Col
       md={4}
-      sm={4}
-      xs={4}
-      className="d-flex justify-content-center align-items-center"
+      sm={8}
+      xs={8} 
+      className="d-flex justify-content-center align-items-center mx-auto text-center" 
     >
       <h2 className="fw-bold text-white">{showTextHeader}</h2>
     </Col>
@@ -64,8 +64,8 @@ function ProfileIcons({
   return (
     <Col
       md={layout === "home" ? 6 : 4}
-      sm={6}
-      xs={6}
+      sm={layout === "home" ? 6 : 2}
+      xs={layout === "home" ? 6 : 2}
       className="d-flex justify-content-end align-items-center"
     >
       <Image

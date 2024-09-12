@@ -6,3 +6,12 @@
   min-height: 100vh;
   overflow: hidden;
 }
+.utu-container-left {
+  display: flex;
+  justify-content: flex-start; /* Mengatur posisi ke kiri */
+  padding: 20px; /* Menambahkan padding jika diperlukan */
+}
+
+.utu-konva {
+  position: relative; /* Posisi relatif jika ingin mengatur lebih lanjut */
+}

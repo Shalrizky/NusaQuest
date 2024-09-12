@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Stage, Layer, Rect, Text } from 'react-konva';
 
 function Board() {
-    const cellSize = 50; 
+    const cellSize = 70; 
     const numRowsCols = 10; 
-    const [stageSize, setStageSize] = useState({ width: 500, height: 500 });
+    const [stageSize, setStageSize] = useState({ width: 800, height: 800 });
 
     useEffect(() => {
         const updateSize = () => {
-            setStageSize({ width: window.innerWidth / 2, height: 500 });
+            setStageSize({ width: window.innerWidth / 2, height: 800 });
         };
         window.addEventListener('resize', updateSize);
         updateSize(); // Initial setup

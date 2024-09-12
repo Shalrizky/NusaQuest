@@ -1,3 +1,4 @@
+/*cssnya container*/
 .utangga-container {
   background-image: url('../../assets/common/bg-ular.png');
   background-repeat: no-repeat;
@@ -6,12 +7,30 @@
   min-height: 100vh;
   overflow: hidden;
 }
+/*cssnya si header*/
 .utu-container-left {
   display: flex;
-  justify-content: flex-start; /* Mengatur posisi ke kiri */
-  padding: 20px; /* Menambahkan padding jika diperlukan */
+  justify-content: flex-start;
+  padding: 20px; 
+}
+/*cssnya si konva*/
+.utu-konva {
+  position: relative;
 }
 
-.utu-konva {
-  position: relative; /* Posisi relatif jika ingin mengatur lebih lanjut */
+/*cssnya si turn box*/
+.player-turn-box {
+  width: 500px;
+  height: 300px;
+  background-color: #003366; /* Dark blue */
+  color: white;
+  text-align: center;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* margin-top: -500px; */
 }

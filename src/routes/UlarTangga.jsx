@@ -1,9 +1,9 @@
 import React from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Button } from 'react-bootstrap';
 import HeaderUtangga from '../components/HeaderUtangga';
-import KonvaUlar from '../components/React-KonvaUlar'; // Assuming this is your Board component
-import '../style/routes/UlarTangga.css'; // Import CSS for styling
-import bgUlarTangga from '../assets/common/bg-ular.png'; // Import background image
+import KonvaUlar from '../components/React-KonvaUlar';
+import '../style/routes/UlarTangga.css';
+import bgUlarTangga from '../assets/common/bg-ular.png';
 
 function UlarTangga() {
     return (
@@ -11,7 +11,13 @@ function UlarTangga() {
             <HeaderUtangga layout="home" />
             <Row className="utu-container-left">
                 <Col md={6} className="utu-konva">
-                    <KonvaUlar />  {/* This assumes KonvaUlar is the modified Board component to fit the design */}
+                    <KonvaUlar />
+                </Col>
+                <Col md={6} className="d-flex flex-column align-items-center justify-content-start">
+                    <div className="player-turn-box">
+                        <h3>Rico Rendang</h3>
+                    </div>
+                    <Button variant="primary" size="lg" className="mt-3">Roll</Button>
                 </Col>
             </Row>
         </Container>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import HeaderUtangga from '../components/HeaderUtangga';
 import KonvaUlar from '../components/React-KonvaUlar';
+import Dice from '../components/Dice'
 import '../style/routes/UlarTangga.css';
 import bgUlarTangga from '../assets/common/bg-ular.png';
 
@@ -17,7 +18,7 @@ function UlarTangga() {
                     <div className="player-turn-box">
                         <h3>Rico Rendang</h3>
                     </div>
-                    <Button variant="primary" size="lg" className="mt-3">Roll</Button>
+                    <Dice /> {/* Add the Dice component here */}
                 </Col>
             </Row>
         </Container>

@@ -1,0 +1,49 @@
+.dice-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%; /* Use 100% width for centering */
+    margin-top: 20px; /* Adjust spacing as needed */
+}
+
+.dice {
+    width: 100px;
+    height: 100px;
+    background-color: white;
+    border: 1px solid #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 50px;
+    perspective: 1000px; /* For 3D effect */
+    margin-bottom: 20px; /* Space between the dice and the button */
+}
+
+/* Animation keyframes for rolling effect */
+@keyframes rollDice {
+    from {
+        transform: rotateX(0deg) rotateY(0deg);
+    }
+    to {
+        transform: rotateX(720deg) rotateY(720deg);
+    }
+}
+
+/* Apply the animation when rolling state is true */
+.rolling {
+    animation: rollDice 1s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* Set different numbers for each dice face */
+.dice-1::after { content: '1'; }
+.dice-2::after { content: '2'; }
+.dice-3::after { content: '3'; }
+.dice-4::after { content: '4'; }
+.dice-5::after { content: '5'; }
+.dice-6::after { content: '6'; }
+
+/* Styles for the roll button */
+.roll-button {
+    width: auto; /* Adjust width as needed */
+    padding: 10px 20px; /* Padding for better button size */
+}

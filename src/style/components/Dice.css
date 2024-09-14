@@ -2,48 +2,56 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%; /* Use 100% width for centering */
-    margin-top: 20px; /* Adjust spacing as needed */
+    width: 100%;
+    margin-top: 20px;
+    perspective: 1000px; /* Perspective for 3D effect */
 }
 
 .dice {
     width: 100px;
     height: 100px;
-    background-color: white;
-    border: 1px solid #000;
+    position: relative;
+    transform-style: preserve-3d; /* Required for 3D */
+    transition: transform 1s cubic-bezier(0.19, 1, 0.22, 1); /* Smooth transition */
+}
+
+/* General styles for all faces */
+.face {
+    position: absolute;
+    width: 100px;
+    height: 100px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 50px;
-    perspective: 1000px; /* For 3D effect */
-    margin-bottom: 20px; /* Space between the dice and the button */
+    background-color: white;
+    border: 1px solid #000;
+    font-size: 50px; /* Font size for the numbers */
+    font-weight: bold;
+    color: #000;
 }
 
-/* Animation keyframes for rolling effect */
+/* Define positions for each face */
+.dice .front  { transform: rotateY(0deg) translateZ(50px); }
+.dice .back   { transform: rotateY(180deg) translateZ(50px); }
+.dice .left   { transform: rotateY(-90deg) translateZ(50px); }
+.dice .right  { transform: rotateY(90deg) translateZ(50px); }
+.dice .top    { transform: rotateX(90deg) translateZ(50px); }
+.dice .bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+/* Animation for rolling the dice */
 @keyframes rollDice {
-    from {
-        transform: rotateX(0deg) rotateY(0deg);
-    }
-    to {
-        transform: rotateX(720deg) rotateY(720deg);
-    }
+    0% { transform: rotateX(0deg) rotateY(0deg); }
+    100% { transform: rotateX(720deg) rotateY(720deg); }
 }
 
-/* Apply the animation when rolling state is true */
 .rolling {
     animation: rollDice 1s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-/* Set different numbers for each dice face */
-.dice-1::after { content: '1'; }
-.dice-2::after { content: '2'; }
-.dice-3::after { content: '3'; }
-.dice-4::after { content: '4'; }
-.dice-5::after { content: '5'; }
-.dice-6::after { content: '6'; }
-
-/* Styles for the roll button */
+/* Roll button styles */
 .roll-button {
-    width: auto; /* Adjust width as needed */
-    padding: 10px 20px; /* Padding for better button size */
+    padding: 10px 20px;
+    margin-top: 20px;
+    cursor: pointer;
 }
+

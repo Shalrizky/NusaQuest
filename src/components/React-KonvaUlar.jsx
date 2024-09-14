@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Stage, Layer, Rect, Text } from 'react-konva';
+import pion from '../assets/common/Pions 1.png'
 
 function Board() {
     const cellSize = 70; 
@@ -31,7 +32,7 @@ function Board() {
             }
 
             for (let j = startCol; direction === 1 ? j <= endCol : j >= endCol; j += direction) {
-                let color = (i + j) % 2 === 0 ? 'orange' : '#FDFBD4'; // Alternate colors
+                let color = (i + j) % 2 === 0 ? '#FD9502' : '#CDCDAB'; // Alternate colors
                 squares.push(
                     <Rect
                         key={`${i}-${j}`}

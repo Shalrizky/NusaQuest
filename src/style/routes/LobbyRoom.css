@@ -1,6 +1,28 @@
 .lobbyroom-container {
-    height: 100vh; 
-    background-size: cover; 
-    background-position: center;
-    background-repeat: no-repeat; 
+    background-image: url('../../assets/common/background.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.lobby-container {
+    display: flex;
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Center items vertically */
+    height: 100%; /* Mengatur tinggi agar mengisi kontainer dengan benar */
+}
+
+.player-slots {
+    display: flex;
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Center items vertically */
+    gap: 50px; /* Spasi antar gambar, sesuaikan sesuai kebutuhan */
+}
+
+.player-slot {
+    width: 307px; /* Menetapkan lebar gambar sesuai dimensi asli */
+    height: 625px; /* Menetapkan tinggi gambar sesuai dimensi asli */
+    object-fit: contain; /* Menjaga gambar tetap proporsional */
 }

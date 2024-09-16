@@ -14,6 +14,7 @@ import LobbyNuca from './routes/LobbyNuca';
 import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
 import ProtectedRoute from './components/ProtectedRoute';
+import LobbyRoom from './routes/LobbyRoom';
 
 const withLoader = (Component) => {
   return (props) => {
@@ -67,6 +68,13 @@ const App = () => {
           path: '/lobbyNuca', element: (
             <ProtectedRoute>
               {withLoader(LobbyNuca)()}
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/LobbyRoom', element: (
+            <ProtectedRoute>
+              {withLoader(LobbyRoom)()}
             </ProtectedRoute>
           )
         },

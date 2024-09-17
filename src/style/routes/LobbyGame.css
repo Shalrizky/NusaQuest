@@ -20,6 +20,7 @@
 
 .heading-row h1 {
   font-size: 3.5rem;
+  text-transform: uppercase;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
   font-family: Potta One, sans-serif;
 }

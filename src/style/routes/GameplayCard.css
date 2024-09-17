@@ -1,8 +1,211 @@
 .room-ruca-container {
-    background-image: url('../../assets/common/background.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: cover;
-    min-height: 100vh;
-    overflow: hidden;
-  }
+  background-image: url('../../assets/common/background.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Mengatur bagian ikon atas */
+.top-icons {
+  padding: 21px 21px;
+}
+
+.top-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.ml-3 {
+  margin-left: 10px;
+}
+
+/* Tumpukan Kartu Belakang di Tengah */
+.card-center-section {
+  margin-top: 205px;
+  margin-right: -150px;
+}
+
+.back-card-stack {
+  position: relative;
+  width: 300px;
+  height: 150px;
+}
+
+.back-card {
+  position: absolute;
+  width: 115px;  /* Ukuran kartu lebih kecil */
+  height: auto;
+}
+
+/* Mengatur posisi tumpukan kartu belakang ke samping (horizontal) */
+.back-card-0 {
+  left: 0;
+  z-index: 5;
+}
+
+.back-card-1 {
+  left: 10px;  /* Geser ke kanan */
+  z-index: 4;
+}
+
+.back-card-2 {
+  left: 20px;  /* Geser lebih ke kanan */
+  z-index: 3;
+}
+
+.back-card-3 {
+  left: 30px;  /* Lebih jauh lagi */
+  z-index: 2;
+}
+
+.back-card-4 {
+  left: 40px;  /* Posisi paling kanan */
+  z-index: 1;
+}
+
+/* Tumpukan Kartu Kuning */
+.card-stack-section {
+  margin-top: 100px;
+}
+
+.card-stack {
+  position: relative;
+  width: 400px;
+  height: 150px;
+}
+
+.stacked-card {
+  position: absolute;
+  width: 120px;
+  height: auto;
+}
+
+/* Mengatur posisi tumpukan kartu dengan offset lebih besar */
+.stacked-card-0 {
+  left: 0;
+  z-index: 5;
+}
+
+.stacked-card-1 {
+  left: 60px;
+  z-index: 4;
+}
+
+.stacked-card-2 {
+  left: 120px;
+  z-index: 3;
+}
+
+.stacked-card-3 {
+  left: 180px;
+  z-index: 2;
+}
+
+.stacked-card-4 {
+  left: 240px;
+  z-index: 1;
+}
+
+/* Shuffle Icon Positioning */
+.shuffle-icon {
+  position: absolute;
+  top: -170px;
+  left: 49%;
+  transform: translate(-50%, -50%);
+  width: 260px; /* Adjust the size as needed */
+  height: auto;
+  z-index: 10;
+}
+
+/* Tumpukan Kartu di Sebelah Kanan (Vertikal ke Bawah) */
+.card-right-section {
+  margin-top: -415px;
+  margin-right: 10px;
+}
+
+.card-right-stack {
+  position: relative;
+  width: 150px; /* Sesuaikan ukuran stack */
+  height: 300px; /* Tinggi untuk tumpukan vertikal */
+  justify-content: flex-end;
+}
+
+.right-card {
+  position: absolute;
+  width: 170px;
+  height: auto;
+}
+
+/* Mengatur posisi tumpukan kartu kanan dari atas ke bawah */
+.right-card-0 {
+  top: 0;
+  z-index: 5;
+}
+
+.right-card-1 {
+  top: 30px;  /* Kartu kedua bergeser ke bawah */
+  z-index: 4;
+}
+
+.right-card-2 {
+  top: 60px;  /* Kartu ketiga lebih jauh ke bawah */
+  z-index: 3;
+}
+
+.right-card-3 {
+  top: 90px;  /* Kartu keempat lebih jauh lagi */
+  z-index: 2;
+}
+
+.right-card-4 {
+  top: 120px;  /* Kartu terakhir */
+  z-index: 1;
+}
+
+/* Tumpukan Kartu di Sebelah Kiri (Vertikal ke Bawah) */
+.card-left-section {
+  margin-top: -305px;
+  margin-left: 10px;
+}
+
+.card-left-stack {
+  position: relative;
+  width: 150px; /* Sesuaikan ukuran stack */
+  height: 300px; /* Tinggi untuk tumpukan vertikal */
+  justify-content: flex-start;
+}
+
+.left-card {
+  position: absolute;
+  width: 170px;
+  height: auto;
+}
+
+/* Mengatur posisi tumpukan kartu kiri dari atas ke bawah */
+.left-card-0 {
+  top: 0;
+  z-index: 5;
+}
+
+.left-card-1 {
+  top: 30px;  /* Kartu kedua bergeser ke bawah */
+  z-index: 4;
+}
+
+.left-card-2 {
+  top: 60px;  /* Kartu ketiga lebih jauh ke bawah */
+  z-index: 3;
+}
+
+.left-card-3 {
+  top: 90px;  /* Kartu keempat lebih jauh lagi */
+  z-index: 2;
+}
+
+.left-card-4 {
+  top: 120px;  /* Kartu terakhir */
+  z-index: 1;
+}

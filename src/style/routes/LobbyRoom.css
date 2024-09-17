@@ -1,10 +1,10 @@
 .lobbyroom-container {
     background-image: url('../../assets/common/background.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
-  min-height: 100vh;
-  overflow: hidden;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    min-height: 100vh;
+    overflow: hidden;
 }
 
 .lobby-container {
@@ -50,4 +50,20 @@ h1 {
     text-align: center; /* Posisikan teks di tengah secara horizontal */
     margin-top: 10px; /* Jarak dari atas halaman */
     font-size: 2rem; /* Ukuran font */
+}
+
+/* Chatbox container */
+.chatbox-container {
+    display: flex;
+    justify-content: flex-start; /* Tempatkan di kiri bawah tombol START */
+    align-items: center;
+}
+
+/* Style untuk ChatBox */
+.chat-box {
+    width: 574px;
+    height: 61px;
+    object-fit: contain;
+    transform: scale(0.6); /* Sesuaikan nilai skala sesuai kebutuhan */
+    transform-origin: top left; /* Untuk memastikan skala dimulai dari sudut kiri atas */
 }

@@ -5,6 +5,7 @@ import bgLobbyRoom from '../assets/common/background.png';
 import framePlayer from '../assets/common/FramePlayer.png'; 
 import EmptySlot from '../assets/common/EmptyPlayer.png';
 import ButtonStart from '../assets/common/btnStart.png';
+import ChatBox from '../assets/common/ChatBox.png';
 
 function LobbyRoom() {
     return (
@@ -22,6 +23,10 @@ function LobbyRoom() {
                         <Button variant="primary" className="start-button" style={{ padding: 0, border: 'none', background: 'none' }}>
                             <Image src={ButtonStart} alt="Button Start" />
                         </Button>
+                    </div>
+                    {/* Tambahkan ChatBox di sini */}
+                    <div className="chatbox-container" style={{ marginTop: '20px' }}>
+                        <Image src={ChatBox} alt="Chat Box" className="chat-box" />
                     </div>
                 </Col>
             </Row>

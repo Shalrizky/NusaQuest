@@ -111,7 +111,7 @@ const DestinationDetail = () => {
               ))}
             </div>
 
-            {/* Tampilkan aktivitas jika ada */}
+            {/* Tampilkan aktivitas Hanya pada pariwisata_darat */}
             {destination.activities && (
               <div className="destination-activities mb-4 px-4 pt-4 pb-2">
                 <h4 className="pb-2">Apa Saja yang Bisa Dilakukan</h4>
@@ -142,6 +142,22 @@ const DestinationDetail = () => {
               </div>
             )}
 
+            {/* Tampilkan rekomendasi kuliner hanya pada kuliner_jawa_barat */}
+            {destination.recommendations && (
+              <div className="destination-culinary-recommendations mb-4 px-4 pt-4 pb-2">
+                <h4>Rekomendasi Tempat Kuliner</h4>
+                <ol>
+                  {destination.recommendations.map((recommendation, index) => (
+                    <li key={index}>
+                      <strong>{recommendation.restaurant_name}</strong> -{" "}
+                      {recommendation.restaurant_address}
+                      <p>{recommendation.restaurant_description}</p>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
             {/* Hanya tampilkan fakta unik jika topik adalah "daerah_jawa_barat" */}
             {destination.topic === "daerah_jawa_barat" && destination.fact && (
               <div className="destination-facts mb-4 px-4 pt-4 pb-2">
@@ -153,6 +169,14 @@ const DestinationDetail = () => {
                     </li>
                   ))}
                 </ol>
+              </div>
+            )}
+
+            {/* Tampilkan cara bermain jika ada */}
+            {destination["Cara Bermain"] && (
+              <div className="destination-play-instructions mb-4 px-4 pt-4 pb-2">
+                <h4>Cara Bermain</h4>
+                <p>{destination["Cara Bermain"]}</p>
               </div>
             )}
           </div>

@@ -16,13 +16,38 @@
 
 .player-slots {
     display: flex;
-    justify-content: center; /* Center items horizontally */
-    align-items: center; /* Center items vertically */
-    gap: 50px; /* Spasi antar gambar, sesuaikan sesuai kebutuhan */
+    justify-content: center; 
+    align-items: center; 
+    gap: 50px;
 }
 
 .player-slot {
-    width: 307px; /* Menetapkan lebar gambar sesuai dimensi asli */
-    height: 625px; /* Menetapkan tinggi gambar sesuai dimensi asli */
-    object-fit: contain; /* Menjaga gambar tetap proporsional */
+    width: 307px; 
+    height: 625px; 
+    object-fit: contain; 
+}
+
+.start-button {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover effect */
+.start-button:hover {
+    transform: scale(1.05); /* Sedikit memperbesar tombol */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Memberikan bayangan */
+    cursor: pointer; /* Mengubah kursor jadi pointer */
+}
+
+/* Active/pressed effect */
+.start-button:active {
+    transform: scale(0.95); /* Memperkecil tombol saat ditekan */
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2); /* Mengurangi bayangan saat ditekan */
+}
+
+/* Style for h1 (ROOM 1) */
+h1 {
+    color: white; /* Warna putih untuk teks */
+    text-align: center; /* Posisikan teks di tengah secara horizontal */
+    margin-top: 10px; /* Jarak dari atas halaman */
+    font-size: 2rem; /* Ukuran font */
 }

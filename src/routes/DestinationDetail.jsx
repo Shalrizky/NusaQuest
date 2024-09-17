@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Container, Row, Col, Spinner, Image } from "react-bootstrap";
 import { fetchDestinationById } from "../services/destinationDataServices";
 import Header from "../components/Header";
+import NotFound from "../assets/common/not-found-img.png";
 import "../style/routes/DetailDestination.css";
 
 const DestinationDetail = () => {
@@ -15,6 +16,30 @@ const DestinationDetail = () => {
     });
   }, [id]);
 
+  // Fungsi untuk membagi deskripsi menjadi paragraf jika terdapat 4 titik
+  const splitDescriptionIntoParagraphs = (description) => {
+    const sentences = description.split(". ");
+    let paragraph = [];
+    let paragraphs = [];
+    let periodCount = 0;
+
+    sentences.forEach((sentence, index) => {
+      periodCount += 1; // Menghitung jumlah titik
+      paragraph.push(sentence);
+
+      // Jika sudah ada 4 kalimat atau ini adalah kalimat terakhir, buat paragraf baru
+      if (periodCount === 4 || index === sentences.length - 1) {
+        paragraphs.push(
+          paragraph.join(". ") + (index === sentences.length - 1 ? "" : ".")
+        );
+        paragraph = [];
+        periodCount = 0;
+      }
+    });
+
+    return paragraphs;
+  };
+
   if (!destination) {
     return (
       <div
@@ -25,6 +50,42 @@ const DestinationDetail = () => {
       </div>
     );
   }
+
+  // Jika tidak ada deskripsi tampil halaman eror
+  if (!destination.description) {
+    return (
+      <Container
+        fluid
+        id="detail-destination-container"
+        className="d-flex flex-column"
+      >
+        <Header
+          showTextHeader={destination.name}
+          showBackIcon={true}
+          showLogoIcon={false}
+        />
+        <Row className="d-flex justify-content-center align-items-center mt-5">
+          <Col md={12} className="text-center text-white">
+            <h1 className="fw-bold pb-2">😓OOPSY</h1>
+            <h3>
+              Konten Informasi Belum Tersedia Untuk Destinasi Ini, Coba Lagi
+              Nanti.
+            </h3>
+          </Col>
+        </Row>
+        <Row className="d-flex justify-content-center align-items-center">
+          <Col
+            md={12}
+            className="d-flex justify-content-center align-items-center"
+          >
+            <img src={NotFound} alt="not found" width={500} />
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
+
+  const paragraphs = splitDescriptionIntoParagraphs(destination.description);
 
   return (
     <Container fluid id="detail-destination-container">
@@ -44,7 +105,10 @@ const DestinationDetail = () => {
               />
             </div>
             <div className="destination-details mb-4 px-4 pt-4 pb-2">
-              <p>{destination.description}</p>
+              {/* Render setiap paragraf */}
+              {paragraphs.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
             </div>
 
             {/* Tampilkan aktivitas jika ada */}

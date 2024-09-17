@@ -15,7 +15,6 @@ function LobbyRoom() {
                         <Image src={EmptySlot} alt="Player Kosong" className="player-slot" />
                         <Image src={EmptySlot} alt="Player Kosong" className="player-slot" />
                         <Image src={EmptySlot} alt="Player Kosong" className="player-slot" />
-                        
                     </div>
                 </Col>
             </Row>

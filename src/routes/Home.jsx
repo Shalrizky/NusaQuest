@@ -10,6 +10,7 @@ import "../style/routes/Home.css";
 
 function Home() {
   const [showModal, setShowModal] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState(null);
 
   return (
     <Container fluid id="home-container">
@@ -20,8 +21,12 @@ function Home() {
           <img src={NusaQuestLogo} alt="NusaQuest Logo" id="nusa-quest-logo" />
         </Col>
       </Row>
-      <NusaMaps setShowModal={setShowModal} />
-      <ModalGame show={showModal} onHide={() => setShowModal(false)} />
+      <NusaMaps setShowModal={setShowModal} setSelectedTopic={setSelectedTopic} />
+      <ModalGame
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        selectedTopic={selectedTopic}
+      />
       <Footer textColor={"#222"} />
     </Container>
   );

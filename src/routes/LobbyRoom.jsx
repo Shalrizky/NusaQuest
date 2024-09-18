@@ -26,7 +26,7 @@ function LobbyRoom() {
 
     return (
         <Container fluid className="lobbyroom-container" style={{ backgroundImage: `url(${bgLobbyRoom})`, backgroundSize: 'cover' }}>
-            <Header showLogoIcon={false} showIcons={false} showBackIcon={true} />
+            <Header showTextHeader="Room 1" showLogoIcon={false} showIcons={false} showBackIcon={true} />
             <Row className="lobby-container">
                 <Col md={6} className="lobby-details">
                     <div className="player-slots">

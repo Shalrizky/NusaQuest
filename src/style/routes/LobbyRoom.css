@@ -33,18 +33,21 @@ h1 {
     align-items: center; 
     gap: 3vw;
     width: 100%;
-    height: 70vh; /* Increased height to maximize space usage */
+    height: 70vh;
 }
 
 .player-slot {
-    width: 30vw; /* Increased width */
-    height: 100%; /* Use full height of player-slots */
+    width: 30vw;
+    height: 100%;
     object-fit: contain;
+}
+
+.start-button-container {
+    margin-top: 2vh;
 }
 
 .start-button {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    margin-top: 2vh;
 }
 
 .start-button:hover {
@@ -63,13 +66,6 @@ h1 {
     bottom: 2vh;
     left: 2vw;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
 }
 
-.chat-box {
-    width: 30vw;
-    height: 6vh;
-    object-fit: contain;
-    transform: scale(0.6);
-    transform-origin: bottom left;
-}

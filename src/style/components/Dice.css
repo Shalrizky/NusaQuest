@@ -11,24 +11,20 @@
     width: 100px;
     height: 100px;
     position: relative;
-    transform-style: preserve-3d; /* Required for 3D */
-    transition: transform 1s cubic-bezier(0.19, 1, 0.22, 1); /* Smooth transition */
+    transform-style: preserve-3d;
 }
 
-/* General styles for all faces */
 .face {
     position: absolute;
     width: 100px;
     height: 100px;
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
     background-color: white;
-    border: 1px solid #000;
+    border: 1px solid black;
 }
 
-/* Define positions for each face */
 .dice .front  { transform: rotateY(0deg) translateZ(50px); }
 .dice .back   { transform: rotateY(180deg) translateZ(50px); }
 .dice .left   { transform: rotateY(-90deg) translateZ(50px); }
@@ -36,72 +32,11 @@
 .dice .top    { transform: rotateX(90deg) translateZ(50px); }
 .dice .bottom { transform: rotateX(-90deg) translateZ(50px); }
 
-/* Animation for rolling the dice */
-@keyframes rollDice {
-    0% { transform: rotateX(0deg) rotateY(0deg); }
-    100% { transform: rotateX(720deg) rotateY(720deg); }
-}
-
-.rolling {
-    animation: rollDice 1s cubic-bezier(0.19, 1, 0.22, 1);
-}
-
-/* Roll button styles */
-.roll-button {
-    padding: 10px 20px;
-    margin-top: 20px;
-    cursor: pointer;
-}
-
-/* Style for dots */
 .dot {
     position: absolute;
-    width: 15px; /* Increase size of dots */
-    height: 15px; /* Increase size of dots */
+    width: 15px;
+    height: 15px;
     background-color: black;
     border-radius: 50%;
-    transform: translate(-50%, -50%); /* Center dots */
+    transform: translate(-50%, -50%);
 }
-
-/* Dot positions */
-.dice .front .dot { top: 50%; left: 50%; }
-.dice .back .dot { top: 50%; left: 50%; }
-.dice .left .dot { top: 50%; left: 50%; }
-.dice .right .dot { top: 50%; left: 50%; }
-.dice .top .dot { top: 50%; left: 50%; }
-.dice .bottom .dot { top: 50%; left: 50%; }
-
-.dice .front .dot:nth-of-type(2) { top: 30%; left: 30%; }
-.dice .back .dot:nth-of-type(2) { top: 30%; left: 30%; }
-.dice .left .dot:nth-of-type(2) { top: 70%; left: 30%; }
-.dice .right .dot:nth-of-type(2) { top: 30%; left: 70%; }
-.dice .top .dot:nth-of-type(2) { top: 70%; left: 70%; }
-.dice .bottom .dot:nth-of-type(2) { top: 30%; left: 70%; }
-
-.dice .front .dot:nth-of-type(3) { top: 70%; left: 70%; }
-.dice .back .dot:nth-of-type(3) { top: 70%; left: 70%; }
-.dice .left .dot:nth-of-type(3) { top: 30%; left: 70%; }
-.dice .right .dot:nth-of-type(3) { top: 70%; left: 30%; }
-.dice .top .dot:nth-of-type(3) { top: 30%; left: 30%; }
-.dice .bottom .dot:nth-of-type(3) { top: 70%; left: 30%; }
-
-.dice .front .dot:nth-of-type(4) { top: 30%; left: 70%; }
-.dice .back .dot:nth-of-type(4) { top: 30%; left: 70%; }
-.dice .left .dot:nth-of-type(4) { top: 30%; left: 30%; }
-.dice .right .dot:nth-of-type(4) { top: 70%; left: 30%; }
-.dice .top .dot:nth-of-type(4) { top: 70%; left: 30%; }
-.dice .bottom .dot:nth-of-type(4) { top: 30%; left: 30%; }
-
-.dice .front .dot:nth-of-type(5) { top: 70%; left: 30%; }
-.dice .back .dot:nth-of-type(5) { top: 70%; left: 30%; }
-.dice .left .dot:nth-of-type(5) { top: 70%; left: 70%; }
-.dice .right .dot:nth-of-type(5) { top: 30%; left: 70%; }
-.dice .top .dot:nth-of-type(5) { top: 30%; left: 70%; }
-.dice .bottom .dot:nth-of-type(5) { top: 70%; left: 70%; }
-
-.dice .front .dot:nth-of-type(6) { top: 30%; left: 50%; }
-.dice .back .dot:nth-of-type(6) { top: 30%; left: 50%; }
-.dice .left .dot:nth-of-type(6) { top: 50%; left: 30%; }
-.dice .right .dot:nth-of-type(6) { top: 50%; left: 70%; }
-.dice .top .dot:nth-of-type(6) { top: 50%; left: 50%; }
-.dice .bottom .dot:nth-of-type(6) { top: 50%; left: 50%; }

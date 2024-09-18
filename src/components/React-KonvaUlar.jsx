@@ -159,8 +159,8 @@ function Board() {
         };
     }, []);
 
-     //Load the six ladder (tangga6) image
-     useEffect(() => {
+    //Load the six ladder (tangga6) image
+    useEffect(() => {
         const img = new window.Image();
         img.src = tangga6ImageSrc;
         img.onload = () => {
@@ -256,7 +256,7 @@ function Board() {
     // Fungsi untuk menghitung posisi dan ukuran ular kedua
     const getSnake2Position = () => {
         const x = 0 * cellSize; // Kolom 19 (index 18)
-        const y = 5.5 * cellSize; 
+        const y = 5.5 * cellSize;
         const snake2Width = 4 * cellSize; // Lebar ular dari 19 ke 38 
         const snake2Height = 4 * cellSize; // Tinggi ular dari 19 ke 38 
         return { x, y, width: snake2Width, height: snake2Height };
@@ -267,7 +267,7 @@ function Board() {
     // Fungsi untuk menghitung posisi dan ukuran ular ketiga
     const getSnake3Position = () => {
         const x = 3.5 * cellSize; // Kolom 26 
-        const y = 5.5 * cellSize; 
+        const y = 5.5 * cellSize;
         const snake3Width = 5 * cellSize; // Lebar ular dari 26 ke 34 
         const snake3Height = 3.1 * cellSize; // Tinggi ular dari 26 ke 34 
         return { x, y, width: snake3Width, height: snake3Height };
@@ -278,7 +278,7 @@ function Board() {
     // Fungsi untuk menghitung posisi dan ukuran ular ke empat
     const getSnake4Position = () => {
         const x = 0 * cellSize; // Kolom 59 
-        const y = 1.7 * cellSize; 
+        const y = 1.7 * cellSize;
         const snake4Width = 4 * cellSize; // Lebar ular dari 59 ke 80 
         const snake4Height = 3.5 * cellSize; // Tinggi ular dari 59 ke 80 
         return { x, y, width: snake4Width, height: snake4Height };
@@ -289,7 +289,7 @@ function Board() {
     // Fungsi untuk menghitung posisi dan ukuran ular ke lima
     const getSnake5Position = () => {
         const x = 1.5 * cellSize; // Kolom 65 
-        const y = 0.2 * cellSize; 
+        const y = 0.2 * cellSize;
         const snake5Width = 5 * cellSize; // Lebar ular dari 65 ke 84 
         const snake5Height = 4.5 * cellSize; // Tinggi ular dari 65 ke 84 
         return { x, y, width: snake5Width, height: snake5Height };
@@ -300,7 +300,7 @@ function Board() {
     // Fungsi untuk menghitung posisi dan ukuran ular ke enam
     const getSnake6Position = () => {
         const x = 6 * cellSize; // Kolom 72
-        const y = 0 * cellSize; 
+        const y = 0 * cellSize;
         const snake6Width = 4 * cellSize; // Lebar ular dari 72 ke 91 
         const snake6Height = 3.4 * cellSize; // Tinggi ular dari 72 ke 91 
         return { x, y, width: snake6Width, height: snake6Height };
@@ -311,7 +311,7 @@ function Board() {
     // Fungsi untuk menghitung posisi dan ukuran tangga pertama (tangga)
     const getTanggaPosition = () => {
         const x = 1 * cellSize; // Kolom 3 (index 2)
-        const y = 8 * cellSize; // Baris dari cell 3
+        const y = 8 * cellSize;
         const tanggaWidth = 4 * cellSize; // Ukuran lebar tangga
         const tanggaHeight = 2 * cellSize; // Tangga panjang dari 3 ke 17
         return { x, y, width: tanggaWidth, height: tanggaHeight };
@@ -323,7 +323,7 @@ function Board() {
     const getTangga2Position = () => {
         // Tangga dari cell 7 ke 28
         const x = 4.7 * cellSize; // Kolom 7 (index 6)
-        const y = 6.5 * cellSize; // Baris dari cell 7
+        const y = 6.5 * cellSize;
         const tangga2Width = 4.5 * cellSize; // Lebar tangga dari 7 ke 28
         const tangga2Height = 3.5 * cellSize; // Tinggi tangga dari 7 ke 28
         return { x, y, width: tangga2Width, height: tangga2Height };
@@ -335,7 +335,7 @@ function Board() {
     const getTangga3Position = () => {
         // Tangga dari cell 16 ke 24
         const x = 3 * cellSize; // Kolom 16 (index 15)
-        const y = 6 * cellSize; // Baris dari cell 16
+        const y = 6 * cellSize;
         const tangga3Width = 2 * cellSize; // Lebar tangga dari 16 ke 37 (EDIT DEWEK)
         const tangga3Height = 3.2 * cellSize; // Tinggi tangga dari 16 ke 37  (EDIT DEWEK)
         return { x, y, width: tangga3Width, height: tangga3Height };
@@ -516,7 +516,7 @@ function Board() {
                         image={tangga3Image}
                     />
                 )}
-                {/* Render the fourth ladder */}
+                {/* gambar tangga ke 4 */}
                 {tangga4Image && (
                     <KonvaImage
                         x={tangga4Position.x}
@@ -526,7 +526,7 @@ function Board() {
                         image={tangga4Image}
                     />
                 )}
-                {/* Render the five ladder */}
+                {/* gambar tangga ke 5 */}
                 {tangga5Image && (
                     <KonvaImage
                         x={tangga5Position.x}
@@ -536,8 +536,8 @@ function Board() {
                         image={tangga5Image}
                     />
                 )}
-                 {/* Render the six ladder */}
-                 {tangga6Image && (
+                {/* gambar tangga ke 6 */}
+                {tangga6Image && (
                     <KonvaImage
                         x={tangga6Position.x}
                         y={tangga6Position.y}
@@ -547,8 +547,8 @@ function Board() {
                     />
                 )}
 
-                 {/* Render the seven ladder */}
-                 {tangga7Image && (
+                {/* gambar tangga ke 7 */}
+                {tangga7Image && (
                     <KonvaImage
                         x={tangga7Position.x}
                         y={tangga7Position.y}
@@ -558,8 +558,8 @@ function Board() {
                     />
                 )}
 
-                  {/* Render the eight ladder */}
-                  {tangga8Image && (
+                {/* gambar tangga ke 8 */}
+                {tangga8Image && (
                     <KonvaImage
                         x={tangga8Position.x}
                         y={tangga8Position.y}
@@ -568,8 +568,6 @@ function Board() {
                         image={tangga8Image}
                     />
                 )}
-
-
             </Layer>
         </Stage>
     );

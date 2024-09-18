@@ -1,4 +1,4 @@
-/*cssnya container*/
+/* Ensure the background image is set correctly */
 .utangga-container {
   background-image: url('../../assets/common/bg-ular.png');
   background-repeat: no-repeat;
@@ -7,19 +7,22 @@
   min-height: 100vh;
   overflow: hidden;
 }
-/*cssnya si header*/
+
+/* Ensure proper layout for header and game board */
 .utu-container-left {
   display: flex;
   justify-content: flex-start;
   padding: 20px; 
 }
-/*cssnya si konva*/
+
+/* Ensure Konva canvas container is positioned correctly */
 .utu-konva {
   position: relative;
 }
 
-/*cssnya si turn box*/
+/* Styling for player turn box */
 .player-turn-box {
+  
   width: 500px;
   height: 300px;
   background-color: #3971D0; /* Dark blue */
@@ -32,6 +35,6 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* margin-top: -500px; */
+  /* Ensure no margin-top issues */
+  margin: 20px auto;
 }
-

@@ -6,6 +6,7 @@ import Dice from '../components/Dice'
 import '../style/routes/UlarTangga.css';
 import bgUlarTangga from '../assets/common/bg-ular.png';
 
+
 function UlarTangga() {
     return (
         <Container fluid className="utangga-container" style={{ backgroundImage: `url(${bgUlarTangga})`, backgroundSize: 'cover' }}>

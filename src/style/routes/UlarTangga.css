@@ -41,22 +41,26 @@
 
 .player-list {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .player-item {
-  margin-bottom: 10px;
+  margin: 10px 20px;
 }
 
 .player-item img {
-  border: 2px solid #fff;
+  border: 5px solid #ffd700; /* warna kuning */
+  border-radius: 50%; /* membuat foto profile menjadi lingkaran */
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 60px; /* ukuran foto profile */
+  height: 60px; /* ukuran foto profile */
 }
 
 .player-item span {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
-  color: #333;
+  color: #ffffff;
   margin-left: 10px;
 }
+

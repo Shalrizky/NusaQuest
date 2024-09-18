@@ -86,12 +86,17 @@ function HeaderUtangga({ layout, toggleTemp }) {
             {/* Offcanvas component */}
             <Offcanvas show={showOffcanvas} onHide={handleCloseOffcanvas} placement="start" className="custom-offcanvas">
                 <Offcanvas.Header closeButton>
-                    <Offcanvas.Title>Offcanvas Title</Offcanvas.Title>
+                    <Offcanvas.Title>Kumpulan Jawaban</Offcanvas.Title>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
-                    <p>This is the content inside the Offcanvas!</p>
+                    <h5>Makanan</h5>
+                    <div className="answer-section">
+                        <p>1. Makanan yang berasal dari Jawa Barat adalah <strong>Gudeg</strong>.</p>
+                        <p>2. Makenna pedas yang berasal dari Jawa Barat adalah <strong>Seblak</strong>.</p>
+                    </div>
+
                 </Offcanvas.Body>
-            </Offcanvas>    
+            </Offcanvas>
         </>
     );
 }

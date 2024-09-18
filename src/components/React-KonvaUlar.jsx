@@ -245,7 +245,7 @@ function Board() {
     // Fungsi untuk menghitung posisi dan ukuran ular pertama
     const getSnakePosition = () => {
         const x = 3 * cellSize; // Kolom 4 (indeks 3) untuk kolom kepala di 74
-        const y = 1 * cellSize; // Kepala sedikit lebih rendah di kotak 74
+        const y = 1 * cellSize; 
         const snakeWidth = 4.5 * cellSize; // Melebar sedikit ke kanan agar menyentuh lebih banyak kolom
         const snakeHeight = 6.5 * cellSize; // Menyesuaikan tinggi agar kepala pas di 74 dan ekor di 36
         return { x, y, width: snakeWidth, height: snakeHeight };

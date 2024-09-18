@@ -4,13 +4,15 @@ import HeaderUtangga from '../components/HeaderUtangga';
 import KonvaUlar from '../components/React-KonvaUlar';
 import Dice from '../components/Dice'
 import '../style/routes/UlarTangga.css';
+import '../assets/common/naruto.jpeg'
+import '../assets/common/narutoa.png'
 import bgUlarTangga from '../assets/common/bg-ular.png';
 
 // Data pemain
 const players = [
-  { id: 1, name: 'Rico Rendang', photo: 'https://example.com/photo1.jpg' },
-  { id: 2, name: 'Pemain 2', photo: 'https://example.com/photo2.jpg' },
-  { id: 3, name: 'Pemain 3', photo: 'https://example.com/photo3.jpg' },
+  { id: 1, name: 'Anak Bego(AB)', photo: require('../assets/common/naruto.jpeg') },
+  { id: 1, name: 'Sahel Bau', photo: require('../assets/common/narutoa.png') },
+  { id: 3, name: 'RanggaSpinner', photo: '' },
 ];
 
 function UlarTangga() {
@@ -23,7 +25,7 @@ function UlarTangga() {
         </Col>
         <Col md={6} className="d-flex flex-column align-items-center justify-content-start">
           <div className="player-turn-box">
-            <h3>Rico Rendang</h3>
+            <h3>RanggaSpinner ...</h3>
           </div>
           <Dice /> {/* Add the Dice component here */}
           <div className="player-list mt-3">

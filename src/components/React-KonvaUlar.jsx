@@ -17,9 +17,9 @@ import tangga7ImageSrc from '../assets/common/tangga7.png';
 import tangga8ImageSrc from '../assets/common/tangga8.png';
 
 function Board() {
-    const cellSize = 70;
+    const cellSize = 80;
     const numRowsCols = 10;
-    const [stageSize, setStageSize] = useState({ width: 800, height: 800 });
+    const [stageSize, setStageSize] = useState({ width: 900, height: 900 });
     const [pionImage, setPionImage] = useState(null);
     const [snakeImage, setSnakeImage] = useState(null);
     const [snake2Image, setSnake2Image] = useState(null);

@@ -69,3 +69,28 @@ h1 {
     align-items: flex-end;
 }
 
+.player-slot-container {
+    position: relative;
+    width: 30vw;
+    height: 100%;
+}
+
+.player-slot {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.player-name {
+    position: absolute;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 2vh;
+    text-align: center;
+    width: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

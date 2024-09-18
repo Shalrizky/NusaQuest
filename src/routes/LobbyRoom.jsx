@@ -1,16 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Image, Button } from 'react-bootstrap';
 import '../style/routes/LobbyRoom.css'; 
 import bgLobbyRoom from '../assets/common/background.png'; 
-import framePlayer from '../assets/common/FramePlayer.png'; 
-import EmptySlot from '../assets/common/EmptyPlayer.png';
 import ButtonStart from '../assets/common/btnStart.png';
 import ChatClose from '../assets/common/chat-close.png';
 import ChatOpen from '../assets/common/chat-open.png';
 import Header from '../components/Header';
+import PlayerSlot from '../components/PlayerSlot';
+import useAuth from "../hooks/useAuth";
 
 function LobbyRoom() {
+    const { user } = useAuth();
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [players, setPlayers] = useState([
+        null,
+        null,
+        null,
+        null
+    ]);
+
+    useEffect(() => {
+        if (user) {
+            setPlayers(prevPlayers => [
+                { id: 1, name: user.displayName || 'Player 1' },
+                ...prevPlayers.slice(1)
+            ]);
+        }
+    }, [user]);
 
     const toggleChat = () => {
         setIsChatOpen(!isChatOpen);
@@ -26,14 +42,13 @@ function LobbyRoom() {
 
     return (
         <Container fluid className="lobbyroom-container" style={{ backgroundImage: `url(${bgLobbyRoom})`, backgroundSize: 'cover' }}>
-            <Header showTextHeader="Room 1" showLogoIcon={false} showIcons={false} showBackIcon={true} />
+            <Header showLogoIcon={false} showIcons={false} showBackIcon={true} />
             <Row className="lobby-container">
                 <Col md={6} className="lobby-details">
                     <div className="player-slots">
-                        <Image src={framePlayer} alt="Frame Player" className="player-slot" />
-                        <Image src={EmptySlot} alt="Player Kosong" className="player-slot" />
-                        <Image src={EmptySlot} alt="Player Kosong" className="player-slot" />
-                        <Image src={EmptySlot} alt="Player Kosong" className="player-slot" />
+                        {players.map((player, index) => (
+                            <PlayerSlot key={index} player={player} />
+                        ))}
                     </div>
                     <div className="start-button-container" style={{ marginTop: '20px', textAlign: 'center' }}>
                         <Button variant="primary" className="start-button" style={{ padding: 0, border: 'none', background: 'none' }}>

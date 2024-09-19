@@ -1,4 +1,4 @@
-.room-utangga-container {
+.lobby-container {
   background-image: url('../../assets/common/lobby-bg.png');
   background-repeat: no-repeat;
   background-position: center;
@@ -7,22 +7,22 @@
   overflow: hidden;
 }
 
-.heading-row {
-  width: 100%;
-}
-
-.heading-row h1 {
-  font-size: 3rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
-  font-family: Potta One, sans-serif;
-}
-
 .content-wrapper {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
 
+.heading-row {
+  width: 100%;
+}
+
+.heading-row h1 {
+  font-size: 3.5rem;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+  font-family: Potta One, sans-serif;
 }
 
 .content-wrapper h5 {
@@ -30,17 +30,17 @@
   font-size: 20px;
 }
 
-.text-instruksi-utangga {
+.text-instruksi-lobby {
   text-align: justify;
   font-size: 18px;
 }
 
-.img-utangga-lobby {
+.img-lobby {
   width: 100%;
   height: auto;
 }
 
-.btn-lobby-utangga {
+.btn-lobby {
   background-color: rgba(180, 180, 180, 0.228) !important;
   border: 2px solid #ffffff8a !important;
   width: 200px;
@@ -58,7 +58,7 @@
     0px 0px 2px #000;
 }
 
-.btn-lobby-utangga:hover {
+.btn-lobby:hover {
   background-color: rgba(180, 180, 180, 0.55) !important;
   border: 2px solid #fffffff5 !important;
   width: 200px;
@@ -75,7 +75,7 @@
   }
 
   .content-wrapper h5,
-  .text-instruksi-utangga {
+  .text-instruksi-nuca {
     font-size: 16px;
     padding-right: 20px;
   }
@@ -88,7 +88,7 @@
   }
 
   .content-wrapper h5,
-  .text-instruksi-utangga {
+  .text-instruksi-lobby {
     font-size: 14px;
     padding-right: 20px;
   }

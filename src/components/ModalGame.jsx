@@ -2,13 +2,19 @@ import React, { useEffect, useState } from "react";
 import { Modal, CloseButton } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
-import nucaLogo from "../assets/common/nuca-logo.png";
-import ulerTanggaLogo from "../assets/common/uler-tangga-logo.png";
 import "../style/components/ModalGame.css";
+import { fetchGames } from "../services/gameDataServices";  
 
-function ModalGame({ show, onHide }) {
-  const [hoveredIndex, setHoveredIndex] = useState(null);
+function ModalGame({ show, onHide, selectedTopic }) {
+  const [games, setGames] = useState({});  // State for storing games
+  const [hoveredIndex, setHoveredIndex] = useState(null);  
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchGames((fetchedGames) => {
+      setGames(fetchedGames);  
+    });
+  }, []);
 
   const handleMouseEnter = (index) => {
     setHoveredIndex(index);
@@ -26,18 +32,10 @@ function ModalGame({ show, onHide }) {
     }
   };
 
-  const handleUtanggaClick = () => {
-    navigate("/LobbyUtangga");
+  const handleGameSelection = (gameID) => {
+    navigate(`/lobby/${selectedTopic}/${gameID}`);
+    onHide();
   };
-  const handleNucaClick = () => {
-    navigate("/LobbyNuca");
-  };
-
-  useEffect(() => {
-    return () => {
-      setHoveredIndex(null);
-    };
-  }, []);
 
   return (
     <Modal
@@ -56,33 +54,35 @@ function ModalGame({ show, onHide }) {
           </Modal.Title>
           <CloseButton variant="white" aria-label="Close" onClick={onHide} />
         </div>
+
+        {/* Game selection display */}
         <div className="d-flex py-2 gap-5">
-          <div className="d-flex flex-column align-items-center ">
-            <img
-              src={ulerTanggaLogo}
-              alt="Uler Tangga Logo"
-              width={160} 
-              className={`game-image-0`}
-              style={{ cursor: "pointer", transform: hoveredIndex === 0 ? "scale(1.1)" : "scale(1)" }}
-              onMouseEnter={() => handleMouseEnter(0)}
-              onMouseLeave={() => handleMouseLeave(0)}
-              onClick={handleUtanggaClick}
-            />
-            <span className="text-white fw-bold">Ular Tangga</span>
-          </div>
-          <div className="d-flex flex-column align-items-center text-center pt-2 gap-2">
-            <img
-              src={nucaLogo}
-              alt="Nuca Logo"
-              width={135}  
-              className={` game-image-1`}
-              style={{ cursor: "pointer", transform: hoveredIndex === 1 ? "scale(1.1)" : "scale(1)" }}
-              onMouseEnter={() => handleMouseEnter(1)}
-              onMouseLeave={() => handleMouseLeave(1)}
-              onClick={handleNucaClick}
-            />
-            <span className="text-white fw-bold ">Nuca</span>
-          </div>
+          {Object.keys(games).length > 0 ? (
+            Object.keys(games).map((gameID, index) => (
+              <div
+                key={gameID}
+                className="d-flex flex-column align-items-center"
+                onMouseEnter={() => handleMouseEnter(index)}
+                onMouseLeave={() => handleMouseLeave(index)}
+                onClick={() => handleGameSelection(gameID)}
+                style={{ cursor: "pointer" }}
+              >
+                <img
+                  src={games[gameID].image}  
+                  alt={games[gameID].name}  
+                  width={150}
+                  style={{
+                    transform: hoveredIndex === index ? "scale(1.1)" : "scale(1)"
+                  }}
+                />
+                <span className="text-white fw-bold mt-2">
+                  {games[gameID].name}
+                </span>
+              </div>
+            ))
+          ) : (
+            <p>No games found</p>  
+          )}
         </div>
       </Modal.Body>
     </Modal>

@@ -9,8 +9,7 @@ import Loader from './utils/Loader';
 import Login from './routes/Login';
 import Home from './routes/Home';
 import Profile from './routes/Profile';
-import LobbyUtangga from './routes/LobbyUtangga';
-import LobbyNuca from './routes/LobbyNuca';
+import LobbyGame from './routes/LobbyGame';
 import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
 import UlarTangga from './routes/UlarTangga';
@@ -21,7 +20,7 @@ const withLoader = (Component) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-      const timer = setTimeout(() => setIsLoading(false), 1000); 
+      const timer = setTimeout(() => setIsLoading(false), 1000);
       return () => clearTimeout(timer);
     }, []);
 
@@ -58,16 +57,9 @@ const App = () => {
         { path: '/information', element: withLoader(Information)() },
         { path: '/destination/:id', element: withLoader(DestinationDetail)() },
         {
-          path: '/lobbyUtangga', element: (
+          path: '/lobby/:topicID/:gameID', element: (
             <ProtectedRoute>
-              {withLoader(LobbyUtangga)()}
-            </ProtectedRoute>
-          )
-        },
-        {
-          path: '/lobbyNuca', element: (
-            <ProtectedRoute>
-              {withLoader(LobbyNuca)()}
+              {withLoader(LobbyGame)()}
             </ProtectedRoute>
           )
         },

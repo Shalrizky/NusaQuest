@@ -1,0 +1,66 @@
+/* Ensure the background image is set correctly */
+.utangga-container {
+  background-image: url('../../assets/common/bg-ular.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Ensure proper layout for header and game board */
+.utu-container-left {
+  display: flex;
+  justify-content: flex-start;
+  padding: 20px; 
+}
+
+/* Ensure Konva canvas container is positioned correctly */
+.utu-konva {
+  position: relative;
+}
+
+/* Styling for player turn box */
+.player-turn-box {
+  
+  width: 500px;
+  height: 300px;
+  background-color: #3971D0; /* Dark blue */
+  color: white;
+  text-align: center;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* Ensure no margin-top issues */
+  margin: 20px auto;
+}
+
+.player-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.player-item {
+  margin: 10px 20px;
+}
+
+.player-item img {
+  border: 5px solid #ffd700; /* warna kuning */
+  border-radius: 50%; /* membuat foto profile menjadi lingkaran */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 60px; /* ukuran foto profile */
+  height: 60px; /* ukuran foto profile */
+}
+
+.player-item span {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+  margin-left: 10px;
+}
+

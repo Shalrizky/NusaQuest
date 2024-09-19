@@ -13,6 +13,7 @@ import LobbyUtangga from './routes/LobbyUtangga';
 import LobbyNuca from './routes/LobbyNuca';
 import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
+import UlarTangga from './routes/UlarTangga';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const withLoader = (Component) => {
@@ -67,6 +68,13 @@ const App = () => {
           path: '/lobbyNuca', element: (
             <ProtectedRoute>
               {withLoader(LobbyNuca)()}
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/UlarTangga', element: (
+            <ProtectedRoute>
+              {withLoader(UlarTangga)()}
             </ProtectedRoute>
           )
         },

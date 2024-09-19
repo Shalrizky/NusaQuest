@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { Stage, Layer, Rect, Text, Image as KonvaImage } from 'react-konva';
-import pionImageSrc from '../assets/common/Pions 1.png';
-import snake2ImageSrc from '../assets/common/uler-tangga2.png';
-import snake3ImageSrc from '../assets/common/uler-tangga3.png';
-import snake4ImageSrc from '../assets/common/uler-tangga4.png';
-import snake5ImageSrc from '../assets/common/uler-tangga5.png';
-import snake6ImageSrc from '../assets/common/uler-tangga6.png';
-import snakeImageSrc from '../assets/common/Uler-tangga1.png';
-import tanggaImageSrc from '../assets/common/tangga1.png';
-import tangga2ImageSrc from '../assets/common/tangga2.png';
-import tangga3ImageSrc from '../assets/common/tangga3.png';
-import tangga4ImageSrc from '../assets/common/tangga4.png';
-import tangga5ImageSrc from '../assets/common/tangga5.png';
-import tangga6ImageSrc from '../assets/common/tangga6.png';
-import tangga7ImageSrc from '../assets/common/tangga7.png';
-import tangga8ImageSrc from '../assets/common/tangga8.png';
+import pionImageSrc from '../assets/games/Utangga/Pions 1.png';
+import snake2ImageSrc from '../assets/games/Utangga/uler-tangga2.png';
+import snake3ImageSrc from '../assets/games/Utangga/uler-tangga3.png';
+import snake4ImageSrc from '../assets/games/Utangga/uler-tangga4.png';
+import snake5ImageSrc from '../assets/games/Utangga/uler-tangga5.png';
+import snake6ImageSrc from '../assets/games/Utangga/uler-tangga6.png';
+import snakeImageSrc from '../assets/games/Utangga/Uler-tangga1.png';
+import tanggaImageSrc from '../assets/games/Utangga/tangga1.png';
+import tangga2ImageSrc from '../assets/games/Utangga/tangga2.png';
+import tangga3ImageSrc from '../assets/games/Utangga/tangga3.png';
+import tangga4ImageSrc from '../assets/games/Utangga/tangga4.png';
+import tangga5ImageSrc from '../assets/games/Utangga/tangga5.png';
+import tangga6ImageSrc from '../assets/games/Utangga/tangga6.png';
+import tangga7ImageSrc from '../assets/games/Utangga/tangga7.png';
+import tangga8ImageSrc from '../assets/games/Utangga/tangga8.png';
 
 function Board() {
     const cellSize = 80;

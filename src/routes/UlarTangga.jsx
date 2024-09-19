@@ -1,17 +1,14 @@
 import React from 'react';
 import { Container, Row, Col, Button, Image } from 'react-bootstrap';
 import HeaderUtangga from '../components/HeaderUtangga';
-import KonvaUlar from '../components/React-KonvaUlar';
-import Dice from '../components/Dice'
+import Board from '../components/React-KonvaUlar';
+import Dice from '../components/Dice';
 import '../style/routes/UlarTangga.css';
-import '../assets/games/Utangga/naruto.jpeg'
-import '../assets/games/Utangga/narutoa.png'
 import bgUlarTangga from '../assets/common/bg-ular.png';
 
-// Data pemain
 const players = [
   { id: 1, name: 'Anak Bego(AB)', photo: require('../assets/games/Utangga/naruto.jpeg') },
-  { id: 1, name: 'Sahel Bau', photo: require('../assets/games/Utangga/narutoa.png') },
+  { id: 2, name: 'Sahel Bau', photo: require('../assets/games/Utangga/narutoa.png') },
   { id: 3, name: 'RanggaSpinner', photo: '' },
 ];
 
@@ -21,7 +18,7 @@ function UlarTangga() {
       <HeaderUtangga layout="home" />
       <Row className="utu-container-left">
         <Col md={6} className="utu-konva">
-          <KonvaUlar />
+          <Board />
         </Col>
         <Col md={6} className="d-flex flex-column align-items-center justify-content-start">
           <div className="player-turn-box">

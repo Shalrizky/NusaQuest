@@ -19,7 +19,7 @@ import tangga8ImageSrc from "../assets/games/Utangga/tangga8.png";
 function Board() {
   const numRowsCols = 10;
   const [stageSize, setStageSize] = useState({ width: 900, height: 900 });
-  const [cellSize, setCellSize] = useState(80); // Dynamically adjust cell size
+  const [cellSize, setCellSize] = useState(80); 
   const [pionImage, setPionImage] = useState(null);
   const [snakeImage, setSnakeImage] = useState(null);
   const [snake2Image, setSnake2Image] = useState(null);
@@ -170,7 +170,7 @@ function Board() {
           {/* Add snake images */}
           {snakeImage && (
             <KonvaImage
-              x={cellSize * 3}
+              x={cellSize * 4}
               y={cellSize}
               width={4 * cellSize}
               height={6 * cellSize}

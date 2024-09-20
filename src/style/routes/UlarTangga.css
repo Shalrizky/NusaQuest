@@ -6,6 +6,9 @@
   background-size: cover;
   min-height: 100vh;
   overflow: hidden;
+  padding: 20px; /* Added padding for consistent spacing */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Ensure proper layout for header and game board */
@@ -13,16 +16,17 @@
   display: flex;
   justify-content: flex-start;
   padding: 20px; 
+  margin-top: 20px;
 }
 
 /* Ensure Konva canvas container is positioned correctly */
 .utu-konva {
   position: relative;
+  margin-bottom: 20px;
 }
 
 /* Styling for player turn box */
 .player-turn-box {
-  
   width: 500px;
   height: 300px;
   background-color: #3971D0; /* Dark blue */
@@ -35,7 +39,6 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* Ensure no margin-top issues */
   margin: 20px auto;
 }
 
@@ -50,11 +53,11 @@
 }
 
 .player-item img {
-  border: 5px solid #ffd700; /* warna kuning */
-  border-radius: 50%; /* membuat foto profile menjadi lingkaran */
+  border: 5px solid #ffd700; /* Yellow border */
+  border-radius: 50%; /* Round profile picture */
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  width: 60px; /* ukuran foto profile */
-  height: 60px; /* ukuran foto profile */
+  width: 60px;
+  height: 60px;
 }
 
 .player-item span {
@@ -64,3 +67,29 @@
   margin-left: 10px;
 }
 
+/* Responsive styles */
+@media (max-width: 768px) {
+  .utu-konva {
+    margin-bottom: 30px;
+  }
+
+  .player-turn-box {
+    width: 100%; /* Make the player turn box full width on mobile */
+    height: auto; /* Allow height to adjust */
+    text-align: center;
+  }
+
+  .player-item {
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+
+  .player-item img {
+    width: 40px; /* Smaller profile image on mobile */
+    height: 40px;
+  }
+
+  .player-item span {
+    font-size: 16px; /* Adjust font size for mobile */
+  }
+}

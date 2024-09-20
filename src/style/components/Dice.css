@@ -12,6 +12,7 @@
     height: 100px;
     position: relative;
     transform-style: preserve-3d;
+    border-radius: 10px; /* Round the corners of the dice */
 }
 
 .face {
@@ -23,6 +24,7 @@
     align-items: center;
     background-color: white;
     border: 1px solid black;
+    border-radius: 20px; /* Round the corners of each face */
 }
 
 .dice .front  { transform: rotateY(0deg) translateZ(50px); }

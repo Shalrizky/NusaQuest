@@ -24,7 +24,7 @@
     align-items: center;
     background-color: white;
     border: 1px solid black;
-    border-radius: 20px; /* Round the corners of each face */
+    /* border-radius: 20px; Round the corners of each face */
 }
 
 .dice .front  { transform: rotateY(0deg) translateZ(50px); }

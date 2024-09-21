@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import gsap from 'gsap';
 import '../style/components/Dice.css';
 
-function Dice() {
+function Dice({ onRollComplete }) {
     const [rolling, setRolling] = useState(false);
     const [diceNumber, setDiceNumber] = useState(1); // Initial dice face
     const diceRef = useRef(null);
@@ -42,6 +42,7 @@ function Dice() {
             onComplete: () => {
                 setDiceNumber(finalNumber); // Set the rolled number after animation
                 setRolling(false);
+                onRollComplete(); // Trigger function passed from parent after roll completes
             }
         });
     };

@@ -7,6 +7,8 @@ import snake3ImageSrc from "../assets/games/Utangga/uler-tangga3.png";
 import snake4ImageSrc from "../assets/games/Utangga/uler-tangga4.png";
 import snake5ImageSrc from "../assets/games/Utangga/uler-tangga5.png";
 import snake6ImageSrc from "../assets/games/Utangga/uler-tangga6.png";
+import snake7ImageSrc from "../assets/games/Utangga/uler-tangga7.png";
+import snake8ImageSrc from "../assets/games/Utangga/uler-tangga8.png";
 import tanggaImageSrc from "../assets/games/Utangga/tangga1.png";
 import tangga2ImageSrc from "../assets/games/Utangga/tangga2.png";
 import tangga3ImageSrc from "../assets/games/Utangga/tangga3.png";
@@ -15,11 +17,12 @@ import tangga5ImageSrc from "../assets/games/Utangga/tangga5.png";
 import tangga6ImageSrc from "../assets/games/Utangga/tangga6.png";
 import tangga7ImageSrc from "../assets/games/Utangga/tangga7.png";
 import tangga8ImageSrc from "../assets/games/Utangga/tangga8.png";
+import tangga9ImageSrc from "../assets/games/Utangga/tangga9.png";
 
 function Board() {
   const numRowsCols = 10;
   const [stageSize, setStageSize] = useState({ width: 900, height: 900 });
-  const [cellSize, setCellSize] = useState(80); 
+  const [cellSize, setCellSize] = useState(80);
   const [pionImage, setPionImage] = useState(null);
   const [snakeImage, setSnakeImage] = useState(null);
   const [snake2Image, setSnake2Image] = useState(null);
@@ -27,6 +30,8 @@ function Board() {
   const [snake4Image, setSnake4Image] = useState(null);
   const [snake5Image, setSnake5Image] = useState(null);
   const [snake6Image, setSnake6Image] = useState(null);
+  const [snake7Image, setSnake7Image] = useState(null);
+  const [snake8Image, setSnake8Image] = useState(null);
   const [tanggaImage, setTanggaImage] = useState(null);
   const [tangga2Image, setTangga2Image] = useState(null);
   const [tangga3Image, setTangga3Image] = useState(null);
@@ -35,6 +40,7 @@ function Board() {
   const [tangga6Image, setTangga6Image] = useState(null);
   const [tangga7Image, setTangga7Image] = useState(null);
   const [tangga8Image, setTangga8Image] = useState(null);
+  const [tangga9Image, setTangga9Image] = useState(null);
 
   const stageRef = useRef();
 
@@ -80,6 +86,8 @@ function Board() {
     loadImage(snake4ImageSrc, setSnake4Image);
     loadImage(snake5ImageSrc, setSnake5Image);
     loadImage(snake6ImageSrc, setSnake6Image);
+    loadImage(snake7ImageSrc, setSnake7Image);
+    loadImage(snake8ImageSrc, setSnake8Image);
     loadImage(tanggaImageSrc, setTanggaImage);
     loadImage(tangga2ImageSrc, setTangga2Image);
     loadImage(tangga3ImageSrc, setTangga3Image);
@@ -88,6 +96,7 @@ function Board() {
     loadImage(tangga6ImageSrc, setTangga6Image);
     loadImage(tangga7ImageSrc, setTangga7Image);
     loadImage(tangga8ImageSrc, setTangga8Image);
+    loadImage(tangga9ImageSrc, setTangga9Image);
   }, []);
 
   // Draw the board grid
@@ -170,132 +179,160 @@ function Board() {
           {/* Add snake images */}
           {snakeImage && (
             <KonvaImage
-              x={cellSize * 4}
-              y={cellSize}
-              width={4 * cellSize}
-              height={6 * cellSize}
+              x={cellSize * 1}
+              y={cellSize * 6}
+              width={2 * cellSize}
+              height={4 * cellSize}
               image={snakeImage}
             />
           )}
           {snake2Image && (
             <KonvaImage
-              x={0}
-              y={cellSize * 5}
-              width={4 * cellSize}
-              height={4 * cellSize}
+              x={cellSize * 8.3}
+              y={cellSize * 7.2}
+              width={1.5 * cellSize}
+              height={2.6 * cellSize}
               image={snake2Image}
             />
           )}
           {snake3Image && (
             <KonvaImage
-              x={cellSize * 3.5}
-              y={cellSize * 5.5}
-              width={5 * cellSize}
-              height={3.1 * cellSize}
+              x={cellSize * 5.2}
+              y={cellSize * 2.3}
+              width={3 * cellSize}
+              height={7 * cellSize}
               image={snake3Image}
             />
           )}
           {snake4Image && (
             <KonvaImage
-              x={0}
-              y={cellSize * 1.7}
-              width={4 * cellSize}
-              height={3.5 * cellSize}
+              x={cellSize * 1.5}
+              y={cellSize * 4.1}
+              width={1.5 * cellSize}
+              height={2.5 * cellSize}
               image={snake4Image}
             />
           )}
           {snake5Image && (
             <KonvaImage
-              x={cellSize * 1.5}
-              y={cellSize * 0.2}
-              width={5 * cellSize}
-              height={4.5 * cellSize}
+              x={cellSize * 3}
+              y={cellSize * 2.5}
+              width={3 * cellSize}
+              height={4 * cellSize}
               image={snake5Image}
             />
           )}
           {snake6Image && (
             <KonvaImage
-              x={cellSize * 6}
-              y={0}
-              width={4 * cellSize}
-              height={3.4 * cellSize}
+              x={cellSize * 7.3}
+              y={cellSize * 0}
+              width={2.5 * cellSize}
+              height={6 * cellSize}
               image={snake6Image}
+            />
+          )}
+          {snake7Image && (
+            <KonvaImage
+              x={cellSize * 5.5}
+              y={cellSize * 0.3}
+              width={1.5 * cellSize}
+              height={3 * cellSize}
+              image={snake7Image}
+            />
+          )}
+          {snake8Image && (
+            <KonvaImage
+              x={cellSize * 1.5}
+              y={cellSize * 0}
+              width={2 * cellSize}
+              height={3 * cellSize}
+              image={snake8Image}
             />
           )}
 
           {/* Add ladder images */}
           {tanggaImage && (
             <KonvaImage
-              x={cellSize}
-              y={cellSize * 8}
-              width={4 * cellSize}
-              height={2 * cellSize}
+              x={cellSize * 0}
+              y={cellSize *4.1}
+              width={1 * cellSize}
+              height={5 * cellSize}
               image={tanggaImage}
             />
           )}
           {tangga2Image && (
             <KonvaImage
-              x={cellSize * 4.7}
-              y={cellSize * 6.5}
-              width={4.5 * cellSize}
-              height={3.5 * cellSize}
+              x={cellSize * 4.3}
+              y={cellSize * 7.2}
+              width={1.5 * cellSize}
+              height={2.5 * cellSize}
               image={tangga2Image}
             />
           )}
           {tangga3Image && (
             <KonvaImage
-              x={cellSize * 3}
-              y={cellSize * 6}
-              width={2 * cellSize}
-              height={3 * cellSize}
+              x={cellSize * 5.5}
+              y={cellSize * 4}
+              width={4 * cellSize}
+              height={5 * cellSize}
               image={tangga3Image}
             />
           )}
           {tangga4Image && (
             <KonvaImage
-              x={cellSize * 7.4}
-              y={cellSize * 5}
-              width={1.5 * cellSize}
-              height={2 * cellSize}
+              x={cellSize * 3}
+              y={cellSize * 3}
+              width={4 * cellSize}
+              height={6 * cellSize}
               image={tangga4Image}
             />
           )}
           {tangga5Image && (
             <KonvaImage
-              x={cellSize * 1.2}
-              y={cellSize * 3.5}
-              width={1.5 * cellSize}
+              x={cellSize * 9.1}
+              y={cellSize * 3.2}
+              width={1 * cellSize}
               height={3 * cellSize}
               image={tangga5Image}
             />
           )}
           {tangga6Image && (
             <KonvaImage
-              x={cellSize * 7.2}
-              y={cellSize * 1.5}
-              width={1.5 * cellSize}
-              height={3 * cellSize}
+              x={cellSize * 4.1}
+              y={cellSize * 2}
+              width={0.8 * cellSize}
+              height={2 * cellSize}
               image={tangga6Image}
             />
           )}
           {tangga7Image && (
             <KonvaImage
-              x={cellSize * 0.5}
-              y={0}
-              width={4 * cellSize}
-              height={4 * cellSize}
+              x={cellSize * 0}
+              y={cellSize *1.1}
+              width={2 * cellSize}
+              height={3 * cellSize}
               image={tangga7Image}
             />
           )}
           {tangga8Image && (
             <KonvaImage
-              x={cellSize * 5}
-              y={0}
-              width={4 * cellSize}
-              height={3 * cellSize}
+              x={cellSize * 5.5}
+              y={cellSize * 0}
+              width={5 * cellSize}
+              height={4 * cellSize}
               image={tangga8Image}
             />
           )}
+          {tangga9Image && (
+            <KonvaImage
+              x={cellSize * 3}
+              y={cellSize * 0}
+              width={5 * cellSize}
+              height={3 * cellSize}
+              image={tangga9Image}
+            />
+          )}
+
         </Layer>
       </Stage>
     </div>

@@ -12,6 +12,7 @@
 }
 
 .start-button {
+    justify-content: center;
     background-color: #007bff; 
     color: white; 
     border: none; 
@@ -33,10 +34,37 @@
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.chatbox-container {
-    position: absolute;
-    bottom: 2vh;
-    left: 2vw;
+.chat-column {
     display: flex;
-    align-items: flex-end;
-}
+    flex-direction: column;
+    height: 100%;
+    margin-top: 50px; /* Tambahkan gap 40px dari atas */
+  }
+  
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    width: 500px;  /* Lebar diubah menjadi 500px */
+    height: auto;  /* Tinggi diatur kembali ke auto untuk menyesuaikan konten */
+    /* border: 1px solid #ccc; */
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 0 auto;  /* Ini akan membuat container berada di tengah kolom jika kolomnya lebih lebar */
+  }
+  
+  .chat-input-form {
+    width: 500px;
+    display: flex;
+    padding: 10px;
+  }
+  
+  .chat-input {
+    flex-grow: 1;
+    margin-right: 10px;
+    padding: 5px;
+  }
+  
+  .send-button {
+    width: 70px;
+  }
+  

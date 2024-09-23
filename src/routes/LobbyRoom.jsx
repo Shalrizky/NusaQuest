@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Image, Button, Card } from "react-bootstrap";
 import Header from "../components/Header";
-import bgLobbyRoom from "../assets/common/background.png";
-import ButtonStart from "../assets/common/btnStart.png";
 import ChatClose from "../assets/common/chat-close.png";
 import ChatOpen from "../assets/common/chat-open.png";
 import "../style/routes/LobbyRoom.css";
@@ -10,6 +8,7 @@ import CardLobbyRoom from "../components/RoomCardPlayer";
 
 function LobbyRoom() {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  
 
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
@@ -31,20 +30,21 @@ function LobbyRoom() {
         showTextHeader="ROOM 1 "
         showBackIcon={true}
       />
+      
       <CardLobbyRoom />
       <Row>
         <Col md={12} className="lobby-details">
           <div
             className="start-button-container"
-            style={{ marginTop: "20px", textAlign: "center" }}
           >
             <Button
               variant="primary"
               className="start-button"
-              style={{ padding: 0, border: "none", background: "none" }}
             >
-              <Image src={ButtonStart} alt="Button Start" />
+              START
             </Button>
+
+            
           </div>
           <div className="chatbox-container" style={{ marginTop: "20px" }}>
             <Button

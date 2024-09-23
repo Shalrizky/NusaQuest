@@ -1,154 +1,132 @@
-.card-player-1 {
-  width: 234px;
-  height: 550px;
-  background: linear-gradient(180deg, #000B45 0%, #0043A5 100%);
-  position: relative;
-  overflow: hidden;
-  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.card-player-1:before {
-  content: "";
-  position: absolute;
-  bottom: -3px; 
-  left: 0;
-  width: 100%;
-  height: 6px; 
-  clip-path: polygon(0 0, 50% 100%, 100% 0);
-  z-index: 1; 
-}
-
-.card-player-1 img {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  margin-bottom: -5px; 
-}
-
-.card-player-1 .card-body {
-  padding: 10px 15px;
-  text-align: center;
-  color: white;
-  position: relative;
-  z-index: 2;
-}
-
-.card-player-1 .card-title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #FFFFFF;
-  margin-bottom: 3px;
-}
-
-.card-player-1 .card-subtitle {
-  font-size: 1rem; 
-  margin-bottom: 15px;
-}
-
-.card-player-1 .win-rate-section {
-  text-align: center;
-  margin-bottom: 10px; 
-}
-
-.card-player-1 .win-rate-section h6 {
-  color: #FFFFFF;
-  font-size: 1rem;
-  margin-bottom: 10px;
-}
-
-.card-player-1 .win-rate-item {
-  display: flex;
-  align-items: center; 
-  justify-content: center; 
-  margin-bottom: 8px;
-}
-
-.card-player-1 .win-rate-item img {
-  width: 20px;
-  height: 20px;
-  margin-right: 8px; 
-}
-
-.card-player-1 .win-rate-item span {
-  font-size: 1rem;
-  color: #FFFFFF;
-}
-
-.card-player-1 .arrow-left,
-.card-player-1 .arrow-right {
-  position: absolute;
-  top: 40%; 
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-color: transparent transparent transparent #FFC72C; 
-}
-
-.card-player-1 .arrow-left {
-  left: -10px;
-  transform: rotate(90deg);
-}
-
-.card-player-1 .arrow-right {
-  right: -10px;
-  transform: rotate(-90deg);
-}
-
 .card-wrapper {
-  width: 240px;
-  height: 556px;
+  margin-top: 30px;
+  width: 250px;
+  height: 555px;
   position: relative;
-  background: #FFC72C; /* Border emas */
-  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%); 
+  background: #FFC72C;
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   align-items: center;
-  padding: 3px; 
+  /* padding: 1px; */
 }
-
-.card-player-1 {
-  width: 234px;
-  height: 550px;
-  background: linear-gradient(180deg, #000B45 0%, #0043A5 100%);
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15); 
-  overflow: hidden;
+.card-wrapper2 {
+  margin-top: 20px;
+  width: 250px;
+  height: 555px;
   position: relative;
-  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%); 
+  background: #D39070;
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* padding: 1px; */
 }
 
-.img-card-player {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  margin-bottom: -5px; 
+.card-wrapper3 {
+  margin-top: 20px;
+  width: 250px;
+  height: 555px;
+  position: relative;
+  background: #7C7977;
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* padding: 1px; */
+}
+/* .card-wrapper4 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: #ffffff;
+  border-radius: 15px;
+} */
+.bot {
+  position: relative;
+  overflow: hidden;
+  width: 245px;
+  height: 550px;
+  background: linear-gradient(180deg, rgba(6, 30, 74, 0) 0%, rgba(37, 53, 83, 0.5) 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+  margin-top: 1px; /* gap above the card */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-@media only screen and (max-width: 768px) {
-  .card-player-1 {
-    width: 90%; /* Adjust the width to fit smaller screens */
-    height: auto; /* Adjust the height to fit the content */
-  }
-  .card-wrapper {
-    width: 90%; /* Adjust the width to fit smaller screens */
-    height: auto; /* Adjust the height to fit the content */
-  }
-  .img-card-player {
-    height: 150px; /* Adjust the height to fit smaller screens */
-  }
+.card-player{
+  position: relative;
+  overflow: hidden;
+  width: 245px;
+  height: 550px;
+  background: linear-gradient(180deg, #061E4A 0%, #061E4A 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+  margin-top: 1px; /*gap above the card */
 }
 
-/* For screens smaller than 480px (smaller mobiles) */
-@media only screen and (max-width: 480px) {
-  .card-player-1 {
-    width: 80%; /* Adjust the width to fit even smaller screens */
-    height: auto; /* Adjust the height to fit the content */
-  }
-  .card-wrapper {
-    width: 80%; /* Adjust the width to fit even smaller screens */
-    height: auto; /* Adjust the height to fit the content */
-  }
-  .img-card-player {
-    height: 100px; /* Adjust the height to fit even smaller screens */
-  }
+.card-player .card-body {
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  /* padding: 20px; */
+}
+.card-player .title{
+  color: white;
+}
+.card-player .text{
+  color: gold;
+}
+.card-player .text-2{
+  color: #D39070;
+}
+.card-player .text-3{
+  color: #7C7977;
+}
+.bot .text-4 {
+  position: absolute; /* Position it relative to .bot */
+  top: 40%; /* Position it below the vector */
+  transform: translate(-50%, 0); /* Center horizontally */
+  text-align: center;
+  font-size: 15px;
+  color: white;
+  margin-top: 20px; /* Adjusts space between the vector and the text */
+}
+
+.card-player .img-card-player {
+  width: 300px;
+  padding: 2px; /*buat poto */
+}
+
+.badge-image{
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+.mask-image{
+  padding-top: 20px;
+  position: relative;
+  width: 30px;
+  height: 70px;
+}
+
+.vector-player {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 20px;
+  position: absolute;
+  top: 25%; 
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 150px;
+}
+
+span{
+  padding-top: 5px;
+  color: white; 
+  margin-left: 5px;
 }

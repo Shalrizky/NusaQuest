@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Rect, Text, Image as KonvaImage } from "react-konva";
 import pionImageSrc from "../assets/games/Utangga/Pions 1.png";
 import snakeImageSrc from "../assets/games/Utangga/Uler-tangga1.png";
@@ -18,12 +18,13 @@ import tangga6ImageSrc from "../assets/games/Utangga/tangga6.png";
 import tangga7ImageSrc from "../assets/games/Utangga/tangga7.png";
 import tangga8ImageSrc from "../assets/games/Utangga/tangga8.png";
 import tangga9ImageSrc from "../assets/games/Utangga/tangga9.png";
+import gsap from "gsap";
 
-function Board() {
+function Board({ pionPositionIndex }) {
   const numRowsCols = 10;
   const [stageSize, setStageSize] = useState({ width: 900, height: 900 });
   const [cellSize, setCellSize] = useState(80);
-  const [pionImage, setPionImage] = useState(null);
+  // Gambar Asset Ular dan tangga
   const [snakeImage, setSnakeImage] = useState(null);
   const [snake2Image, setSnake2Image] = useState(null);
   const [snake3Image, setSnake3Image] = useState(null);
@@ -41,8 +42,11 @@ function Board() {
   const [tangga7Image, setTangga7Image] = useState(null);
   const [tangga8Image, setTangga8Image] = useState(null);
   const [tangga9Image, setTangga9Image] = useState(null);
+  // Asset pion
+  const [pionImage, setPionImage] = useState(null);
 
   const stageRef = useRef();
+  const pionImageRef = useRef();
 
   // Responsive resizing logic
   useEffect(() => {
@@ -51,11 +55,9 @@ function Board() {
         const containerWidth = stageRef.current.parentElement.offsetWidth;
         const containerHeight = stageRef.current.parentElement.offsetHeight;
 
-        // Set the board to be square and scale down based on available width
         const newStageSize = Math.min(containerWidth, containerHeight);
         setStageSize({ width: newStageSize, height: newStageSize });
 
-        // Adjust the cell size dynamically
         const newCellSize = newStageSize / numRowsCols;
         setCellSize(newCellSize);
       }
@@ -67,12 +69,56 @@ function Board() {
     return () => window.removeEventListener("resize", updateSize);
   }, []);
 
-  // Load pion image
-  useEffect(() => {
-    const img = new window.Image();
-    img.src = pionImageSrc;
-    img.onload = () => setPionImage(img);
-  }, []);
+  // Draw the board grid
+  const drawBoard = () => {
+    let squares = [];
+    let number = 1;
+    for (let i = numRowsCols - 1; i >= 0; i--) {
+      let startCol = 0;
+      let endCol = numRowsCols - 1;
+      let direction = 1;
+
+      if ((numRowsCols - 1 - i) % 2 !== 0) {
+        startCol = numRowsCols - 1;
+        endCol = 0;
+        direction = -1;
+      }
+
+      for (
+        let j = startCol;
+        direction === 1 ? j <= endCol : j >= endCol;
+        j += direction
+      ) {
+        let color = (i + j) % 2 === 0 ? "#FD9502" : "#CDCDAB";
+        squares.push(
+          <Rect
+            key={`${i}-${j}`}
+            x={j * cellSize}
+            y={i * cellSize}
+            width={cellSize}
+            height={cellSize}
+            fill={color}
+          />
+        );
+        squares.push(
+          <Text
+            key={`text-${i}-${j}`}
+            x={j * cellSize + cellSize / 1}
+            y={i * cellSize + cellSize / 2}
+            text={number}
+            fontSize={Math.max(cellSize / 5, 10)}
+            fill="black"
+            align="center"
+            verticalAlign="middle"
+            offsetX={cellSize / 3}
+            offsetY={cellSize / 3}
+          />
+        );
+        number++;
+      }
+    }
+    return squares;
+  };
 
   useEffect(() => {
     const loadImage = (src, setter) => {
@@ -99,65 +145,78 @@ function Board() {
     loadImage(tangga9ImageSrc, setTangga9Image);
   }, []);
 
-  // Draw the board grid
-  const drawBoard = () => {
-    let squares = [];
-    let number = 1;
-    for (let i = numRowsCols - 1; i >= 0; i--) {
-      let startCol = 0;
-      let endCol = numRowsCols - 1;
-      let direction = 1;
+  // Load pion image
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = pionImageSrc;
+    img.onload = () => setPionImage(img);
+  }, []);
 
-      if ((numRowsCols - 1 - i) % 2 !== 0) {
-        startCol = numRowsCols - 1;
-        endCol = 0;
-        direction = -1;
+  // Calculate pion position based on index (adjusted to start from 1)
+  const getPionPosition = useCallback(
+    (index) => {
+      const row = Math.floor(index / numRowsCols);
+      let col;
+
+      // For even rows, the column is left to right
+      // For odd rows, the column is right to left (reversed)
+      if (row % 2 === 0) {
+        col = index % numRowsCols;
+      } else {
+        col = numRowsCols - 1 - (index % numRowsCols);
+      }
+      const x = col * cellSize;
+      const y = (numRowsCols - 1 - row) * cellSize;
+      return { x, y };
+    },
+    [numRowsCols, cellSize]
+  );
+
+  useEffect(() => {
+    if (pionPositionIndex !== null && pionImageRef.current) {
+      const timeline = gsap.timeline();
+
+      let currentIndex = 0;
+
+      const pionAttrs = pionImageRef.current.attrs;
+      const currentX = pionAttrs.x;
+      const currentY = pionAttrs.y;
+
+      // Calculate the current index based on current X and Y
+      for (let i = 0; i <= numRowsCols * numRowsCols; i++) {
+        const { x, y } = getPionPosition(i);
+        if (
+          Math.abs(x - currentX) < cellSize / 2 &&
+          Math.abs(y - currentY) < cellSize / 2
+        ) {
+          currentIndex = i;
+          break;
+        }
       }
 
-      for (
-        let j = startCol;
-        direction === 1 ? j <= endCol : j >= endCol;
-        j += direction
-      ) {
-        let color = (i + j) % 2 === 0 ? "#FD9502" : "#CDCDAB"; // Alternate colors
-        squares.push(
-          <Rect
-            key={`${i}-${j}`}
-            x={j * cellSize}
-            y={i * cellSize}
-            width={cellSize}
-            height={cellSize}
-            fill={color}
-          />
-        );
-        squares.push(
-          <Text
-            key={`text-${i}-${j}`}
-            x={j * cellSize + cellSize / 1}
-            y={i * cellSize + cellSize / 2}
-            text={number}
-            fontSize={Math.max(cellSize / 5, 10)} // Scale the font size dynamically
-            fill="black"
-            align="center"
-            verticalAlign="middle"
-            offsetX={cellSize / 3}
-            offsetY={cellSize / 3}
-          />
-        );
-        number++;
+      while (currentIndex < pionPositionIndex) {
+        currentIndex += 1;
+        const nextPosition = getPionPosition(currentIndex);
+
+        // Efek jumping lebih halus pada sumbu Y
+        timeline.to(pionImageRef.current, {
+          x: nextPosition.x,
+          y: nextPosition.y - 20,
+          duration: 0.2,
+          ease: "sine.out",
+        });
+
+        // Pion turun kembali ke posisi normal dengan smooth
+        timeline.to(pionImageRef.current, {
+          y: nextPosition.y,
+          duration: 0.2,
+          ease: "sine.out",
+        });
       }
+
+      timeline.play();
     }
-    return squares;
-  };
-
-  // Calculate pion position
-  const getPionPosition = () => {
-    const x = 0;
-    const y = (numRowsCols - 1) * cellSize;
-    return { x, y };
-  };
-
-  const pionPosition = getPionPosition();
+  }, [pionPositionIndex, cellSize, stageSize, getPionPosition]);
 
   return (
     <div style={{ width: "100%", height: "100%" }} ref={stageRef}>
@@ -168,8 +227,9 @@ function Board() {
           {/* Add pion image */}
           {pionImage && (
             <KonvaImage
-              x={pionPosition.x + 5}
-              y={pionPosition.y + 5}
+              ref={pionImageRef} // Reference to animate the pion
+              x={5} // Starting X position
+              y={stageSize.height - cellSize + 5} // Start pion at bottom-left
               width={cellSize - 10}
               height={cellSize - 10}
               image={pionImage}
@@ -254,7 +314,7 @@ function Board() {
           {tanggaImage && (
             <KonvaImage
               x={cellSize * 0}
-              y={cellSize *4.1}
+              y={cellSize * 4.1}
               width={1 * cellSize}
               height={5 * cellSize}
               image={tanggaImage}
@@ -308,7 +368,7 @@ function Board() {
           {tangga7Image && (
             <KonvaImage
               x={cellSize * 0}
-              y={cellSize *1.1}
+              y={cellSize * 1.1}
               width={2 * cellSize}
               height={3 * cellSize}
               image={tangga7Image}
@@ -332,7 +392,6 @@ function Board() {
               image={tangga9Image}
             />
           )}
-
         </Layer>
       </Stage>
     </div>

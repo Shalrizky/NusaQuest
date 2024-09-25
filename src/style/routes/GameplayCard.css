@@ -13,9 +13,10 @@
   padding: 21px 21px;
 }
 
+/* Tambahkan z-index lebih tinggi untuk backIcon agar tetap di atas overlay */
 .top-icon {
-  width: 40px;
-  height: 40px;
+  z-index: 200;  /* Lebih tinggi dari overlay */
+  position: relative; /* Agar z-index berlaku */
 }
 
 .ml-3 {
@@ -38,6 +39,11 @@
   position: absolute;
   width: 115px;  /* Ukuran kartu lebih kecil */
   height: auto;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.back-card:hover {
+  transform: translateY(-20px); /* Mengangkat kartu saat di-hover */
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); /* Menambahkan bayangan */
 }
 
 /* Mengatur posisi tumpukan kartu belakang ke samping (horizontal) */
@@ -81,6 +87,11 @@
   position: absolute;
   width: 120px;
   height: auto;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.stacked-card:hover {
+  transform: translateY(-20px); /* Mengangkat kartu saat di-hover */
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); /* Menambahkan bayangan */
 }
 
 /* Mengatur posisi tumpukan kartu dengan offset lebih besar */
@@ -208,4 +219,72 @@
 .left-card-4 {
   top: 120px;  /* Kartu terakhir */
   z-index: 1;
+}
+
+
+/* Menempatkan logo person di atas layar dan memperbesarnya */
+.logo-person {
+  position: absolute;
+  top: 20px; /* Jarak dari atas layar */
+  left: 50%;
+  transform: translateX(-50%); /* Memusatkan secara horizontal */
+  width: 200px; /* Perbesar ukuran logo menjadi 200px */
+  height: auto;
+  z-index: 1000; /* Pastikan di depan elemen lainnya */
+}
+
+/* Overlay hitam yang muncul setengah layar */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: -50%;
+  width: 50%;  /* Setengah layar */
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* Hitam dengan transparansi */
+  z-index: 100; /* z-index lebih rendah dari backIcon */
+  transition: left 0.5s ease; /* Animasi untuk slide-in */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0px 20px 20px 0px;
+}
+
+.overlay.show {
+  left: 0;
+}
+
+/* Konten di dalam overlay */
+.overlay-content {
+  color: white;
+  text-align: left; /* Meratakan teks ke kiri */
+  position: absolute; /* Memungkinkan penempatan relatif terhadap elemen induk */
+  top: 100px; /* Atur jarak dari atas sesuai dengan tinggi button backIcon */
+  left: 20px; /* Atur jarak dari kiri */
+  right: 20px; /* Atur jarak dari kanan jika diperlukan */
+}
+
+.overlay-content h1 {
+  font-size: 36px; /* Ukuran untuk header */
+  margin-bottom: 10px;
+}
+
+.overlay-content h2 {
+  font-size: 20px; /* Ukuran untuk subheader */
+  margin-bottom: 20px;
+  font-weight: lighter;
+}
+
+/* Styling untuk list pertanyaan dan jawaban */
+.question-list {
+  text-align: left; /* Untuk meratakan list di sebelah kiri */
+  font-size: 18px;
+  margin-top: 20px;
+}
+
+.question-list li {
+  margin-bottom: 10px;
+}
+
+.question-list strong {
+  font-weight: bold; /* Membuat teks bold untuk jawaban */
 }

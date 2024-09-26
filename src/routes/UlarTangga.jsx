@@ -44,11 +44,28 @@ const questions = [
   },
 ];
 
+//Misalnya, 5: 24 berarti pemain yang berada di posisi 5 akan naik ke posisi 24.
 const snakesAndLadders = {
-  5: 24, // Tangga dari 5 ke 24
-  27: 48, // Tangga dari 5 ke 24
-  49: 69, // Tangga dari 5 ke 24
-  // Tambahkan lebih banyak peta jika diperlukan
+  5: 24, // Tangga dari 6 ke 25
+  16: 66,// tangga dari 17 ke 67
+  61: 80,// tangga dari 60 ke 80
+  64: 75,// tangga dari 64 ke 75
+  72: 88,// tangga dari 73 ke 89
+  85: 94,// tangga dari 86 ke 95
+  19: 59, // tangga dari 20 ke 60
+  27: 48, // Tangga dari 28 ke 49
+  49: 69, // Tangga dari 50 ke 70
+
+  //untuk turun (ULAR)
+  22: 1,// ular dari 23 ke 2
+  29: 8,// ular dari 30 ke 9
+  57: 38,// ular dari 58 ke 39
+  65: 43,// ular dari 66 ke 44
+  67: 13,// ular dari 68 ke 14
+  90: 48,// ulara dari 91 ke 49
+  93: 66,//ular dari 94 ke 67
+  98: 76,//ular dari 99 ke 77
+
 };
 
 function UlarTangga() {
@@ -60,8 +77,9 @@ function UlarTangga() {
   const [isCorrect, setIsCorrect] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const handleDiceRollComplete = (diceNumber) => {
-
+  //Mengubah posisi pion berdasarkan nilai dadu
+  const handleDiceRollComplete = () => {
+    const diceNumber = 4;
     setPionPositionIndex((prevPosition) => {
       let newPosition = prevPosition + diceNumber;
       if (newPosition > 99) newPosition = 99; // Batas akhir papan
@@ -128,14 +146,13 @@ function UlarTangga() {
                     (option, index) => (
                       <div
                         key={index}
-                        className={`form-check ${
-                          submitted
+                        className={`form-check ${submitted
                             ? option ===
                               questions[currentQuestionIndex].correctAnswer
                               ? "correct-answer"
                               : "wrong-answer"
                             : ""
-                        }`}
+                          }`}
                       >
                         <input
                           type="radio"
@@ -158,9 +175,8 @@ function UlarTangga() {
                 </Form.Group>
                 {submitted && isCorrect !== null && (
                   <div
-                    className={`answer-feedback ${
-                      isCorrect ? "text-success" : "text-danger"
-                    }`}
+                    className={`answer-feedback ${isCorrect ? "text-success" : "text-danger"
+                      }`}
                   >
                     {isCorrect ? "Correct Answer!" : "Wrong Answer!"}
                   </div>
@@ -177,9 +193,8 @@ function UlarTangga() {
             {players.map((player, index) => (
               <div
                 key={player.id}
-                className={`player-item d-flex align-items-center ${
-                  currentPlayerIndex === index ? "active-player" : ""
-                }`}
+                className={`player-item d-flex align-items-center ${currentPlayerIndex === index ? "active-player" : ""
+                  }`}
               >
                 <Image
                   src={player.photo || "path/to/placeholder.jpg"}

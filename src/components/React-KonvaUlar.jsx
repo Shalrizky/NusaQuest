@@ -160,8 +160,6 @@ function Board({ pionPositionIndex, setPionPositionIndex, snakesAndLadders }) {
       const row = Math.floor(index / numRowsCols);
       let col;
 
-      // For even rows, the column is left to right
-      // For odd rows, the column is right to left (reversed)
       if (row % 2 === 0) {
         col = index % numRowsCols;
       } else {
@@ -174,10 +172,12 @@ function Board({ pionPositionIndex, setPionPositionIndex, snakesAndLadders }) {
     [numRowsCols, cellSize]
   );
 
+  //FUNGSI NAIK TURUN PION
   useEffect(() => {
     if (pionPositionIndex !== null && pionImageRef.current) {
       const timeline = gsap.timeline({
         onComplete: () => {
+
           // Setelah mencapai posisi target, periksa apakah ada tangga atau ular
           if (snakesAndLadders[pionPositionIndex] && !isJumping.current) {
             isJumping.current = true;
@@ -253,7 +253,6 @@ function Board({ pionPositionIndex, setPionPositionIndex, snakesAndLadders }) {
       <Stage width={stageSize.width} height={stageSize.height}>
         <Layer>
           {drawBoard()}
-
           {/* Add pion image */}
           {pionImage && (
             <KonvaImage

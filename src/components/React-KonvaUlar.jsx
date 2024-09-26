@@ -23,7 +23,7 @@ import tangga8ImageSrc from "../assets/games/Utangga/tangga8.png";
 import tangga9ImageSrc from "../assets/games/Utangga/tangga9.png";
 import gsap from "gsap";  
 
-function Board({ pionPositionIndex }) {
+function Board({ pionPositionIndex, setPionPositionIndex, snakesAndLadders }) {
   const numRowsCols = 10;
   const [stageSize, setStageSize] = useState({ width: 900, height: 900 });
   const [cellSize, setCellSize] = useState(80);
@@ -54,6 +54,7 @@ const [pion4Image, setPion4Image] = useState(null);
 
   const stageRef = useRef();
   const pionImageRef = useRef();
+  const isJumping = useRef(false); // Ref untuk mencegah loop tak terbatas
 
 
   // Responsive resizing logic
@@ -111,15 +112,15 @@ const [pion4Image, setPion4Image] = useState(null);
         squares.push(
           <Text
             key={`text-${i}-${j}`}
-            x={j * cellSize + cellSize / 1}
+            x={j * cellSize + cellSize / 2}
             y={i * cellSize + cellSize / 2}
             text={number}
             fontSize={Math.max(cellSize / 5, 10)}
             fill="black"
             align="center"
             verticalAlign="middle"
-            offsetX={cellSize / 3}
-            offsetY={cellSize / 3}
+            offsetX={cellSize / 2}
+            offsetY={cellSize / 2}
           />
         );
         number++;
@@ -168,7 +169,7 @@ const [pion4Image, setPion4Image] = useState(null);
   }, []);
   
 
-  // Calculate pion position based on index (adjusted to start from 1)
+  // Calculate pion position based on index (0-based)
   const getPionPosition = useCallback(
     (index) => {
       const row = Math.floor(index / numRowsCols);
@@ -188,87 +189,80 @@ const [pion4Image, setPion4Image] = useState(null);
     [numRowsCols, cellSize]
   );
 
-  //CODE UNTUK NAIK TANGGA
- useEffect(() => {
-  // Logic for when pionPositionIndex changes...
-  if (pionPositionIndex !== null && pionImageRef.current) {
-    const timeline = gsap.timeline();
-    let currentIndex = 0;
-    const pionAttrs = pionImageRef.current.attrs;
-    const currentX = pionAttrs.x;
-    const currentY = pionAttrs.y;
+  useEffect(() => {
+    if (pionPositionIndex !== null && pionImageRef.current) {
+      const timeline = gsap.timeline({
+        onComplete: () => {
+          // Setelah mencapai posisi target, periksa apakah ada tangga atau ular
+          if (snakesAndLadders[pionPositionIndex] && !isJumping.current) {
+            isJumping.current = true;
+            const finalPosition = snakesAndLadders[pionPositionIndex];
+            const posisiAkhir = getPionPosition(finalPosition);
 
-    // Calculate the current index based on current X and Y
-    for (let i = 0; i <= numRowsCols * numRowsCols; i++) {
-      const { x, y } = getPionPosition(i);
-      if (
-        Math.abs(x - currentX) < cellSize / 2 &&
-        Math.abs(y - currentY) < cellSize / 2
-      ) {
-        currentIndex = i;
-        break;
+            gsap.timeline()
+              .to(pionImageRef.current, {
+                y: getPionPosition(pionPositionIndex).y - 20,
+                duration: 0.2,
+                ease: "sine.out",
+              })
+              .to(pionImageRef.current, {
+                x: posisiAkhir.x,
+                y: posisiAkhir.y,
+                duration: 1,
+                ease: "power2.out",
+                onComplete: () => {
+                  setPionPositionIndex(finalPosition);
+                  isJumping.current = false;
+                },
+              })
+              .play();
+          }
+        },
+      });
+
+      let currentIndex = 0;
+
+      const pionAttrs = pionImageRef.current.attrs;
+      const currentX = pionAttrs.x;
+      const currentY = pionAttrs.y;
+
+      // Hitung currentIndex berdasarkan posisi pion saat ini
+      for (let i = 0; i <= numRowsCols * numRowsCols; i++) {
+        const { x, y } = getPionPosition(i);
+        if (
+          Math.abs(x - currentX) < cellSize / 2 &&
+          Math.abs(y - currentY) < cellSize / 2
+        ) {
+          currentIndex = i;
+          break;
+        }
       }
     }
 
-    console.log(`Pion starting at index: ${currentIndex}`);
+      // Animasi pion bergerak ke target posisi
+      while (currentIndex < pionPositionIndex) {
+        currentIndex += 1;
+        const nextPosition = getPionPosition(currentIndex);
 
-    // Check if pion is at index 6 and needs to "naik tangga" to index 24
-    if (currentIndex === 6) {
-      console.log("Pion reached column 6, moving to index 24");
-
-      // Naik tangga to index 24
-      const naikPosition = getPionPosition(24);
-      
-      timeline
-        .to(pionImageRef.current, {
-          x: naikPosition.x,
-          y: naikPosition.y - 30, // Lift pion slightly
-          duration: 0.5,
-          ease: "power2.out",
-          onComplete: () => console.log("Pion naik animasi selesai"),
-        })
-        .to(pionImageRef.current, {
-          y: naikPosition.y, // Set pion back to normal position
+        // Efek melompat pada sumbu Y
+        timeline.to(pionImageRef.current, {
+          x: nextPosition.x,
+          y: nextPosition.y - 20,
           duration: 0.2,
           ease: "power2.out",
         });
+
+
+        // Efek turun kembali ke posisi normal
+        timeline.to(pionImageRef.current, {
+          y: nextPosition.y,
+          duration: 0.2,
+          ease: "sine.out",
+        });
+      }
 
       timeline.play();
-
-      // Update currentIndex to 24 after naik tangga
-      currentIndex = 24;
-
-      // Stop further movement by returning from the effect
-      return;
-    }
-
-    // Continue moving the pion based on the remaining diceNumber
-    while (currentIndex < pionPositionIndex) {
-      currentIndex += 1;
-
-      const nextPosition = getPionPosition(currentIndex);
-
-      console.log(`Pion moving to index: ${currentIndex}`);
-
-      timeline
-        .to(pionImageRef.current, {
-          x: nextPosition.x,
-          y: nextPosition.y - 20, // Small lift while moving
-          duration: 0.2,
-          ease: "sine.out",
-        })
-        .to(pionImageRef.current, {
-          y: nextPosition.y, // Bring pion back to normal y position
-          duration: 0.2,
-          ease: "sine.out",
-        });
-    }
-
-    console.log(`Pion final index: ${currentIndex}`);
-    timeline.play();
-  }
-}, [pionPositionIndex, cellSize, stageSize, getPionPosition]);
-
+    }, [pionPositionIndex, cellSize, stageSize, getPionPosition, setPionPositionIndex, snakesAndLadders]);
   
   
   
@@ -282,9 +276,10 @@ const [pion4Image, setPion4Image] = useState(null);
           {/* Add pion image */}
           {pionImage && (
             <KonvaImage
-              ref={pionImageRef} // Reference to animate the pion
-              x={0} // Starting X position
-              y={stageSize.height - cellSize + 5} // Start pion at bottom-left
+
+              ref={pionImageRef} // Reference untuk animasi pion
+              x={0} // Posisi X awal
+              y={stageSize.height - cellSize + 5} // Posisi Y awal (bawah kiri)
               width={cellSize - 10}
               height={cellSize - 10}
               image={pionImage}

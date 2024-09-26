@@ -83,7 +83,7 @@ function UlarTangga() {
       setCurrentQuestionIndex(
         (prevIndex) => (prevIndex + 1) % questions.length
       );
-    }, 2000); // Penundaan setelah pemain menjawab
+    }, 1000); // Penundaan setelah pemain menjawab
   };
 
   return (

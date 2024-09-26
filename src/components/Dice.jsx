@@ -8,15 +8,15 @@ function Dice({ onRollComplete }) {
 
   const rollDice = () => {
     const dice = diceRef.current;
-
+  
     if (!dice) return;
-
+  
     setRolling(true);
-
-    // Generate a random number between 1 and 6
-    const finalNumber = Math.ceil(Math.random() * 6);
-
-    // Rotasi tetap untuk setiap angka dadu
+  
+    // Always set finalNumber to 6 for testing
+    const finalNumber = 5;
+  
+    // Rotasi tetap untuk angka 6
     const rotations = {
       1: { x: 0, y: 0 }, // Angka 1 di depan
       2: { x: -90, y: 0 }, // Angka 2 di bawah
@@ -25,13 +25,13 @@ function Dice({ onRollComplete }) {
       5: { x: 90, y: 0 }, // Angka 5 di atas
       6: { x: 180, y: 0 }, // Angka 6 di belakang
     };
-
+  
     const { x, y } = rotations[finalNumber];
-
+  
     // Rotasi tambahan untuk efek acak
     const randomRotationX = Math.floor(Math.random() * 4) * 360;
     const randomRotationY = Math.floor(Math.random() * 4) * 360;
-
+  
     // Menggunakan GSAP untuk animasi rotasi dadu
     gsap.to(dice, {
       duration: 1,

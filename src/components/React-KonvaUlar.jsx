@@ -20,7 +20,7 @@ import tangga8ImageSrc from "../assets/games/Utangga/tangga8.png";
 import tangga9ImageSrc from "../assets/games/Utangga/tangga9.png";
 import gsap from "gsap";
 
-function Board({ pionPositionIndex }) {
+function Board({ pionPositionIndex, setPionPositionIndex, snakesAndLadders }) {
   const numRowsCols = 10;
   const [stageSize, setStageSize] = useState({ width: 900, height: 900 });
   const [cellSize, setCellSize] = useState(80);
@@ -47,6 +47,7 @@ function Board({ pionPositionIndex }) {
 
   const stageRef = useRef();
   const pionImageRef = useRef();
+  const isJumping = useRef(false); // Ref untuk mencegah loop tak terbatas
 
   // Responsive resizing logic
   useEffect(() => {
@@ -103,15 +104,15 @@ function Board({ pionPositionIndex }) {
         squares.push(
           <Text
             key={`text-${i}-${j}`}
-            x={j * cellSize + cellSize / 1}
+            x={j * cellSize + cellSize / 2}
             y={i * cellSize + cellSize / 2}
             text={number}
             fontSize={Math.max(cellSize / 5, 10)}
             fill="black"
             align="center"
             verticalAlign="middle"
-            offsetX={cellSize / 3}
-            offsetY={cellSize / 3}
+            offsetX={cellSize / 2}
+            offsetY={cellSize / 2}
           />
         );
         number++;
@@ -152,7 +153,7 @@ function Board({ pionPositionIndex }) {
     img.onload = () => setPionImage(img);
   }, []);
 
-  // Calculate pion position based on index (adjusted to start from 1)
+  // Calculate pion position based on index (0-based)
   const getPionPosition = useCallback(
     (index) => {
       const row = Math.floor(index / numRowsCols);
@@ -174,7 +175,34 @@ function Board({ pionPositionIndex }) {
 
   useEffect(() => {
     if (pionPositionIndex !== null && pionImageRef.current) {
-      const timeline = gsap.timeline();
+      const timeline = gsap.timeline({
+        onComplete: () => {
+          // Setelah mencapai posisi target, periksa apakah ada tangga atau ular
+          if (snakesAndLadders[pionPositionIndex] && !isJumping.current) {
+            isJumping.current = true;
+            const finalPosition = snakesAndLadders[pionPositionIndex];
+            const posisiAkhir = getPionPosition(finalPosition);
+
+            gsap.timeline()
+              .to(pionImageRef.current, {
+                y: getPionPosition(pionPositionIndex).y - 20,
+                duration: 0.2,
+                ease: "sine.out",
+              })
+              .to(pionImageRef.current, {
+                x: posisiAkhir.x,
+                y: posisiAkhir.y,
+                duration: 1,
+                ease: "power2.out",
+                onComplete: () => {
+                  setPionPositionIndex(finalPosition);
+                  isJumping.current = false;
+                },
+              })
+              .play();
+          }
+        },
+      });
 
       let currentIndex = 0;
 
@@ -182,7 +210,7 @@ function Board({ pionPositionIndex }) {
       const currentX = pionAttrs.x;
       const currentY = pionAttrs.y;
 
-      // Calculate the current index based on current X and Y
+      // Hitung currentIndex berdasarkan posisi pion saat ini
       for (let i = 0; i <= numRowsCols * numRowsCols; i++) {
         const { x, y } = getPionPosition(i);
         if (
@@ -194,11 +222,12 @@ function Board({ pionPositionIndex }) {
         }
       }
 
+      // Animasi pion bergerak ke target posisi
       while (currentIndex < pionPositionIndex) {
         currentIndex += 1;
         const nextPosition = getPionPosition(currentIndex);
 
-        // Efek jumping lebih halus pada sumbu Y
+        // Efek melompat pada sumbu Y
         timeline.to(pionImageRef.current, {
           x: nextPosition.x,
           y: nextPosition.y - 20,
@@ -206,7 +235,7 @@ function Board({ pionPositionIndex }) {
           ease: "sine.out",
         });
 
-        // Pion turun kembali ke posisi normal dengan smooth
+        // Efek turun kembali ke posisi normal
         timeline.to(pionImageRef.current, {
           y: nextPosition.y,
           duration: 0.2,
@@ -216,7 +245,7 @@ function Board({ pionPositionIndex }) {
 
       timeline.play();
     }
-  }, [pionPositionIndex, cellSize, stageSize, getPionPosition]);
+  }, [pionPositionIndex, cellSize, stageSize, getPionPosition, setPionPositionIndex, snakesAndLadders]);
 
   return (
     <div style={{ width: "100%", height: "100%" }} ref={stageRef}>
@@ -227,9 +256,9 @@ function Board({ pionPositionIndex }) {
           {/* Add pion image */}
           {pionImage && (
             <KonvaImage
-              ref={pionImageRef} // Reference to animate the pion
-              x={5} // Starting X position
-              y={stageSize.height - cellSize + 5} // Start pion at bottom-left
+              ref={pionImageRef} // Reference untuk animasi pion
+              x={0} // Posisi X awal
+              y={stageSize.height - cellSize + 5} // Posisi Y awal (bawah kiri)
               width={cellSize - 10}
               height={cellSize - 10}
               image={pionImage}

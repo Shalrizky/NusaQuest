@@ -44,6 +44,13 @@ const questions = [
   },
 ];
 
+const snakesAndLadders = {
+  5: 24, // Tangga dari 5 ke 24
+  27: 48, // Tangga dari 5 ke 24
+  49: 69, // Tangga dari 5 ke 24
+  // Tambahkan lebih banyak peta jika diperlukan
+};
+
 function UlarTangga() {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [pionPositionIndex, setPionPositionIndex] = useState(0);
@@ -54,9 +61,11 @@ function UlarTangga() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const handleDiceRollComplete = (diceNumber) => {
+
     setPionPositionIndex((prevPosition) => {
       let newPosition = prevPosition + diceNumber;
       if (newPosition > 99) newPosition = 99; // Batas akhir papan
+
       return newPosition;
     });
 
@@ -95,7 +104,11 @@ function UlarTangga() {
       <HeaderUtangga layout="home" />
       <Row className="utu-container-left">
         <Col xs={12} md={6} className="utu-konva">
-          <Board pionPositionIndex={pionPositionIndex} />
+          <Board
+            pionPositionIndex={pionPositionIndex}
+            setPionPositionIndex={setPionPositionIndex}
+            snakesAndLadders={snakesAndLadders}
+          />
         </Col>
 
         <Col

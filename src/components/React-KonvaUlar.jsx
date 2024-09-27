@@ -2,6 +2,9 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Rect, Text, Image as KonvaImage } from "react-konva";
 import pionImageSrc from "../assets/games/Utangga/Pions 1.png";
+import pion2ImageSrc from "../assets/games/Utangga/Pions 2.png";
+import pion3ImageSrc from "../assets/games/Utangga/Pions 3.png";
+import pion4ImageSrc from "../assets/games/Utangga/Pions 4.png";
 import snakeImageSrc from "../assets/games/Utangga/Uler-tangga1.png";
 import snake2ImageSrc from "../assets/games/Utangga/uler-tangga2.png";
 import snake3ImageSrc from "../assets/games/Utangga/uler-tangga3.png";
@@ -45,6 +48,9 @@ function Board({ pionPositionIndex, setPionPositionIndex, snakesAndLadders }) {
   const [tangga9Image, setTangga9Image] = useState(null);
   // Asset pion
   const [pionImage, setPionImage] = useState(null);
+  const [pion2Image, setPion2Image] = useState(null);
+  const [pion3Image, setPion3Image] = useState(null);
+  const [pion4Image, setPion4Image] = useState(null);
 
   const stageRef = useRef();
   const pionImageRef = useRef();
@@ -153,7 +159,23 @@ function Board({ pionPositionIndex, setPionPositionIndex, snakesAndLadders }) {
     img.src = pionImageSrc;
     img.onload = () => setPionImage(img);
   }, []);
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = pion2ImageSrc;
+    img.onload = () => setPion2Image(img);
+  }, []);
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = pion3ImageSrc;
+    img.onload = () => setPion3Image(img);
+  }, []);
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = pion4ImageSrc;
+    img.onload = () => setPion4Image(img);
+  }, []);
 
+  
   // Calculate pion position based on index (0-based)
   const getPionPosition = useCallback(
     (index) => {
@@ -248,23 +270,12 @@ function Board({ pionPositionIndex, setPionPositionIndex, snakesAndLadders }) {
     }
   }, [pionPositionIndex, cellSize, stageSize, getPionPosition, setPionPositionIndex, snakesAndLadders]);
 
+
   return (
     <div style={{ width: "100%", height: "100%" }} ref={stageRef}>
       <Stage width={stageSize.width} height={stageSize.height}>
         <Layer>
           {drawBoard()}
-          {/* Add pion image */}
-          {pionImage && (
-            <KonvaImage
-              ref={pionImageRef} // Reference untuk animasi pion
-              x={0} // Posisi X awal
-              y={stageSize.height - cellSize + 5} // Posisi Y awal (bawah kiri)
-              width={cellSize - 10}
-              height={cellSize - 10}
-              image={pionImage}
-            />
-          )}
-
           {/* Add snake images */}
           {snakeImage && (
             <KonvaImage
@@ -421,6 +432,49 @@ function Board({ pionPositionIndex, setPionPositionIndex, snakesAndLadders }) {
               image={tangga9Image}
             />
           )}
+
+          {/* Add pion image */}
+          {pionImage && (
+            <KonvaImage
+              ref={pionImageRef} // Reference untuk animasi pion
+              x={-2} // Posisi X awal
+              y={stageSize.height - cellSize + 5} // Posisi Y awal (bawah kiri)
+              width={cellSize - 10}
+              height={cellSize - 10}
+              image={pionImage}
+            />
+          )}
+           {pion2Image && (
+            <KonvaImage
+              ref={pionImageRef} // Reference untuk animasi pion
+              x={0} // Posisi X awal
+              y={stageSize.height - cellSize + 5} // Posisi Y awal (bawah kiri)
+              width={cellSize - 10}
+              height={cellSize - 10}
+              image={pion2Image}
+            />
+          )}
+           {pion3Image && (
+            <KonvaImage
+              ref={pionImageRef} // Reference untuk animasi pion
+              x={3} // Posisi X awal
+              y={stageSize.height - cellSize + 5} // Posisi Y awal (bawah kiri)
+              width={cellSize - 10}
+              height={cellSize - 10}
+              image={pion3Image}
+            />
+          )}
+           {pion4Image && (
+            <KonvaImage
+              ref={pionImageRef} // Reference untuk animasi pion
+              x={6} // Posisi X awal
+              y={stageSize.height - cellSize + 5} // Posisi Y awal (bawah kiri)
+              width={cellSize - 10}
+              height={cellSize - 10}
+              image={pion4Image}
+            />
+          )}
+          
         </Layer>
       </Stage>
     </div>

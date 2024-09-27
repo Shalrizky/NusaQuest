@@ -47,28 +47,29 @@ const questions = [
 //Misalnya, 5: 24 berarti pemain yang berada di posisi 5 akan naik ke posisi 24.
 const snakesAndLadders = {
   5: 24, // Tangga dari 6 ke 25
-  16: 66,// tangga dari 17 ke 67
-  61: 80,// tangga dari 60 ke 80
-  64: 75,// tangga dari 64 ke 75
-  72: 88,// tangga dari 73 ke 89
-  85: 94,// tangga dari 86 ke 95
+  16: 66, // tangga dari 17 ke 67
+  61: 80, // tangga dari 60 ke 80
+  64: 75, // tangga dari 64 ke 75
+  72: 88, // tangga dari 73 ke 89
+  85: 94, // tangga dari 86 ke 95
   19: 59, // tangga dari 20 ke 60
   27: 48, // Tangga dari 28 ke 49
   49: 69, // Tangga dari 50 ke 70
 
-  //untuk turun (ULAR)
-  22: 1,// ular dari 23 ke 2
-  29: 8,// ular dari 30 ke 9
-  57: 38,// ular dari 58 ke 39
-  65: 43,// ular dari 66 ke 44
-  67: 13,// ular dari 68 ke 14
-  90: 48,// ulara dari 91 ke 49
-  93: 66,//ular dari 94 ke 67
-  98: 76,//ular dari 99 ke 77
-
+  // untuk turun (ULAR)
+  22: 1, // ular dari 23 ke 2
+  29: 8, // ular dari 30 ke 9
+  57: 38, // ular dari 58 ke 39
+  65: 43, // ular dari 66 ke 44
+  67: 13, // ular dari 68 ke 14
+  90: 48, // ulara dari 91 ke 49
+  93: 66, // ular dari 94 ke 67
+  98: 76, // ular dari 99 ke 77
 };
 
 function UlarTangga() {
+  const [isPionMoving, setIsPionMoving] = useState(false);
+
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [pionPositionIndex, setPionPositionIndex] = useState(0);
   const [showQuestion, setShowQuestion] = useState(false);
@@ -77,20 +78,35 @@ function UlarTangga() {
   const [isCorrect, setIsCorrect] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
+  //kolom dimana ada tangga dan akan muncul pertanyaan
+  const questionColumns = [5, 16, 61, 64, 72, 85, 19, 27, 49];
+
   //Mengubah posisi pion berdasarkan nilai dadu
-  const handleDiceRollComplete = () => {
-    const diceNumber = 4;
+  const handleDiceRollComplete = (diceNumber) => {
+    // const diceNum?ber = 5;
+    setIsPionMoving(true); // Pion mulai bergerak
     setPionPositionIndex((prevPosition) => {
       let newPosition = prevPosition + diceNumber;
       if (newPosition > 99) newPosition = 99; // Batas akhir papan
 
+      // Cek apakah pion berada di kolom ditentukan untuk menampilkan pertanyaan
+      if (questionColumns.includes(newPosition)) {
+        setShowQuestion(true);
+      } else {
+        setShowQuestion(false); // Sembunyikan pertanyaan jika tidak di kolom yang ditentukan
+      }
+
       return newPosition;
     });
 
-    // Tampilkan pertanyaan setelah dadu dilempar
-    setShowQuestion(true);
     setSubmitted(false);
     setIsCorrect(null);
+
+    // Pindahkan giliran ke pemain berikutnya setelah dadu berhenti
+    setTimeout(() => {
+      setIsPionMoving(false); // Pion selesai bergerak
+      setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+    }, 4000); // Simulasikan durasi pergerakan pion
   };
 
   const handleAnswerChange = (e) => {
@@ -102,15 +118,13 @@ function UlarTangga() {
 
     setSubmitted(true);
 
-    // Pindahkan giliran ke pemain berikutnya setelah jawaban diberikan
+    // Pindahkan ke pertanyaan berikutnya setelah jawaban diberikan
     setTimeout(() => {
-      setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
       setShowQuestion(false); // Sembunyikan pertanyaan setelah dijawab
-
       setCurrentQuestionIndex(
         (prevIndex) => (prevIndex + 1) % questions.length
       );
-    }, 1000); // Penundaan setelah pemain menjawab
+    }, 2000); // Penundaan setelah pemain menjawab
   };
 
   return (
@@ -147,11 +161,11 @@ function UlarTangga() {
                       <div
                         key={index}
                         className={`form-check ${submitted
-                            ? option ===
-                              questions[currentQuestionIndex].correctAnswer
-                              ? "correct-answer"
-                              : "wrong-answer"
-                            : ""
+                          ? option ===
+                            questions[currentQuestionIndex].correctAnswer
+                            ? "correct-answer"
+                            : "wrong-answer"
+                          : ""
                           }`}
                       >
                         <input
@@ -186,7 +200,7 @@ function UlarTangga() {
           </div>
 
           {/* Komponen Dadu */}
-          <Dice onRollComplete={handleDiceRollComplete} />
+          <Dice onRollComplete={handleDiceRollComplete} disabled={isPionMoving} />
 
           {/* Daftar pemain */}
           <div className="player-list mt-3">

@@ -8,17 +8,6 @@
   position: relative;
 }
 
-/* Mengatur bagian ikon atas */
-.top-icons {
-  padding: 21px 21px;
-}
-
-/* Tambahkan z-index lebih tinggi untuk backIcon agar tetap di atas overlay */
-.top-icon {
-  z-index: 200;  /* Lebih tinggi dari overlay */
-  position: relative; /* Agar z-index berlaku */
-}
-
 .ml-3 {
   margin-left: 10px;
 }
@@ -72,15 +61,24 @@
   z-index: 1;
 }
 
-/* Tumpukan Kartu Kuning */
+/* CSS untuk tumpukan kartu di tengah bawah */
 .card-stack-section {
-  margin-top: 100px;
+  position: absolute;
+  bottom: 0;  /* Menempatkan stack di bagian bawah */
+  left: 50%;  /* Menempatkan stack di tengah horizontal */
+  transform: translateX(-50%);  /* Menggeser ke kiri setengah dari lebar stack untuk memusatkan */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 400px;  /* Sesuaikan lebar stack sesuai kebutuhan */
+  height: auto;
 }
 
+/* Style untuk tumpukan kartu */
 .card-stack {
   position: relative;
   width: 400px;
-  height: 150px;
+  height: 150px;  /* Tinggi kartu tumpukan */
 }
 
 .stacked-card {
@@ -89,12 +87,13 @@
   height: auto;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 .stacked-card:hover {
-  transform: translateY(-20px); /* Mengangkat kartu saat di-hover */
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); /* Menambahkan bayangan */
+  transform: translateY(-20px);  /* Mengangkat kartu saat di-hover */
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);  /* Menambahkan bayangan */
 }
 
-/* Mengatur posisi tumpukan kartu dengan offset lebih besar */
+/* Mengatur posisi kartu dalam tumpukan */
 .stacked-card-0 {
   left: 0;
   z-index: 5;
@@ -123,18 +122,24 @@
 /* Shuffle Icon Positioning */
 .shuffle-icon {
   position: absolute;
-  top: -170px;
-  left: 49%;
+  top: -150px;
+  left: 50%;
   transform: translate(-50%, -50%);
-  width: 260px; /* Adjust the size as needed */
+  width: 250px; /* Adjust the size as needed */
   height: auto;
   z-index: 10;
 }
 
-/* Tumpukan Kartu di Sebelah Kanan (Vertikal ke Bawah) */
+/* CSS untuk bagian Kartu Kanan */
 .card-right-section {
-  margin-top: -415px;
-  margin-right: 10px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 10%;
 }
 
 .card-right-stack {
@@ -176,10 +181,16 @@
   z-index: 1;
 }
 
-/* Tumpukan Kartu di Sebelah Kiri (Vertikal ke Bawah) */
+/* CSS untuk bagian Kartu Kiri */
 .card-left-section {
-  margin-top: -305px;
-  margin-left: 10px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 10%;
 }
 
 .card-left-stack {
@@ -221,6 +232,30 @@
   z-index: 1;
 }
 
+/* CSS untuk bagian Kartu Kanan */
+.card-right-section {
+  position: absolute;
+  right: 0;
+  top: 50%; /* Atur posisinya di tengah layar secara vertikal */
+  transform: translateY(-50%); /* Agar tepat berada di tengah */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 10%;
+}
+
+/* CSS untuk bagian Kartu Kiri */
+.card-left-section {
+  position: realative;
+  left: 0;
+  top: 50%; /* Atur posisinya di tengah layar secara vertikal */
+  transform: translateY(-50%); /* Agar tepat berada di tengah */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 10%;
+}
+
 
 /* Menempatkan logo person di atas layar dan memperbesarnya */
 .logo-person {
@@ -240,7 +275,7 @@
   left: -50%;
   width: 50%;  /* Setengah layar */
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7); /* Hitam dengan transparansi */
+  background-color: rgba(0, 0, 0, 0.3); /* Hitam dengan transparansi lebih ringan */
   z-index: 100; /* z-index lebih rendah dari backIcon */
   transition: left 0.5s ease; /* Animasi untuk slide-in */
   display: flex;
@@ -253,38 +288,74 @@
   left: 0;
 }
 
-/* Konten di dalam overlay */
+/* Konten di dalam overlay dengan transparansi dan border */
 .overlay-content {
-  color: white;
-  text-align: left; /* Meratakan teks ke kiri */
-  position: absolute; /* Memungkinkan penempatan relatif terhadap elemen induk */
-  top: 100px; /* Atur jarak dari atas sesuai dengan tinggi button backIcon */
-  left: 20px; /* Atur jarak dari kiri */
-  right: 20px; /* Atur jarak dari kanan jika diperlukan */
+  background-color: rgba(255, 255, 255, 0.8); /* Warna putih dengan transparansi 80% */
+  border: 2px solid rgba(0, 0, 0, 0.5); /* Border hitam transparan */
+  color: black; /* Ubah teks menjadi hitam agar lebih mudah dibaca */
+  padding: 20px;
+  border-radius: 15px;
+  text-align: left;
+  position: absolute;
+  top: 100px;
+  left: 20px;
+  right: 20px;
 }
 
+/* Style untuk header dan subheader di dalam overlay */
 .overlay-content h1 {
-  font-size: 36px; /* Ukuran untuk header */
+  font-size: 28px; /* Ukuran untuk header */
   margin-bottom: 10px;
 }
 
 .overlay-content h2 {
-  font-size: 20px; /* Ukuran untuk subheader */
+  font-size: 18px; /* Ukuran untuk subheader */
   margin-bottom: 20px;
   font-weight: lighter;
 }
 
-/* Styling untuk list pertanyaan dan jawaban */
+/* Styling untuk list pertanyaan dan jawaban multiple choice */
 .question-list {
-  text-align: left; /* Untuk meratakan list di sebelah kiri */
   font-size: 18px;
   margin-top: 20px;
+  list-style-type: none; /* Menghilangkan bullet point */
+  padding: 0;
 }
 
 .question-list li {
-  margin-bottom: 10px;
+  margin-bottom: 15px; /* Jarak antar jawaban */
 }
 
-.question-list strong {
-  font-weight: bold; /* Membuat teks bold untuk jawaban */
+/* Style untuk pilihan jawaban dengan huruf A-D */
+.question-list li:before {
+  content: attr(data-choice); /* Menambahkan huruf pilihan (A, B, C, D) di depan */
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+/* Modal yang transparan */
+.transparent-modal .modal-content {
+  background-color: rgba(255, 255, 255, 0.8); /* Transparansi 80% */
+  border: none; /* Hapus border */
+  box-shadow: none; /* Hapus shadow default */
+}
+
+/* Style untuk pilihan jawaban */
+.choice-item {
+  cursor: pointer;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.5); /* Background transparan */
+  border-radius: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.choice-item:hover {
+  background-color: rgba(0, 123, 255, 0.2); /* Background biru saat di-hover */
+}
+
+/* Style untuk jawaban yang dipilih */
+.choice-item.selected {
+  background-color: rgba(0, 123, 255, 0.5); /* Background biru lebih pekat */
+  color: white;
+  font-weight: bold;
 }

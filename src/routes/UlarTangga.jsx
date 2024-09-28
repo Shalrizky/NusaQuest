@@ -69,9 +69,8 @@ const snakesAndLadders = {
 
 function UlarTangga() {
   const [isPionMoving, setIsPionMoving] = useState(false);
-
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const [pionPositionIndex, setPionPositionIndex] = useState(0);
+  const [pionPositions, setPionPositions] = useState([0, 0, 0, 0]); // 4 pion di posisi awal (0)
   const [showQuestion, setShowQuestion] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -82,21 +81,23 @@ function UlarTangga() {
   const questionColumns = [5, 16, 61, 64, 72, 85, 19, 27, 49];
 
   //Mengubah posisi pion berdasarkan nilai dadu
-  const handleDiceRollComplete = (diceNumber) => {
-    // const diceNum?ber = 5;
+  const handleDiceRollComplete = () => {
+    const diceNumber = 5;
     setIsPionMoving(true); // Pion mulai bergerak
-    setPionPositionIndex((prevPosition) => {
-      let newPosition = prevPosition + diceNumber;
-      if (newPosition > 99) newPosition = 99; // Batas akhir papan
 
-      // Cek apakah pion berada di kolom ditentukan untuk menampilkan pertanyaan
+    setPionPositions((prevPositions) => {
+      const newPositions = [...prevPositions]; // Make a copy of the previous positions
+      let newPosition = newPositions[currentPlayerIndex] + diceNumber;
+    
+      if (newPosition > 99) newPosition = 99; // Cap at 99
       if (questionColumns.includes(newPosition)) {
         setShowQuestion(true);
       } else {
         setShowQuestion(false); // Sembunyikan pertanyaan jika tidak di kolom yang ditentukan
       }
 
-      return newPosition;
+      newPositions[currentPlayerIndex] = newPosition; // Update the position of the current player
+      return newPositions; // Return the updated array
     });
 
     setSubmitted(false);
@@ -104,9 +105,9 @@ function UlarTangga() {
 
     // Pindahkan giliran ke pemain berikutnya setelah dadu berhenti
     setTimeout(() => {
-      setIsPionMoving(false); // Pion selesai bergerak
+      setIsPionMoving(false);
       setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-    }, 4000); // Simulasikan durasi pergerakan pion
+    }, 2500);
   };
 
   const handleAnswerChange = (e) => {
@@ -136,9 +137,10 @@ function UlarTangga() {
       <HeaderUtangga layout="home" />
       <Row className="utu-container-left">
         <Col xs={12} md={6} className="utu-konva">
+
           <Board
-            pionPositionIndex={pionPositionIndex}
-            setPionPositionIndex={setPionPositionIndex}
+            pionPositionIndex={pionPositions}
+            setPionPositionIndex={setPionPositions}
             snakesAndLadders={snakesAndLadders}
           />
         </Col>
@@ -149,7 +151,11 @@ function UlarTangga() {
           className="d-flex flex-column align-items-center justify-content-start"
         >
           <div className="player-turn-box">
-            <h3>{players[currentPlayerIndex].name}'s Turn</h3>
+            {players[currentPlayerIndex] ? (
+              <h3>{players[currentPlayerIndex].name}'s Turn</h3>
+            ) : (
+              <h3>Waiting for player...</h3>
+            )}
             {showQuestion && (
               <Form>
                 <Form.Group>

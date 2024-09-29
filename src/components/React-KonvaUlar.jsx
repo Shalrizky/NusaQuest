@@ -23,14 +23,14 @@ import tangga8ImageSrc from "../assets/games/Utangga/tangga8.png";
 import tangga9ImageSrc from "../assets/games/Utangga/tangga9.png";
 import gsap from "gsap";
 
-function Board({ pionPositionIndex = [0, 0, 0, 0], setPionPositionIndex, snakesAndLadders }) {
+function Board({ pionPositionIndex = [0, 0, 0, 0], setPionPositionIndex, snakesAndLadders, waitingForAnswer,currentPlayerIndex,isCorrect,setIsCorrect  }) {
   const numRowsCols = 10;
   const [stageSize, setStageSize] = useState({ width: 900, height: 900 });
   const [cellSize, setCellSize] = useState(80);
 
   // Gambar Asset Ular dan tangga
   const [snakeImage, setSnakeImage] = useState(null);
-  const [snake2Image, setSnake2Image] = useState(null); 
+  const [snake2Image, setSnake2Image] = useState(null);
   const [snake3Image, setSnake3Image] = useState(null);
   const [snake4Image, setSnake4Image] = useState(null);
   const [snake5Image, setSnake5Image] = useState(null);
@@ -186,83 +186,119 @@ function Board({ pionPositionIndex = [0, 0, 0, 0], setPionPositionIndex, snakesA
     [numRowsCols, cellSize]
   );
 
-  // Fungsi untuk menggerakkan pion saat naik turun tangga atau ular
-   useEffect(() => {
+    // Fungsi untuk menggerakkan pion saat naik turun tangga atau ular
+    useEffect(() => {
     if (!Array.isArray(pionPositionIndex)) {
       console.error("pionPositionIndex bukan array atau tidak terdefinisi, defaulting to empty array");
       pionPositionIndex = [];
     }
 
     pionPositionIndex.forEach((pionPosition, pionIndex) => {
+      // Jika pion berada di kolom yang memerlukan jawaban
+      if (waitingForAnswer && currentPlayerIndex === pionIndex) {
+        console.log("Menunggu jawaban sebelum pion dapat bergerak...");
+        return; // Jangan lanjutkan animasi jika pemain belum menjawab pertanyaan
+      }
+
       if (pionPosition !== null && pionImageRef.current[pionIndex]) {
+        if (isJumping.current) {
+          return; // Stop if another animation is in progress
+        }
+
         const timeline = gsap.timeline({
           onComplete: () => {
-            if (snakesAndLadders[pionPosition] && !isJumping.current) {
-              isJumping.current = true;
-              const finalPosition = snakesAndLadders[pionPosition];
-              const posisiAkhir = getPionPosition(finalPosition);
-
-              gsap
-                .timeline()
-                .to(pionImageRef.current[pionIndex], {
-                  y: getPionPosition(pionPosition).y - 20,
-                  duration: 0.2,
-                  ease: "sine.out",
-                })
-                .to(pionImageRef.current[pionIndex], {
-                  x: posisiAkhir.x,
-                  y: posisiAkhir.y,
-                  duration: 1,
-                  ease: "power2.out",
-                  onComplete: () => {
-                    setPionPositionIndex((prevPositions) => {
-                      const newPositions = [...prevPositions];
-                      newPositions[pionIndex] = finalPosition;
-                      return newPositions;
-                    });
-                    isJumping.current = false;
-                  },
-                })
-                .play();
-            }
+            // Reset the jumping flag to allow future animations
+            isJumping.current = false;
           },
         });
 
-        let currentIndex = 0;
-        const pionAttrs = pionImageRef.current[pionIndex].attrs;
-        const currentX = pionAttrs.x;
-        const currentY = pionAttrs.y;
+        // Jika pion bertemu ular, langsung turunkan
+        if (snakesAndLadders[pionPosition] < pionPosition) {
+          console.log(`Pion ${pionIndex} bertemu ular di posisi ${pionPosition}, turun ke ${snakesAndLadders[pionPosition]}`);
+          isJumping.current = true; // Set flag to true to avoid overlapping animations
+          const finalPosition = snakesAndLadders[pionPosition];
+          const posisiAkhir = getPionPosition(finalPosition);
 
-        for (let i = 0; i <= numRowsCols * numRowsCols; i++) {
-          const { x, y } = getPionPosition(i);
-          if (Math.abs(x - currentX) < cellSize / 2 && Math.abs(y - currentY) < cellSize / 2) {
-            currentIndex = i;
-            break;
-          }
+          timeline
+            .to(pionImageRef.current[pionIndex], {
+              y: getPionPosition(pionPosition).y - 20,
+              duration: 0.2,
+              ease: "sine.out",
+            })
+            .to(pionImageRef.current[pionIndex], {
+              x: posisiAkhir.x,
+              y: posisiAkhir.y,
+              duration: 1,
+              ease: "power2.out",
+              onComplete: () => {
+                setPionPositionIndex((prevPositions) => {
+                  const newPositions = [...prevPositions];
+                  newPositions[pionIndex] = finalPosition;
+                  console.log(`Pion ${pionIndex} dipindahkan ke ${finalPosition}`);
+                  return newPositions;
+                });
+                isJumping.current = false; // Reset after movement
+              },
+            })
+            .play();
         }
 
-        while (currentIndex < pionPosition) {
-          currentIndex += 1;
-          const nextPosition = getPionPosition(currentIndex);
+        // Jika pion bertemu tangga, hanya naik jika pemain ini benar
+        else if (pionIndex === currentPlayerIndex && isCorrect && snakesAndLadders[pionPosition] > pionPosition) {
+          console.log(`Pion ${pionIndex} bertemu tangga di posisi ${pionPosition}, naik ke ${snakesAndLadders[pionPosition]}`);
+          isJumping.current = true; // Set flag to true to avoid overlapping animations
+          const finalPosition = snakesAndLadders[pionPosition];
+          const posisiAkhir = getPionPosition(finalPosition);
 
-          timeline.to(pionImageRef.current[pionIndex], {
-            x: nextPosition.x,
-            y: nextPosition.y - 20,
-            duration: 0.2,
-            ease: "sine.out",
-          });
+          timeline
+            .to(pionImageRef.current[pionIndex], {
+              y: getPionPosition(pionPosition).y - 20,
+              duration: 0.2,
+              ease: "sine.out",
+            })
+            .to(pionImageRef.current[pionIndex], {
+              x: posisiAkhir.x,
+              y: posisiAkhir.y,
+              duration: 1,
+              ease: "power2.out",
+              onComplete: () => {
+                setPionPositionIndex((prevPositions) => {
+                  const newPositions = [...prevPositions];
+                  newPositions[pionIndex] = finalPosition;
+                  console.log(`Pion ${pionIndex} dipindahkan ke ${finalPosition}`);
+                  return newPositions;
+                });
+                isJumping.current = false; // Reset after movement
+              },
+            })
+            .play();
+        } else if (pionIndex === currentPlayerIndex) {
+          // Normal movement without snake or ladder
+          let currentIndex = pionPositionIndex[pionIndex];
+          const nextPosition = pionPosition;
 
-          timeline.to(pionImageRef.current[pionIndex], {
-            y: nextPosition.y,
-            duration: 0.2,
-            ease: "sine.out",
-          });
+          console.log(`Pion ${pionIndex} bergerak ke posisi ${nextPosition}`);
+
+          timeline
+            .to(pionImageRef.current[pionIndex], {
+              x: getPionPosition(nextPosition).x,
+              y: getPionPosition(nextPosition).y,
+              duration: 0.5,
+              ease: "power1.out",
+            })
+            .play();
         }
-
-        timeline.play();
       }
     });
-  }, [pionPositionIndex, cellSize, stageSize, getPionPosition, setPionPositionIndex, snakesAndLadders]);
+
+    // Reset isCorrect for the next player
+    if (pionPositionIndex[currentPlayerIndex] !== null) {
+      setIsCorrect(false);
+    }
+  }, [pionPositionIndex, cellSize, stageSize, getPionPosition, setPionPositionIndex, snakesAndLadders, waitingForAnswer, currentPlayerIndex, isCorrect, setIsCorrect]);
+  
+  
+
 
   return (
     <div style={{ width: "100%", height: "100%" }} ref={stageRef}>

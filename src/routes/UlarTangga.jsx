@@ -58,18 +58,18 @@ const tanggaUp = {
   19: 59,
   27: 48,
   49: 69,
-  22: 1,
-  98: 76,
 };
 
 const snakesDown = {
   // Turun Ular
+  22: 1,
   29: 8,
   57: 38,
   65: 43,
   67: 13,
   90: 48,
   93: 66,
+  98: 76,
 };
 
 function UlarTangga() {
@@ -88,8 +88,7 @@ function UlarTangga() {
     console.log("Pion Positions:", newPositions);
   };
 
-  const handleDiceRollComplete = () => {
-    const diceNumber = 6; // Assuming a fixed dice number for simplicity, replace with a random one as needed
+  const handleDiceRollComplete = (diceNumber) => {
     setIsPionMoving(true); // Set animation status
   
     setPionPositionIndex((prevPositions) => {
@@ -133,7 +132,7 @@ function UlarTangga() {
       });
   
       setIsPionMoving(false);
-    }, 2500); // Allow time for the pawn to move before continuing
+    }, 2000); // Allow time for the pawn to move before continuing
   
     // Reset question and answer state
     setSubmitted(false);

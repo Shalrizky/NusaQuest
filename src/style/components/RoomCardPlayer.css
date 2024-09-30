@@ -118,6 +118,15 @@
   height: 150px;
 }
 
+<<<<<<< HEAD
+=======
+span{
+  padding-top: 5px;
+  color: white; 
+  margin-left: 5px;
+}
+
+>>>>>>> 1c7627e (responsive semoga)
 .card-player-container {
   display: flex;
   flex-wrap: nowrap; /* Pastikan tidak berpindah baris */

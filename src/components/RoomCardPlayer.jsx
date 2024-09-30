@@ -10,34 +10,23 @@ import "../style/components/RoomCardPlayer.css";
 
 const CustomCard = () => {
   return (
-    <Row className="card-player-container d-flex justify-content-center align-items-center gap-5">
-
-      <Col md={2}>
+    <Row className="card-player-container d-flex justify-content-center align-items-center gap-4">
+      <Col className="d-flex justify-content-center">
         <div className="card-wrapper">
           <Card className="card-player">
             <Card.Img variant="top" src={Image} className="img-card-player" />
             <Card.Body>
-              <Card.Title className="title">Anak Bego (AB)</Card.Title>
-              {/* <Card.Text className="text">
-                <p>Master Kuliner</p>
-              </Card.Text> */}
-
+              <Card.Title className="title">KAMAL ABRAR</Card.Title>
               <div className="card-image-container d-flex align-items-center">
                 <Card.Img src={badge1} alt="Player" className="badge-image" />
                 <span>Master Kuliner</span>
               </div>
-
-              {/*<div className="mask-container d-flex align-items-center" style={{ marginTop: "10px" }}>
-                <Card.Img src={mask} alt="Mask" className="mask-image" />
-                <span>70%</span>
-              </div> */}
-
             </Card.Body>
           </Card>
-        </div> {/* akhir dari card-wrapper  */}
+        </div>
       </Col>
 
-      <Col md={2}>
+      <Col className="d-flex justify-content-center">
         <div className="card-wrapper2">
           <Card className="card-player">
             <Card.Img variant="top" src={Image2} className="img-card-player" />
@@ -47,18 +36,12 @@ const CustomCard = () => {
                 <Card.Img src={badge2} alt="Player" className="badge-image" />
                 <span>Amatir Kuliner</span>
               </div>
-
-              {/*<div className="mask-container d-flex align-items-center" style={{ marginTop: "10px" }}>
-                <Card.Img src={mask} alt="Mask" className="mask-image" />
-                <span>70%</span>
-              </div> */}
-
             </Card.Body>
           </Card>
-        </div> {/* akhir dari card-wrapper  */}
+        </div>
       </Col>
 
-      <Col md={2}>
+      <Col className="d-flex justify-content-center">
         <div className="card-wrapper3">
           <Card className="card-player">
             <Card.Img variant="top" src={Image3} className="img-card-player" />
@@ -66,20 +49,14 @@ const CustomCard = () => {
               <Card.Title className="title">King Sahel</Card.Title>
               <div className="card-image-container d-flex align-items-center">
                 <Card.Img src={badge3} alt="Player" className="badge-image" />
-                <span>Beginner kuliner</span>
+                <span>Beginner Kuliner</span>
               </div>
-
-              {/*<div className="mask-container d-flex align-items-center" style={{ marginTop: "10px" }}>
-                <Card.Img src={mask} alt="Mask" className="mask-image" />
-                <span>70%</span>
-              </div> */}
-
             </Card.Body>
           </Card>
-        </div> {/* akhir dari card-wrapper  */}
+        </div>
       </Col>
 
-      <Col md={2}>
+      <Col className="d-flex justify-content-center">
         <Card className="bot">
           <Card.Img variant="top" src={vector} className="vector-player" />
           <Card.Body>
@@ -89,7 +66,6 @@ const CustomCard = () => {
           </Card.Body>
         </Card>
       </Col>
-
     </Row>
   );
 };

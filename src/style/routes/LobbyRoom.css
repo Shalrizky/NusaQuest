@@ -1,70 +1,170 @@
-.lobbyroom-container {
-    background-image: url('../../assets/common/background.png');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: cover;
-    min-height: 100vh;
-    overflow: hidden;
+/* Add a global box-sizing reset */
+* {
+  box-sizing: border-box;
 }
+
+.lobbyroom-container {
+  background-image: url('../../assets/common/background.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
 .start-button-container {
-    margin-top: 30px;
-    text-align: center;
+  margin-bottom: 30px;
+  text-align: center;
 }
 
 .start-button {
-    justify-content: center;
-    background-color: #007bff; 
-    color: white; 
-    border: none; 
-    padding: 10px 60px; 
-    border-radius: 0px; 
-    font-size: 30px; 
-    font-family: 'Poppins', sans-serif;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
+  justify-content: center;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 60px;
+  border-radius: 0px;
+  font-size: 30px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: bold;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 }
+
 .start-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
+  transform: scale(1.05);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
 }
 
 .start-button:active {
-    transform: scale(0.95);
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+  transform: scale(0.95);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.chat-column {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    margin-top: 50px; /* Tambahkan gap 40px dari atas */
-  }
-  
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 350px;
+  height: auto;
+  padding: 7px;
+  position: absolute;
+  bottom: 10px;
+  border-radius: 10px;
+  background-color: #007bff;
+  transition: height 0.3s ease, width 0.3s ease;
+  pointer-events: auto;
+  justify-content: flex-end;
+}
+
+/* Make the chat box responsive by adjusting the font size and padding on smaller screens */
+@media (max-width: 768px) {
   .chat-container {
-    display: flex;
-    flex-direction: column;
-    width: 500px;  /* Lebar diubah menjadi 500px */
-    height: auto;  /* Tinggi diatur kembali ke auto untuk menyesuaikan konten */
-    /* border: 1px solid #ccc; */
-    border-radius: 5px;
-    overflow: hidden;
-    margin: 0 auto;  /* Ini akan membuat container berada di tengah kolom jika kolomnya lebih lebar */
-  }
-  
-  .chat-input-form {
-    width: 500px;
-    display: flex;
-    padding: 10px;
-  }
-  
-  .chat-input {
-    flex-grow: 1;
-    margin-right: 10px;
+    font-size: 0.9rem;
     padding: 5px;
   }
-  
-  .send-button {
-    width: 70px;
+}
+
+@media (max-width: 480px) {
+  .chat-container {
+    font-size: 0.8rem;
+    padding: 3px;
   }
-  
+}
+
+.chat-container.collapsed {
+  height: auto;
+  padding-bottom: 5px;
+}
+
+.chat-container.expanded {
+  height: 300px;
+}
+
+.chat-messages {
+  max-height: 0px;
+  overflow-y: hidden;
+  transition: max-height 0.1s ease-in-out;
+}
+
+.chat-container.expanded .chat-messages {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.chat-input-form {
+  display: flex;
+  padding: 5px 0;
+  background-color: transparent;
+  width: 100%;
+}
+
+.chat-input {
+  flex-grow: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.send-button {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #0056b3;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 5px;
+}
+
+.send-button:hover {
+  background-color: #004494;
+}
+
+/* Media queries for responsiveness */
+
+/* Small screens (max-width: 768px) */
+@media (max-width: 768px) {
+  .lobbyroom-container {
+    background-size: 100% 100vh;
+  }
+  .start-button {
+    font-size: 24px;
+    padding: 8px 40px;
+  }
+  .chat-container {
+    max-width: 250px;
+  }
+  .chat-input {
+    padding: 6px;
+    font-size: 0.8rem;
+  }
+  .send-button {
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Extra small screens (max-width: 480px) */
+@media (max-width: 480px) {
+  .lobbyroom-container {
+    background-size: 100% 100vh;
+  }
+  .start-button {
+    font-size: 18px;
+    padding: 6px 30px;
+  }
+  .chat-container {
+    max-width: 200px;
+  }
+  .chat-input {
+    padding: 4px;
+    font-size: 0.6rem;
+  }
+  .send-button {
+    padding: 4px 6px;
+    font-size: 0.6rem;
+  }
+}

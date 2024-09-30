@@ -35,14 +35,7 @@
   align-items: center;
   /* padding: 1px; */
 }
-/* .card-wrapper4 {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  background-color: #ffffff;
-  border-radius: 15px;
-} */
+
 .bot {
   position: relative;
   overflow: hidden;
@@ -130,3 +123,21 @@ span{
   color: white; 
   margin-left: 5px;
 }
+
+.card-player-container {
+  display: flex;
+  flex-wrap: nowrap; /* Pastikan tidak berpindah baris */
+  justify-content: space-around; /* Memberi jarak antar kartu */
+  gap: 20px;
+  align-items: center;
+  overflow-x: auto; /* Jika terlalu kecil, bisa di-scroll secara horizontal */
+  padding: 20px;
+}
+
+/* Atur size untuk setiap kartu agar lebih responsif */
+.card-wrapper, .card-wrapper2, .card-wrapper3, .bot {
+  flex: 1 1 0; /* Agar kartu memiliki lebar yang sama */
+  max-width: 250px; /* Lebar maksimal agar tidak terlalu besar */
+  transition: all 0.3s ease;
+}
+

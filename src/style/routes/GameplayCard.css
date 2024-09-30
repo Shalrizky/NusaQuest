@@ -8,8 +8,34 @@
   position: relative;
 }
 
-.ml-3 {
-  margin-left: 10px;
+/* Logo Person di bagian atas layar */
+.logo-person {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 170px; /* Sesuaikan dengan ukuran yang diperlukan */
+  height: auto;
+  z-index: 1000;
+}
+
+/* Style untuk ikon btnTemp di kanan atas */
+.btn-temp-container {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1100; /* Pastikan di atas elemen lainnya */
+}
+
+.btn-temp {
+  width: 50px;  /* Sesuaikan ukuran tombol */
+  height: auto;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.btn-temp:hover {
+  transform: scale(1.1);  /* Zoom in sedikit saat di-hover */
 }
 
 /* Tumpukan Kartu Belakang di Tengah */
@@ -26,59 +52,40 @@
 
 .back-card {
   position: absolute;
-  width: 115px;  /* Ukuran kartu lebih kecil */
+  width: 115px; /* Ukuran kartu lebih kecil */
   height: auto;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 .back-card:hover {
   transform: translateY(-20px); /* Mengangkat kartu saat di-hover */
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); /* Menambahkan bayangan */
 }
 
 /* Mengatur posisi tumpukan kartu belakang ke samping (horizontal) */
-.back-card-0 {
-  left: 0;
-  z-index: 5;
-}
+.back-card-0 { left: 0; z-index: 5; }
+.back-card-1 { left: 10px; z-index: 4; }
+.back-card-2 { left: 20px; z-index: 3; }
+.back-card-3 { left: 30px; z-index: 2; }
+.back-card-4 { left: 40px; z-index: 1; }
 
-.back-card-1 {
-  left: 10px;  /* Geser ke kanan */
-  z-index: 4;
-}
-
-.back-card-2 {
-  left: 20px;  /* Geser lebih ke kanan */
-  z-index: 3;
-}
-
-.back-card-3 {
-  left: 30px;  /* Lebih jauh lagi */
-  z-index: 2;
-}
-
-.back-card-4 {
-  left: 40px;  /* Posisi paling kanan */
-  z-index: 1;
-}
-
-/* CSS untuk tumpukan kartu di tengah bawah */
+/* Tumpukan Kartu Kuning di Tengah Bawah dengan Shuffle Icon */
 .card-stack-section {
   position: absolute;
-  bottom: 0;  /* Menempatkan stack di bagian bawah */
-  left: 50%;  /* Menempatkan stack di tengah horizontal */
-  transform: translateX(-50%);  /* Menggeser ke kiri setengah dari lebar stack untuk memusatkan */
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 400px;  /* Sesuaikan lebar stack sesuai kebutuhan */
+  width: 350px;
   height: auto;
 }
 
-/* Style untuk tumpukan kartu */
 .card-stack {
   position: relative;
   width: 400px;
-  height: 150px;  /* Tinggi kartu tumpukan */
+  height: 150px;
 }
 
 .stacked-card {
@@ -89,64 +96,44 @@
 }
 
 .stacked-card:hover {
-  transform: translateY(-20px);  /* Mengangkat kartu saat di-hover */
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);  /* Menambahkan bayangan */
+  transform: translateY(-20px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* Mengatur posisi kartu dalam tumpukan */
-.stacked-card-0 {
-  left: 0;
-  z-index: 5;
-}
+.stacked-card-0 { left: 0; z-index: 5; }
+.stacked-card-1 { left: 60px; z-index: 4; }
+.stacked-card-2 { left: 120px; z-index: 3; }
+.stacked-card-3 { left: 180px; z-index: 2; }
+.stacked-card-4 { left: 240px; z-index: 1; }
 
-.stacked-card-1 {
-  left: 60px;
-  z-index: 4;
-}
-
-.stacked-card-2 {
-  left: 120px;
-  z-index: 3;
-}
-
-.stacked-card-3 {
-  left: 180px;
-  z-index: 2;
-}
-
-.stacked-card-4 {
-  left: 240px;
-  z-index: 1;
-}
-
-/* Shuffle Icon Positioning */
+/* Shuffle Icon di tengah kartu */
 .shuffle-icon {
   position: absolute;
-  top: -150px;
-  left: 50%;
+  top: -185px;
+  left: 53%;
   transform: translate(-50%, -50%);
-  width: 250px; /* Adjust the size as needed */
+  width: 255px; /* Sesuaikan ukuran sesuai kebutuhan */
   height: auto;
   z-index: 10;
 }
 
-/* CSS untuk bagian Kartu Kanan */
+/* Tumpukan Kartu di Sebelah Kanan (Vertikal) */
 .card-right-section {
   position: absolute;
   right: 0;
-  top: 50%;
+  top: 53%;
   transform: translateY(-50%);
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 10%;
+  width: 15%;
 }
 
 .card-right-stack {
   position: relative;
   width: 150px; /* Sesuaikan ukuran stack */
   height: 300px; /* Tinggi untuk tumpukan vertikal */
-  justify-content: flex-end;
 }
 
 .right-card {
@@ -156,48 +143,28 @@
 }
 
 /* Mengatur posisi tumpukan kartu kanan dari atas ke bawah */
-.right-card-0 {
-  top: 0;
-  z-index: 5;
-}
+.right-card-0 { top: 0; z-index: 5; }
+.right-card-1 { top: 30px; z-index: 4; }
+.right-card-2 { top: 60px; z-index: 3; }
+.right-card-3 { top: 90px; z-index: 2; }
+.right-card-4 { top: 120px; z-index: 1; }
 
-.right-card-1 {
-  top: 30px;  /* Kartu kedua bergeser ke bawah */
-  z-index: 4;
-}
-
-.right-card-2 {
-  top: 60px;  /* Kartu ketiga lebih jauh ke bawah */
-  z-index: 3;
-}
-
-.right-card-3 {
-  top: 90px;  /* Kartu keempat lebih jauh lagi */
-  z-index: 2;
-}
-
-.right-card-4 {
-  top: 120px;  /* Kartu terakhir */
-  z-index: 1;
-}
-
-/* CSS untuk bagian Kartu Kiri */
+/* Tumpukan Kartu di Sebelah Kiri (Vertikal) */
 .card-left-section {
   position: absolute;
   left: 0;
-  top: 50%;
+  top: 53%;
   transform: translateY(-50%);
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 10%;
+  width: 15%;
 }
 
 .card-left-stack {
   position: relative;
   width: 150px; /* Sesuaikan ukuran stack */
   height: 300px; /* Tinggi untuk tumpukan vertikal */
-  justify-content: flex-start;
 }
 
 .left-card {
@@ -207,73 +174,18 @@
 }
 
 /* Mengatur posisi tumpukan kartu kiri dari atas ke bawah */
-.left-card-0 {
-  top: 0;
-  z-index: 5;
-}
-
-.left-card-1 {
-  top: 30px;  /* Kartu kedua bergeser ke bawah */
-  z-index: 4;
-}
-
-.left-card-2 {
-  top: 60px;  /* Kartu ketiga lebih jauh ke bawah */
-  z-index: 3;
-}
-
-.left-card-3 {
-  top: 90px;  /* Kartu keempat lebih jauh lagi */
-  z-index: 2;
-}
-
-.left-card-4 {
-  top: 120px;  /* Kartu terakhir */
-  z-index: 1;
-}
-
-/* CSS untuk bagian Kartu Kanan */
-.card-right-section {
-  position: absolute;
-  right: 0;
-  top: 50%; /* Atur posisinya di tengah layar secara vertikal */
-  transform: translateY(-50%); /* Agar tepat berada di tengah */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 10%;
-}
-
-/* CSS untuk bagian Kartu Kiri */
-.card-left-section {
-  position: realative;
-  left: 0;
-  top: 50%; /* Atur posisinya di tengah layar secara vertikal */
-  transform: translateY(-50%); /* Agar tepat berada di tengah */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 10%;
-}
-
-
-/* Menempatkan logo person di atas layar dan memperbesarnya */
-.logo-person {
-  position: absolute;
-  top: 20px; /* Jarak dari atas layar */
-  left: 50%;
-  transform: translateX(-50%); /* Memusatkan secara horizontal */
-  width: 200px; /* Perbesar ukuran logo menjadi 200px */
-  height: auto;
-  z-index: 1000; /* Pastikan di depan elemen lainnya */
-}
+.left-card-0 { top: 0; z-index: 5; }
+.left-card-1 { top: 30px; z-index: 4; }
+.left-card-2 { top: 60px; z-index: 3; }
+.left-card-3 { top: 90px; z-index: 2; }
+.left-card-4 { top: 120px; z-index: 1; }
 
 /* Overlay hitam yang muncul setengah layar */
 .overlay {
   position: fixed;
   top: 0;
   left: -50%;
-  width: 50%;  /* Setengah layar */
+  width: 50%; /* Setengah layar */
   height: 100%;
   background-color: rgba(0, 0, 0, 0.3); /* Hitam dengan transparansi lebih ringan */
   z-index: 100; /* z-index lebih rendah dari backIcon */
@@ -292,7 +204,7 @@
 .overlay-content {
   background-color: rgba(255, 255, 255, 0.8); /* Warna putih dengan transparansi 80% */
   border: 2px solid rgba(0, 0, 0, 0.5); /* Border hitam transparan */
-  color: black; /* Ubah teks menjadi hitam agar lebih mudah dibaca */
+  color: black;
   padding: 20px;
   border-radius: 15px;
   text-align: left;
@@ -302,60 +214,68 @@
   right: 20px;
 }
 
-/* Style untuk header dan subheader di dalam overlay */
-.overlay-content h1 {
-  font-size: 28px; /* Ukuran untuk header */
-  margin-bottom: 10px;
-}
-
-.overlay-content h2 {
-  font-size: 18px; /* Ukuran untuk subheader */
-  margin-bottom: 20px;
-  font-weight: lighter;
-}
-
-/* Styling untuk list pertanyaan dan jawaban multiple choice */
-.question-list {
-  font-size: 18px;
-  margin-top: 20px;
-  list-style-type: none; /* Menghilangkan bullet point */
-  padding: 0;
-}
-
-.question-list li {
-  margin-bottom: 15px; /* Jarak antar jawaban */
-}
-
-/* Style untuk pilihan jawaban dengan huruf A-D */
-.question-list li:before {
-  content: attr(data-choice); /* Menambahkan huruf pilihan (A, B, C, D) di depan */
-  font-weight: bold;
-  margin-right: 10px;
-}
-
-/* Modal yang transparan */
+/* Modal yang transparan untuk pop-up */
 .transparent-modal .modal-content {
   background-color: rgba(255, 255, 255, 0.8); /* Transparansi 80% */
-  border: none; /* Hapus border */
-  box-shadow: none; /* Hapus shadow default */
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  border: none;
 }
 
-/* Style untuk pilihan jawaban */
-.choice-item {
-  cursor: pointer;
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.5); /* Background transparan */
-  border-radius: 10px;
-  transition: background-color 0.3s ease;
+.player-profile-container {
+  position: absolute;
+  width: 100%;
+  top: 20px; /* Adjust based on desired positioning */
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
 }
 
-.choice-item:hover {
-  background-color: rgba(0, 123, 255, 0.2); /* Background biru saat di-hover */
+.player-profile {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid #fff; /* Optional styling for profile */
 }
 
-/* Style untuk jawaban yang dipilih */
-.choice-item.selected {
-  background-color: rgba(0, 123, 255, 0.5); /* Background biru lebih pekat */
-  color: white;
+.player-profile-left {
+  position: absolute;
+  left: 55px;
+  top: 110px;
+}
+
+.player-profile-right {
+  position: absolute;
+  right: 75px;
+  top: 110px;
+}
+
+.player-profile-bottom {
+  position: absolute;
+  bottom: -655px;
+  left: 65%;
+  transform: translateX(-50%);
+}
+
+
+.modal-content-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modal-icon {
+  margin-bottom: 20px;
+}
+
+.modal-deck-icon {
+  width: 100px;
+  height: auto;
+}
+
+.modal-text {
+  font-size: 18px;
   font-weight: bold;
+  color: #333;
 }

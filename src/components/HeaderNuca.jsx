@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import { Row, Col, Image, Offcanvas } from "react-bootstrap";
-import btntemp from "../assets/common/btntemp.png";
 import iconmusik from "../assets/common/icon_musik.png";
 import iconmusikOff from "../assets/common/icon_musik_off.png";
 import iconsfx from "../assets/common/icon_sfx.png";
@@ -56,14 +55,7 @@ function HeaderNuca({ layout, toggleTemp }) {
              <audio ref={sfxRef} src={sfxFile} preload="auto" />     {/* Set the imported SFX file */}
             <Row className="align-items-center">
                 <Col className="d-flex justify-content-start">
-                    <Image
-                        src={btntemp}
-                        alt="btn temp"
-                        width={45}
-                        className="ms-3"
-                        onClick={handleBtnTempClick}
-                        style={{ cursor: "pointer" }}
-                    />
+                    
                 </Col>
                 <Col className="d-flex justify-content-end">
                     <Image

@@ -7,6 +7,7 @@ import Potion from "../components/potion"; // Import komponen Potion
 import "../style/routes/UlarTangga.css";
 import bgUlarTangga from "../assets/common/bg-ular.png";
 
+// Definisi pemain
 const players = [
   {
     id: 1,
@@ -30,6 +31,7 @@ const players = [
   },
 ];
 
+// Definisi pertanyaan
 const questions = [
   {
     id: 1,
@@ -45,7 +47,9 @@ const questions = [
   },
 ];
 
-const snakesAndLadders = {
+// Mendefinisikan ular dan tangga
+const tanggaUp = {
+  // Naik tangga
   5: 24,
   16: 66,
   61: 80,
@@ -55,8 +59,11 @@ const snakesAndLadders = {
   19: 59,
   27: 48,
   49: 69,
-  22: 1,
+};
 
+const snakesDown = {
+  // Turun Ular
+  22: 1,
   29: 8,
   57: 38,
   65: 43,
@@ -69,48 +76,68 @@ const snakesAndLadders = {
 function UlarTangga() {
   const [isPionMoving, setIsPionMoving] = useState(false);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const [pionPositions, setPionPositions] = useState([0, 0, 0, 0]); // 4 pion di posisi awal (0)
+  const [pionPositionIndex, setPionPositionIndex] = useState([0, 0, 0, 0]);
   const [showQuestion, setShowQuestion] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [waitingForAnswer, setWaitingForAnswer] = useState(false); // Cegah pion naik sebelum menjawab dengan benar
+  const [waitingForAnswer, setWaitingForAnswer] = useState(false);
 
-  // Kolom di mana ada tangga dan muncul pertanyaan
-  const questionColumns = [5, 16, 61, 64, 72, 85, 19, 27, 49];
 
-  // Mengubah posisi pion berdasarkan nilai dadu
-  const handleDiceRollComplete = () => {
-    const diceNumber = 5;  // Misalkan nilai dadu yang sudah dihasilkan
-    setIsPionMoving(true); // Pion mulai bergerak
+  const logPionPositions = (newPositions) => {
+    console.log("Pion Positions:", newPositions);
+  };
+
+  const handleDiceRollComplete = (diceNumber) => {
+    setIsPionMoving(true); // Set animation status
   
-    setPionPositions((prevPositions) => {
+    setPionPositionIndex((prevPositions) => {
       const newPositions = [...prevPositions];
       let newPosition = newPositions[currentPlayerIndex] + diceNumber;
   
-      if (newPosition > 99) newPosition = 99;
+      if (newPosition > 99) newPosition = 99; // Ensure it doesn't go beyond the board
   
-      // Jika pion berhenti di salah satu kolom pertanyaan
-      if (questionColumns.includes(newPosition)) {
-        setShowQuestion(true);
-        setWaitingForAnswer(true); // Jangan biarkan pion naik sampai pertanyaan dijawab dengan benar
-      } else {
-        setShowQuestion(false); // Sembunyikan pertanyaan jika tidak di kolom yang ditentukan
-        // Pindahkan giliran hanya jika tidak ada pertanyaan
-        setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-      }
-  
+      // Update position before checking for interactions
       newPositions[currentPlayerIndex] = newPosition;
+  
+      logPionPositions(newPositions);
       return newPositions;
     });
   
+    setTimeout(() => {
+      // After the pawn movement is completed, handle further actions
+      setPionPositionIndex((prevPositions) => {
+        const newPositions = [...prevPositions];
+        let newPosition = newPositions[currentPlayerIndex];
+  
+        // Check if the new position is a ladder (show question)
+        if (tanggaUp[newPosition]) {
+          setShowQuestion(true);
+          setWaitingForAnswer(true);
+          // Stop the movement here until the question is answered
+        } 
+        // If it's a snake, move the pawn down automatically
+        else if (snakesDown[newPosition]) {
+          newPosition = snakesDown[newPosition];
+          console.log(`Pion ${currentPlayerIndex} turun ular ke ${newPosition}`);
+          newPositions[currentPlayerIndex] = newPosition;
+          logPionPositions(newPositions);
+          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+        } else {
+          // No ladder or snake, move on to the next player
+          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+        }
+  
+        return newPositions;
+      });
+  
+      setIsPionMoving(false);
+    }, 2000); // Allow time for the pawn to move before continuing
+  
+    // Reset question and answer state
     setSubmitted(false);
     setIsCorrect(null);
-  
-    setTimeout(() => {
-      setIsPionMoving(false);
-    }, 2500);
   };
   
 
@@ -124,36 +151,35 @@ function UlarTangga() {
     setSubmitted(true);
   
     if (isAnswerCorrect) {
-      // Hanya jika jawabannya benar, pion akan naik tangga (jika ada tangga)
-      setPionPositions((prevPositions) => {
+      // Trigger animation to move up the ladder if the answer is correct
+      setPionPositionIndex((prevPositions) => {
         const newPositions = [...prevPositions];
         const currentPos = newPositions[currentPlayerIndex];
   
-        // Cek apakah pemain berada di kolom tangga dan perbarui posisinya jika benar
-        if (snakesAndLadders[currentPos]) {
-          newPositions[currentPlayerIndex] = snakesAndLadders[currentPos]; // Naik tangga jika benar
+        if (tanggaUp[currentPos]) {
+          const targetPosition = tanggaUp[currentPos];
+          newPositions[currentPlayerIndex] = targetPosition;
+          console.log(
+            `Pion ${currentPlayerIndex} naik tangga ke ${targetPosition}`
+          );
         }
+  
+        logPionPositions(newPositions);
         return newPositions;
       });
     }
   
-    // Lanjutkan ke pemain berikutnya, baik jawaban benar atau salah
     setTimeout(() => {
-      setShowQuestion(false); // Sembunyikan pertanyaan setelah jawaban diberikan
-      setWaitingForAnswer(false); // Izinkan pion untuk bergerak lagi setelah menjawab
-  
-      // Pindahkan giliran ke pemain berikutnya
+      setShowQuestion(false);
+      setWaitingForAnswer(false);
       setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-  
-      // Naikkan index pertanyaan
-      setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
-    }, 2000);
+      setCurrentQuestionIndex(
+        (prevIndex) => (prevIndex + 1) % questions.length
+      );
+    }, 1800);
   };
   
   
-  
-  
-
   return (
     <Container
       fluid
@@ -163,16 +189,16 @@ function UlarTangga() {
       <HeaderUtangga layout="home" />
       <Row className="utu-container-left">
         <Col xs={12} md={6} className="utu-konva">
-        <Board
-            pionPositionIndex={pionPositions}
-            setPionPositionIndex={setPionPositions}
-            snakesAndLadders={snakesAndLadders}
+          <Board
+            pionPositionIndex={pionPositionIndex}
+            setPionPositionIndex={setPionPositionIndex}
+            tanggaUp={tanggaUp}
+            snakesDown={snakesDown}
             waitingForAnswer={waitingForAnswer}
             isCorrect={isCorrect}
-            setIsCorrect={setIsCorrect} // Tambahkan ini
+            setIsCorrect={setIsCorrect}
             currentPlayerIndex={currentPlayerIndex}
           />
-
         </Col>
 
         <Col
@@ -231,7 +257,7 @@ function UlarTangga() {
           {/* Komponen Dadu */}
           <Dice
             onRollComplete={handleDiceRollComplete}
-            disabled={isPionMoving || waitingForAnswer} // Cegah dadu bergulir jika menunggu jawaban
+            disabled={isPionMoving || waitingForAnswer}
           />
           {/* Tambahkan komponen Potion di bawah tombol Roll */}
           <button><Potion /></button>
@@ -251,7 +277,6 @@ function UlarTangga() {
                   width={40}
                   height={40}
                 />
-
                 {currentPlayerIndex === index && (
                   <span className="ml-2">{player.name}</span>
                 )}

@@ -47,7 +47,7 @@ const questions = [
 ];
 
 // Mendefinisikan ular dan tangga
-const snakesAndLadders = {
+const tanggaUp = {
   // Naik tangga
   5: 24,
   16: 66,
@@ -59,6 +59,10 @@ const snakesAndLadders = {
   27: 48,
   49: 69,
   22: 1,
+  98: 76,
+};
+
+const snakesDown = {
   // Turun Ular
   29: 8,
   57: 38,
@@ -66,7 +70,6 @@ const snakesAndLadders = {
   67: 13,
   90: 48,
   93: 66,
-  98: 76,
 };
 
 function UlarTangga() {
@@ -80,76 +83,103 @@ function UlarTangga() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
 
-  const questionColumns = [5, 16, 61, 64, 72, 85, 19, 27, 49];
 
   const logPionPositions = (newPositions) => {
     console.log("Pion Positions:", newPositions);
   };
 
   const handleDiceRollComplete = () => {
-    const diceNumber = 5 // Roll a random number between 1 and 6
+    const diceNumber = 6; // Assuming a fixed dice number for simplicity, replace with a random one as needed
     setIsPionMoving(true); // Set animation status
   
     setPionPositionIndex((prevPositions) => {
       const newPositions = [...prevPositions];
       let newPosition = newPositions[currentPlayerIndex] + diceNumber;
   
-      if (newPosition > 99) newPosition = 99;
+      if (newPosition > 99) newPosition = 99; // Ensure it doesn't go beyond the board
   
-      // If the pion lands on a question column
-      if (questionColumns.includes(newPosition)) {
-        setShowQuestion(true);
-        setWaitingForAnswer(true);
-      } else {
-        setShowQuestion(false);
-        setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-      }
-  
+      // Update position before checking for interactions
       newPositions[currentPlayerIndex] = newPosition;
+  
       logPionPositions(newPositions);
       return newPositions;
     });
   
+    setTimeout(() => {
+      // After the pawn movement is completed, handle further actions
+      setPionPositionIndex((prevPositions) => {
+        const newPositions = [...prevPositions];
+        let newPosition = newPositions[currentPlayerIndex];
+  
+        // Check if the new position is a ladder (show question)
+        if (tanggaUp[newPosition]) {
+          setShowQuestion(true);
+          setWaitingForAnswer(true);
+          // Stop the movement here until the question is answered
+        } 
+        // If it's a snake, move the pawn down automatically
+        else if (snakesDown[newPosition]) {
+          newPosition = snakesDown[newPosition];
+          console.log(`Pion ${currentPlayerIndex} turun ular ke ${newPosition}`);
+          newPositions[currentPlayerIndex] = newPosition;
+          logPionPositions(newPositions);
+          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+        } else {
+          // No ladder or snake, move on to the next player
+          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+        }
+  
+        return newPositions;
+      });
+  
+      setIsPionMoving(false);
+    }, 2500); // Allow time for the pawn to move before continuing
+  
+    // Reset question and answer state
     setSubmitted(false);
     setIsCorrect(null);
-  
-    setTimeout(() => {
-      setIsPionMoving(false);
-    }, 2500);
   };
   
 
   const handleAnswerChange = (e) => {
     const answer = e.target.value;
     setSelectedAnswer(answer);
-
+  
     const correctAnswer = questions[currentQuestionIndex].correctAnswer;
     const isAnswerCorrect = answer === correctAnswer;
     setIsCorrect(isAnswerCorrect);
     setSubmitted(true);
-
+  
     if (isAnswerCorrect) {
+      // Trigger animation to move up the ladder if the answer is correct
       setPionPositionIndex((prevPositions) => {
         const newPositions = [...prevPositions];
         const currentPos = newPositions[currentPlayerIndex];
-
-        if (snakesAndLadders[currentPos]) {
-          newPositions[currentPlayerIndex] = snakesAndLadders[currentPos];
-          console.log(`Pion ${currentPlayerIndex} naik tangga ke ${snakesAndLadders[currentPos]}`);
+  
+        if (tanggaUp[currentPos]) {
+          const targetPosition = tanggaUp[currentPos];
+          newPositions[currentPlayerIndex] = targetPosition;
+          console.log(
+            `Pion ${currentPlayerIndex} naik tangga ke ${targetPosition}`
+          );
         }
+  
         logPionPositions(newPositions);
         return newPositions;
       });
     }
-
+  
     setTimeout(() => {
       setShowQuestion(false);
       setWaitingForAnswer(false);
       setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-      setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
-    }, 2000);
+      setCurrentQuestionIndex(
+        (prevIndex) => (prevIndex + 1) % questions.length
+      );
+    }, 1800);
   };
-
+  
+  
   return (
     <Container
       fluid
@@ -162,7 +192,8 @@ function UlarTangga() {
           <Board
             pionPositionIndex={pionPositionIndex}
             setPionPositionIndex={setPionPositionIndex}
-            snakesAndLadders={snakesAndLadders}
+            tanggaUp={tanggaUp}
+            snakesDown={snakesDown}
             waitingForAnswer={waitingForAnswer}
             isCorrect={isCorrect}
             setIsCorrect={setIsCorrect}
@@ -170,7 +201,11 @@ function UlarTangga() {
           />
         </Col>
 
-        <Col xs={12} md={6} className="d-flex flex-column align-items-center justify-content-start">
+        <Col
+          xs={12}
+          md={6}
+          className="d-flex flex-column align-items-center justify-content-start"
+        >
           <div className="player-turn-box">
             {players[currentPlayerIndex] ? (
               <h3>{players[currentPlayerIndex].name}'s Turn</h3>
@@ -183,35 +218,63 @@ function UlarTangga() {
                   <Form.Label>
                     {questions[currentQuestionIndex].question}
                   </Form.Label>
-                  {questions[currentQuestionIndex].options.map((option, index) => (
-                    <div key={index} className={`form-check ${submitted ? option === questions[currentQuestionIndex].correctAnswer ? "correct-answer" : "wrong-answer" : ""}`}>
-                      <input
-                        type="radio"
-                        name="foodChoice"
-                        id={`foodChoice${index}`}
-                        value={option}
-                        onChange={handleAnswerChange}
-                        checked={selectedAnswer === option}
-                        className="d-none"
-                      />
-                      <label htmlFor={`foodChoice${index}`} className="form-check-label">
-                        {option}
-                      </label>
-                    </div>
-                  ))}
+                  {questions[currentQuestionIndex].options.map(
+                    (option, index) => (
+                      <div
+                        key={index}
+                        className={`form-check ${
+                          submitted
+                            ? option ===
+                              questions[currentQuestionIndex].correctAnswer
+                              ? "correct-answer"
+                              : "wrong-answer"
+                            : ""
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="foodChoice"
+                          id={`foodChoice${index}`}
+                          value={option}
+                          onChange={handleAnswerChange}
+                          checked={selectedAnswer === option}
+                          className="d-none"
+                        />
+                        <label
+                          htmlFor={`foodChoice${index}`}
+                          className="form-check-label"
+                        >
+                          {option}
+                        </label>
+                      </div>
+                    )
+                  )}
                 </Form.Group>
               </Form>
             )}
           </div>
 
           {/* Komponen Dadu */}
-          <Dice onRollComplete={handleDiceRollComplete} disabled={isPionMoving || waitingForAnswer} />
+          <Dice
+            onRollComplete={handleDiceRollComplete}
+            disabled={isPionMoving || waitingForAnswer}
+          />
 
           {/* Daftar pemain */}
           <div className="player-list mt-3">
             {players.map((player, index) => (
-              <div key={player.id} className={`player-item d-flex align-items-center ${currentPlayerIndex === index ? "active-player" : ""}`}>
-                <Image src={player.photo || "path/to/placeholder.jpg"} roundedCircle width={40} height={40} />
+              <div
+                key={player.id}
+                className={`player-item d-flex align-items-center ${
+                  currentPlayerIndex === index ? "active-player" : ""
+                }`}
+              >
+                <Image
+                  src={player.photo || "path/to/placeholder.jpg"}
+                  roundedCircle
+                  width={40}
+                  height={40}
+                />
                 {currentPlayerIndex === index && (
                   <span className="ml-2">{player.name}</span>
                 )}

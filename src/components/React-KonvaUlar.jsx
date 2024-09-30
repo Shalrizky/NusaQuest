@@ -31,6 +31,8 @@ function Board({
   snakesAndLadders,
   waitingForAnswer,
   currentPlayerIndex,
+  tanggaUp,
+  snakesDown,
   isCorrect,
   setIsCorrect,
 }) {
@@ -360,7 +362,8 @@ function Board({
                 image={img}
                 index={index}
                 onAnimationComplete={() => {}} // Handle any callback after animation if needed
-                snakesAndLadders={snakesAndLadders}
+                tanggaUp={tanggaUp}
+                snakesDown={snakesDown}
                 isCorrect={isCorrect}
               />
             );

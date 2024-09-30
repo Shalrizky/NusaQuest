@@ -3,6 +3,7 @@ import { Container, Row, Col, Image, Form } from "react-bootstrap";
 import HeaderUtangga from "../components/HeaderUtangga";
 import Board from "../components/React-KonvaUlar";
 import Dice from "../components/Dice";
+import Potion from "../components/potion"; // Import komponen Potion
 import "../style/routes/UlarTangga.css";
 import bgUlarTangga from "../assets/common/bg-ular.png";
 
@@ -232,6 +233,8 @@ function UlarTangga() {
             onRollComplete={handleDiceRollComplete}
             disabled={isPionMoving || waitingForAnswer} // Cegah dadu bergulir jika menunggu jawaban
           />
+          {/* Tambahkan komponen Potion di bawah tombol Roll */}
+          <button><Potion /></button>
 
           {/* Daftar pemain */}
           <div className="player-list mt-3">

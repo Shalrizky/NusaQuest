@@ -1,4 +1,3 @@
-// Board.js
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Rect, Text, Image as KonvaImage } from "react-konva";
 import Pion from "./PionUTangga"; // Pastikan path impor benar
@@ -351,7 +350,7 @@ function Board({
 
           {/* Tambahkan gambar pion */}
           {pionImages.map((img, index) => {
-            if (!img) return null;
+            if (!img || pionPositionIndex[index] === undefined) return null; // Ensure pion position and image are defined
             return (
               <Pion
                 key={`pion-${index}`}
@@ -360,7 +359,7 @@ function Board({
                 getPosition={getPosition}
                 image={img}
                 index={index}
-                onAnimationComplete={() => {}}
+                onAnimationComplete={() => {}} // Handle any callback after animation if needed
                 snakesAndLadders={snakesAndLadders}
                 isCorrect={isCorrect}
               />

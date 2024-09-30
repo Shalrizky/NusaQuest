@@ -48,6 +48,7 @@ const questions = [
 
 // Mendefinisikan ular dan tangga
 const snakesAndLadders = {
+  // Naik tangga
   5: 24,
   16: 66,
   61: 80,
@@ -58,6 +59,7 @@ const snakesAndLadders = {
   27: 48,
   49: 69,
   22: 1,
+  // Turun Ular
   29: 8,
   57: 38,
   65: 43,
@@ -85,16 +87,16 @@ function UlarTangga() {
   };
 
   const handleDiceRollComplete = () => {
-    const diceNumber = 5
-    setIsPionMoving(true); // Pion mulai bergerak
-
+    const diceNumber = 5 // Roll a random number between 1 and 6
+    setIsPionMoving(true); // Set animation status
+  
     setPionPositionIndex((prevPositions) => {
       const newPositions = [...prevPositions];
       let newPosition = newPositions[currentPlayerIndex] + diceNumber;
-
+  
       if (newPosition > 99) newPosition = 99;
-
-      // Jika pion berhenti di salah satu kolom pertanyaan
+  
+      // If the pion lands on a question column
       if (questionColumns.includes(newPosition)) {
         setShowQuestion(true);
         setWaitingForAnswer(true);
@@ -102,19 +104,20 @@ function UlarTangga() {
         setShowQuestion(false);
         setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
       }
-
+  
       newPositions[currentPlayerIndex] = newPosition;
       logPionPositions(newPositions);
       return newPositions;
     });
-
+  
     setSubmitted(false);
     setIsCorrect(null);
-
+  
     setTimeout(() => {
       setIsPionMoving(false);
     }, 2500);
   };
+  
 
   const handleAnswerChange = (e) => {
     const answer = e.target.value;

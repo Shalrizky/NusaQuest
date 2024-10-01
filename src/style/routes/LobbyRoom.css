@@ -1,7 +1,3 @@
-/* Add a global box-sizing reset */
-* {
-  box-sizing: border-box;
-}
 
 .lobbyroom-container {
   background-image: url('../../assets/common/background.png');
@@ -122,8 +118,6 @@
 .send-button:hover {
   background-color: #004494;
 }
-
-/* Media queries for responsiveness */
 
 /* Small screens (max-width: 768px) */
 @media (max-width: 768px) {

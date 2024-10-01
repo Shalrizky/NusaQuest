@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Container, Row, Col, Button } from "react-bootstrap";
+import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import Header from "../components/Header";  
 import "../style/routes/LobbyRoom.css";
-import CardLobbyRoom from "../components/RoomCardPlayer";
+import CardPlayer from "../components/CardPlayer";
 
 function LobbyRoom() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const chatContainerRef = useRef(null); // Reference to the chat container
+  const [isLoading, setIsLoading] = useState(true); // State for loading spinner
+  const chatContainerRef = useRef(null);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -22,14 +23,12 @@ function LobbyRoom() {
     setIsExpanded(!isExpanded); 
   };
 
-  // Function to handle clicking outside the chatbox
   const handleClickOutside = (event) => {
     if (chatContainerRef.current && !chatContainerRef.current.contains(event.target)) {
       setIsExpanded(false); // Close chatbox if clicked outside
     }
   };
 
-  // Effect to add/remove the event listener
   useEffect(() => {
     if (isExpanded) {
       document.addEventListener("mousedown", handleClickOutside);
@@ -37,8 +36,13 @@ function LobbyRoom() {
       document.removeEventListener("mousedown", handleClickOutside);
     }
 
-    // Clean up the event listener on component unmount or when chatbox closes
+    // Simulate loading for 2 seconds
+    const timer = setTimeout(() => {
+      setIsLoading(false); // Set loading to false after 2 seconds
+    }, 2000);
+
     return () => {
+      clearTimeout(timer);
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isExpanded]);
@@ -58,15 +62,23 @@ function LobbyRoom() {
         showTextHeader="ROOM 1 "
         showBackIcon={true}
       />
-      
-      <CardLobbyRoom />
+
+      {/* Menampilkan loading untuk mount card playernya */}
+      {isLoading ? (
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+          <Spinner animation="border" variant="light" /> 
+        </div>
+      ) : (
+        <CardPlayer /> // Tampilkan CardPlayer setelah loading selesai
+      )}
+
       <Row>
         <Col md={2} className="chat-column">
           <div 
-            ref={chatContainerRef} // Assign reference to chat container
+            ref={chatContainerRef}
             className={`chat-container ${isExpanded ? 'expanded' : 'collapsed'}`} 
             onClick={(e) => {
-              e.stopPropagation(); // Prevent toggle on chat container click
+              e.stopPropagation(); 
               toggleChatSize();
             }} 
           >

@@ -6,9 +6,9 @@ import badge1 from "../assets/common/badge.png";
 import badge2 from "../assets/common/badge2.png";
 import badge3 from "../assets/common/badge3.png";
 import vector from "../assets/common/Vector.png"
-import "../style/components/RoomCardPlayer.css";
+import "../style/components/CardPlayer.css";
 
-const CustomCard = () => {
+const CardPlayer = () => {
   return (
     <Row className="card-player-container d-flex justify-content-center align-items-center gap-4">
       <Col className="d-flex justify-content-center">
@@ -19,7 +19,7 @@ const CustomCard = () => {
               <Card.Title className="title">KAMAL ABRAR</Card.Title>
               <div className="card-image-container d-flex align-items-center">
                 <Card.Img src={badge1} alt="Player" className="badge-image" />
-                <span>Master Kuliner</span>
+                <span className="badge-card-title">Master Kuliner</span>
               </div>
             </Card.Body>
           </Card>
@@ -34,7 +34,7 @@ const CustomCard = () => {
               <Card.Title className="title">Reyki Ganteng</Card.Title>
               <div className="card-image-container d-flex align-items-center">
                 <Card.Img src={badge2} alt="Player" className="badge-image" />
-                <span>Amatir Kuliner</span>
+                <span className="badge-card-title">Amatir Kuliner</span>
               </div>
             </Card.Body>
           </Card>
@@ -49,7 +49,7 @@ const CustomCard = () => {
               <Card.Title className="title">King Sahel</Card.Title>
               <div className="card-image-container d-flex align-items-center">
                 <Card.Img src={badge3} alt="Player" className="badge-image" />
-                <span>Beginner Kuliner</span>
+                <span className="badge-card-title">Beginner Kuliner</span>
               </div>
             </Card.Body>
           </Card>
@@ -57,7 +57,7 @@ const CustomCard = () => {
       </Col>
 
       <Col className="d-flex justify-content-center">
-        <Card className="bot">
+        <Card className="player-not-available">
           <Card.Img variant="top" src={vector} className="vector-player" />
           <Card.Body>
             <Card.Text className="text-4">
@@ -70,4 +70,4 @@ const CustomCard = () => {
   );
 };
 
-export default CustomCard;
+export default CardPlayer;

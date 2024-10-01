@@ -36,7 +36,7 @@
   /* padding: 1px; */
 }
 
-.bot {
+.player-not-available {
   position: relative;
   overflow: hidden;
   width: 245px;
@@ -78,8 +78,8 @@
 .card-player .text-3{
   color: #7C7977;
 }
-.bot .text-4 {
-  position: absolute; /* Position it relative to .bot */
+.player-not-available .text-4 {
+  position: absolute; /* Position it relative to .player-not-available */
   top: 40%; /* Position it below the vector */
   transform: translate(-50%, 0); /* Center horizontally */
   text-align: center;
@@ -118,15 +118,13 @@
   height: 150px;
 }
 
-<<<<<<< HEAD
-=======
-span{
+.badge-card-title{
   padding-top: 5px;
   color: white; 
   margin-left: 5px;
 }
 
->>>>>>> 1c7627e (responsive semoga)
+
 .card-player-container {
   display: flex;
   flex-wrap: nowrap; /* Pastikan tidak berpindah baris */
@@ -138,7 +136,7 @@ span{
 }
 
 /* Atur size untuk setiap kartu agar lebih responsif */
-.card-wrapper, .card-wrapper2, .card-wrapper3, .bot {
+.card-wrapper, .card-wrapper2, .card-wrapper3, .player-not-available {
   flex: 1 1 0; /* Agar kartu memiliki lebar yang sama */
   max-width: 250px; /* Lebar maksimal agar tidak terlalu besar */
   transition: all 0.3s ease;

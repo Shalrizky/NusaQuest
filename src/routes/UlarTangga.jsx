@@ -5,6 +5,10 @@ import Board from "../components/React-KonvaUlar";
 import Dice from "../components/Dice";
 import Potion from "../components/potion"; // Import komponen Potion
 import "../style/routes/UlarTangga.css";
+import victoryImage from "../assets/games/Utangga/victory.png"
+import Achievement from "../assets/games/Utangga/achievement1.png"
+import Achievement2 from "../assets/games/Utangga/achievement2.png"
+import potionImage from "../assets/games/Utangga/potion.png"
 import bgUlarTangga from "../assets/common/bg-ular.png";
 
 // Definisi pemain
@@ -83,6 +87,7 @@ function UlarTangga() {
   const [isCorrect, setIsCorrect] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
+  const [victory, setVictory] = useState(false); // State untuk menang
 
 
   const logPionPositions = (newPositions) => {
@@ -94,12 +99,20 @@ function UlarTangga() {
   
     setPionPositionIndex((prevPositions) => {
       const newPositions = [...prevPositions];
-      let newPosition = newPositions[currentPlayerIndex] + diceNumber;
+      
+        // Normal gameplay logic for other players
+        let newPosition = newPositions[currentPlayerIndex] + diceNumber;
   
-      if (newPosition > 99) newPosition = 99; // Ensure it doesn't go beyond the board
+        if (newPosition > 99) newPosition = 99; // Ensure it doesn't go beyond the board
   
-      // Update position before checking for interactions
-      newPositions[currentPlayerIndex] = newPosition;
+        // Update position before checking for interactions
+        newPositions[currentPlayerIndex] = newPosition;
+  
+        // Check for victory
+        if (newPosition === 99) {
+          setVictory(true); // Set victory state if the player reaches column 99
+        }
+      
   
       logPionPositions(newPositions);
       return newPositions;
@@ -116,7 +129,7 @@ function UlarTangga() {
           setShowQuestion(true);
           setWaitingForAnswer(true);
           // Stop the movement here until the question is answered
-        } 
+        }
         // If it's a snake, move the pawn down automatically
         else if (snakesDown[newPosition]) {
           newPosition = snakesDown[newPosition];
@@ -139,6 +152,7 @@ function UlarTangga() {
     setSubmitted(false);
     setIsCorrect(null);
   };
+  
   
 
   const handleAnswerChange = (e) => {
@@ -285,6 +299,20 @@ function UlarTangga() {
           </div>
         </Col>
       </Row>
+       {/*Show Overlay Victory */}
+       {victory && (
+        <div className="victory-overlay">
+          <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
+          <h2>{players[currentPlayerIndex].name} Wins!</h2>
+          <p>Kamu mendapatkan:</p>
+          <div className="rewards">
+          <img src={Achievement} alt="achievement" className="Achievement1-logo" />
+          <img src={Achievement2} alt="achievement2" className="Achievement2-logo" />
+          <img src={potionImage} alt="potion" className="potion-logo" />
+          </div>
+          <p>Sentuh dimana saja untuk keluar.</p>
+        </div>
+      )}
     </Container>
   );
 }

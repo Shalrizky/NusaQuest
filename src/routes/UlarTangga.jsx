@@ -94,25 +94,23 @@ function UlarTangga() {
     console.log("Pion Positions:", newPositions);
   };
 
-  const handleDiceRollComplete = (diceNumber) => {
+  const handleDiceRollComplete = () => {
+    const diceNumber=1
     setIsPionMoving(true); // Set animation status
   
     setPionPositionIndex((prevPositions) => {
       const newPositions = [...prevPositions];
-      
-        // Normal gameplay logic for other players
-        let newPosition = newPositions[currentPlayerIndex] + diceNumber;
+      let newPosition = newPositions[currentPlayerIndex] + diceNumber;
   
-        if (newPosition > 99) newPosition = 99; // Ensure it doesn't go beyond the board
+      if (newPosition > 99) newPosition = 99; // Ensure it doesn't go beyond the board
   
-        // Update position before checking for interactions
-        newPositions[currentPlayerIndex] = newPosition;
+      // Update position before checking for interactions
+      newPositions[currentPlayerIndex] = newPosition;
   
-        // Check for victory
-        if (newPosition === 99) {
-          setVictory(true); // Set victory state if the player reaches column 99
-        }
-      
+      // Check for victory
+      if (newPosition === 99) {
+        setVictory(true); // Set victory state if the player reaches column 99
+      }
   
       logPionPositions(newPositions);
       return newPositions;
@@ -138,8 +136,14 @@ function UlarTangga() {
           logPionPositions(newPositions);
           setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
         } else {
-          // No ladder or snake, move on to the next player
-          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+          // If the dice number is 6, ask a question for an extra roll
+          if (diceNumber === 6) {
+            setShowQuestion(true);
+            setWaitingForAnswer(true);
+          } else {
+            // If the dice number is not 6, move on to the next player
+            setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+          }
         }
   
         return newPositions;
@@ -151,10 +155,25 @@ function UlarTangga() {
     // Reset question and answer state
     setSubmitted(false);
     setIsCorrect(null);
-  };
+  }
+  
   
   
 
+  const handleCorrectAnswerForExtraRoll = (isAnswerCorrect) => {
+    if (isAnswerCorrect) {
+      console.log(`Pemain ${players[currentPlayerIndex].name} menjawab benar dan mendapat kesempatan roll lagi.`);
+      setShowQuestion(false);
+      setWaitingForAnswer(false);
+      // Pemain dapat me-roll dadu kembali
+    } else {
+      console.log(`Pemain ${players[currentPlayerIndex].name} menjawab salah, giliran pindah ke pemain berikutnya.`);
+      setShowQuestion(false);
+      setWaitingForAnswer(false);
+      setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+    }
+  };
+  
   const handleAnswerChange = (e) => {
     const answer = e.target.value;
     setSelectedAnswer(answer);
@@ -173,23 +192,24 @@ function UlarTangga() {
         if (tanggaUp[currentPos]) {
           const targetPosition = tanggaUp[currentPos];
           newPositions[currentPlayerIndex] = targetPosition;
-          console.log(
-            `Pion ${currentPlayerIndex} naik tangga ke ${targetPosition}`
-          );
+          console.log(`Pion ${currentPlayerIndex} naik tangga ke ${targetPosition}`);
         }
   
         logPionPositions(newPositions);
         return newPositions;
       });
+  
+      // Jika jawabannya benar, dan sebelumnya pemain mendapat angka 6, izinkan roll ulang
+      handleCorrectAnswerForExtraRoll(true);
+    } else {
+      // Jika jawabannya salah, dan sebelumnya pemain mendapat angka 6, hentikan giliran
+      handleCorrectAnswerForExtraRoll(false);
     }
   
     setTimeout(() => {
       setShowQuestion(false);
       setWaitingForAnswer(false);
-      setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-      setCurrentQuestionIndex(
-        (prevIndex) => (prevIndex + 1) % questions.length
-      );
+      setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
     }, 1800);
   };
   

@@ -12,166 +12,150 @@ import HeaderNuca from '../components/HeaderNuca';
 import playerProfile from '../assets/common/imageOne.png'; // Foto profil pemain
 
 function GameplayCard() {
-  const [cards, setCards] = useState([1, 2, 3, 4, 5]);  // Maksimal 5 kartu
-  const [rotation, setRotation] = useState(0);  // Derajat rotasi untuk shuffle icon
-  const [showOverlay, setShowOverlay] = useState(false);  // State untuk overlay
-  const [showModal, setShowModal] = useState(false);  // State untuk modal pop-up
+  const [rotation, setRotation] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [category, setCategory] = useState("");
+  const [options, setOptions] = useState([]);
+  const [currentPlayer, setCurrentPlayer] = useState("player1");
+  const [playerCards, setPlayerCards] = useState({
+    player1: [1, 2, 3, 4, 5],
+    player2: [1, 2, 3, 4, 5],
+    player3: [1, 2, 3, 4, 5],
+  });
 
-  const handleBackClick = () => {
-    setShowOverlay(!showOverlay);  // Toggle untuk membuka/menutup overlay
-  };
+  const [backCards] = useState([1, 2, 3, 4, 5]);
+  const [selectedAnswer, setSelectedAnswer] = useState("");
+  const [answerStatus, setAnswerStatus] = useState("");
+  const [isAnswered, setIsAnswered] = useState(false);
 
-  const handleShuffleClick = () => {
-    setRotation((prevRotation) => prevRotation + 720); // Tambah 720 derajat untuk 2 kali rotasi penuh
+  const nextPlayer = () => {
+    if (currentPlayer === "player1") {
+      setCurrentPlayer("player2");
+    } else if (currentPlayer === "player2") {
+      setCurrentPlayer("player3");
+    } else {
+      setCurrentPlayer("player1");
+    }
   };
 
   const handleCardClick = () => {
-    // Ketika kartu tengah diklik, tampilkan modal
-    setShowModal(true);
+    if (currentPlayer === "player1") {
+      setCategory("Makanan");
+      setQuestion("Apa saja makanan khas Jawa Barat yang paling terkenal dan menjadi favorit masyarakat lokal?");
+      setOptions(["Soto Betawi", "Gudeg", "Batagor", "Rendang"]);
+      setShowModal(true);
+      setSelectedAnswer(""); // Reset jawaban sebelumnya
+      setIsAnswered(false); // Reset status jawaban
+      setAnswerStatus(""); // Reset status jawaban
+    }
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);  // Tutup modal
+  const handleAnswerClick = (answer) => {
+    setSelectedAnswer(answer); // Simpan jawaban yang dipilih
+
+    // Set status jawaban
+    if (answer === "Batagor") {
+      setAnswerStatus("correct");
+      if (playerCards[currentPlayer].length > 1) {
+        setPlayerCards((prevCards) => ({
+          ...prevCards,
+          [currentPlayer]: prevCards[currentPlayer].slice(0, -1),
+        }));
+      }
+    } else {
+      setAnswerStatus("incorrect");
+      if (playerCards[currentPlayer].length < 15) {
+        setPlayerCards((prevCards) => ({
+          ...prevCards,
+          [currentPlayer]: [...prevCards[currentPlayer], prevCards[currentPlayer].length + 1],
+        }));
+      }
+    }
+
+    setIsAnswered(true); // Tandai bahwa pemain telah menjawab
+
+    // Lanjutkan ke pemain berikutnya setelah 1,5 detik
+    setTimeout(() => {
+      nextPlayer();
+      setShowModal(false); // Tutup modal setelah waktu tunggu
+    }, 1500);
   };
 
   return (
     <>
       <HeaderNuca />
       <Container fluid className="room-ruca-container">
-        {/* Tambahkan tombol btnTemp di bagian atas kanan */}
         <div className="btn-temp-container">
-          <Image
-            src={btnTemp}
-            alt="Tombol Suhu"
-            className="btn-temp"
-          />
+          <Image src={btnTemp} alt="Tombol Suhu" className="btn-temp" />
         </div>
-
-        {/* Overlay hitam setengah layar yang akan muncul ketika backIcon diklik */}
-        <div className={`overlay ${showOverlay ? 'show' : ''}`}>
-          <div className="overlay-content">
-            <h1>Kumpulan Jawaban</h1>
-            <h2>Makanan</h2>
-            {/* List pertanyaan dan jawaban */}
-            <ol className="question-list">
-              <li>Makanan yang berasal dari Jawa Barat adalah? <strong>Gudeg</strong></li>
-            </ol>
-          </div>
-        </div>
-
-        {/* Tambahkan logo di bagian atas layar */}
-        <Image
-          src={logoPerson}
-          alt="Logo Person"
-          className="logo-person"
-        />
-
-        {/* Profil pemain di kiri, kanan, dan bawah */}
+        <Image src={logoPerson} alt="Logo Person" className="logo-person" />
         <div className="player-profile-container">
-          <Image
-            src={playerProfile}
-            alt="Profil Pemain 1"
-            className="player-profile player-profile-left"
-          />
-          <Image
-            src={playerProfile}
-            alt="Profil Pemain 2"
-            className="player-profile player-profile-right"
-          />
-          <Image
-            src={playerProfile}
-            alt="Profil Pemain 3"
-            className="player-profile player-profile-bottom"
-          />
+          <Image src={playerProfile} alt="Profil Pemain 1" className={`player-profile player-profile-left ${currentPlayer === "player1" ? "active-player" : ""}`} />
+          <Image src={playerProfile} alt="Profil Pemain 2" className={`player-profile player-profile-right ${currentPlayer === "player2" ? "active-player" : ""}`} />
+          <Image src={playerProfile} alt="Profil Pemain 3" className={`player-profile player-profile-bottom ${currentPlayer === "player3" ? "active-player" : ""}`} />
         </div>
-
-        {/* Tumpukan Kartu Belakang di Tengah */}
         <Row className="justify-content-center align-items-center card-center-section">
           <Col xs={12} className="d-flex justify-content-center">
             <div className="back-card-stack">
-              {cards.map((card, index) => (
-                <Image
-                  key={index}
-                  src={backCard}
-                  alt={`Kartu belakang ${index + 1}`}
-                  className={`back-card back-card-${index}`}
-                />
+              {backCards.map((card, index) => (
+                <Image key={index} src={backCard} alt={`Kartu belakang ${index + 1}`} className={`back-card back-card-${index}`} onClick={handleCardClick} />
               ))}
             </div>
           </Col>
         </Row>
-
-        {/* Tumpukan Kartu di Sebelah Kanan (Vertikal) */}
         <Row className="card-right-section">
           <Col className="d-flex justify-content-center card-right-stack">
-            {cards.map((card, index) => (
-              <Image
-                key={index}
-                src={rightCard}
-                alt={`Kartu kanan ${index + 1}`}
-                className={`right-card right-card-${index}`}
-              />
+            {playerCards.player2.map((card, index) => (
+              <Image key={index} src={rightCard} alt={`Kartu kanan ${index + 1}`} className={`right-card right-card-${index}`} />
             ))}
           </Col>
         </Row>
-
-        {/* Tumpukan Kartu di Sebelah Kiri (Vertikal) */}
         <Row className="card-left-section">
           <Col className="d-flex justify-content-center card-left-stack">
-            {cards.map((card, index) => (
-              <Image
-                key={index}
-                src={leftCard}
-                alt={`Kartu kiri ${index + 1}`}
-                className={`left-card left-card-${index}`}
-              />
+            {playerCards.player3.map((card, index) => (
+              <Image key={index} src={leftCard} alt={`Kartu kiri ${index + 1}`} className={`left-card left-card-${index}`} />
             ))}
           </Col>
         </Row>
-
-        {/* Tumpukan Kartu Kuning dengan Shuffle Icon */}
         <Row className="justify-content-center align-items-center card-stack-section">
           <Col xs={12} className="d-flex justify-content-center card-stack position-relative">
-            {cards.map((card, index) => (
-              <Image
-                key={index}
-                src={deckCard}
-                alt={`Kartu ${index + 1}`}
-                className={`stacked-card stacked-card-${index}`}
-                onClick={handleCardClick}
-              />
+            {playerCards.player1.map((card, index) => (
+              <Image key={index} src={deckCard} alt={`Kartu ${index + 1}`} className={`stacked-card stacked-card-${index}`} />
             ))}
-            {/* Shuffle Icon di tengah dengan rotasi */}
             <Image
               src={shuffleIcon}
               alt="Shuffle"
               className="shuffle-icon"
-              onClick={handleShuffleClick}
-              style={{ 
-                cursor: 'pointer', 
-                transform: `translate(-50%, -50%) rotate(${rotation}deg)`, 
-                transition: 'transform 4s ease' 
-              }}
+              onClick={() => setRotation(rotation + 720)}
+              style={{ cursor: 'pointer', transform: `translate(-50%, -50%) rotate(${rotation}deg)`, transition: 'transform 4s ease' }}
             />
           </Col>
         </Row>
 
-        {/* Modal pop-up sederhana saat kartu tengah diklik */}
-        <Modal show={showModal} onHide={handleCloseModal} centered className="transparent-modal">
-          <Modal.Header closeButton>
-            <Modal.Title>Nusa Quest</Modal.Title>
-          </Modal.Header>
+        {/* Modal pop-up untuk menampilkan pertanyaan saat kartu tengah diklik */}
+        <Modal show={showModal} centered className="transparent-modal">
           <Modal.Body className="modal-content-body">
-            <div className="modal-icon">
-              <Image src={deckCard} alt="Icon Kartu" className="modal-deck-icon" />
+            <div className="modal-category">{category}</div>
+            <h5 className="modal-text">{question}</h5>
+            <div className="question-options">
+              {options.map((option, index) => (
+                <Button
+                  key={index}
+                  variant={
+                    selectedAnswer === option 
+                      ? (answerStatus === "correct" ? "success" : "danger") 
+                      : (isAnswered ? "secondary" : "primary") // Nonaktifkan tombol jika sudah dijawab
+                  }
+                  className="answer-option"
+                  onClick={() => handleAnswerClick(option)}
+                  disabled={isAnswered} // Nonaktifkan tombol setelah menjawab
+                >
+                  {option}
+                </Button>
+              ))}
             </div>
-            <h5 className="modal-text">Anda telah memilih kartu dari Nusa Quest!</h5>
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseModal}>
-              Tutup
-            </Button>
-          </Modal.Footer>
         </Modal>
       </Container>
     </>

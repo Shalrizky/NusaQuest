@@ -258,24 +258,63 @@
   transform: translateX(-50%);
 }
 
-
-.modal-content-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* Style untuk modal yang memanjang ke samping */
+.transparent-modal .modal-content {
+  background: #6ba3ff;  /* Sesuaikan warna latar belakang sesuai contoh */
+  border-radius: 20px;  /* Membuat sudut-sudut bulat */
+  padding: 15px;
+  text-align: center;
+  width: 500px;  /* Menambahkan lebar untuk membuat modal lebih memanjang ke samping */
+  max-width: 100%;  /* Menjaga agar modal tidak terlalu lebar, mengikuti ukuran layar */
+  margin: 0 auto;  /* Mengatur posisi modal agar tetap di tengah */
 }
 
-.modal-icon {
-  margin-bottom: 20px;
-}
-
-.modal-deck-icon {
-  width: 100px;
-  height: auto;
+/* Style untuk teks pertanyaan di modal */
+.modal-category {
+  font-size: 0.9em;  /* Ukuran font lebih kecil untuk kategori */
+  color: rgba(255, 255, 255, 0.326);  /* Warna teks putih */
+  text-align: left;  /* Align ke kiri */
+  margin-bottom: 10px;
+  text-decoration: underline;  /* Memberikan garis bawah pada teks */
+  font-weight: bold;  /* Bold untuk penegasan */
 }
 
 .modal-text {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
+  color: white;  /* Warna teks putih */
+  font-size: 1.1em;  /* Sesuaikan ukuran font */
+  margin-bottom: 12px;
+}
+
+/* Style untuk opsi pertanyaan (tombol) */
+.question-options {
+  display: flex;
+  flex-direction: column;  /* Tampilkan tombol jawaban secara vertikal */
+  gap: 4px;  /* Jarak antara tombol */
+}
+
+.question-options .answer-option {
+  background-color: #4a90e2;  /* Warna tombol jawaban */
+  border: 1px solid white;  /* Border putih di sekeliling tombol */
+  border-radius: 10px;  /* Membulatkan sudut tombol */
+  padding: 8px 20px;
+  color: white;  /* Warna teks */
+  font-size: 1.1em;
+  width: 100%;
+  transition: background-color 0.1s ease; /* Tambahan efek saat tombol ditekan */
+}
+
+/* Hover effect untuk tombol */
+.question-options .answer-option:hover {
+  background-color: #2d6fa9; /* Warna tombol saat di-hover */
+}
+
+/* Style untuk tombol yang aktif (benar/salah) */
+.question-options .answer-option.success {
+  background-color: #28a745; /* Hijau untuk jawaban benar */
+  border: 1px solid #28a745; /* Border hijau */
+}
+
+.question-options .answer-option.danger {
+  background-color: #dc3545; /* Merah untuk jawaban salah */
+  border: 1px solid #dc3545; /* Border merah */
 }

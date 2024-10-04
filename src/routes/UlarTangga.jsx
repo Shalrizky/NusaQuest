@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Image, Form } from "react-bootstrap";
-import HeaderUtangga from "../components/HeaderUtangga";
-import Board from "../components/React-KonvaUlar";
-import Dice from "../components/Dice";
+import HeaderUtangga from "../components/games/HeaderGame";
+import Board from "../components/games/React-KonvaUlar";
+import Dice from "../components/games/Dice";
 import Potion from "../components/potion"; 
 import "../style/routes/UlarTangga.css";
 import victoryImage from "../assets/games/Utangga/victory.png"

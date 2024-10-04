@@ -1,11 +1,11 @@
 import React, { useState, useRef } from "react";
 import { Row, Col, Image, Offcanvas } from "react-bootstrap";
-import btntemp from "../assets/common/btnTemp.png";
-import iconmusik from "../assets/common/icon_musik.png";
-import iconmusikOff from "../assets/common/icon_musik_off.png";
-import iconsfx from "../assets/common/icon_sfx.png";
-import iconsfxOff from "../assets/common/icon_sfx_off.png";
-import "../style/components/HeaderUtangga.css";
+import btntemp from "../../assets/common/btnTemp.png";
+import iconmusik from "../../assets/common/icon_musik.png";
+import iconmusikOff from "../../assets/common/icon_musik_off.png";
+import iconsfx from "../../assets/common/icon_sfx.png";
+import iconsfxOff from "../../assets/common/icon_sfx_off.png";
+import "../../style/components/games/HeaderGame.css";
 
 function HeaderUtangga({ layout, toggleTemp }) {
     const [isMusicPlaying, setIsMusicPlaying] = useState(false);

@@ -308,14 +308,54 @@
   background-color: #2d6fa9; /* Warna tombol saat di-hover */
 }
 
-/* Style untuk tombol yang aktif (benar/salah) */
-.question-options .answer-option.success {
-  background-color: #28a745; /* Hijau untuk jawaban benar */
-  border: 1px solid #28a745; /* Border hijau */
+.question-options .answer-option.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
 }
 
-.question-options .answer-option.danger {
-  background-color: #dc3545; /* Merah untuk jawaban salah */
-  border: 1px solid #dc3545; /* Border merah */
+.question-options .answer-option.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
 }
 
+/* Tambahkan animasi getaran */
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+/* Tambahkan class shake untuk animasi */
+.shake {
+  animation: shake 0.3s;
+}
+
+@keyframes disappear {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0) rotate(360deg);
+  }
+}
+
+.card-disappear {
+  animation: disappear 0.5s ease-out forwards;
+}
+
+/* Adjust the animation for different card positions */
+.right-card.card-disappear {
+  transform-origin: left center;
+}
+
+.left-card.card-disappear {
+  transform-origin: right center;
+}
+
+.stacked-card.card-disappear {
+  transform-origin: center bottom;
+}

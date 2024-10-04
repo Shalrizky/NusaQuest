@@ -24,7 +24,7 @@ function Potion() {
   return (
     <>
       <div className="potion-icon mt-3" onClick={handleOpenModal}>
-        <Image src={potionIcon} alt="Potion Icon" width={60} height={60} />
+        <Image src={potionIcon} alt="Potion Icon" width={100}  />
       </div>
 
       {/* Overlay hitam transparan dan konten modal langsung */}

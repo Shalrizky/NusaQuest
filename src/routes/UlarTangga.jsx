@@ -3,7 +3,7 @@ import { Container, Row, Col, Image, Form } from "react-bootstrap";
 import HeaderUtangga from "../components/games/HeaderGame";
 import Board from "../components/games/React-KonvaUlar";
 import Dice from "../components/games/Dice";
-import Potion from "../components/potion"; 
+import Potion from "../components/games/potion"; 
 import "../style/routes/UlarTangga.css";
 import victoryImage from "../assets/games/Utangga/victory.png"
 import Achievement from "../assets/games/Utangga/achievement1.png"

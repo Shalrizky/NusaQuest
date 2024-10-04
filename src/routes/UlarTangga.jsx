@@ -88,14 +88,14 @@ function UlarTangga() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
   const [victory, setVictory] = useState(false); // State untuk menang
+  const [allowExtraRoll, setAllowExtraRoll] = useState(false);
 
 
   const logPionPositions = (newPositions) => {
     console.log("Pion Positions:", newPositions);
   };
 
-  const handleDiceRollComplete = () => {
-    const diceNumber=1
+  const handleDiceRollComplete = (diceNumber) => {
     setIsPionMoving(true); // Set animation status
   
     setPionPositionIndex((prevPositions) => {
@@ -117,33 +117,43 @@ function UlarTangga() {
     });
   
     setTimeout(() => {
-      // After the pawn movement is completed, handle further actions
       setPionPositionIndex((prevPositions) => {
         const newPositions = [...prevPositions];
         let newPosition = newPositions[currentPlayerIndex];
   
-        // Check if the new position is a ladder (show question)
+        // Jika bertemu tangga, tampilkan pertanyaan khusus untuk naik tangga
         if (tanggaUp[newPosition]) {
           setShowQuestion(true);
           setWaitingForAnswer(true);
-          // Stop the movement here until the question is answered
-        }
-        // If it's a snake, move the pawn down automatically
+          setSubmitted(false);  // Reset pertanyaan state untuk tangga
+          setIsCorrect(null);
+          setAllowExtraRoll(false);  // Tangga tidak memberi giliran ulang, reset extra roll
+  
+          // Setelah pertanyaan terjawab di handleAnswerChange, pion naik
+        } 
+        // Jika bertemu ular, turun otomatis dan giliran berpindah
         else if (snakesDown[newPosition]) {
           newPosition = snakesDown[newPosition];
-          console.log(`Pion ${currentPlayerIndex} turun ular ke ${newPosition}`);
           newPositions[currentPlayerIndex] = newPosition;
           logPionPositions(newPositions);
           setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-        } else {
-          // If the dice number is 6, ask a question for an extra roll
-          if (diceNumber === 6) {
-            setShowQuestion(true);
-            setWaitingForAnswer(true);
-          } else {
-            // If the dice number is not 6, move on to the next player
-            setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-          }
+        } 
+        // Jika mendapatkan angka 6, berikan pertanyaan untuk giliran ulang
+        else if (diceNumber === 6) {
+          setShowQuestion(true);
+          setWaitingForAnswer(true);
+          setSubmitted(false);  // Reset pertanyaan state untuk dadu 6
+          setIsCorrect(null);
+          setAllowExtraRoll(true);  // Berikan kesempatan roll ulang jika jawabannya benar
+        } 
+        // Jika pemain sudah mendapat kesempatan roll ulang sebelumnya
+        else if (allowExtraRoll) {
+          setAllowExtraRoll(false); // Reset kesempatan setelah roll ulang
+          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+        } 
+        // Jika bukan angka 6 dan tidak ada roll ulang, pindah ke pemain berikutnya
+        else {
+          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
         }
   
         return newPositions;
@@ -155,23 +165,6 @@ function UlarTangga() {
     // Reset question and answer state
     setSubmitted(false);
     setIsCorrect(null);
-  }
-  
-  
-  
-
-  const handleCorrectAnswerForExtraRoll = (isAnswerCorrect) => {
-    if (isAnswerCorrect) {
-      console.log(`Pemain ${players[currentPlayerIndex].name} menjawab benar dan mendapat kesempatan roll lagi.`);
-      setShowQuestion(false);
-      setWaitingForAnswer(false);
-      // Pemain dapat me-roll dadu kembali
-    } else {
-      console.log(`Pemain ${players[currentPlayerIndex].name} menjawab salah, giliran pindah ke pemain berikutnya.`);
-      setShowQuestion(false);
-      setWaitingForAnswer(false);
-      setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-    }
   };
   
   const handleAnswerChange = (e) => {
@@ -184,26 +177,36 @@ function UlarTangga() {
     setSubmitted(true);
   
     if (isAnswerCorrect) {
-      // Trigger animation to move up the ladder if the answer is correct
-      setPionPositionIndex((prevPositions) => {
-        const newPositions = [...prevPositions];
-        const currentPos = newPositions[currentPlayerIndex];
+      // Cek apakah pertanyaan ini berasal dari dadu 6 atau dari tangga
+      if (allowExtraRoll) {
+        // Jika pertanyaan dari dadu 6 dan jawabannya benar, beri kesempatan roll lagi
+        console.log("Jawaban benar untuk dadu 6, roll dadu lagi.");
+      } else {
+        // Jika pertanyaan dari tangga, pion naik ke posisi tangga
+        setPionPositionIndex((prevPositions) => {
+          const newPositions = [...prevPositions];
+          const currentPos = newPositions[currentPlayerIndex];
   
-        if (tanggaUp[currentPos]) {
-          const targetPosition = tanggaUp[currentPos];
-          newPositions[currentPlayerIndex] = targetPosition;
-          console.log(`Pion ${currentPlayerIndex} naik tangga ke ${targetPosition}`);
-        }
+          if (tanggaUp[currentPos]) {
+            const targetPosition = tanggaUp[currentPos];
+            newPositions[currentPlayerIndex] = targetPosition;
+            console.log(
+              `Pion ${currentPlayerIndex} naik tangga ke ${targetPosition}`
+            );
+          }
   
-        logPionPositions(newPositions);
-        return newPositions;
-      });
+          logPionPositions(newPositions);
+          return newPositions;
+        });
   
-      // Jika jawabannya benar, dan sebelumnya pemain mendapat angka 6, izinkan roll ulang
-      handleCorrectAnswerForExtraRoll(true);
+        // Setelah naik tangga, langsung pindah giliran ke pemain berikutnya
+        setAllowExtraRoll(false);
+        setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+      }
     } else {
-      // Jika jawabannya salah, dan sebelumnya pemain mendapat angka 6, hentikan giliran
-      handleCorrectAnswerForExtraRoll(false);
+      // Jika jawaban salah, giliran berpindah ke pemain berikutnya
+      setAllowExtraRoll(false);
+      setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
     }
   
     setTimeout(() => {
@@ -214,6 +217,10 @@ function UlarTangga() {
   };
   
   
+
+
+
+
   return (
     <Container
       fluid
@@ -256,14 +263,13 @@ function UlarTangga() {
                     (option, index) => (
                       <div
                         key={index}
-                        className={`form-check ${
-                          submitted
+                        className={`form-check ${submitted
                             ? option ===
                               questions[currentQuestionIndex].correctAnswer
                               ? "correct-answer"
                               : "wrong-answer"
                             : ""
-                        }`}
+                          }`}
                       >
                         <input
                           type="radio"
@@ -301,9 +307,8 @@ function UlarTangga() {
             {players.map((player, index) => (
               <div
                 key={player.id}
-                className={`player-item d-flex align-items-center ${
-                  currentPlayerIndex === index ? "active-player" : ""
-                }`}
+                className={`player-item d-flex align-items-center ${currentPlayerIndex === index ? "active-player" : ""
+                  }`}
               >
                 <Image
                   src={player.photo || "path/to/placeholder.jpg"}
@@ -319,16 +324,16 @@ function UlarTangga() {
           </div>
         </Col>
       </Row>
-       {/*Show Overlay Victory */}
-       {victory && (
+      {/*Show Overlay Victory */}
+      {victory && (
         <div className="victory-overlay">
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
           <h2>{players[currentPlayerIndex].name} Wins!</h2>
           <p>Kamu mendapatkan:</p>
           <div className="rewards">
-          <img src={Achievement} alt="achievement" className="Achievement1-logo" />
-          <img src={Achievement2} alt="achievement2" className="Achievement2-logo" />
-          <img src={potionImage} alt="potion" className="potion-logo" />
+            <img src={Achievement} alt="achievement" className="Achievement1-logo" />
+            <img src={Achievement2} alt="achievement2" className="Achievement2-logo" />
+            <img src={potionImage} alt="potion" className="potion-logo" />
           </div>
           <p>Sentuh dimana saja untuk keluar.</p>
         </div>

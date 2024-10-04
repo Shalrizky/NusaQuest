@@ -111,7 +111,7 @@ function UlarTangga() {
       if (newPosition === 99) {
         setVictory(true); // Set victory state if the player reaches column 99
       }
-  
+      
       logPionPositions(newPositions);
       return newPositions;
     });

@@ -7,7 +7,7 @@ import rightCard from '../assets/common/rightCard.png';
 import leftCard from '../assets/common/leftCard.png';
 import shuffleIcon from '../assets/icons/shuffle.png';
 import logoPerson from '../assets/common/logo-person.png';
-import btnTemp from '../assets/common/btntemp.png';
+import btnTemp from '../assets/common/btnTemp.png';
 import HeaderNuca from '../components/HeaderNuca';
 import playerProfile from '../assets/common/imageOne.png';
 

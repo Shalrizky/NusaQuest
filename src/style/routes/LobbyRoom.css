@@ -1,3 +1,8 @@
+/* Add a global box-sizing reset */
+* {
+  box-sizing: border-box;
+}
+
 .lobbyroom-container {
   background-image: url('../../assets/common/background.png');
   background-repeat: no-repeat;
@@ -16,6 +21,7 @@
   justify-content: center;
   background-color: #007bff;
   color: white;
+  display: inline-flex;
   border: none;
   padding: 10px 60px;
   border-radius: 0px;
@@ -41,7 +47,6 @@
   flex-direction: column;
   width: 100%;
   max-width: 350px;
-  height: auto;
   padding: 7px;
   position: absolute;
   bottom: 10px;
@@ -50,21 +55,6 @@
   transition: height 0.3s ease, width 0.3s ease;
   pointer-events: auto;
   justify-content: flex-end;
-}
-
-/* Make the chat box responsive by adjusting the font size and padding on smaller screens */
-@media (max-width: 768px) {
-  .chat-container {
-    font-size: 0.9rem;
-    padding: 5px;
-  }
-}
-
-@media (max-width: 480px) {
-  .chat-container {
-    font-size: 0.8rem;
-    padding: 3px;
-  }
 }
 
 .chat-container.collapsed {
@@ -95,7 +85,7 @@
 }
 
 .chat-input {
-  flex-grow: 1;
+  width: 100%;
   padding: 8px;
   border: none;
   border-radius: 5px;
@@ -118,46 +108,15 @@
   background-color: #004494;
 }
 
-/* Small screens (max-width: 768px) */
+/* Media queries for responsiveness */
 @media (max-width: 768px) {
-  .lobbyroom-container {
-    background-size: 100% 100vh;
-  }
-  .start-button {
-    font-size: 24px;
-    padding: 8px 40px;
-  }
   .chat-container {
     max-width: 250px;
   }
-  .chat-input {
-    padding: 6px;
-    font-size: 0.8rem;
-  }
-  .send-button {
-    padding: 6px 8px;
-    font-size: 0.8rem;
-  }
 }
 
-/* Extra small screens (max-width: 480px) */
 @media (max-width: 480px) {
-  .lobbyroom-container {
-    background-size: 100% 100vh;
-  }
-  .start-button {
-    font-size: 18px;
-    padding: 6px 30px;
-  }
   .chat-container {
     max-width: 200px;
-  }
-  .chat-input {
-    padding: 4px;
-    font-size: 0.6rem;
-  }
-  .send-button {
-    padding: 4px 6px;
-    font-size: 0.6rem;
   }
 }

@@ -90,18 +90,24 @@ function LobbyRoom() {
               ))}
             </div>
             <form onSubmit={handleSendMessage} className="chat-input-form" onClick={(e) => e.stopPropagation()}>
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder={
-                  newMessage.trim() === "" && !isExpanded && getLastMessage() 
-                  ? `Abrar: ${getLastMessage()}` 
-                  : 'Ketik pesan di sini'
-                }
-                className="chat-input"
-              />
-              <Button type="submit" variant="primary" className="send-button">Send</Button>
+              <Row>
+                <Col xs={8}>
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder={
+                      newMessage.trim() === "" && !isExpanded && getLastMessage() 
+                      ? `Abrar: ${getLastMessage()}` 
+                      : 'Ketik pesan di sini'
+                    }
+                    className="chat-input"
+                  />
+                </Col>
+                <Col xs={4}>
+                  <Button type="submit" variant="primary" className="send-button">Send</Button>
+                </Col>
+              </Row>
             </form>
           </div>
         </Col>

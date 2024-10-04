@@ -10,8 +10,8 @@ import "../style/components/CardPlayer.css";
 
 const CardPlayer = () => {
   return (
-    <Row className="card-player-container d-flex justify-content-center align-items-center gap-4">
-      <Col className="d-flex justify-content-center">
+    <Row className="card-player-container d-flex justify-content-center align-items-center">
+      <Col xs={12} sm={6} lg={3} className="d-flex justify-content-center mx-lg-3 mx-2 mb-4">
         <div className="card-wrapper">
           <Card className="card-player">
             <Card.Img variant="top" src={Image} className="img-card-player" />
@@ -26,7 +26,7 @@ const CardPlayer = () => {
         </div>
       </Col>
 
-      <Col className="d-flex justify-content-center">
+      <Col xs={12} sm={6} lg={3} className="d-flex justify-content-center mx-lg-3 mx-2 mb-4">
         <div className="card-wrapper2">
           <Card className="card-player">
             <Card.Img variant="top" src={Image2} className="img-card-player" />
@@ -41,7 +41,7 @@ const CardPlayer = () => {
         </div>
       </Col>
 
-      <Col className="d-flex justify-content-center">
+      <Col xs={12} sm={6} lg={3} className="d-flex justify-content-center mx-lg-3 mx-2 mb-4">
         <div className="card-wrapper3">
           <Card className="card-player">
             <Card.Img variant="top" src={Image3} className="img-card-player" />
@@ -56,7 +56,7 @@ const CardPlayer = () => {
         </div>
       </Col>
 
-      <Col className="d-flex justify-content-center">
+      <Col xs={12} sm={6} lg={3} className="d-flex justify-content-center mx-lg-3 mx-2 mb-4">
         <Card className="player-not-available">
           <Card.Img variant="top" src={vector} className="vector-player" />
           <Card.Body>

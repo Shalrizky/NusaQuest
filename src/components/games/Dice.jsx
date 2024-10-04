@@ -2,12 +2,12 @@ import React, { useState, useRef } from "react";
 import gsap from "gsap";
 import "../../style/components/games/Dice.css";
 
-function Dice({ onRollComplete,disabled  }) {
+function Dice({ onRollComplete, disabled }) {
   const [rolling, setRolling] = useState(false);
   const diceRef = useRef(null);
 
   const rollDice = () => {
-    if (disabled || rolling) return; // Prevent rolling if already rolling or disabled
+    if (disabled || rolling) return;
 
     const dice = diceRef.current;
     if (!dice) return;
@@ -41,7 +41,7 @@ function Dice({ onRollComplete,disabled  }) {
       ease: "power2.out",
       onComplete: () => {
         setRolling(false);
-        onRollComplete(finalNumber); // Kirim hasil lemparan ke komponen parent
+        onRollComplete(finalNumber);
       },
     });
   };

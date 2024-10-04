@@ -3,7 +3,7 @@ import { Container, Row, Col, Image, Form } from "react-bootstrap";
 import HeaderUtangga from "../components/games/HeaderGame";
 import Board from "../components/games/React-KonvaUlar";
 import Dice from "../components/games/Dice";
-import Potion from "../components/games/potion"; 
+import Potion from "../components/games/potion";
 import "../style/routes/UlarTangga.css";
 import victoryImage from "../assets/games/Utangga/victory.png"
 import Achievement from "../assets/games/Utangga/achievement1.png"
@@ -86,29 +86,28 @@ function UlarTangga() {
   const [isCorrect, setIsCorrect] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
-  const [victory, setVictory] = useState(false); 
+  const [victory, setVictory] = useState(false);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
 
 
   const logPionPositions = (newPositions) => {
-    console.log("Pion Positions:", newPositions);
   };
 
   const handleDiceRollComplete = (diceNumber) => {
-    setIsPionMoving(true); 
+    setIsPionMoving(true);
 
     setPionPositionIndex((prevPositions) => {
       const newPositions = [...prevPositions];
       let newPosition = newPositions[currentPlayerIndex] + diceNumber;
 
-      if (newPosition > 99) newPosition = 99; 
+      if (newPosition > 99) newPosition = 99;
 
       // Update position before checking for interactions
       newPositions[currentPlayerIndex] = newPosition;
 
       // Check for victory
       if (newPosition === 99) {
-        setVictory(true); 
+        setVictory(true);
       }
 
       logPionPositions(newPositions);
@@ -124,9 +123,9 @@ function UlarTangga() {
         if (tanggaUp[newPosition]) {
           setShowQuestion(true);
           setWaitingForAnswer(true);
-          setSubmitted(false);  
+          setSubmitted(false);
           setIsCorrect(null);
-          setAllowExtraRoll(false);  
+          setAllowExtraRoll(false);
         }
         // Jika bertemu ular, turun otomatis dan giliran berpindah
         else if (snakesDown[newPosition]) {
@@ -139,13 +138,13 @@ function UlarTangga() {
         else if (diceNumber === 6) {
           setShowQuestion(true);
           setWaitingForAnswer(true);
-          setSubmitted(false);  
+          setSubmitted(false);
           setIsCorrect(null);
-          setAllowExtraRoll(true);  
+          setAllowExtraRoll(true);
         }
         // Jika pemain sudah mendapat kesempatan roll ulang sebelumnya
         else if (allowExtraRoll) {
-          setAllowExtraRoll(false); 
+          setAllowExtraRoll(false);
           setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
         }
 
@@ -158,9 +157,7 @@ function UlarTangga() {
       });
 
       setIsPionMoving(false);
-    }, 2000); 
-
-    // Reset question and answer state
+    }, 2000);
     setSubmitted(false);
     setIsCorrect(null);
   };
@@ -178,7 +175,6 @@ function UlarTangga() {
       // Cek apakah pertanyaan ini berasal dari dadu 6 atau dari tangga
       if (allowExtraRoll) {
         // Jika pertanyaan dari dadu 6 dan jawabannya benar, beri kesempatan roll lagi
-        console.log("Jawaban benar untuk dadu 6, roll dadu lagi.");
       } else {
         // Jika pertanyaan dari tangga, pion naik ke posisi tangga
         setPionPositionIndex((prevPositions) => {
@@ -188,9 +184,6 @@ function UlarTangga() {
           if (tanggaUp[currentPos]) {
             const targetPosition = tanggaUp[currentPos];
             newPositions[currentPlayerIndex] = targetPosition;
-            console.log(
-              `Pion ${currentPlayerIndex} naik tangga ke ${targetPosition}`
-            );
           }
 
           logPionPositions(newPositions);
@@ -213,11 +206,6 @@ function UlarTangga() {
       setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
     }, 1800);
   };
-
-
-
-
-
 
   return (
     <Container
@@ -324,8 +312,7 @@ function UlarTangga() {
 
       {/*Show Overlay Victory */}
       {victory && (
-        <div className="victory-overlay">
-          onClick={() => setVictory(false)} {/*buat click dimana saja bisa berfungsi*/} 
+        <div className="victory-overlay" onClick={() => setVictory(false)}>
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
           <h2>{players[currentPlayerIndex].name} Wins!</h2>
           <p>Kamu mendapatkan:</p>

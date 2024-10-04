@@ -161,10 +161,6 @@ function Board({
       const loadedTanggas = await Promise.all(tanggaSrcs.map(loadImage));
       const loadedPions = await Promise.all(pionSrcs.map(loadImage));
 
-      console.log("Snakes loaded:", loadedSnakes.length);
-      console.log("Tanggas loaded:", loadedTanggas.length);
-      console.log("Pions loaded:", loadedPions.length);
-
       setSnakeImages(loadedSnakes);
       setTanggaImages(loadedTanggas);
       setPionImages(loadedPions);
@@ -361,7 +357,7 @@ function Board({
                 getPosition={getPosition}
                 image={img}
                 index={index}
-                onAnimationComplete={() => {}} // Handle any callback after animation if needed
+                onAnimationComplete={() => { }} // Handle any callback after animation if needed
                 tanggaUp={tanggaUp}
                 snakesDown={snakesDown}
                 isCorrect={isCorrect}

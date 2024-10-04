@@ -27,7 +27,7 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
       gsap.to(node, {
         x: targetPos.x,
         y: targetPos.y,
-        duration: 0.3, // Smooth duration for sliding
+        duration: 0.3,
         ease: "power2.inOut",
         onComplete: () => {
           setPositionIndex(targetIndex);

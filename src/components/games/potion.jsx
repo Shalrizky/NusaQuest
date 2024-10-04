@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Image } from "react-bootstrap";
 import "../../style/components/games/potion.css";
-import potionIcon from "../../assets/games/Utangga/potion.png"; // Import icon potion
+import potionIcon from "../../assets/games/Utangga/potion1.png"; // Import icon potion
 
 function Potion() {
   const [showModal, setShowModal] = useState(false);
@@ -24,7 +24,8 @@ function Potion() {
   return (
     <>
       <div className="potion-icon mt-3" onClick={handleOpenModal}>
-        <Image src={potionIcon} alt="Potion Icon" width={100}  />
+        <Image src={potionIcon} alt="Potion Icon" width={70} />
+        <p className="potion-text">1x</p>
       </div>
 
       {/* Overlay hitam transparan dan konten modal langsung */}

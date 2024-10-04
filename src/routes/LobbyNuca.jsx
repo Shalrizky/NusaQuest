@@ -3,15 +3,8 @@ import { Container, Row, Col, Button } from "react-bootstrap";
 import NucaLobbyLogo from "../assets/common/nuca-lobby-logo.png";
 import "../style/routes/LobbyNuca.css";
 import Header from '../components/Header';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 function LobbyNuca() {
-  const navigate = useNavigate(); // Initialize useNavigate
-
-  const handleSelectRoom = () => {
-    navigate('/GameplayCard'); // Redirect to /gameplay route
-  };
-
   return (
     <Container fluid className="room-utangga-container">
       <Header showLogoIcon={false} showIcons={false} showBackIcon={true} />
@@ -36,7 +29,7 @@ function LobbyNuca() {
               Permainan dimulai dengan setiap pemain secara bergantian melempar pertanyaan pilihan ganda yang telah disediakan terkait topik pada dek kartu, dengan masing-masing pemain mendapatkan lima kartu pertanyaan.
             </li>
           </ol>
-          <Button onClick={handleSelectRoom} className="btn-lobby-uTangga">Select Room</Button>
+          <Button className="btn-lobby-uTangga">Select Room</Button>
         </Col>
         <Col md={6} className="d-flex justify-content-center align-items-md-center align-items-sm-center">
           <img

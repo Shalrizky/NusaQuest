@@ -13,6 +13,7 @@ import LobbyGame from './routes/LobbyGame';
 import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
 import UlarTangga from './routes/UlarTangga';
+import GameplayCard from './routes/GameplayCard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const withLoader = (Component) => {
@@ -67,6 +68,13 @@ const App = () => {
           path: '/UlarTangga', element: (
             <ProtectedRoute>
               {withLoader(UlarTangga)()}
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/gameplayCard', element: (
+            <ProtectedRoute>
+              {withLoader(GameplayCard)()}
             </ProtectedRoute>
           )
         },

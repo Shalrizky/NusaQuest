@@ -6,6 +6,9 @@
   background-size: cover;
   min-height: 100vh;
   overflow: hidden;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Ensure proper layout for header and game board */
@@ -13,19 +16,20 @@
   display: flex;
   justify-content: flex-start;
   padding: 20px; 
+  margin-top: 20px;
 }
 
 /* Ensure Konva canvas container is positioned correctly */
 .utu-konva {
   position: relative;
+  margin-bottom: 20px;
 }
 
 /* Styling for player turn box */
 .player-turn-box {
-  
   width: 500px;
   height: 300px;
-  background-color: #3971D0; /* Dark blue */
+  background-color: #81B0FE; /*blue */
   color: white;
   text-align: center;
   padding: 20px;
@@ -33,9 +37,8 @@
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-around;  
   align-items: center;
-  /* Ensure no margin-top issues */
   margin: 20px auto;
 }
 
@@ -50,11 +53,11 @@
 }
 
 .player-item img {
-  border: 5px solid #ffd700; /* warna kuning */
-  border-radius: 50%; /* membuat foto profile menjadi lingkaran */
+  border: 5px solid #ffd700; 
+  border-radius: 50%; 
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  width: 60px; /* ukuran foto profile */
-  height: 60px; /* ukuran foto profile */
+  width: 60px;
+  height: 60px;
 }
 
 .player-item span {
@@ -62,5 +65,121 @@
   font-weight: bold;
   color: #ffffff;
   margin-left: 10px;
+}
+.form-check {
+  border: 1px solid #B3D9FF;
+  padding: 2px;
+  justify-content: center;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s ease; /* Animasi smooth untuk transisi */
+}
+
+.form-check input[type="radio"] {
+  margin-right: 2px;
+}
+
+.form-check-label {
+  cursor: pointer;
+  padding: 5px; /* Tambah padding agar lebih nyaman di-hover */
+  width: 100%; /* Supaya seluruh elemen label dapat di-hover */
+}
+
+/* Efek hover untuk label */
+.form-check:hover {
+  background-color: #FD8200; /* Background berubah menjadi oranye saat di-hover */
+}
+
+/* Warna hijau untuk jawaban benar */
+.correct-answer {
+  background-color: lightgreen !important;
+}
+
+/* Warna merah untuk jawaban salah */
+.wrong-answer {
+  background-color: lightcoral !important;
+}
+
+/*Css Overlay VICTORY*/
+.victory-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8); /* Transparan */
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  text-align: center;
+  padding: 20px;
+}
+
+.victory-logo {
+  width: 300px; /* Sesuaikan ukuran logo sesuai kebutuhan */
+  margin-bottom: 20px;
+}
+
+.victory-overlay h1 {
+  font-size: 3rem;
+  margin: 10px 0;
+}
+
+.victory-overlay h2 {
+  font-size: 2rem;
+  margin: 10px 0;
+}
+
+.rewards {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.Achievement1-logo {
+  margin: 5px 10px;
+  width: 100px;
+  height:100px ;
+}
+
+.Achievement2-logo {
+    margin: 5px 10px;
+    width: 100px;
+    height:100px ;
+}
+.potion-logo {
+    margin: 5px 10px;
+    width: 120px;
+    height:100px ;
+}
+/* Responsive styles */
+@media (max-width: 768px) {
+  .utu-konva {
+    margin-bottom: 30px;
+  }
+
+  .player-turn-box {
+    width: 100%; /* Make the player turn box full width on mobile */
+    height: auto; /* Allow height to adjust */
+    text-align: center;
+  }
+
+  .player-item {
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+
+  .player-item img {
+    width: 40px; /* Smaller profile image on mobile */
+    height: 40px;
+  }
+
+  .player-item span {
+    font-size: 16px; /* Adjust font size for mobile */
+  }
 }
 

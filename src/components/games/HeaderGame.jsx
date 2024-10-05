@@ -1,22 +1,29 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Row, Col, Image, Offcanvas } from "react-bootstrap";
-import btntemp from "../assets/common/btnTemp.png";
-import iconmusik from "../assets/common/icon_musik.png";
-import iconmusikOff from "../assets/common/icon_musik_off.png";
-import iconsfx from "../assets/common/icon_sfx.png";
-import iconsfxOff from "../assets/common/icon_sfx_off.png";
-import "../style/components/HeaderUtangga.css";
+import btntemp from "../../assets/common/btnTemp.png";
+import iconmusik from "../../assets/common/icon_musik.png";
+import iconmusikOff from "../../assets/common/icon_musik_off.png";
+import iconsfx from "../../assets/common/icon_sfx.png";
+import iconsfxOff from "../../assets/common/icon_sfx_off.png";
+import "../../style/components/games/HeaderGame.css";
 
 function HeaderUtangga({ layout, toggleTemp }) {
-    const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-    const [isSfxPlaying, setIsSfxPlaying] = useState(false);
-    const [showOffcanvas, setShowOffcanvas] = useState(false); // State to control Offcanvas
+    const [isMusicPlaying, setIsMusicPlaying] = useState(true);
+    const [isSfxPlaying, setIsSfxPlaying] = useState(true);
+    const [showOffcanvas, setShowOffcanvas] = useState(false);
     const audioRef = useRef(null);
     const sfxRef = useRef(null);
 
+    useEffect(() => {
+        // Memutar musik secara otomatis saat komponen dimuat
+        if (audioRef.current) {
+            audioRef.current.play().catch((error) => {
+            });
+        }
+    }, []); // Hanya jalankan saat komponen di-mount
+
     const handleBtnTempClick = () => {
-        console.log("Button Temp clicked");
-        setShowOffcanvas(true); // Show the Offcanvas
+        setShowOffcanvas(true);
         if (toggleTemp) toggleTemp();
     };
 
@@ -46,12 +53,13 @@ function HeaderUtangga({ layout, toggleTemp }) {
         setIsSfxPlaying(!isSfxPlaying);
     };
 
-    const handleCloseOffcanvas = () => setShowOffcanvas(false); // Close the Offcanvas
+    const handleCloseOffcanvas = () => setShowOffcanvas(false);
 
     return (
         <>
-            <audio ref={audioRef} src="/audio/background-music.mp3" preload="auto" />
-            <audio ref={sfxRef} src="/audio/sfx-file.mp3" preload="auto" />
+            <audio ref={audioRef} src={require("../../assets/sound/song1.mp3")} preload="auto" />
+            <audio ref={sfxRef} src={require("../../assets/sound/song2.mp3")} preload="auto" />
+            <audio ref={sfxRef} src={require("../../assets/sound/song3.MP3")} preload="auto" />
             <Row className="align-items-center mt-3">
                 <Col className="d-flex justify-content-start">
                     <Image
@@ -92,9 +100,8 @@ function HeaderUtangga({ layout, toggleTemp }) {
                     <h5>Makanan</h5>
                     <div className="answer-section">
                         <p>1. Makanan yang berasal dari Jawa Barat adalah <strong>Gudeg</strong>.</p>
-                        <p>2. Makenna pedas yang berasal dari Jawa Barat adalah <strong>Seblak</strong>.</p>
+                        <p>2. Makanan pedas yang berasal dari Jawa Barat adalah <strong>Seblak</strong>.</p>
                     </div>
-
                 </Offcanvas.Body>
             </Offcanvas>
         </>

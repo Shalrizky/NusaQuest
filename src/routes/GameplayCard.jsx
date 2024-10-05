@@ -97,13 +97,9 @@ function GameplayCard() {
 
   return (
     <>
-      <HeaderNuca />
       <Container fluid className="room-ruca-container">
-        <div className="btn-temp-container">
-          <Image src={btnTemp} alt="Tombol Suhu" className="btn-temp" />
-        </div>
+      <HeaderNuca />
         <Image src={logoPerson} alt="Logo Person" className="logo-person" />
-
         <div className="player-profile-container">
           {["player1", "player2", "player3"].map((player, index) => (
             <div key={index} className={`player-profile-wrapper ${player}`}>

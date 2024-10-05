@@ -16,32 +16,9 @@
 }
 
 .custom-offcanvas .btn-close:hover {
-    background-color: rgb(255, 255, 255); /* Light background on hover */
+    background-color: rgba(255, 255, 255, 0.244); /* Light background on hover */
 }
 
 .custom-offcanvas .btn-close:focus {
     box-shadow: none; /* Remove default focus shadow */
-}
-/* HeaderNuca.css */
-.header-nuca {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: transparent; /* Latar belakang transparan */
-    z-index: 999; /* Agar berada di atas konten lainnya */
-    padding: 10px 20px; /* Tambahkan sedikit padding */
-}
-
-.header-nuca img {
-    cursor: pointer;
-}
-
-.header-nuca .row {
-    margin: 0; /* Hapus margin */
-}
-
-/* Tambahan untuk menghindari konten overlap */
-.room-ruca-container {
-    padding-top: 80px; /* Beri padding pada container utama agar tidak tumpang tindih dengan header */
 }

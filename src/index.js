@@ -72,7 +72,7 @@ const App = () => {
           )
         },
         {
-          path: '/gameplayCard', element: (
+          path: '/GameplayCard', element: (
             <ProtectedRoute>
               {withLoader(GameplayCard)()}
             </ProtectedRoute>

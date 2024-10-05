@@ -84,7 +84,7 @@ function LobbyGame() {
               Select Room
             </Button>
           </Col>
-          <Col md={6} className="d-flex justify-content-center pt-4">
+          <Col md={6} className="d-flex justify-content-center align-items-end ">
             <img
               ref={imageRef}
               src={lobbyData.image}

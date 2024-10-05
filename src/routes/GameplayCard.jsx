@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect} from "react";
 import { Container, Row, Col, Image, Modal, Button } from "react-bootstrap";
 import "../style/routes/GameplayCard.css";
 import deckCard from "../assets/common/deckCard.png";
@@ -7,7 +7,6 @@ import rightCard from "../assets/common/rightCard.png";
 import leftCard from "../assets/common/leftCard.png";
 import shuffleIcon from "../assets/common/shuffle.png";
 import logoPerson from "../assets/common/logo-person.png";
-import btnTemp from "../assets/common/btnTemp.png";
 import HeaderNuca from "../components/HeaderNuca";
 import playerProfile from "../assets/common/imageOne.png";
 import ramuanIcon from "../assets/common/ramuanIcon.png";
@@ -31,6 +30,10 @@ function GameplayCard() {
   const [isAnswered, setIsAnswered] = useState(false);
   const [animatingCard, setAnimatingCard] = useState(null);
   const [showPotionModal, setShowPotionModal] = useState(false);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [selectedDeckCard, setSelectedDeckCard] = useState(null);
+
+  const shuffleIconRef = useRef(null);
 
   const nextPlayer = useCallback(() => {
     if (currentPlayer === "player1") {
@@ -42,7 +45,7 @@ function GameplayCard() {
     }
   }, [currentPlayer]);
 
-  const handleCardClick = () => {
+  const handleBackCardClick = () => {
     if (currentPlayer === "player1") {
       setCategory("Makanan");
       setQuestion("Apa saja makanan khas Jawa Barat yang paling terkenal dan menjadi favorit masyarakat lokal?");
@@ -58,41 +61,72 @@ function GameplayCard() {
     setSelectedAnswer(answer);
     if (answer === "Batagor") {
       setAnswerStatus("correct");
-      if (playerCards[currentPlayer].length > 1) {
-        setAnimatingCard(currentPlayer);
-        setTimeout(() => {
-          setPlayerCards((prevCards) => ({
-            ...prevCards,
-            [currentPlayer]: prevCards[currentPlayer].slice(0, -1),
-          }));
-          setAnimatingCard(null);
-        }, 500);
-      }
+      setIsShuffling(true);
+      setRotation(prevRotation => prevRotation + 360);  // Increment rotation by 360 degrees
     } else {
       setAnswerStatus("incorrect");
-      setPlayerCards((prevCards) => ({
-        ...prevCards,
-        [currentPlayer]: [...prevCards[currentPlayer], prevCards[currentPlayer].length + 1],
-      }));
+      setIsShuffling(true);
+      setRotation(prevRotation => prevRotation + 360)
     }
     setIsAnswered(true);
     setTimeout(() => {
       nextPlayer();
       setShowModal(false);
+      setIsShuffling(false);
     }, 1500);
+  };
+
+  useEffect(() => {
+    if (shuffleIconRef.current) {
+      shuffleIconRef.current.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+    }
+  }, [rotation]);
+
+  const handleDeckCardClick = (index) => {
+    if (!isShuffling && answerStatus === "correct") {
+      setSelectedDeckCard(index);
+      const updatedPlayerCards = { ...playerCards };
+      updatedPlayerCards[currentPlayer] = updatedPlayerCards[currentPlayer].filter((_, i) => i !== index);
+      setPlayerCards(updatedPlayerCards);
+
+      // Animate the selected card moving to the center
+      const cardElement = document.querySelector(`.stacked-card-${index}`);
+      if (cardElement) {
+        cardElement.style.transition = "transform 8.0s ease";
+        cardElement.style.transform = "translate(-50%, -50%)";
+        cardElement.style.position = "absolute";
+        cardElement.style.left = "50%";
+        cardElement.style.top = "50%";
+        cardElement.style.zIndex = "1000";
+      }
+
+      // Reset after animation
+      setTimeout(() => {
+        setSelectedDeckCard(null);
+        if (cardElement) {
+          cardElement.style.transition = "";
+          cardElement.style.transform = "";
+          cardElement.style.position = "";
+          cardElement.style.left = "";
+          cardElement.style.top = "";
+          cardElement.style.zIndex = "";
+        }
+      }, 500);
+    }
   };
 
   const handlePotionClick = () => {
     setShowPotionModal(true);
   };
 
+  // Edit bagian ini untuk mengatur modal potion dan pertanyaan
   const handlePotionConfirm = () => {
-    setShowPotionModal(false);
-    setShowModal(false);
+    setShowPotionModal(false); // Tutup modal potion
+    setShowModal(false); // Tutup modal pertanyaan
   };
 
   const handlePotionCancel = () => {
-    setShowPotionModal(false);
+    setShowPotionModal(false); // Tutup hanya modal potion
   };
 
   return (
@@ -100,33 +134,35 @@ function GameplayCard() {
       <Container fluid className="room-ruca-container">
       <HeaderNuca />
         <Image src={logoPerson} alt="Logo Person" className="logo-person" />
-        <div className="player-profile-container">
-          {["player1", "player2", "player3"].map((player, index) => (
-            <div key={index} className={`player-profile-wrapper ${player}`}>
-              <Image
-                src={playerProfile}
-                alt={`Profil Pemain ${index + 1}`}
-                className={`player-profile ${currentPlayer === player ? "active-player" : ""}`}
-              />
-            </div>
-          ))}
-        </div>
+        {/* Player profiles */}
+      <div className="player-profile-container">
+        {["player1", "player2", "player3"].map((player, index) => (
+          <div key={index} className={`player-profile-wrapper ${player}`}>
+            <Image
+              src={playerProfile}
+              alt={`Profil Pemain ${index + 1}`}
+              className={`player-profile ${currentPlayer === player ? "active-player" : ""}`}
+            />
+          </div>
+        ))}
+      </div>
 
-        <Row className="justify-content-center align-items-center card-center-section">
-          <Col xs={12} className="d-flex justify-content-center">
-            <div className="back-card-stack">
-              {backCards.map((card, index) => (
-                <Image
-                  key={index}
-                  src={backCard}
-                  alt={`Kartu belakang ${index + 1}`}
-                  className={`back-card back-card-${index}`}
-                  onClick={handleCardClick}
-                />
-              ))}
-            </div>
-          </Col>
-        </Row>
+        {/* Back Cards in the center */}
+      <Row className="justify-content-center align-items-center card-center-section">
+        <Col xs={12} className="d-flex justify-content-center">
+          <div className="back-card-stack">
+            {backCards.map((card, index) => (
+              <Image
+                key={index}
+                src={backCard}
+                alt={`Kartu belakang ${index + 1}`}
+                className={`back-card back-card-${index}`}
+                onClick={handleBackCardClick}
+              />
+            ))}
+          </div>
+        </Col>
+      </Row>
 
         <Row className="card-right-section">
           <Col className="d-flex justify-content-center card-right-stack">
@@ -162,81 +198,72 @@ function GameplayCard() {
           </Col>
         </Row>
 
-        <Row className="justify-content-center align-items-center card-stack-section">
-          <Col xs={12} className="d-flex justify-content-center card-stack position-relative">
-            {playerCards.player1.map((card, index) => (
-              <Image
-                key={index}
-                src={deckCard}
-                alt={`Kartu ${index + 1}`}
-                className={`stacked-card stacked-card-${index} ${
-                  animatingCard === "player1" && index === playerCards.player1.length - 1
-                    ? "card-disappear"
-                    : ""
-                }`}
-              />
-            ))}
+         {/* Bottom Deck Cards */}
+         <Row className="justify-content-center align-items-center card-stack-section">
+        <Col xs={12} className="d-flex justify-content-center card-stack position-relative">
+          {playerCards[currentPlayer].map((card, index) => (
             <Image
-              src={shuffleIcon}
-              alt="Shuffle"
-              className="shuffle-icon"
-              onClick={() => setRotation(rotation + 720)}
-              style={{
-                cursor: "pointer",
-                transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-                transition: "transform 4s ease",
-              }}
+              key={index}
+              src={deckCard}
+              alt={`Kartu ${index + 1}`}
+              className={`stacked-card stacked-card-${index} ${
+                selectedDeckCard === index ? "selected-deck-card" : ""
+              }`}
+              onClick={() => handleDeckCardClick(index)}
             />
-          </Col>
-        </Row>
+          ))}
+          <Image
+            ref={shuffleIconRef}
+            src={shuffleIcon}
+            alt="Shuffle"
+            className={`shuffle-icon ${isShuffling ? "shuffling" : ""}`}
+          />
+        </Col>
+      </Row>
 
-        <Modal show={showModal} centered className="transparent-modal">
-          <Modal.Body className="modal-content-body">
-            <div className="modal-category">{category}</div>
-            <h5 className="modal-text">{question}</h5>
-            <div className="question-options">
-              {options.map((option, index) => (
-                <Button
-                  key={index}
-                  variant={
-                    isAnswered && selectedAnswer === option
-                      ? answerStatus === "correct"
-                        ? "success"
-                        : "danger"
-                      : "primary"
-                  }
-                  className={`answer-option ${
-                    answerStatus === "incorrect" && selectedAnswer === option ? "shake" : ""
-                  }`}
-                  onClick={() => handleAnswerClick(option)}
-                  disabled={isAnswered}
-                >
-                  {option}
-                </Button>
-              ))}
-            </div>
-
-            <div className="ramuan-icon-container">
-              <Image src={ramuanIcon} alt="Ramuan" className="ramuan-icon" onClick={handlePotionClick} />
-            </div>
-          </Modal.Body>
-        </Modal>
-
-        <Modal show={showPotionModal} centered onHide={handlePotionCancel} className="transparent-modal">
-          <Modal.Body className="modal-content-body">
-            <h5>Menggunakan Potion akan menyelamatkanmu dari pertanyaan ini</h5>
-            <p>Apakah Kamu Yakin Ingin Menggunakan Potion?</p>
-            <div className="d-flex justify-content-around">
-              <Button variant="success" onClick={handlePotionConfirm}>
-                Ya
+         {/* Modal for questions */}
+      <Modal show={showModal} centered className="transparent-modal">
+        <Modal.Body className="modal-content-body">
+          <div className="modal-category">{category}</div>
+          <h5 className="modal-text">{question}</h5>
+          <div className="question-options">
+            {options.map((option, index) => (
+              <Button
+                key={index}
+                variant={
+                  isAnswered && selectedAnswer === option
+                    ? answerStatus === "correct"
+                      ? "success"
+                      : "danger"
+                    : "primary"
+                }
+                className={`answer-option ${
+                  answerStatus === "incorrect" && selectedAnswer === option ? "shake" : ""
+                }`}
+                onClick={() => handleAnswerClick(option)}
+                disabled={isAnswered}
+              >
+                {option}
               </Button>
-              <Button variant="danger" onClick={handlePotionCancel}>
-                Tidak
-              </Button>
-            </div>
-          </Modal.Body>
-        </Modal>
-      </Container>
+            ))}
+          </div>
+          <div className="ramuan-icon-container">
+            <Image src={ramuanIcon} alt="Ramuan" className="ramuan-icon" onClick={handlePotionClick} />
+          </div>
+        </Modal.Body>
+      </Modal>
+
+    <Modal show={showPotionModal} centered className="potion-modal">
+        <Modal.Body className="potion-modal-content">
+          <p>Menggunakan Potion akan menyelamatkanmu dari pertanyaan ini</p>
+          <p>Apakah kamu yakin ingin menggunakan Potion?</p>
+          <div className="potion-modal-buttons">
+            <Button variant="primary" onClick={handlePotionConfirm} className="ya-potion-button">Ya</Button>
+            <Button variant="secondary" onClick={handlePotionCancel} className="tidak-potion-button">Tidak</Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+    </Container>
     </>
   );
 }

@@ -14,7 +14,7 @@
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: 170px; /* Sesuaikan dengan ukuran yang diperlukan */
+  width: 170px;
   height: auto;
   z-index: 1000;
 }
@@ -24,18 +24,50 @@
   position: absolute;
   top: 20px;
   left: 20px;
-  z-index: 1100; /* Pastikan di atas elemen lainnya */
+  z-index: 1100;
 }
 
 .btn-temp {
-  width: 50px;  /* Sesuaikan ukuran tombol */
+  width: 50px;
   height: auto;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
 
 .btn-temp:hover {
-  transform: scale(1.1);  /* Zoom in sedikit saat di-hover */
+  transform: scale(1.1);
+}
+
+/* Wrapper untuk player profile */
+.player-profile-wrapper {
+  position: relative;
+}
+
+.player-profile-wrapper.player1 {
+  position: absolute;
+  top: 130px;
+  left: 65px;
+}
+
+.player-profile-wrapper.player2 {
+  position: absolute;
+  top: 130px;
+  right: 65px;
+}
+
+.player-profile-wrapper.player3 {
+  position: absolute;
+  bottom: 50px;
+  right: 450px;
+  transform: translateX(-50%);
+}
+
+/* Style untuk profil pemain */
+.player-profile {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid #fff;
 }
 
 /* Tumpukan Kartu Belakang di Tengah */
@@ -52,14 +84,14 @@
 
 .back-card {
   position: absolute;
-  width: 115px; /* Ukuran kartu lebih kecil */
+  width: 115px;
   height: auto;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .back-card:hover {
-  transform: translateY(-20px); /* Mengangkat kartu saat di-hover */
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); /* Menambahkan bayangan */
+  transform: translateY(-20px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* Mengatur posisi tumpukan kartu belakang ke samping (horizontal) */
@@ -113,9 +145,10 @@
   top: -185px;
   left: 53%;
   transform: translate(-50%, -50%);
-  width: 255px; /* Sesuaikan ukuran sesuai kebutuhan */
+  width: 255px;
   height: auto;
   z-index: 10;
+  cursor: pointer;
 }
 
 /* Tumpukan Kartu di Sebelah Kanan (Vertikal) */
@@ -132,8 +165,8 @@
 
 .card-right-stack {
   position: relative;
-  width: 150px; /* Sesuaikan ukuran stack */
-  height: 300px; /* Tinggi untuk tumpukan vertikal */
+  width: 150px;
+  height: 300px;
 }
 
 .right-card {
@@ -163,8 +196,8 @@
 
 .card-left-stack {
   position: relative;
-  width: 150px; /* Sesuaikan ukuran stack */
-  height: 300px; /* Tinggi untuk tumpukan vertikal */
+  width: 150px;
+  height: 300px;
 }
 
 .left-card {
@@ -180,132 +213,59 @@
 .left-card-3 { top: 90px; z-index: 2; }
 .left-card-4 { top: 120px; z-index: 1; }
 
-/* Overlay hitam yang muncul setengah layar */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: -50%;
-  width: 50%; /* Setengah layar */
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.3); /* Hitam dengan transparansi lebih ringan */
-  z-index: 100; /* z-index lebih rendah dari backIcon */
-  transition: left 0.5s ease; /* Animasi untuk slide-in */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 0px 20px 20px 0px;
-}
-
-.overlay.show {
-  left: 0;
-}
-
-/* Konten di dalam overlay dengan transparansi dan border */
-.overlay-content {
-  background-color: rgba(255, 255, 255, 0.8); /* Warna putih dengan transparansi 80% */
-  border: 2px solid rgba(0, 0, 0, 0.5); /* Border hitam transparan */
-  color: black;
-  padding: 20px;
-  border-radius: 15px;
-  text-align: left;
-  position: absolute;
-  top: 100px;
-  left: 20px;
-  right: 20px;
-}
-
 /* Modal yang transparan untuk pop-up */
 .transparent-modal .modal-content {
-  background-color: rgba(255, 255, 255, 0.8); /* Transparansi 80% */
+  background-color: #4a90e2;
   border-radius: 20px;
+  padding: 10px;
+  left: 2px;
+  text-align: center;
+  border: 1px solid white;
+}
+
+.transparent-modal .modal-content-body {
+  background: none;
   padding: 20px;
-  text-align: center;
-  border: none;
+  font-family: 'Arial', sans-serif;
+  font-size: 1.2rem;
+  color: #ffffff;
 }
 
-.player-profile-container {
-  position: absolute;
-  width: 100%;
-  top: 20px; /* Adjust based on desired positioning */
-  display: flex;
-  justify-content: space-between;
-  padding: 0 20px;
-}
-
-.player-profile {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 3px solid #fff; /* Optional styling for profile */
-}
-
-.player-profile-left {
-  position: absolute;
-  left: 55px;
-  top: 110px;
-}
-
-.player-profile-right {
-  position: absolute;
-  right: 75px;
-  top: 110px;
-}
-
-.player-profile-bottom {
-  position: absolute;
-  bottom: -655px;
-  left: 65%;
-  transform: translateX(-50%);
-}
-
-/* Style untuk modal yang memanjang ke samping */
-.transparent-modal .modal-content {
-  background: #6ba3ff;  /* Sesuaikan warna latar belakang sesuai contoh */
-  border-radius: 20px;  /* Membuat sudut-sudut bulat */
-  padding: 15px;
-  text-align: center;
-  width: 500px;  /* Menambahkan lebar untuk membuat modal lebih memanjang ke samping */
-  max-width: 100%;  /* Menjaga agar modal tidak terlalu lebar, mengikuti ukuran layar */
-  margin: 0 auto;  /* Mengatur posisi modal agar tetap di tengah */
-}
-
-/* Style untuk teks pertanyaan di modal */
 .modal-category {
-  font-size: 0.9em;  /* Ukuran font lebih kecil untuk kategori */
-  color: rgba(255, 255, 255, 0.326);  /* Warna teks putih */
-  text-align: left;  /* Align ke kiri */
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.326);
+  text-align: left;
   margin-bottom: 10px;
-  text-decoration: underline;  /* Memberikan garis bawah pada teks */
-  font-weight: bold;  /* Bold untuk penegasan */
+  text-decoration: underline;
+  font-weight: bold;
 }
 
 .modal-text {
-  color: white;  /* Warna teks putih */
-  font-size: 1.1em;  /* Sesuaikan ukuran font */
+  color: white;
+  font-size: 1.1em;
   margin-bottom: 12px;
 }
 
-/* Style untuk opsi pertanyaan (tombol) */
+/* Style untuk tombol opsi pertanyaan */
 .question-options {
   display: flex;
-  flex-direction: column;  /* Tampilkan tombol jawaban secara vertikal */
-  gap: 4px;  /* Jarak antara tombol */
+  flex-direction: column;
+  gap: 4px;
 }
 
 .question-options .answer-option {
-  background-color: #4a90e2;  /* Warna tombol jawaban */
-  border: 1px solid white;  /* Border putih di sekeliling tombol */
-  border-radius: 10px;  /* Membulatkan sudut tombol */
-  padding: 8px 20px;
-  color: white;  /* Warna teks */
+  background-color: #4a90e2;
+  border: 1px solid white;
+  border-radius: 10px;
+  padding: 10px 20px;
+  color: white;
   font-size: 1.1em;
   width: 100%;
-  transition: background-color 0.1s ease; /* Tambahan efek saat tombol ditekan */
+  transition: background-color 0.1s ease;
 }
 
-/* Hover effect untuk tombol */
 .question-options .answer-option:hover {
-  background-color: #2d6fa9; /* Warna tombol saat di-hover */
+  background-color: #2d6fa9;
 }
 
 .question-options .answer-option.btn-success {
@@ -318,6 +278,47 @@
   border-color: #dc3545;
 }
 
+/* Container untuk ikon ramuan */
+.ramuan-icon-container {
+  position: absolute;
+  bottom: -120px;
+  right: -470px;
+  width: 75px;
+  height: auto;
+  cursor: pointer;
+  transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+  z-index: 1500;
+}
+
+.transparent-modal .modal-content-body .btn-success {
+  background-color: #3ba55d;
+  border: 1px solid white;
+  border-radius: 30px;
+  padding: 10px 0;
+  width: 120px;
+  font-weight: bold;
+  color: white;
+}
+
+.transparent-modal .modal-content-body .btn-danger {
+  background-color: #ff4d4d;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 0;
+  width: 120px;
+  font-weight: bold;
+  color: white;
+}
+
+.transparent-modal .modal-content-body .btn-success:hover,
+.transparent-modal .modal-content-body .btn-danger:hover {
+  opacity: 0.9;
+}
+
+.transparent-modal {
+  backdrop-filter: blur(2px);
+}
+
 /* Tambahkan animasi getaran */
 @keyframes shake {
   0% { transform: translateX(0); }
@@ -327,7 +328,6 @@
   100% { transform: translateX(0); }
 }
 
-/* Tambahkan class shake untuk animasi */
 .shake {
   animation: shake 0.3s;
 }
@@ -347,7 +347,6 @@
   animation: disappear 0.5s ease-out forwards;
 }
 
-/* Adjust the animation for different card positions */
 .right-card.card-disappear {
   transform-origin: left center;
 }
@@ -357,5 +356,27 @@
 }
 
 .stacked-card.card-disappear {
-  transform-origin: center bottom;
+  transform-origin: center bottom;
+}
+
+.ramuan-icon-container .ramuan-icon {
+  width: 100%;
+  height: auto;
+  transition: transform 0.3s ease;
+}
+
+@keyframes ramuan-fade {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Hover effect untuk ikon ramuan */
+.ramuan-icon:hover {
+  transform: scale(1.2);
 }

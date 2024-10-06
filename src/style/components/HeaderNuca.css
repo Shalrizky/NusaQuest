@@ -10,13 +10,13 @@
 }
 
 .custom-offcanvas .btn-close {
-    background-color: transparent; /* Make the background transparent */
+    background-color: white; /* Make the background transparent */
     border: none; /* Remove any border */
     color: #ffffff; /* Set the close button icon color to white */
 }
 
 .custom-offcanvas .btn-close:hover {
-    background-color: rgba(255, 255, 255, 0.244); /* Light background on hover */
+    background-color: rgb(255, 255, 255); /* Light background on hover */
 }
 
 .custom-offcanvas .btn-close:focus {

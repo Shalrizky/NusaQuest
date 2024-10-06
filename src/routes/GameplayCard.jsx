@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect} from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Container, Row, Col, Image, Modal, Button } from "react-bootstrap";
 import "../style/routes/GameplayCard.css";
 import deckCard from "../assets/common/deckCard.png";
@@ -14,24 +14,24 @@ import ramuanIcon from "../assets/common/ramuanIcon.png";
 function GameplayCard() {
   const [rotation, setRotation] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [showPotionModal, setShowPotionModal] = useState(false);
   const [question, setQuestion] = useState("");
   const [category, setCategory] = useState("");
   const [options, setOptions] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState("player1");
   const [playerCards, setPlayerCards] = useState({
-    player1: [1, 2, 3, 4, 5],
+    player1: [1, 2, 3, 4, 5, 6, 7],
     player2: [1, 2, 3, 4, 5],
     player3: [1, 2, 3, 4, 5],
   });
-
-  const [backCards] = useState([1, 2, 3, 4, 5]);
+  const [backCards, setBackCards] = useState([1, 2, 3, 4, 5]);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [answerStatus, setAnswerStatus] = useState("");
   const [isAnswered, setIsAnswered] = useState(false);
-  const [animatingCard, setAnimatingCard] = useState(null);
-  const [showPotionModal, setShowPotionModal] = useState(false);
   const [isShuffling, setIsShuffling] = useState(false);
+  const [canClickDeckCard, setCanClickDeckCard] = useState(false);
   const [selectedDeckCard, setSelectedDeckCard] = useState(null);
+  const [cardsToAdd, setCardsToAdd] = useState(0);
 
   const shuffleIconRef = useRef(null);
 
@@ -61,19 +61,89 @@ function GameplayCard() {
     setSelectedAnswer(answer);
     if (answer === "Batagor") {
       setAnswerStatus("correct");
-      setIsShuffling(true);
-      setRotation(prevRotation => prevRotation + 360);  // Increment rotation by 360 degrees
     } else {
       setAnswerStatus("incorrect");
-      setIsShuffling(true);
-      setRotation(prevRotation => prevRotation + 360)
+      setCardsToAdd(prev => prev + 1);
     }
     setIsAnswered(true);
     setTimeout(() => {
-      nextPlayer();
       setShowModal(false);
-      setIsShuffling(false);
+      startShuffling();
     }, 1500);
+  };
+
+  const addCardToCurrentPlayer = useCallback(() => {
+    if (cardsToAdd > 0) {
+      setPlayerCards(prevCards => {
+        const updatedCards = { ...prevCards };
+        updatedCards[currentPlayer] = [...updatedCards[currentPlayer], updatedCards[currentPlayer].length + 1];
+        return updatedCards;
+      });
+      setCardsToAdd(prev => prev - 1);
+    }
+  }, [cardsToAdd, currentPlayer]);
+
+  useEffect(() => {
+    if (!isShuffling && cardsToAdd > 0) {
+      addCardToCurrentPlayer();
+    }
+  }, [isShuffling, cardsToAdd, addCardToCurrentPlayer]);
+
+  const startShuffling = () => {
+    setIsShuffling(true);
+    setRotation(prevRotation => prevRotation + 360);
+    setTimeout(() => {
+      setIsShuffling(false);
+      nextPlayer();
+      setCanClickDeckCard(true);
+    }, 1000);
+  };
+
+  const handleDeckCardClick = (index) => {
+  if (canClickDeckCard) {
+    setSelectedDeckCard(index);
+    const updatedPlayerCards = { ...playerCards };
+    const selectedCard = updatedPlayerCards[currentPlayer][index];
+    updatedPlayerCards[currentPlayer] = updatedPlayerCards[currentPlayer].filter((_, i) => i !== index);
+
+    // Pindahkan kartu ke atas tumpukan kartu di kanan
+    if (currentPlayer === "player1") {
+      updatedPlayerCards.player2 = [selectedCard, ...updatedPlayerCards.player2];
+    } else if (currentPlayer === "player2") {
+      updatedPlayerCards.player1 = [selectedCard, ...updatedPlayerCards.player1];
+    } else {
+      updatedPlayerCards.player1 = [selectedCard, ...updatedPlayerCards.player1];
+    }
+
+      setPlayerCards(updatedPlayerCards);
+  
+       // Animate the selected card
+    const cardElement = document.querySelector(`.stacked-card-${index}`);
+    if (cardElement) {
+      cardElement.style.transition = "all 0.5s ease";
+      cardElement.style.transform = "translate(0, -200%) rotate(0deg)";
+      cardElement.style.opacity = "0";
+    }
+
+    // Reset state after animation
+    setTimeout(() => {
+      setSelectedDeckCard(null);
+      setCanClickDeckCard(false);
+    }, 500);
+  }
+};
+
+  const handlePotionClick = () => {
+    setShowPotionModal(true);
+  };
+
+  const handlePotionConfirm = () => {
+    setShowPotionModal(false);
+    setShowModal(false);
+  };
+
+  const handlePotionCancel = () => {
+    setShowPotionModal(false);
   };
 
   useEffect(() => {
@@ -82,60 +152,14 @@ function GameplayCard() {
     }
   }, [rotation]);
 
-  const handleDeckCardClick = (index) => {
-    if (!isShuffling && answerStatus === "correct") {
-      setSelectedDeckCard(index);
-      const updatedPlayerCards = { ...playerCards };
-      updatedPlayerCards[currentPlayer] = updatedPlayerCards[currentPlayer].filter((_, i) => i !== index);
-      setPlayerCards(updatedPlayerCards);
-
-      // Animate the selected card moving to the center
-      const cardElement = document.querySelector(`.stacked-card-${index}`);
-      if (cardElement) {
-        cardElement.style.transition = "transform 8.0s ease";
-        cardElement.style.transform = "translate(-50%, -50%)";
-        cardElement.style.position = "absolute";
-        cardElement.style.left = "50%";
-        cardElement.style.top = "50%";
-        cardElement.style.zIndex = "1000";
-      }
-
-      // Reset after animation
-      setTimeout(() => {
-        setSelectedDeckCard(null);
-        if (cardElement) {
-          cardElement.style.transition = "";
-          cardElement.style.transform = "";
-          cardElement.style.position = "";
-          cardElement.style.left = "";
-          cardElement.style.top = "";
-          cardElement.style.zIndex = "";
-        }
-      }, 500);
-    }
-  };
-
-  const handlePotionClick = () => {
-    setShowPotionModal(true);
-  };
-
-  // Edit bagian ini untuk mengatur modal potion dan pertanyaan
-  const handlePotionConfirm = () => {
-    setShowPotionModal(false); // Tutup modal potion
-    setShowModal(false); // Tutup modal pertanyaan
-  };
-
-  const handlePotionCancel = () => {
-    setShowPotionModal(false); // Tutup hanya modal potion
-  };
-
   return (
     <>
       <Container fluid className="room-ruca-container">
       <HeaderNuca />
         <Image src={logoPerson} alt="Logo Person" className="logo-person" />
+
         {/* Player profiles */}
-      <div className="player-profile-container">
+        <div className="player-profile-container">
         {["player1", "player2", "player3"].map((player, index) => (
           <div key={index} className={`player-profile-wrapper ${player}`}>
             <Image
@@ -148,78 +172,77 @@ function GameplayCard() {
       </div>
 
         {/* Back Cards in the center */}
-      <Row className="justify-content-center align-items-center card-center-section">
-        <Col xs={12} className="d-flex justify-content-center">
-          <div className="back-card-stack">
-            {backCards.map((card, index) => (
-              <Image
-                key={index}
-                src={backCard}
-                alt={`Kartu belakang ${index + 1}`}
-                className={`back-card back-card-${index}`}
-                onClick={handleBackCardClick}
-              />
-            ))}
-          </div>
-        </Col>
-      </Row>
+<Row className="justify-content-center align-items-center card-center-section">
+  <Col xs={12} className="d-flex justify-content-center">
+    <div className="back-card-stack">
+      {backCards.map((card, index) => (
+        <Image
+          key={index}
+          src={backCard}
+          alt={`Kartu belakang ${index + 1}`}
+          className={`back-card back-card-${index}`}
+          onClick={handleBackCardClick}
+        />
+      ))}
+    </div>
+  </Col>
+</Row>
 
-        <Row className="card-right-section">
-          <Col className="d-flex justify-content-center card-right-stack">
-            {playerCards.player2.map((card, index) => (
-              <Image
-                key={index}
-                src={rightCard}
-                alt={`Kartu kanan ${index + 1}`}
-                className={`right-card right-card-${index} ${
-                  animatingCard === "player2" && index === playerCards.player2.length - 1
-                    ? "card-disappear"
-                    : ""
-                }`}
-              />
-            ))}
-          </Col>
-        </Row>
+        {/* Right Cards */}
+<Row className="card-right-section">
+  <Col className="d-flex justify-content-center card-right-stack">
+    {playerCards.player2.map((card, index) => (
+      <Image
+        key={index}
+        src={rightCard}
+        alt={`Kartu kanan ${index + 1}`}
+        className={`right-card right-card-${index}`}
+        style={{
+          zIndex: playerCards.player2.length - index,
+          top: `${index * 30}px`
+        }}
+      />
+    ))}
+  </Col>
+</Row>
 
-        <Row className="card-left-section">
-          <Col className="d-flex justify-content-center card-left-stack">
-            {playerCards.player3.map((card, index) => (
-              <Image
-                key={index}
-                src={leftCard}
-                alt={`Kartu kiri ${index + 1}`}
-                className={`left-card left-card-${index} ${
-                  animatingCard === "player3" && index === playerCards.player3.length - 1
-                    ? "card-disappear"
-                    : ""
-                }`}
-              />
-            ))}
-          </Col>
-        </Row>
-
-         {/* Bottom Deck Cards */}
-         <Row className="justify-content-center align-items-center card-stack-section">
-        <Col xs={12} className="d-flex justify-content-center card-stack position-relative">
-          {playerCards[currentPlayer].map((card, index) => (
+        {/* Left Cards */}
+      <Row className="card-left-section">
+        <Col className="d-flex justify-content-center card-left-stack">
+          {playerCards.player3.map((card, index) => (
             <Image
               key={index}
-              src={deckCard}
-              alt={`Kartu ${index + 1}`}
-              className={`stacked-card stacked-card-${index} ${
-                selectedDeckCard === index ? "selected-deck-card" : ""
-              }`}
-              onClick={() => handleDeckCardClick(index)}
+              src={leftCard}
+              alt={`Kartu kiri ${index + 1}`}
+              className={`left-card left-card-${index}`}
             />
           ))}
-          <Image
-            ref={shuffleIconRef}
-            src={shuffleIcon}
-            alt="Shuffle"
-            className={`shuffle-icon ${isShuffling ? "shuffling" : ""}`}
-          />
         </Col>
       </Row>
+
+         {/* Bottom Deck Cards */}
+<Row className="justify-content-center align-items-center card-stack-section">
+  <Col xs={12} className="d-flex justify-content-center card-stack position-relative">
+    {playerCards[currentPlayer].map((card, index) => (
+      <Image
+        key={index}
+        src={deckCard}
+        alt={`Kartu ${index + 1}`}
+        className={`stacked-card stacked-card-${index} ${
+          selectedDeckCard === index ? "selected-deck-card" : ""
+        }`}
+        onClick={() => handleDeckCardClick(index)}
+        style={{ cursor: canClickDeckCard ? 'pointer' : 'default' }}
+      />
+    ))}
+    <Image
+      ref={shuffleIconRef}
+      src={shuffleIcon}
+      alt="Shuffle"
+      className={`shuffle-icon ${isShuffling ? "shuffling" : ""}`}
+    />
+  </Col>
+</Row>
 
          {/* Modal for questions */}
       <Modal show={showModal} centered className="transparent-modal">

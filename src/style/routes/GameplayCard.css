@@ -68,8 +68,14 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    border: 3px solid #fff; /* Optional styling for profile */
-  }
+    border: 3px solid transparent;
+    transition: border-color 0.3s ease;
+    }
+
+    .player-profile.active-player {
+      border-color: #00ff00;
+      box-shadow: 0 0 10px #00ff00;
+    }
   
   /* Tumpukan Kartu Belakang di Tengah */
   .card-center-section {
@@ -135,8 +141,27 @@
     transform: translateY(-10px);
   }
 
+  @keyframes moveToRight {
+    0% {
+      transform: translate(0, 0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(200%, -100%) rotate(90deg);
+      opacity: 0;
+    }
+  }
+  
+  .stacked-card.moving {
+    animation: moveToRight 0.5s forwards;
+  }
+
   .selected-deck-card {
-    z-index: 1000;
+    position: absolute !important;
+    left: calc(50% + 120px) !important; /* Adjust this value to position the card */
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 1000 !important;
   }
   
   /* Mengatur posisi kartu dalam tumpukan */
@@ -224,42 +249,6 @@
   .left-card-2 { top: 60px; z-index: 3; }
   .left-card-3 { top: 90px; z-index: 2; }
   .left-card-4 { top: 120px; z-index: 1; }
-  
-  /* Overlay hitam yang muncul setengah layar */
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: -50%;
-    width: 50%; /* Setengah layar */
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.3); /* Hitam dengan transparansi lebih ringan */
-    z-index: 50; /* z-index lebih rendah dari backIcon */
-    transition: left 0.5s ease; /* Animasi untuk slide-in */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 0px 20px 20px 0px;
-  }
-  
-  .overlay.show {
-    left: 0;
-  }
-  
-  /* Konten di dalam overlay dengan transparansi dan border */
-  .overlay-content {
-    background-color: rgba(255, 255, 255, 0.8); /* Warna putih dengan transparansi 80% */
-    border: 2px solid rgba(0, 0, 0, 0.5); /* Border hitam transparan */
-    color: black;
-    padding: 20px;
-    border-radius: 15px;
-    text-align: left;
-    position: absolute;
-    top: 100px;
-    left: 20px;
-    right: 20px;
-    z-index: 100; /* Pastikan di atas overlay */
-
-  }
   
   /* Modal yang transparan untuk pop-up */
   .transparent-modal .modal-content {

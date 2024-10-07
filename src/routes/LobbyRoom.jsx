@@ -83,7 +83,7 @@ function LobbyRoom() {
         <CardPlayer /> // Tampilkan CardPlayer setelah loading selesai
       )}
 
-      <Row className="mb-3">
+      <Row className="mb-3 mt-5">
         <Col
           md={12}
           className="d-flex justify-content-center align-items-center"
@@ -96,7 +96,7 @@ function LobbyRoom() {
       <Row>
         <Col
           md={12}
-          className="chat-column m-3"
+          className="chat-column ms-3 mt-3"
           onClick={(e) => {
             e.stopPropagation();
             toggleChatSize();

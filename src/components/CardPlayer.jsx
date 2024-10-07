@@ -7,42 +7,41 @@ import { gsap } from "gsap";
 import "../style/components/CardPlayer.css";
 
 const CardPlayer = () => {
-  const cardRefs = useRef([]); // Array untuk menyimpan refs kartu
+  // const cardRefs = useRef([]);
 
-  useEffect(() => {
-    // Animasi GSAP ketika ukuran layar berubah
-    const updateCardSize = () => {
-      const screenWidth = window.innerWidth;
+  // useEffect(() => {
+  //   // Animasi GSAP ketika ukuran layar berubah
+  //   const updateCardSize = () => {
+  //     const screenWidth = window.innerWidth;
 
-      // Mengecilkan kartu secara bertahap berdasarkan ukuran layar
-      if (screenWidth < 576) {
-        gsap.to(cardRefs.current, { width: "140px", height: "360px", duration: 0.5 });
-      } else if (screenWidth < 768) {
-        gsap.to(cardRefs.current, { width: "180px", height: "400px", duration: 0.5 });
-      } else if (screenWidth < 992) {
-        gsap.to(cardRefs.current, { width: "200px", height: "450px", duration: 0.5 });
-      } else if (screenWidth < 1200) {
-        gsap.to(cardRefs.current, { width: "220px", height: "500px", duration: 0.5 });
-      } else {
-        gsap.to(cardRefs.current, { width: "250px", height: "555px", duration: 0.5 });
-      }
-    };
+  //     // Mengecilkan kartu secara bertahap berdasarkan ukuran layar
+  //     if (screenWidth < 576) {
+  //       gsap.to(cardRefs.current, { width: "140px", height: "360px", duration: 0.5 });
+  //     } else if (screenWidth < 768) {
+  //       gsap.to(cardRefs.current, { width: "180px", height: "400px", duration: 0.5 });
+  //     } else if (screenWidth < 992) {
+  //       gsap.to(cardRefs.current, { width: "200px", height: "450px", duration: 0.5 });
+  //     } else if (screenWidth < 1200) {
+  //       gsap.to(cardRefs.current, { width: "220px", height: "500px", duration: 0.5 });
+  //     } else {
+  //       gsap.to(cardRefs.current, { width: "250px", height: "555px", duration: 0.5 });
+  //     }
+  //   };
 
-    // Update ukuran kartu saat pertama kali render dan ketika layar berubah ukuran
-    window.addEventListener("resize", updateCardSize);
-    updateCardSize();
+  //   // Update ukuran kartu saat pertama kali render dan ketika layar berubah ukuran
+  //   window.addEventListener("resize", updateCardSize);
+  //   updateCardSize();
 
-    return () => {
-      window.removeEventListener("resize", updateCardSize);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener("resize", updateCardSize);
+  //   };
+  // }, []);
 
   return (
-    <Row className="card-player-container justify-content-center align-items-center">
-      {/* Kartu pertama */}
+    <Row className="card-player-container justify-content-center align-items-center mt-4 ">
       <Col
-        className="d-flex justify-content-center mx-2 mb-4 card-col"
-        ref={(el) => (cardRefs.current[0] = el)} // Assign ref ke array
+        className="card-box  d-flex  justify-content-center align-items-center gap-5 "
+        // ref={(el) => (cardRefs.current[0] = el)} // Assign ref ke array
       >
         <div className="card-wrapper">
           <Card className="card-player">
@@ -56,13 +55,7 @@ const CardPlayer = () => {
             </Card.Body>
           </Card>
         </div>
-      </Col>
 
-      {/* Kartu kedua */}
-      <Col
-        className="d-flex justify-content-center mx-2 mb-4 card-col"
-        ref={(el) => (cardRefs.current[1] = el)} // Assign ref ke array
-      >
         <div className="card-wrapper">
           <Card className="card-player">
             <Card.Img variant="top" src={Image} className="img-card-player" />
@@ -75,13 +68,6 @@ const CardPlayer = () => {
             </Card.Body>
           </Card>
         </div>
-      </Col>
-
-      {/* Kartu ketiga */}
-      <Col
-        className="d-flex justify-content-center mx-2 mb-4 card-col"
-        ref={(el) => (cardRefs.current[2] = el)} // Assign ref ke array
-      >
         <div className="card-wrapper">
           <Card className="card-player">
             <Card.Img variant="top" src={Image} className="img-card-player" />
@@ -94,21 +80,16 @@ const CardPlayer = () => {
             </Card.Body>
           </Card>
         </div>
-      </Col>
-
-      {/* Kartu keempat */}
-      <Col
-        className="d-flex justify-content-center mx-2 mb-4 card-col"
-        ref={(el) => (cardRefs.current[3] = el)} // Assign ref ke array
-      >
-        <Card className="player-not-available">
-          <Card.Img variant="top" src={vector} className="vector-player" />
-          <Card.Body>
-            <Card.Text className="text-4">
-              <p>Menunggu Pemain Lain Untuk Masuk</p>
-            </Card.Text>
-          </Card.Body>
-        </Card>
+        <div className="card-wrapper">
+          <Card className="player-not-available">
+            <Card.Img variant="top" src={vector} className="vector-player" />
+            <Card.Body>
+              <Card.Text className="text-4">
+                <p>Menunggu Pemain Lain Untuk Masuk</p>
+              </Card.Text>
+            </Card.Body>
+          </Card>
+        </div>
       </Col>
     </Row>
   );

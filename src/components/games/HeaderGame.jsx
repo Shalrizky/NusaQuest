@@ -8,8 +8,8 @@ import iconsfxOff from "../../assets/common/icon_sfx_off.png";
 import "../../style/components/games/HeaderGame.css";
 
 function HeaderUtangga({ layout, toggleTemp }) {
-    const [isMusicPlaying, setIsMusicPlaying] = useState(true);
-    const [isSfxPlaying, setIsSfxPlaying] = useState(true);
+    const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+    const [isSfxPlaying, setIsSfxPlaying] = useState(false);
     const [showOffcanvas, setShowOffcanvas] = useState(false);
     const audioRef = useRef(null);
     const sfxRef = useRef(null);
@@ -58,8 +58,8 @@ function HeaderUtangga({ layout, toggleTemp }) {
     return (
         <>
             <audio ref={audioRef} src={require("../../assets/sound/song1.mp3")} preload="auto" />
-            <audio ref={sfxRef} src={require("../../assets/sound/song2.mp3")} preload="auto" />
-            <audio ref={sfxRef} src={require("../../assets/sound/song3.MP3")} preload="auto" />
+            <audio ref={audioRef} src={require("../../assets/sound/song2.mp3")} preload="auto" />
+            <audio ref={audioRef} src={require("../../assets/sound/song3.MP3")} preload="auto" />
             <Row className="align-items-center mt-3">
                 <Col className="d-flex justify-content-start">
                     <Image

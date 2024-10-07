@@ -1,20 +1,20 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Container, Row, Col, Image, Modal, Button } from "react-bootstrap";
 import "../style/routes/GameplayCard.css";
-import deckCard from '../assets/common/deckCard.png';
-import backCard from '../assets/common/backCard.png';
-import rightCard from '../assets/common/rightCard.png';
-import leftCard from '../assets/common/leftCard.png';
-import shuffleIcon from '../assets/icons/shuffle.png';
-import logoPerson from '../assets/common/logo-person.png';
-import btnTemp from '../assets/common/btnTemp.png';
-import HeaderNuca from '../components/HeaderNuca';
-import playerProfile from '../assets/common/imageOne.png';
-import ramuanIcon from '../assets/icons/ramuanIcon.png';
+import deckCard from "../assets/common/deckCard.png";
+import backCard from "../assets/common/backCard.png";
+import rightCard from "../assets/common/rightCard.png";
+import leftCard from "../assets/common/leftCard.png";
+import shuffleIcon from "../assets/icons/shuffle.png";
+import logoPerson from "../assets/common/logo-person.png";
+import HeaderNuca from "../components/HeaderNuca";
+import playerProfile from "../assets/common/imageOne.png";
+import ramuanIcon from "../assets/icons/ramuanIcon.png";
 
 function GameplayCard() {
   const [rotation, setRotation] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [showPotionModal, setShowPotionModal] = useState(false);
   const [question, setQuestion] = useState("");
   const [category, setCategory] = useState("");
   const [options, setOptions] = useState([]);
@@ -24,15 +24,20 @@ function GameplayCard() {
     player2: [1, 2, 3, 4, 5],
     player3: [1, 2, 3, 4, 5],
   });
-
-  const [backCards] = useState([1, 2, 3, 4, 5]);
+  const [backCards, setBackCards] = useState([1, 2, 3, 4, 5]);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [answerStatus, setAnswerStatus] = useState("");
   const [isAnswered, setIsAnswered] = useState(false);
-  const [animatingCard, setAnimatingCard] = useState(null);
-  const [showPotionModal, setShowPotionModal] = useState(false);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [canClickDeckCard, setCanClickDeckCard] = useState(false);
+  const [selectedDeckCard, setSelectedDeckCard] = useState(null);
+  const [cardsToAdd, setCardsToAdd] = useState(0);
+  const [timer, setTimer] = useState(20); // Timer untuk giliran pemain
+  const [isPlayer1CardPushed, setIsPlayer1CardPushed] = useState(false); // State untuk animasi kartu Player 1
+  const [canPlayer1SelectCard, setCanPlayer1SelectCard] = useState(false); // State untuk memeriksa apakah Player 1 bisa memilih kartu
 
-  // Fungsi untuk mengganti pemain
+  const shuffleIconRef = useRef(null);
+
   const nextPlayer = useCallback(() => {
     if (currentPlayer === "player1") {
       setCurrentPlayer("player2");
@@ -43,11 +48,29 @@ function GameplayCard() {
     }
   }, [currentPlayer]);
 
-  // Fungsi untuk menghandle klik pada kartu
-  const handleCardClick = () => {
+  useEffect(() => {
+    setTimer(20); // Set waktu awal timer
+    const countdown = setInterval(() => {
+      setTimer((prev) => {
+        if (prev > 0) {
+          return prev - 1;
+        } else {
+          clearInterval(countdown);
+          nextPlayer(); // Pindah ke pemain berikutnya saat timer habis
+          return 0;
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(countdown);
+  }, [currentPlayer, nextPlayer]);
+
+  const handleBackCardClick = () => {
     if (currentPlayer === "player1") {
       setCategory("Makanan");
-      setQuestion("Apa saja makanan khas Jawa Barat yang paling terkenal dan menjadi favorit masyarakat lokal?");
+      setQuestion(
+        "Apa saja makanan khas Jawa Barat yang paling terkenal dan menjadi favorit masyarakat lokal?"
+      );
       setOptions(["Soto Betawi", "Gudeg", "Batagor", "Rendang"]);
       setShowModal(true);
       setSelectedAnswer("");
@@ -56,42 +79,110 @@ function GameplayCard() {
     }
   };
 
-  // Fungsi untuk menghandle jawaban
   const handleAnswerClick = (answer) => {
     setSelectedAnswer(answer);
     if (answer === "Batagor") {
       setAnswerStatus("correct");
-      if (playerCards[currentPlayer].length > 1) {
-        setAnimatingCard(currentPlayer);
-        setTimeout(() => {
-          setPlayerCards((prevCards) => ({
-            ...prevCards,
-            [currentPlayer]: prevCards[currentPlayer].slice(0, -1),
-          }));
-          setAnimatingCard(null);
-        }, 500);
-      }
+      // Mengurangi satu kartu dari pemain saat jawabannya benar
+      setPlayerCards((prevCards) => {
+        const updatedCards = { ...prevCards };
+        // Hanya menghapus kartu dari pemain jika jumlah kartu lebih dari 0
+        if (updatedCards[currentPlayer].length > 0) {
+          updatedCards[currentPlayer] = updatedCards[currentPlayer].slice(0, -1); // Menghapus kartu terakhir
+        }
+        return updatedCards;
+      });
     } else {
       setAnswerStatus("incorrect");
-      setPlayerCards((prevCards) => ({
-        ...prevCards,
-        [currentPlayer]: [...prevCards[currentPlayer], prevCards[currentPlayer].length + 1],
-      }));
+      setCardsToAdd((prev) => prev + 1);
     }
     setIsAnswered(true);
     setTimeout(() => {
-      nextPlayer();
       setShowModal(false);
+      startShuffling();
     }, 1500);
   };
+  
 
-  // Fungsi untuk menghandle klik pada ramuanIcon
+  const addCardToCurrentPlayer = useCallback(() => {
+    if (cardsToAdd > 0) {
+      setPlayerCards((prevCards) => {
+        const updatedCards = { ...prevCards };
+        updatedCards[currentPlayer] = [
+          ...updatedCards[currentPlayer],
+          updatedCards[currentPlayer].length + 1,
+        ];
+        return updatedCards;
+      });
+      setCardsToAdd((prev) => prev - 1);
+    }
+  }, [cardsToAdd, currentPlayer]);
+
+  useEffect(() => {
+    if (!isShuffling && cardsToAdd > 0) {
+      addCardToCurrentPlayer();
+    }
+  }, [isShuffling, cardsToAdd, addCardToCurrentPlayer]);
+
+  const startShuffling = () => {
+    setIsShuffling(true);
+    setRotation((prevRotation) => prevRotation + 360);
+    
+    setTimeout(() => {
+      setIsShuffling(false);
+      setIsPlayer1CardPushed(true); // Munculkan kartu Player 1
+      
+      // Setelah animasi timbul selesai, aktifkan pilihan kartu untuk Player 1
+      setTimeout(() => {
+        setCanPlayer1SelectCard(true); // Player 1 dapat memilih kartu setelah animasi selesai
+        setIsPlayer1CardPushed(false); // Reset animasi setelah selesai
+      }, 4000); // Waktu lebih lama agar kartu Player 1 bisa timbul dengan lebih lama
+    
+      nextPlayer();
+    }, 1000); // Waktu yang dibutuhkan shuffle untuk berhenti
+  };
+
+  const handleDeckCardClick = (index) => {
+    // Pastikan hanya Player 1 yang bisa memilih kartu setelah animasi timbul selesai
+    if (canClickDeckCard && canPlayer1SelectCard) {
+      setSelectedDeckCard(index);
+      const updatedPlayerCards = { ...playerCards };
+      const selectedCard = updatedPlayerCards["player1"][index];
+      updatedPlayerCards["player1"] = updatedPlayerCards["player1"].filter(
+        (_, i) => i !== index
+      );
+
+      if (currentPlayer === "player1") {
+        updatedPlayerCards.player2 = [selectedCard, ...updatedPlayerCards.player2];
+      } else if (currentPlayer === "player2") {
+        updatedPlayerCards.player1 = [selectedCard, ...updatedPlayerCards.player1];
+      } else {
+        updatedPlayerCards.player1 = [selectedCard, ...updatedPlayerCards.player1];
+      }
+
+      setPlayerCards(updatedPlayerCards);
+
+      const cardElement = document.querySelector(`.stacked-card-${index}`);
+
+      if (cardElement) {
+        cardElement.style.transition = "all 0.5s ease";
+        cardElement.style.transform = "translate(0, -200%) rotate(0deg)";
+        cardElement.style.opacity = "0";
+      }
+
+      setTimeout(() => {
+        setSelectedDeckCard(null);
+        setCanClickDeckCard(false);
+        setCanPlayer1SelectCard(false); // Reset state pemilihan kartu
+      }, 500);
+    }
+  };
+
   const handlePotionClick = () => {
     setShowPotionModal(true);
   };
 
   const handlePotionConfirm = () => {
-    // Logic untuk menggunakan potion, misalnya menutup pertanyaan atau mengubah status pemain
     setShowPotionModal(false);
     setShowModal(false);
   };
@@ -100,33 +191,39 @@ function GameplayCard() {
     setShowPotionModal(false);
   };
 
+  useEffect(() => {
+    if (shuffleIconRef.current) {
+      shuffleIconRef.current.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+    }
+  }, [rotation]);
+
   return (
     <>
-      <HeaderNuca />
       <Container fluid className="room-ruca-container">
-        <div className="btn-temp-container">
-          <Image
-            src={btnTemp}
-            alt="Tombol Suhu"
-            className="btn-temp"
-          />
-        </div>
+        <HeaderNuca />
         <Image src={logoPerson} alt="Logo Person" className="logo-person" />
 
-        {/* Posisi foto profil untuk setiap pemain */}
+        {/* Player profiles */}
         <div className="player-profile-container">
           {["player1", "player2", "player3"].map((player, index) => (
             <div key={index} className={`player-profile-wrapper ${player}`}>
               <Image
                 src={playerProfile}
                 alt={`Profil Pemain ${index + 1}`}
-                className={`player-profile ${currentPlayer === player ? "active-player" : ""}`}
+                className={`player-profile ${
+                  currentPlayer === player ? "active-player" : ""
+                }`}
               />
+              {currentPlayer === player && (
+                <div className="timer-overlay">
+                  <span className="timer-text">{timer}s</span>
+                </div>
+              )}
             </div>
           ))}
         </div>
 
-        {/* Elemen kartu belakang di tengah */}
+        {/* Back Cards in the center */}
         <Row className="justify-content-center align-items-center card-center-section">
           <Col xs={12} className="d-flex justify-content-center">
             <div className="back-card-stack">
@@ -136,14 +233,14 @@ function GameplayCard() {
                   src={backCard}
                   alt={`Kartu belakang ${index + 1}`}
                   className={`back-card back-card-${index}`}
-                  onClick={handleCardClick}
+                  onClick={handleBackCardClick}
                 />
               ))}
             </div>
           </Col>
         </Row>
 
-        {/* Bagian kanan, kiri, dan bawah untuk kartu pemain */}
+        {/* Right Cards */}
         <Row className="card-right-section">
           <Col className="d-flex justify-content-center card-right-stack">
             {playerCards.player2.map((card, index) => (
@@ -151,11 +248,17 @@ function GameplayCard() {
                 key={index}
                 src={rightCard}
                 alt={`Kartu kanan ${index + 1}`}
-                className={`right-card right-card-${index} ${animatingCard === 'player2' && index === playerCards.player2.length - 1 ? 'card-disappear' : ''}`}
+                className={`right-card right-card-${index}`}
+                style={{
+                  zIndex: playerCards.player2.length - index,
+                  top: `${index * 30}px`,
+                }}
               />
             ))}
           </Col>
         </Row>
+
+        {/* Left Cards */}
         <Row className="card-left-section">
           <Col className="d-flex justify-content-center card-left-stack">
             {playerCards.player3.map((card, index) => (
@@ -163,34 +266,39 @@ function GameplayCard() {
                 key={index}
                 src={leftCard}
                 alt={`Kartu kiri ${index + 1}`}
-                className={`left-card left-card-${index} ${animatingCard === 'player3' && index === playerCards.player3.length - 1 ? 'card-disappear' : ''}`}
+                className={`left-card left-card-${index}`}
               />
             ))}
           </Col>
         </Row>
 
-        {/* Elemen tumpukan kartu kuning dan ikon shuffle */}
+        {/* Bottom Deck Cards for Player 1 */}
         <Row className="justify-content-center align-items-center card-stack-section">
           <Col xs={12} className="d-flex justify-content-center card-stack position-relative">
-            {playerCards.player1.map((card, index) => (
+            {playerCards["player1"].map((card, index) => (
               <Image
                 key={index}
                 src={deckCard}
                 alt={`Kartu ${index + 1}`}
-                className={`stacked-card stacked-card-${index} ${animatingCard === 'player1' && index === playerCards.player1.length - 1 ? 'card-disappear' : ''}`}
+                className={`stacked-card stacked-card-${index} ${
+                  selectedDeckCard === index ? "selected-deck-card" : ""
+                } ${isPlayer1CardPushed ? "card-pushed" : ""}`} // Class tambahan untuk efek dorong
+                onClick={() => handleDeckCardClick(index)}
+                style={{ cursor: canClickDeckCard && canPlayer1SelectCard ? "pointer" : "default",
+                  '--card-index': index, // Atur variabel custom CSS untuk posisi kartu
+                  }}
               />
             ))}
             <Image
+              ref={shuffleIconRef}
               src={shuffleIcon}
               alt="Shuffle"
-              className="shuffle-icon"
-              onClick={() => setRotation(rotation + 720)}
-              style={{ cursor: 'pointer', transform: `translate(-50%, -50%) rotate(${rotation}deg)`, transition: 'transform 4s ease' }}
+              className={`shuffle-icon ${isShuffling ? "shuffling" : ""}`}
             />
           </Col>
         </Row>
 
-        {/* Modal untuk pertanyaan */}
+        {/* Modal for questions */}
         <Modal show={showModal} centered className="transparent-modal">
           <Modal.Body className="modal-content-body">
             <div className="modal-category">{category}</div>
@@ -206,7 +314,11 @@ function GameplayCard() {
                         : "danger"
                       : "primary"
                   }
-                  className={`answer-option ${answerStatus === "incorrect" && selectedAnswer === option ? "shake" : ""}`}
+                  className={`answer-option ${
+                    answerStatus === "incorrect" && selectedAnswer === option
+                      ? "shake"
+                      : ""
+                  }`}
                   onClick={() => handleAnswerClick(option)}
                   disabled={isAnswered}
                 >
@@ -214,24 +326,34 @@ function GameplayCard() {
                 </Button>
               ))}
             </div>
-
-            {/* Tambahkan Icon Ramuan */}
             <div className="ramuan-icon-container">
-              <Image src={ramuanIcon} alt="Ramuan" className="ramuan-icon" onClick={handlePotionClick} />
+              <Image
+                src={ramuanIcon}
+                alt="Ramuan"
+                className="ramuan-icon"
+                onClick={handlePotionClick}
+              />
             </div>
           </Modal.Body>
         </Modal>
 
-        {/* Modal untuk konfirmasi penggunaan ramuan */}
-        <Modal show={showPotionModal} centered onHide={handlePotionCancel} className="transparent-modal">
-          <Modal.Body className="modal-content-body">
-            <h5>Menggunakan Potion akan menyelamatkanmu dari pertanyaan ini</h5>
-            <p>Apakah Kamu Yakin Ingin Menggunakan Potion?</p>
-            <div className="d-flex justify-content-around">
-              <Button variant="success" onClick={handlePotionConfirm}>
+        <Modal show={showPotionModal} centered className="potion-modal">
+          <Modal.Body className="potion-modal-content">
+            <p>Menggunakan Potion akan menyelamatkanmu dari pertanyaan ini</p>
+            <p>Apakah kamu yakin ingin menggunakan Potion?</p>
+            <div className="potion-modal-buttons">
+              <Button
+                variant="primary"
+                onClick={handlePotionConfirm}
+                className="ya-potion-button"
+              >
                 Ya
               </Button>
-              <Button variant="danger" onClick={handlePotionCancel}>
+              <Button
+                variant="secondary"
+                onClick={handlePotionCancel}
+                className="tidak-potion-button"
+              >
                 Tidak
               </Button>
             </div>

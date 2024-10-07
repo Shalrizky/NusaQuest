@@ -16,17 +16,12 @@
 }
 
 .custom-offcanvas .btn-close:hover {
-<<<<<<< HEAD
     background-color: rgb(255, 255, 255); /* Light background on hover */
-=======
-    background-color: rgba(255, 255, 255, 0.244); /* Light background on hover */
->>>>>>> c56e2d801b9c74a7c176a6e549d7d9123195eeca
 }
 
 .custom-offcanvas .btn-close:focus {
     box-shadow: none; /* Remove default focus shadow */
 }
-<<<<<<< HEAD
 /* HeaderNuca.css */
 .header-nuca {
     position: fixed;
@@ -50,5 +45,3 @@
 .room-ruca-container {
     padding-top: 80px; /* Beri padding pada container utama agar tidak tumpang tindih dengan header */
 }
-=======
->>>>>>> c56e2d801b9c74a7c176a6e549d7d9123195eeca

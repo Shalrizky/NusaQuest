@@ -5,7 +5,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 import { AuthProvider } from './context/AuthContext';
 import Loader from './utils/Loader';
-
 import Login from './routes/Login';
 import Home from './routes/Home';
 import Profile from './routes/Profile';
@@ -15,7 +14,6 @@ import DestinationDetail from './routes/DestinationDetail';
 import UlarTangga from './routes/UlarTangga';
 import GameplayCard from './routes/GameplayCard';
 import ProtectedRoute from './components/ProtectedRoute';
-import GameplayCard from './routes/GameplayCard';
 
 
 const withLoader = (Component) => {

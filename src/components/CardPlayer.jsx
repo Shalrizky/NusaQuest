@@ -3,45 +3,45 @@ import { Card, Row, Col } from "react-bootstrap";
 import Image from "../assets/common/image-player-1.png";
 import badge1 from "../assets/common/badge.png";
 import vector from "../assets/common/Vector.png";
-import "../style/components/CardPlayer.css";
 import { gsap } from "gsap";
+import "../style/components/CardPlayer.css";
 
 const CardPlayer = () => {
   const cardRefs = useRef([]); // Array untuk menyimpan refs kartu
 
   useEffect(() => {
-    // Animasi GSAP ketika komponen pertama kali muncul
-    gsap.fromTo(
-      cardRefs.current,
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 1, stagger: 0.2, ease: "power2.out" }
-    );
-
-    const updateAnimation = () => {
+    // Animasi GSAP ketika ukuran layar berubah
+    const updateCardSize = () => {
       const screenWidth = window.innerWidth;
+
+      // Mengecilkan kartu secara bertahap berdasarkan ukuran layar
       if (screenWidth < 576) {
-        // Animasi untuk layar kecil
-        gsap.to(cardRefs.current, { y: 50, duration: 0.5 });
+        gsap.to(cardRefs.current, { width: "140px", height: "360px", duration: 0.5 });
+      } else if (screenWidth < 768) {
+        gsap.to(cardRefs.current, { width: "180px", height: "400px", duration: 0.5 });
+      } else if (screenWidth < 992) {
+        gsap.to(cardRefs.current, { width: "200px", height: "450px", duration: 0.5 });
+      } else if (screenWidth < 1200) {
+        gsap.to(cardRefs.current, { width: "220px", height: "500px", duration: 0.5 });
       } else {
-        gsap.to(cardRefs.current, { y: 0, duration: 0.5 });
+        gsap.to(cardRefs.current, { width: "250px", height: "555px", duration: 0.5 });
       }
     };
 
-    window.addEventListener("resize", updateAnimation);
+    // Update ukuran kartu saat pertama kali render dan ketika layar berubah ukuran
+    window.addEventListener("resize", updateCardSize);
+    updateCardSize();
 
     return () => {
-      window.removeEventListener("resize", updateAnimation);
+      window.removeEventListener("resize", updateCardSize);
     };
   }, []);
 
   return (
-    <Row className="card-player-container d-flex justify-content-center align-items-center flex-nowrap">
+    <Row className="card-player-container justify-content-center align-items-center">
       {/* Kartu pertama */}
       <Col
-        xs={12}
-        sm={6}
-        lg={3}
-        className="d-flex justify-content-center mx-lg-3 mx-2 mb-4"
+        className="d-flex justify-content-center mx-2 mb-4 card-col"
         ref={(el) => (cardRefs.current[0] = el)} // Assign ref ke array
       >
         <div className="card-wrapper">
@@ -60,10 +60,7 @@ const CardPlayer = () => {
 
       {/* Kartu kedua */}
       <Col
-        xs={12}
-        sm={6}
-        lg={3}
-        className="d-flex justify-content-center mx-lg-3 mx-2 mb-4"
+        className="d-flex justify-content-center mx-2 mb-4 card-col"
         ref={(el) => (cardRefs.current[1] = el)} // Assign ref ke array
       >
         <div className="card-wrapper">
@@ -82,10 +79,7 @@ const CardPlayer = () => {
 
       {/* Kartu ketiga */}
       <Col
-        xs={12}
-        sm={6}
-        lg={3}
-        className="d-flex justify-content-center mx-lg-3 mx-2 mb-4"
+        className="d-flex justify-content-center mx-2 mb-4 card-col"
         ref={(el) => (cardRefs.current[2] = el)} // Assign ref ke array
       >
         <div className="card-wrapper">
@@ -104,10 +98,7 @@ const CardPlayer = () => {
 
       {/* Kartu keempat */}
       <Col
-        xs={12}
-        sm={6}
-        lg={3}
-        className="d-flex justify-content-center mx-lg-3 mx-2 mb-4"
+        className="d-flex justify-content-center mx-2 mb-4 card-col"
         ref={(el) => (cardRefs.current[3] = el)} // Assign ref ke array
       >
         <Card className="player-not-available">

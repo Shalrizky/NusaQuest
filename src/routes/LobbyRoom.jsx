@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
-import Header from "../components/Header";  
+import Header from "../components/Header";
 import "../style/routes/LobbyRoom.css";
 import CardPlayer from "../components/CardPlayer";
 
 function LobbyRoom() {
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // State for loading spinner
   const chatContainerRef = useRef(null);
@@ -14,17 +14,25 @@ function LobbyRoom() {
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim()) {
-      setMessages([...messages, { text: newMessage, sender: 'Abrar' }]);
-      setNewMessage('');
+      setMessages([...messages, { text: newMessage, sender: "Abrar" }]);
+      setNewMessage("");
+
+      // Expand the chat if not already expanded
+      if (!isExpanded) {
+        setIsExpanded(true);
+      }
     }
   };
 
   const toggleChatSize = () => {
-    setIsExpanded(!isExpanded); 
+    setIsExpanded(!isExpanded);
   };
 
   const handleClickOutside = (event) => {
-    if (chatContainerRef.current && !chatContainerRef.current.contains(event.target)) {
+    if (
+      chatContainerRef.current &&
+      !chatContainerRef.current.contains(event.target)
+    ) {
       setIsExpanded(false); // Close chatbox if clicked outside
     }
   };
@@ -51,7 +59,7 @@ function LobbyRoom() {
     if (messages.length > 0) {
       return messages[messages.length - 1].text;
     }
-    return ''; 
+    return "";
   };
 
   return (
@@ -65,58 +73,68 @@ function LobbyRoom() {
 
       {/* Menampilkan loading untuk mount card playernya */}
       {isLoading ? (
-        <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-          <Spinner animation="border" variant="light" /> 
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: "100vh" }}
+        >
+          <Spinner animation="border" variant="light" />
         </div>
       ) : (
         <CardPlayer /> // Tampilkan CardPlayer setelah loading selesai
       )}
 
+      <Row className="mb-3">
+        <Col
+          md={12}
+          className="d-flex justify-content-center align-items-center"
+        >
+          <Button variant="primary" className="start-button">
+            START
+          </Button>
+        </Col>
+      </Row>
       <Row>
-        <Col md={2} className="chat-column">
-          <div 
+        <Col
+          md={12}
+          className="chat-column m-3"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleChatSize();
+          }}
+        >
+          <div
             ref={chatContainerRef}
-            className={`chat-container ${isExpanded ? 'expanded' : 'collapsed'}`} 
-            onClick={(e) => {
-              e.stopPropagation(); 
-              toggleChatSize();
-            }} 
+            className={`chat-box ${isExpanded ? "expanded" : "collapsed"}`}
           >
             <div className="chat-messages">
               {messages.map((msg, index) => (
                 <div key={index} className="message">
-                  <strong>{msg.sender}: </strong>{msg.text}
+                  <strong>{msg.sender}: </strong>
+                  {msg.text}
                 </div>
               ))}
             </div>
-            <form onSubmit={handleSendMessage} className="chat-input-form" onClick={(e) => e.stopPropagation()}>
-              <Row>
-                <Col xs={8}>
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder={
-                      newMessage.trim() === "" && !isExpanded && getLastMessage() 
-                      ? `Abrar: ${getLastMessage()}` 
-                      : 'Ketik pesan di sini'
-                    }
-                    className="chat-input"
-                  />
-                </Col>
-                <Col xs={4}>
-                  <Button type="submit" variant="primary" className="send-button">Send</Button>
-                </Col>
-              </Row>
-            </form>
           </div>
-        </Col>
-        <Col md={8} className="lobby-details">
-          <div className="start-button-container">
-            <Button variant="primary" className="start-button">
-              START
+          <form
+            onSubmit={handleSendMessage}
+            className="chat-input-form d-flex p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder={
+                newMessage.trim() === "" && !isExpanded && getLastMessage()
+                  ? `Abrar: ${getLastMessage()}`
+                  : "Ketik pesan di sini"
+              }
+              className="chat-input"
+            />
+            <Button type="submit" variant="primary" className="send-button ms-3">
+              Send
             </Button>
-          </div>
+          </form>
         </Col>
       </Row>
     </Container>

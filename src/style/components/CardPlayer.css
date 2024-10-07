@@ -1,10 +1,11 @@
 .card-player-container {
   display: flex;
-  flex-wrap: nowrap; /* Kartu tidak turun ke bawah */
+  flex-wrap: nowrap; /* Pastikan kartu tetap dalam satu baris */
   justify-content: center;
   align-items: flex-start;
   padding: 20px;
   width: 100%;
+  overflow: hidden;
 }
 
 .card-wrapper, .player-not-available {
@@ -14,6 +15,7 @@
   justify-content: center;
   align-items: center;
   transition: all 0.3s ease;
+  overflow: hidden; 
 }
 
 .card-player {
@@ -71,4 +73,89 @@
   font-size: 15px;
   color: white;
   margin-top: 20px;
+}
+
+/* Media queries untuk layar ponsel */
+@media (max-width: 576px) {
+  .card-wrapper, .player-not-available {
+    width: 120px; /* Mengecilkan lebar kartu */
+    height: 300px; /* Mengecilkan tinggi kartu */
+  }
+
+  .card-player .title {
+    font-size: 12px; /* Ukuran font untuk layar kecil */
+  }
+
+  .img-card-player {
+    width: 80%; /* Menyesuaikan ukuran gambar dalam kartu */
+  }
+
+  .vector-player {
+    width: 60px; /* Mengecilkan ikon vector */
+  }
+
+  .badge-image {
+    width: 20px; /* Mengecilkan ukuran badge */
+    height: 20px;
+  }
+
+  .text-4 {
+    font-size: 12px; /* Mengecilkan ukuran teks */
+  }
+}
+
+@media (max-width: 480px) {
+  .card-wrapper, .player-not-available {
+    width: 100px;
+    height: 250px;
+  }
+
+  .card-player .title {
+    font-size: 10px;
+  }
+
+  .img-card-player {
+    width: 70%;
+  }
+
+  .vector-player {
+    width: 50px;
+  }
+
+  .badge-image {
+    width: 15px;
+    height: 15px;
+  }
+
+  .text-4 {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 320px) {
+  .card-wrapper, .player-not-available {
+    width: 80px;
+    height: 200px;
+  }
+
+  .card-player .title {
+    font-size: 8px;
+  }
+
+  .img-card-player {
+    width: 60%;
+  }
+
+  .vector-player {
+    width: 40px;
+  }
+
+  .badge-image {
+    width: 10px;
+    height: 10px;
+  }
+
+  .text-4 {
+    font-size: 8px;
+  }
 }

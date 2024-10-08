@@ -47,8 +47,12 @@
 }
 
 .vector-player {
-  width: 100px;
-  height: auto;
+  margin-top: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px; /* Make the image take up the full height of the card */
+  max-width: 100px;
 }
 
 .badge-image {
@@ -71,14 +75,13 @@
 }
 
 .player-not-available {
-  margin-top: 8px;
-  width: 215px;
-  height: 56vh; /* use consistent unit for height */
-  position: relative;
+  margin-top: auto;
+  width: 215px; /* Initial width */
+  height: 58vh; /* Initial height */
+  position: auto;
   background: linear-gradient(180deg, rgba(6, 30, 74, 0) 0%, rgba(37, 53, 83, 0.5) 100%);
   clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
@@ -147,7 +150,7 @@
   }
   .player-not-available {
     width: 140px;
-    height: 35vh;
+    height: 83vh;
   }
 }
 
@@ -180,12 +183,12 @@
   }
   .player-not-available {
     width: 100px;
-    height: 25vh;
+    height: 80vh;
   }
 }
 
 /* Mobile portrait (320px and below) */
-@media (max-width: 320px) {
+@media screen and (max-width: 530px) {
   .card-wrapper {
     width: 80px; /* Reduce width by 135px */
     height: 160px; /* Reduce height by 295px */

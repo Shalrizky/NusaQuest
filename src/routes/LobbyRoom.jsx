@@ -25,7 +25,15 @@ function LobbyRoom() {
   };
 
   const toggleChatSize = () => {
-    setIsExpanded(!isExpanded);
+    const newExpandedState = !isExpanded;
+    setIsExpanded(newExpandedState);
+    if (newExpandedState) {
+      // Disable scrolling when chat is expanded
+      document.body.style.overflow = "hidden";
+    } else {
+      // Enable scrolling when chat is collapsed
+      document.body.style.overflow = "auto";
+    }
   };
 
   const handleClickOutside = (event) => {
@@ -34,6 +42,7 @@ function LobbyRoom() {
       !chatContainerRef.current.contains(event.target)
     ) {
       setIsExpanded(false); // Close chatbox if clicked outside
+      document.body.style.overflow = "auto"; // Re-enable scrolling when chat is closed
     }
   };
 
@@ -83,7 +92,7 @@ function LobbyRoom() {
         <CardPlayer /> // Tampilkan CardPlayer setelah loading selesai
       )}
 
-      <Row className="mb-3 mt-5">
+      <Row className="mb-1 mt-5">
         <Col
           md={12}
           className="d-flex justify-content-center align-items-center"
@@ -96,7 +105,7 @@ function LobbyRoom() {
       <Row>
         <Col
           md={12}
-          className="chat-column ms-3 mt-3"
+          className="chat-column ms-3 mt-3 position-relative"
           onClick={(e) => {
             e.stopPropagation();
             toggleChatSize();
@@ -105,9 +114,10 @@ function LobbyRoom() {
           <div
             ref={chatContainerRef}
             className={`chat-box ${isExpanded ? "expanded" : "collapsed"}`}
+            style={{ position: "absolute", bottom: isExpanded ? "100%" : "0", transition: "bottom 0.3s ease-in-out" }}
           >
             <div className="chat-messages">
-              {messages.map((msg, index) => (
+              {messages.slice(0).reverse().map((msg, index) => (
                 <div key={index} className="message">
                   <strong>{msg.sender}: </strong>
                   {msg.text}

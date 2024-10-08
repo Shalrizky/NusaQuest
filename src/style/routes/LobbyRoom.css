@@ -44,7 +44,7 @@
 }
 
 .chat-box {
-  display: flex;
+  display: auto;
   flex-direction: column-reverse; /* Keeps the input at the bottom */
   width: 100%;
   position: relative;
@@ -109,7 +109,7 @@
   background-color: #004494;
 }
 
-/* Media queries for responsiveness */
+
 @media (max-width: 768px) {
   .chat-column {
     max-width: 250px;

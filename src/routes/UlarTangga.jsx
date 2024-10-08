@@ -89,6 +89,8 @@ function UlarTangga() {
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
   const [victory, setVictory] = useState(false);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
+  const [winner, setWinner] = useState(false);
+  
   const navigate = useNavigate();
 
 
@@ -104,12 +106,12 @@ function UlarTangga() {
 
       if (newPosition > 99) newPosition = 99;
 
-      // Update position before checking for interactions
       newPositions[currentPlayerIndex] = newPosition;
 
-      // Check for victory
+      
       if (newPosition === 99) {
         setVictory(true);
+        setWinner(players[currentPlayerIndex].name); 
       }
 
       logPionPositions(newPositions);
@@ -120,7 +122,9 @@ function UlarTangga() {
       setPionPositionIndex((prevPositions) => {
         const newPositions = [...prevPositions];
         let newPosition = newPositions[currentPlayerIndex];
-
+  
+        if (victory) return prevPositions; 
+  
         // Jika bertemu tangga, tampilkan pertanyaan khusus untuk naik tangga
         if (tanggaUp[newPosition]) {
           setShowQuestion(true);
@@ -149,15 +153,14 @@ function UlarTangga() {
           setAllowExtraRoll(false);
           setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
         }
-
         // Jika bukan angka 6 dan tidak ada roll ulang, pindah ke pemain berikutnya
         else {
           setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
         }
-
+  
         return newPositions;
       });
-
+  
       setIsPionMoving(false);
     }, 2000);
     setSubmitted(false);
@@ -316,7 +319,7 @@ function UlarTangga() {
       {victory && (
         <div className="victory-overlay" onClick={() => navigate("/")}>
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
-          <h2>{players[currentPlayerIndex].name} Wins!</h2>
+          <h2>{winner} Wins!</h2>
           <p>Kamu mendapatkan:</p>
           <div className="rewards">
             <img src={Achievement} alt="achievement" className="Achievement1-logo" />

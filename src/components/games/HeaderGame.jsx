@@ -8,7 +8,7 @@ import iconsfxOff from "../../assets/common/icon_sfx_off.png";
 import "../../style/components/games/HeaderGame.css";
 
 function HeaderUtangga({ layout, toggleTemp }) {
-    const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+    const [isMusicPlaying, setIsMusicPlaying] = useState(true);
     const [isSfxPlaying, setIsSfxPlaying] = useState(false);
     const [showOffcanvas, setShowOffcanvas] = useState(false);
     const audioRef = useRef(null);

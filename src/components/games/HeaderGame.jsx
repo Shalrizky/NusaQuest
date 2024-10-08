@@ -10,8 +10,8 @@ import song2 from "../../assets/sound/song2.mp3";
 import song3 from "../../assets/sound/song3.mp3";
 import "../../style/components/games/HeaderGame.css";
 
-function HeaderUtangga({ layout, toggleTemp }) {
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false); // Initially set to false to wait for user interaction
+function HeaderUtangga({ toggleTemp }) {
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false); 
   const [isSfxPlaying] = useState(true);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const audioRef = useRef(null);

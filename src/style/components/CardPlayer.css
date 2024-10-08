@@ -4,23 +4,29 @@
   overflow: hidden;
 }
 
-.card-wrapper, .player-not-available {
+.card-wrapper {
+  margin-top: 15px;
+  width: 215px; /* Initial width */
+  height: 458px; /* Initial height */
   position: relative;
-  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+  background: #FFC72C; /* Yellow background */
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%); /* Polygon shape */
   display: flex;
   justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease;
-  overflow: hidden; 
+  align-items: center; /* Center align items */
+  overflow: hidden;
+  box-sizing: border-box; /* Ensure padding and border are included in the element's total width and height */
 }
 
 .card-player {
+  margin-top: 5px;
+  width: 210px;
+  height: 440px;
+  margin-bottom: 15px;
   background: linear-gradient(180deg, #061E4A 0%, #061E4A 100%);
   overflow: hidden;
-  width: 90%;
-  height: 57vh;
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
 }
-
 
 .card-player .card-body {
   display: flex;
@@ -65,94 +71,148 @@
 }
 
 .player-not-available {
+  margin-top: 8px;
+  width: 215px;
+  height: 56vh; /* use consistent unit for height */
+  position: relative;
   background: linear-gradient(180deg, rgba(6, 30, 74, 0) 0%, rgba(37, 53, 83, 0.5) 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-/* Media queries untuk layar ponsel */
-@media (max-width: 576px) {
-  .card-wrapper, .player-not-available {
-    width: 120px; /* Mengecilkan lebar kartu */
-    height: 300px; /* Mengecilkan tinggi kartu */
-  }
+/* Media queries untuk responsive design */
 
-  .card-player .title {
-    font-size: 12px; /* Ukuran font untuk layar kecil */
+/* Tablet landscape (1024px and below) */
+@media (max-width: 1024px) {
+  .card-wrapper {
+    width: 180px; /* Reduce width by 35px */
+    height: 380px; /* Reduce height by 75px */
   }
-
+  .card-player {
+    width: 175px;
+    height: 365px;
+  }
   .img-card-player {
-    width: 80%; /* Menyesuaikan ukuran gambar dalam kartu */
+    width: 100%;
+    height: auto;
   }
-
   .vector-player {
-    width: 60px; /* Mengecilkan ikon vector */
+    width: 80px;
   }
-
   .badge-image {
-    width: 20px; /* Mengecilkan ukuran badge */
-    height: 20px;
+    width: 25px;
+    height: 25px;
   }
-
+  .badge-card-title {
+    font-size: 12px;
+  }
   .text-4 {
-    font-size: 12px; /* Mengecilkan ukuran teks */
+    font-size: 13px;
+  }
+  .player-not-available {
+    width: 180px;
+    height: 45vh;
   }
 }
 
-@media (max-width: 480px) {
-  .card-wrapper, .player-not-available {
-    width: 100px;
-    height: 250px;
+/* Tablet portrait (768px and below) */
+@media (max-width: 768px) {
+  .card-wrapper {
+    width: 140px; /* Reduce width by 75px */
+    height: 280px; /* Reduce height by 175px */
   }
-
-  .card-player .title {
+  .card-player {
+    width: 135px;
+    height: 265px;
+  }
+  .img-card-player {
+    width: 100%;
+    height: auto;
+  }
+  .vector-player {
+    width: 60px;
+  }
+  .badge-image {
+    width: 20px;
+    height: 20px;
+  }
+  .badge-card-title {
     font-size: 10px;
   }
+  .text-4 {
+    font-size: 11px;
+  }
+  .player-not-available {
+    width: 140px;
+    height: 35vh;
+  }
+}
 
+/* Mobile landscape (480px and below) */
+@media (max-width: 480px) {
+  .card-wrapper {
+    width: 100px; /* Reduce width by 115px */
+    height: 200px; /* Reduce height by 255px */
+  }
+  .card-player {
+    width: 95px;
+    height: 190px;
+  }
   .img-card-player {
-    width: 70%;
+    width: 100%;
+    height: auto;
   }
-
   .vector-player {
-    width: 50px;
+    width: 40px;
   }
-
   .badge-image {
     width: 15px;
     height: 15px;
   }
-
+  .badge-card-title {
+    font-size: 8px;
+  }
   .text-4 {
-    font-size: 10px;
+    font-size: 9px;
+  }
+  .player-not-available {
+    width: 100px;
+    height: 25vh;
   }
 }
 
+/* Mobile portrait (320px and below) */
 @media (max-width: 320px) {
-  .card-wrapper, .player-not-available {
-    width: 80px;
-    height: 200px;
+  .card-wrapper {
+    width: 80px; /* Reduce width by 135px */
+    height: 160px; /* Reduce height by 295px */
   }
-
-  .card-player .title {
-    font-size: 8px;
+  .card-player {
+    width: 75px;
+    height: 150px;
   }
-
   .img-card-player {
-    width: 60%;
+    width: 100%;
+    height: auto;
   }
-
   .vector-player {
-    width: 40px;
+    width: 30px;
   }
-
   .badge-image {
     width: 10px;
     height: 10px;
   }
-
+  .badge-card-title {
+    font-size: 6px;
+  }
   .text-4 {
-    font-size: 8px;
+    font-size: 7px;
+  }
+  .player-not-available {
+    width: 80px;
+    height: 20vh;
   }
 }

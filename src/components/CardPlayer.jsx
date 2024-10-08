@@ -80,7 +80,7 @@ const CardPlayer = () => {
             </Card.Body>
           </Card>
         </div>
-        <div className="card-wrapper">
+        <div className="player-not-available">
           <Card className="player-not-available">
             <Card.Img variant="top" src={vector} className="vector-player" />
             <Card.Body>

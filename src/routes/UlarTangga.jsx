@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Image, Form } from "react-bootstrap";
+import { useNavigate } from 'react-router-dom';
 import HeaderUtangga from "../components/games/HeaderGame";
 import Board from "../components/games/React-KonvaUlar";
 import Dice from "../components/games/Dice";
@@ -88,6 +89,7 @@ function UlarTangga() {
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
   const [victory, setVictory] = useState(false);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
+  const navigate = useNavigate();
 
 
   const logPionPositions = (newPositions) => {
@@ -312,7 +314,7 @@ function UlarTangga() {
 
       {/*Show Overlay Victory */}
       {victory && (
-        <div className="victory-overlay" onClick={() => setVictory(false)}>
+        <div className="victory-overlay" onClick={() => navigate("/")}>
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
           <h2>{players[currentPlayerIndex].name} Wins!</h2>
           <p>Kamu mendapatkan:</p>

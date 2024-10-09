@@ -109,15 +109,9 @@
   background-color: #004494;
 }
 
-
-@media (max-width: 768px) {
-  .chat-column {
-    max-width: 250px;
+/* @media screen and (max-width: 530px) {
+  .chat-box .chat-column .chat-input .chat-input-form .chat-messages
+  {
+    width: 200vh; 
   }
-}
-
-@media (max-width: 480px) {
-  .chat-column {
-    max-width: 200px;
-  }
-}
+} */

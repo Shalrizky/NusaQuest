@@ -170,23 +170,25 @@ useEffect(() => {
 )}
   
 
-  const handleDeckCardClick = (cardIndex) => {
-    if (canSelectCard && currentPlayer === "player3") {
-      setLoadingIndicator(true); // Aktifkan indikator loading
-      setSelectedDeckCard(cardIndex);
-  
-      // Set the position to be next to the shuffle icon
-      setSelectedCardPosition({ bottom: "50%", left: "85%" }); // 85% untuk menempatkan di kanan layar
-      setIsCardMoving(true); // Mulai animasi pergerakan
-  
-      // Setelah 1 detik, pindah ke pemain berikutnya
-      setTimeout(() => {
-        setIsCardMoving(false);
-        setLoadingIndicator(false); // Nonaktifkan indikator loading
-        nextPlayer(); // Lanjut ke pemain berikutnya setelah kartu ditempatkan
-      }, 1000);
-    }
-  };
+const handleDeckCardClick = (cardIndex) => {
+  if (canSelectCard && currentPlayer === "player3") {
+    setLoadingIndicator(true);
+    setSelectedDeckCard(cardIndex);
+    
+    // Atur posisi kartu yang dipilih ke samping ikon shuffle
+    setSelectedCardPosition({ top: "50%", left: "85%" }); // Misalnya, 85% untuk menempatkannya di sebelah kanan
+
+    setIsCardMoving(true);
+
+    // Setelah 1 detik, pindah ke pemain berikutnya
+    setTimeout(() => {
+      setIsCardMoving(false);
+      setLoadingIndicator(false);
+      nextPlayer();
+    }, 1000);
+  }
+};
+
   
 
   // Render Player1's deck cards
@@ -224,23 +226,27 @@ useEffect(() => {
   </div>
 )}
 
-  const renderSelectedDeckCard = () => {
-    if (selectedDeckCard !== null) {
-      return (
-        <Image
-          src={deckCard}
-          alt="Selected Deck Card"
-          className="selected-deck-card"
-          style={{
-            top: selectedCardPosition.top,
-            left: selectedCardPosition.left,
-            zIndex: 1000,
-          }}
-        />
-      );
-    }
-    return null;
-  };
+const renderSelectedDeckCard = () => {
+  if (selectedDeckCard !== null) {
+    return (
+      <Image
+        src={deckCard}
+        alt="Selected Deck Card"
+        className="selected-deck-card"
+        style={{
+          position: 'absolute',
+          top: selectedCardPosition.top,
+          left: selectedCardPosition.left,
+          zIndex: 1000,
+          transform: 'translate(-50%, -50%)', // Pusatkan kartu
+          transition: 'top 0.5s, left 0.5s', // Tambahkan animasi untuk pergerakan
+        }}
+      />
+    );
+  }
+  return null;
+};
+
 
   const addCardToCurrentPlayer = useCallback(() => {
     if (cardsToAdd > 0) {

@@ -7,8 +7,17 @@ import RoomSelect from "../components/RoomSelect";
 import "../style/routes/LobbyGame.css"; 
 import { fetchLobbyData } from "../services/lobbyDataServices"; 
 
+// Buat daftar topik yang sesuai dengan topicID
+const topics = {
+  daerah_jawa_barat: "Daerah Jawa Barat",
+  kuliner_jawa_barat: "Kuliner Jawa Barat",
+  pariwisata_bahari: "Pariwisata Bahari",
+  pariwisata_darat: "Pariwisata Darat",
+  permainan_daerah: "Permainan Daerah"
+};
+
 function LobbyGame() {
-  const { gameID } = useParams(); // Ambil gameID dari URL
+  const { gameID, topicID } = useParams(); // Ambil gameID dan topicID dari URL
   const [lobbyData, setLobbyData] = useState(null); 
   const [showRoomSelect, setShowRoomSelect] = useState(false);
   const imageRef = useRef(null);
@@ -58,6 +67,7 @@ function LobbyGame() {
         <Row className="heading-row">
           <Col md={12}>
             <h1 className="fw-bold">{lobbyData.name}</h1>
+            <h3 className="fw-bold">Topik: {topics[topicID]}</h3> 
           </Col>
         </Row>
         <Row>
@@ -74,7 +84,7 @@ function LobbyGame() {
               Select Room
             </Button>
           </Col>
-          <Col md={6} className="d-flex justify-content-center pt-4">
+          <Col md={6} className="d-flex justify-content-center align-items-end ">
             <img
               ref={imageRef}
               src={lobbyData.image}

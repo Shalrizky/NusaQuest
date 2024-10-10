@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
+import React, { useState, useEffect } from 'react';
+import { AuthProvider } from './context/AuthContext';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import Loader from './utils/Loader';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
-import { AuthProvider } from './context/AuthContext';
-import Loader from './utils/Loader';
 import Login from './routes/Login';
 import Home from './routes/Home';
 import Profile from './routes/Profile';

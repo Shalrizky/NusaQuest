@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
+import React, { useState, useEffect } from 'react';
+import { AuthProvider } from './context/AuthContext';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import Loader from './utils/Loader';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
-import { AuthProvider } from './context/AuthContext';
-import Loader from './utils/Loader';
 
 import Login from './routes/Login';
 import Home from './routes/Home';
 import Profile from './routes/Profile';
-import LobbyUtangga from './routes/LobbyUtangga';
-import LobbyNuca from './routes/LobbyNuca';
+import LobbyGame from './routes/LobbyGame';
 import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
+import UlarTangga from './routes/UlarTangga';
 import ProtectedRoute from './components/ProtectedRoute';
 import LobbyRoom from './routes/LobbyRoom';
 
@@ -21,7 +21,7 @@ const withLoader = (Component) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-      const timer = setTimeout(() => setIsLoading(false), 1000); 
+      const timer = setTimeout(() => setIsLoading(false), 1000);
       return () => clearTimeout(timer);
     }, []);
 
@@ -58,16 +58,16 @@ const App = () => {
         { path: '/information', element: withLoader(Information)() },
         { path: '/destination/:id', element: withLoader(DestinationDetail)() },
         {
-          path: '/lobbyUtangga', element: (
+          path: '/lobby/:topicID/:gameID', element: (
             <ProtectedRoute>
-              {withLoader(LobbyUtangga)()}
+              {withLoader(LobbyGame)()}
             </ProtectedRoute>
           )
         },
         {
-          path: '/lobbyNuca', element: (
+          path: '/UlarTangga', element: (
             <ProtectedRoute>
-              {withLoader(LobbyNuca)()}
+              {withLoader(UlarTangga)()}
             </ProtectedRoute>
           )
         },

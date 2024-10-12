@@ -4,6 +4,7 @@
   background-position: center;
   background-size: cover;
   background-attachment: fixed;
+  overflow: hidden;
   min-height: 100vh;
 }
 
@@ -11,6 +12,7 @@
   width: 100%;
   height: 500px;
   border-radius: 20px;
+  object-fit: cover;
 }
 
 .destination-details {
@@ -27,20 +29,28 @@
 }
 
 .destination-activities,
-.destination-facts {
+.destination-ticket,
+.destination-facts,
+.destination-culinary-recommendations,
+.destination-play-instructions {
   color: #fff;
   background-color: rgba(0, 0, 0, 0.605);
   border-radius: 20px;
 }
 
 .destination-activities h4,
-.destination-facts h4 {
+.destination-ticket h4,
+.destination-facts h4,
+.destination-culinary-recommendations h4 ,
+.destination-play-instructions h4 {
   font-weight: bolder;
   letter-spacing: 1px
 }
 
 .destination-activities ol,
-.destination-facts ol {
+.destination-ticket ol,
+.destination-facts ol,
+.destination-culinary-recommendations ol {
   text-align: justify;
   font-size: 1rem;
   line-height: 1.8;
@@ -48,29 +58,16 @@
 }
 
 .destination-activities li,
-.destination-facts li {
-  margin-bottom: 10px;
-
+.destination-ticket li,
+.destination-facts li,
+.destination-culinary-recommendations li {
+  margin-bottom: 15px;
 }
 
-.destination-ticket {
-  color: #fff;
-  background-color: rgba(0, 0, 0, 0.605);
-  border-radius: 20px;
-}
-
-.destination-ticket h4 {
-  font-weight: bolder;
-  letter-spacing: 1px
-}
-
-.destination-ticket ol {
+.destination-play-instructions p {
   text-align: justify;
   font-size: 1rem;
   line-height: 1.8;
   letter-spacing: 1px
 }
 
-.destination-ticket li {
-  margin-bottom: 10px;
-}

@@ -1,0 +1,24 @@
+.custom-offcanvas {
+    background-color: rgba(0, 0, 0, 0.5); /* Black with 50% opacity */
+    width: 500px !important; /* Set width to 500px */
+}
+
+.custom-offcanvas p,
+.custom-offcanvas h5,
+.custom-offcanvas .offcanvas-title {
+    color: #ffffff; /* Ensure all text remains white */
+}
+
+.custom-offcanvas .btn-close {
+    background-color: transparent; /* Make the background transparent */
+    border: none; /* Remove any border */
+    color: #ffffff; /* Set the close button icon color to white */
+}
+
+.custom-offcanvas .btn-close:hover {
+    background-color: rgba(255, 255, 255, 0.244); /* Light background on hover */
+}
+
+.custom-offcanvas .btn-close:focus {
+    box-shadow: none; /* Remove default focus shadow */
+}

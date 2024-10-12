@@ -11,47 +11,58 @@ import WilayahBahari from "../assets/nusaMaps/bahari.png";
 import WilayahPermainan from "../assets/nusaMaps/permainan.png";
 import WilayahKuliner from "../assets/nusaMaps/kuliner.png";
 import WilayahInformasi from "../assets/nusaMaps/informasi.png";
+import { fetchTopics } from "../services/destinationDataServices";
 import "../style/components/NusaMaps.css";
-import { throttle } from 'lodash';
+import { throttle } from "lodash";
 
-// Image sources and metadata
-const IMAGE_SOURCES = [
-  WilayahDarat,
-  WilayahDaerah,
-  WilayahBahari,
-  WilayahPermainan,
-  WilayahKuliner,
-  WilayahInformasi,
+// Array data gambar dan topik
+const imageData = [
+  {
+    src: WilayahDarat,
+    size: { width: 300, height: 280 },
+    text: "Pariwisata Darat",
+    textPosition: { x: -100, y: -30 },
+    topicID: "pariwisata_darat",
+  },
+  {
+    src: WilayahDaerah,
+    size: { width: 300, height: 260 },
+    text: "Daerah Jawa Barat",
+    textPosition: { x: -100, y: 10 },
+    topicID: "daerah_jawa_barat",
+  },
+  {
+    src: WilayahBahari,
+    size: { width: 330, height: 240 },
+    text: "Pariwisata Bahari",
+    textPosition: { x: -90, y: -20 },
+    topicID: "pariwisata_bahari",
+  },
+  {
+    src: WilayahPermainan,
+    size: { width: 270, height: 150 },
+    text: "Permainan Daerah",
+    textPosition: { x: -90, y: 10 },
+    topicID: "permainan_daerah",
+  },
+  {
+    src: WilayahKuliner,
+    size: { width: 432, height: 302 },
+    text: "Kuliner Jawa Barat",
+    textPosition: { x: -50, y: -20 },
+    topicID: "kuliner_jawa_barat",
+  },
+  {
+    src: WilayahInformasi,
+    size: { width: 380, height: 219 },
+    text: "Informasi",
+    textPosition: { x: 50, y: 10 },
+    topicID: null, // Untuk halaman Informasi
+  },
 ];
 
-const IMAGE_SIZES = [
-  { width: 300, height: 280 },
-  { width: 300, height: 260 },
-  { width: 330, height: 240 },
-  { width: 270, height: 150 },
-  { width: 432, height: 302 },
-  { width: 380, height: 219 },
-];
-
-const TEXT_CONTENT = [
-  "Pariwisata Darat",
-  "Daerah Jawa Barat",
-  "Pariwisata Bahari",
-  "Permainan Daerah",
-  "Kuliner Jawa Barat",
-  "Informasi",
-];
-
-const TEXT_POSITIONS = [
-  { x: -100, y: -30 },
-  { x: -100, y: 10 },
-  { x: -90, y: -20 },
-  { x: -90, y: 10 },
-  { x: -50, y: -20 },
-  { x: 50, y: 10 },
-];
-
-function NusaMaps({ setShowModal }) {
+function NusaMaps({ setShowModal, setSelectedTopic }) {
+  const [topics, setTopics] = useState({});
   const { isLoggedIn } = useAuth();
   const imageRefs = useRef([]);
   const navigate = useNavigate();
@@ -63,35 +74,64 @@ function NusaMaps({ setShowModal }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [animationIn, setAnimationIn] = useState(false);
 
-  // Handle click events on images
+  useEffect(() => {
+    fetchTopics((fetchedTopics) => {
+      setTopics(fetchedTopics);
+    });
+  }, []);
+
+  // Fungsi untuk menangani klik pada gambar
   const handleImageClick = (index) => {
-    if (index === 5) {
+    const data = imageData[index];
+
+    if (data.topicID === null) {
       navigate("/information");
     } else {
-      isLoggedIn ? setShowModal(true) : navigate("/login");
+      if (isLoggedIn) {
+        const topicID = data.topicID;
+
+        if (topicID && topics[topicID]) {
+          setSelectedTopic(topicID);
+
+          setShowModal(true);
+        } else {
+          console.error("Data topik tidak ditemukan untuk ID ini.");
+        }
+      } else {
+        navigate("/login");
+      }
     }
   };
 
   const imagePositions = useMemo(
     () => [
       { x: 0, y: 0 },
-      { x: 0, y: stageHeight - 260 },
-      { x: (stageWidth - 300) / 2, y: (stageHeight - 250) / 2 },
-      { x: (stageWidth - 300) / 3, y: stageHeight - 150 },
-      { x: stageWidth - 411, y: -32 },
-      { x: stageWidth - 405, y: stageHeight - 220 },
+      { x: 0, y: stageHeight - imageData[1].size.height },
+      {
+        x: (stageWidth - imageData[2].size.width) / 2,
+        y: (stageHeight - imageData[2].size.height) / 2,
+      },
+      {
+        x: (stageWidth - imageData[3].size.width) / 3,
+        y: stageHeight - imageData[3].size.height,
+      },
+      { x: stageWidth - imageData[4].size.width + 20, y: -32 },
+      {
+        x: stageWidth - imageData[5].size.width - 25,
+        y: stageHeight - imageData[5].size.height,
+      },
     ],
     [stageHeight, stageWidth]
   );
 
   useEffect(() => {
-    // Load images
+    // Memuat gambar
     const loadImages = () => {
-      const loadedImages = IMAGE_SOURCES.map((src, index) => {
+      const loadedImages = imageData.map((data, index) => {
         const img = new window.Image();
-        img.src = src;
+        img.src = data.src;
         img.onload = () => {
-          if (index === IMAGE_SOURCES.length - 1) {
+          if (index === imageData.length - 1) {
             setAllImagesLoaded(true);
           }
         };
@@ -107,7 +147,12 @@ function NusaMaps({ setShowModal }) {
     gsap.fromTo(
       [imageRefs.current[0], imageRefs.current[1]],
       { x: -stageWidth },
-      { x: imagePositions[0].x, duration: 1, ease: "power3.out", stagger: 0.2 }
+      {
+        x: (i) => imagePositions[i].x,
+        duration: 1,
+        ease: "power3.out",
+        stagger: 0.2,
+      }
     );
 
     gsap.fromTo(
@@ -162,11 +207,11 @@ function NusaMaps({ setShowModal }) {
       targetImage.filters([Konva.Filters.Brighten]);
       targetImage.brightness(-0.2);
       targetImage.getLayer().batchDraw();
-  
-      // Set cursor to pointer
+
+      // Ubah kursor menjadi pointer
       const container = targetImage.getStage().container();
-      container.style.cursor = 'pointer';
-  
+      container.style.cursor = "pointer";
+
       gsap.to(targetImage, {
         scaleX: 1.1,
         scaleY: 1.1,
@@ -175,7 +220,7 @@ function NusaMaps({ setShowModal }) {
       });
     }
   }, 100);
-  
+
   const handleMouseLeave = throttle(() => {
     const hoveredImage = imageRefs.current[hoveredIndex];
     if (hoveredImage) {
@@ -185,26 +230,25 @@ function NusaMaps({ setShowModal }) {
         duration: 0.5,
         ease: "power1.inOut",
       });
-  
+
       const container = hoveredImage.getStage().container();
-      container.style.cursor = 'default';
+      container.style.cursor = "default";
     }
-  
+
     imageRefs.current.forEach((imageRef) => {
       if (imageRef) {
         imageRef.filters([]);
         imageRef.cache();
       }
     });
-  
+
     const layer = imageRefs.current[0]?.getLayer();
     if (layer) {
       layer.batchDraw();
     }
-  
+
     setHoveredIndex(null);
   }, 100);
-  
 
   const renderImages = () =>
     images.map((image, index) => (
@@ -213,8 +257,8 @@ function NusaMaps({ setShowModal }) {
         image={image}
         x={imagePositions[index].x}
         y={imagePositions[index].y}
-        width={IMAGE_SIZES[index].width}
-        height={IMAGE_SIZES[index].height}
+        width={imageData[index].size.width}
+        height={imageData[index].size.height}
         onMouseEnter={() => handleMouseEnter(index)}
         onMouseLeave={handleMouseLeave}
         ref={(ref) => (imageRefs.current[index] = ref)}
@@ -226,16 +270,16 @@ function NusaMaps({ setShowModal }) {
     hoveredIndex !== null && (
       <Text
         key={`text-${hoveredIndex}`}
-        text={TEXT_CONTENT[hoveredIndex]}
+        text={imageData[hoveredIndex].text}
         x={
           imagePositions[hoveredIndex].x +
-          IMAGE_SIZES[hoveredIndex].width / 2 +
-          TEXT_POSITIONS[hoveredIndex].x
+          imageData[hoveredIndex].size.width / 2 +
+          imageData[hoveredIndex].textPosition.x
         }
         y={
           imagePositions[hoveredIndex].y +
-          IMAGE_SIZES[hoveredIndex].height / 2 +
-          TEXT_POSITIONS[hoveredIndex].y
+          imageData[hoveredIndex].size.height / 2 +
+          imageData[hoveredIndex].textPosition.y
         }
         onMouseEnter={() => handleMouseEnter(hoveredIndex)}
         onMouseLeave={handleMouseLeave}

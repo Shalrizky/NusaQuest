@@ -1,0 +1,44 @@
+.dice-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 20px;
+    perspective: 1000px; /* Perspective for 3D effect */
+}
+
+.dice {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    transform-style: preserve-3d;
+    border-radius: 10px; /* Round the corners of the dice */
+}
+
+.face {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    border: 1px solid black;
+    /* border-radius: 20px; Round the corners of each face */
+}
+
+.dice .front  { transform: rotateY(0deg) translateZ(50px); }
+.dice .back   { transform: rotateY(180deg) translateZ(50px); }
+.dice .left   { transform: rotateY(-90deg) translateZ(50px); }
+.dice .right  { transform: rotateY(90deg) translateZ(50px); }
+.dice .top    { transform: rotateX(90deg) translateZ(50px); }
+.dice .bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+.dot {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: black;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}

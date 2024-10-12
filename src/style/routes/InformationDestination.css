@@ -1,0 +1,37 @@
+#information-container {
+ background-image: url('../../assets/common/maps-bg.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+#destination-tabs {
+  font-weight: bold;
+}
+
+.custom-tab {
+  border: 2px solid #fff;
+  border-radius: 5px;
+  margin-right: 2px;
+  color: #fff;
+
+}
+
+.custom-tab:hover {
+  color: #fff !important;
+  background-color: #009DD7 !important;
+}
+
+.custom-tab.active {
+  background-color: #009DD7 !important; 
+  color: white !important;
+  border: none !important;
+  border: 2px solid #fff !important;
+}
+
+.custom-tab, h3 {
+  color: #fff;
+}
+

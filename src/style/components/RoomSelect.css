@@ -1,0 +1,44 @@
+.room-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.room-container {
+  background: transparent;
+  padding: 20px;
+  width: 90%;
+  max-width: 1200px;
+  position: relative;
+}
+
+.room-img {
+  width: 100%;
+  height: auto;
+}
+
+/* Menggunakan Flexbox untuk memastikan 5 elemen sejajar */
+.room-wrapper {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.room-box {
+  flex: 1 1 20%; 
+  max-width: 20%; 
+  padding: 10px;
+}
+
+@media (max-width: 768px) {
+  .room-box {
+    padding: 5px; 
+  }
+}

@@ -1,0 +1,95 @@
+.room-utangga-container {
+  background-image: url('../../assets/common/lobby-bg.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.heading-row {
+  width: 100%;
+}
+
+.heading-row h1 {
+  font-size: 3rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+  font-family: Potta One, sans-serif;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+}
+
+.content-wrapper h5 {
+  text-align: justify;
+  font-size: 20px;
+}
+
+.text-instruksi-utangga {
+  text-align: justify;
+  font-size: 18px;
+}
+
+.img-utangga-lobby {
+  width: 100%;
+  height: auto;
+}
+
+.btn-lobby-utangga {
+  background-color: rgba(180, 180, 180, 0.228) !important;
+  border: 2px solid #ffffff8a !important;
+  width: 200px;
+  font-weight: bold;
+  border-radius: 10px;
+  margin: 0 30px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3),
+    5px 5px 6px rgba(0, 0, 0, 1);
+  color: white;
+  text-shadow:
+    -1px -1px 1px #000,
+    1px -1px 1px #000,
+    -1px 1px 1px #000,
+    1px 1px 1px #000,
+    0px 0px 2px #000;
+}
+
+.btn-lobby-utangga:hover {
+  background-color: rgba(180, 180, 180, 0.55) !important;
+  border: 2px solid #fffffff5 !important;
+  width: 200px;
+  border-radius: 10px;
+  margin: 0 30px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3),
+    5px 5px 6px rgba(0, 0, 0, 1);
+}
+
+/* Medium Screens (Tablet, around 530px to 730px) */
+@media screen and (min-width: 530px) and (max-width: 900px) {
+  .heading-row h1 {
+    font-size: 2rem;
+  }
+
+  .content-wrapper h5,
+  .text-instruksi-utangga {
+    font-size: 16px;
+    padding-right: 20px;
+  }
+}
+
+/* Small Screens (Mobile below 530px) */
+@media screen and (max-width: 530px) {
+  .heading-row h1 {
+    font-size: 1.5rem
+  }
+
+  .content-wrapper h5,
+  .text-instruksi-utangga {
+    font-size: 14px;
+    padding-right: 20px;
+  }
+}

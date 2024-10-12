@@ -1,0 +1,60 @@
+.scrollable-container {
+   user-select: none;
+   cursor: grab;
+   display: flex;
+   overflow-x: auto;
+   gap: 25px;
+   padding: 15px 0;
+   scrollbar-width: thin;
+   scrollbar-color:  #d9d7c0 transparent;
+}
+
+.scrollable-container:active {
+   cursor: grabbing;
+}
+
+.destination-card {
+   width: 270px; 
+   height: 380px;
+   display: flex;
+   flex-direction: column;
+   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+   border-radius: 25px;
+   overflow: hidden;
+   background-color: #fff; 
+}
+
+.destination-card img {
+   width: 100%; 
+   height: 65%;
+   border-radius: 22px !important;
+}
+
+.destination-card img:hover {
+ cursor: pointer;
+}
+
+.destination-card .card-body {
+   padding: 10px; 
+}
+
+.destination-card .card-title {
+   font-size: 1rem;
+   font-weight: bold;
+}
+
+.destination-card .card-text {
+   font-size: 0.8rem;
+   text-align: justify;
+}
+
+.destination-card .card-text span {
+   cursor: pointer;
+   color: #d39400;
+   text-decoration: none;
+}
+
+.destination-card .card-text span:hover {
+   cursor: pointer;
+   font-weight: bold;
+}

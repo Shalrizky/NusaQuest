@@ -1,0 +1,221 @@
+.card-player-container {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.card-wrapper {
+  margin-top: 15px;
+  width: 215px; /* Initial width */
+  height: 458px; /* Initial height */
+  position: relative;
+  background: #FFC72C; /* Yellow background */
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%); /* Polygon shape */
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Center align items */
+  overflow: hidden;
+  box-sizing: border-box; /* Ensure padding and border are included in the element's total width and height */
+}
+
+.card-player {
+  margin-top: 5px;
+  width: 210px;
+  height: 440px;
+  margin-bottom: 15px;
+  background: linear-gradient(180deg, #061E4A 0%, #061E4A 100%);
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+}
+
+.card-player .card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card-player .title {
+  color: white;
+  font-size: 18px;
+  text-align: center;
+}
+
+.img-card-player {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.vector-player {
+  margin-top: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px; /* Make the image take up the full height of the card */
+  max-width: 100px;
+}
+
+.badge-image {
+  width: 30px;
+  height: 30px;
+}
+
+.badge-card-title {
+  padding-top: 5px;
+  color: white;
+  margin-left: 5px;
+  font-size: 14px;
+}
+
+.text-4 {
+  text-align: center;
+  font-size: 15px;
+  color: white;
+  margin-top: 20px;
+}
+
+.player-not-available {
+  margin-top: auto;
+  width: 215px; /* Initial width */
+  height: 58vh; /* Initial height */
+  position: auto;
+  background: linear-gradient(180deg, rgba(6, 30, 74, 0) 0%, rgba(37, 53, 83, 0.5) 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Media queries untuk responsive design */
+
+/* Tablet landscape (1024px and below) */
+@media (max-width: 1024px) {
+  .card-wrapper {
+    width: 180px; /* Reduce width by 35px */
+    height: 380px; /* Reduce height by 75px */
+  }
+  .card-player {
+    width: 175px;
+    height: 365px;
+  }
+  .img-card-player {
+    width: 100%;
+    height: auto;
+  }
+  .vector-player {
+    width: 80px;
+  }
+  .badge-image {
+    width: 25px;
+    height: 25px;
+  }
+  .badge-card-title {
+    font-size: 12px;
+  }
+  .text-4 {
+    font-size: 13px;
+  }
+  .player-not-available {
+    width: 180px;
+    height: 45vh;
+  }
+}
+
+/* Tablet portrait (768px and below) */
+@media (max-width: 768px) {
+  .card-wrapper {
+    width: 140px; /* Reduce width by 75px */
+    height: 280px; /* Reduce height by 175px */
+  }
+  .card-player {
+    width: 135px;
+    height: 265px;
+  }
+  .img-card-player {
+    width: 100%;
+    height: auto;
+  }
+  .vector-player {
+    width: 60px;
+  }
+  .badge-image {
+    width: 20px;
+    height: 20px;
+  }
+  .badge-card-title {
+    font-size: 10px;
+  }
+  .text-4 {
+    font-size: 11px;
+  }
+  .player-not-available {
+    width: 140px;
+    height: 83vh;
+  }
+}
+
+/* Mobile landscape (480px and below) */
+@media (max-width: 480px) {
+  .card-wrapper {
+    width: 100px; /* Reduce width by 115px */
+    height: 200px; /* Reduce height by 255px */
+  }
+  .card-player {
+    width: 95px;
+    height: 190px;
+  }
+  .img-card-player {
+    width: 100%;
+    height: auto;
+  }
+  .vector-player {
+    width: 40px;
+  }
+  .badge-image {
+    width: 15px;
+    height: 15px;
+  }
+  .badge-card-title {
+    font-size: 8px;
+  }
+  .text-4 {
+    font-size: 9px;
+  }
+  .player-not-available {
+    width: 100px;
+    height: 80vh;
+  }
+}
+
+/* Mobile portrait (320px and below) */
+@media screen and (max-width: 530px) {
+  .card-wrapper {
+    width: 80px; /* Reduce width by 135px */
+    height: 160px; /* Reduce height by 295px */
+  }
+  .card-player {
+    width: 75px;
+    height: 150px;
+  }
+  .img-card-player {
+    width: 100%;
+    height: auto;
+  }
+  .vector-player {
+    width: 30px;
+  }
+  .badge-image {
+    width: 10px;
+    height: 10px;
+  }
+  .badge-card-title {
+    font-size: 6px;
+  }
+  .text-4 {
+    font-size: 7px;
+  }
+  .player-not-available {
+    width: 80px;
+    height: 20vh;
+  }
+}

@@ -4,34 +4,36 @@
   overflow: hidden;
 }
 
+
 .card-wrapper {
-  margin-top: 15px;
-  width: 215px; /* Initial width */
-  height: 458px; /* Initial height */
-  position: relative;
-  background: #FFC72C; /* Yellow background */
-  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%); /* Polygon shape */
-  display: flex;
-  justify-content: center;
-  align-items: center; /* Center align items */
-  overflow: hidden;
-  box-sizing: border-box; /* Ensure padding and border are included in the element's total width and height */
+  width: 170px; 
+  height: 380px;
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+  box-sizing: border-box;
+  padding: 3px;
+  background-color: #d39400;
+  
 }
 
 .card-player {
-  margin-top: 5px;
-  width: 210px;
-  height: 440px;
-  margin-bottom: 15px;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(180deg, #061E4A 0%, #061E4A 100%);
-  overflow: hidden;
-  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%); /* Polygon yang lebih kecil */
+  box-shadow: inset 18px 0 30px -10px #d3940071, /* Shadow di kiri */
+  inset -18px 0 30px -10px #d3940071; /* Shadow di kanan */
 }
 
 .card-player .card-body {
   display: flex;
   flex-direction: column;
   align-items: center;
+
+}
+.img-card-player {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
 .card-player .title {
@@ -40,10 +42,13 @@
   text-align: center;
 }
 
-.img-card-player {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
+.badge-image {
+  width: 30px;
+}
+
+.badge-card-title {
+  color: white;
+  font-size: 12px;
 }
 
 .vector-player {
@@ -55,17 +60,7 @@
   max-width: 100px;
 }
 
-.badge-image {
-  width: 30px;
-  height: 30px;
-}
 
-.badge-card-title {
-  padding-top: 5px;
-  color: white;
-  margin-left: 5px;
-  font-size: 14px;
-}
 
 .text-4 {
   text-align: center;

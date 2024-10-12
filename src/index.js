@@ -12,9 +12,9 @@ import Profile from './routes/Profile';
 import LobbyGame from './routes/LobbyGame';
 import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
+import RoomPlayer from './routes/RoomPlayer';
 import UlarTangga from './routes/UlarTangga';
 import ProtectedRoute from './components/ProtectedRoute';
-import LobbyRoom from './routes/LobbyRoom';
 
 const withLoader = (Component) => {
   return (props) => {
@@ -65,16 +65,16 @@ const App = () => {
           )
         },
         {
-          path: '/UlarTangga', element: (
+          path: '/RoomPlayer', element: (
             <ProtectedRoute>
-              {withLoader(UlarTangga)()}
+              {withLoader(RoomPlayer)()}
             </ProtectedRoute>
           )
         },
         {
-          path: '/LobbyRoom', element: (
+          path: '/UlarTangga', element: (
             <ProtectedRoute>
-              {withLoader(LobbyRoom)()}
+              {withLoader(UlarTangga)()}
             </ProtectedRoute>
           )
         },

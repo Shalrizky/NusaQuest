@@ -92,7 +92,7 @@ function LobbyRoom() {
         <CardPlayer /> // Tampilkan CardPlayer setelah loading selesai
       )}
 
-      <Row className="mb-1 mt-5">
+      <Row className="mb-1 mt-2">
         <Col
           md={12}
           className="d-flex justify-content-center align-items-center"

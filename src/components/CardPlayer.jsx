@@ -7,7 +7,7 @@ import "../style/components/CardPlayer.css";
 
 const CardPlayer = () => {
   return (
-    <Row className="card-player-container justify-content-center align-items-center md-my-3">
+    <Row className="card-player-container justify-content-center align-items-center my-2 ">
       <Col className="card-box d-flex justify-content-evenly align-items-center">
         <div className="card-wrapper d-flex justify-content-center align-items-center">
           <Card className="card-player d-flex justify-content-center align-items-center">

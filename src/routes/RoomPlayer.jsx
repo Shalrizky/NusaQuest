@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Container, Row, Col, Button, Spinner } from "react-bootstrap";
 import Header from "../components/Header";
-import "../style/routes/RoomPlayer.css";
 import CardPlayer from "../components/CardPlayer";
+import "../style/routes/RoomPlayer.css";
 
 function LobbyRoom() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // State for loading spinner
   const chatContainerRef = useRef(null);
 
   const handleSendMessage = (e) => {
@@ -17,7 +16,6 @@ function LobbyRoom() {
       setMessages([...messages, { text: newMessage, sender: "Abrar" }]);
       setNewMessage("");
 
-      // Expand the chat if not already expanded
       if (!isExpanded) {
         setIsExpanded(true);
       }
@@ -46,24 +44,6 @@ function LobbyRoom() {
     }
   };
 
-  useEffect(() => {
-    if (isExpanded) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    // Simulate loading for 2 seconds
-    const timer = setTimeout(() => {
-      setIsLoading(false); // Set loading to false after 2 seconds
-    }, 2000);
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isExpanded]);
-
   const getLastMessage = () => {
     if (messages.length > 0) {
       return messages[messages.length - 1].text;
@@ -72,40 +52,32 @@ function LobbyRoom() {
   };
 
   return (
-    <Container fluid className="lobbyroom-container">
+    <Container
+      fluid
+      className="lobbyroom-container d-flex flex-column"
+    >
       <Header
         showLogoIcon={false}
         showIcons={true}
-        showTextHeader="ROOM 1 "
+        showTextHeader="ROOM 1"
         showBackIcon={true}
       />
 
-      {/* Menampilkan loading untuk mount card playernya */}
-      {isLoading ? (
-        <div
-          className="d-flex justify-content-center align-items-center"
-          style={{ height: "100vh" }}
-        >
-          <Spinner animation="border" variant="light" />
-        </div>
-      ) : (
-        <CardPlayer /> // Tampilkan CardPlayer setelah loading selesai
-      )}
-
-      <Row className="mb-1 mt-2">
-        <Col
-          md={12}
-          className="d-flex justify-content-center align-items-center"
-        >
-          <Button variant="primary" className="start-button">
-            START
-          </Button>
+      {/* Wrapper untuk CardPlayer dan tombol START */}
+      <Row className="flex-grow-1 d-flex flex-column justify-content-lg-center align-items-center">
+        <Col md={12} className="d-flex justify-content-center">
+          <CardPlayer />
+        </Col>
+        <Col md={12} className="d-flex justify-content-center mt-3 mb-4">
+          <Button className="start-button">START</Button>
         </Col>
       </Row>
-      <Row>
+
+      {/* Elemen input chat */}
+      <Row className="chat-row">
         <Col
           md={12}
-          className="chat-column ms-3 mt-3 position-relative"
+          className="chat-column"
           onClick={(e) => {
             e.stopPropagation();
             toggleChatSize();
@@ -114,15 +86,17 @@ function LobbyRoom() {
           <div
             ref={chatContainerRef}
             className={`chat-box ${isExpanded ? "expanded" : "collapsed"}`}
-            style={{ position: "absolute", bottom: isExpanded ? "100%" : "0", transition: "bottom 0.3s ease-in-out" }}
           >
             <div className="chat-messages">
-              {messages.slice(0).reverse().map((msg, index) => (
-                <div key={index} className="message">
-                  <strong>{msg.sender}: </strong>
-                  {msg.text}
-                </div>
-              ))}
+              {messages
+                .slice(0)
+                .reverse()
+                .map((msg, index) => (
+                  <div key={index} className="message">
+                    <strong>{msg.sender}: </strong>
+                    {msg.text}
+                  </div>
+                ))}
             </div>
           </div>
           <form
@@ -141,7 +115,11 @@ function LobbyRoom() {
               }
               className="chat-input"
             />
-            <Button type="submit" variant="primary" className="send-button ms-3">
+            <Button
+              type="submit"
+              variant="primary"
+              className="send-button ms-3"
+            >
               Send
             </Button>
           </form>

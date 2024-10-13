@@ -7,9 +7,9 @@ import "../style/components/CardPlayer.css";
 
 const CardPlayer = () => {
   return (
-    <Row className="card-player-container justify-content-center align-items-center my-2 ">
-      <Col className="card-box d-flex justify-content-evenly align-items-center">
-        <div className="card-wrapper d-flex justify-content-center align-items-center">
+    <Row className="card-player-container justify-content-center align-items-center px-4 mt-lg-3">
+      <Col className="card-box d-flex justify-content-center align-items-center">
+        <div className="card-wrapper">
           <Card className="card-player d-flex justify-content-center align-items-center">
             <Card.Img
               variant="top"
@@ -31,7 +31,7 @@ const CardPlayer = () => {
           </Card>
         </div>
 
-        <div className="card-wrapper d-flex justify-content-center align-items-center">
+        <div className="card-wrapper">
           <Card className="card-player d-flex justify-content-center align-items-center">
             <Card.Img
               variant="top"
@@ -53,7 +53,7 @@ const CardPlayer = () => {
           </Card>
         </div>
 
-        <div className="card-wrapper d-flex justify-content-center align-items-center">
+        <div className="card-wrapper">
           <Card className="card-player d-flex justify-content-center align-items-center">
             <Card.Img
               variant="top"
@@ -75,10 +75,14 @@ const CardPlayer = () => {
           </Card>
         </div>
 
-        <div className="card-wrapper-notavail ">
-          <Card className="player-not-available d-flex justify-content-center align-items-center">
+        <div className="card-wrapper-notavail">
+          <Card className="player-not-available">
             <Card.Body className="d-flex flex-column justify-content-top align-items-center mt-5 text-center gap-3">
-              <Image src={vector} className="img-card-notavail img-fluid" width={80} />
+              <Image
+                src={vector}
+                className="img-card-notavail img-fluid"
+                width={80}
+              />
               <Card.Text className="text-player-notavail">
                 <p>Menunggu Pemain Lain Untuk Masuk</p>
               </Card.Text>

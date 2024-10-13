@@ -1,566 +1,76 @@
-/* ===== Background dan Kontainer Utama ===== */
-.room-ruca-container {
-  background-image: url('../../assets/common/background.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
-  min-height: 100vh;
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
   overflow: hidden;
+}
+
+.nuca-container {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+  width: 100vw;
   position: relative;
-}
-
-/* ===== Logo Person ===== */
-.logo-person {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 170px;
-  height: auto;
-  z-index: 1000;
-}
-
-/* ===== Temp Button Icon di Kanan Atas ===== */
-.btn-temp-container {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 1100;
-}
-
-.btn-temp {
-  width: 50px;
-  height: auto;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.btn-temp:hover {
-  transform: scale(1.1);
-}
-
-/* ===== Player Profile Wrapper ===== */
-.player-profile-wrapper {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  z-index: 1000;
-  transition: left 0.3s ease;
-}
-
-.player-profile-wrapper.player1 { top: 130px; left: 65px; }
-.player-profile-wrapper.player2 { top: 130px; right: 65px; }
-.player-profile-wrapper.player3 {
-  bottom: 50px;
-  right: 430px;
-  transform: translateX(-50%);
-}
-
-/* Style untuk Profil Pemain */
-.player-profile {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 3px solid transparent;
-  transition: border-color 0.3s ease;
-}
-
-/* Overlay Timer */
-.timer-overlay {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 5px 10px;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  font-weight: bold;
-  z-index: 1200;
-}
-
-.timer-text {
-  display: block;
-  text-align: center;
-}
-
-/* ===== Tumpukan Kartu Belakang di Tengah ===== */
-.card-center-section { margin-top: 205px; margin-right: -150px; }
-
-.back-card-stack {
-  position: relative;
-  width: 300px;
-  height: 150px;
-}
-
-.back-card {
-  position: absolute;
-  width: 115px;
-  height: auto;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.back-card:hover {
-  transform: translateY(-20px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
-}
-
-/* Mengatur posisi tumpukan kartu belakang secara horizontal */
-.back-card-0 { left: 0; z-index: 5; }
-.back-card-1 { left: 10px; z-index: 4; }
-.back-card-2 { left: 20px; z-index: 3; }
-.back-card-3 { left: 30px; z-index: 2; }
-.back-card-4 { left: 40px; z-index: 1; }
-
-/* ===== Tumpukan Kartu Kuning di Bawah dengan Shuffle Icon ===== */
-.card-stack-section {
-  position: absolute;
-  bottom: 30px;
-  left: 48%;
-  transform: translateX(-50%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 350px;
-  height: auto;
-}
-
-.card-stack {
-  position: relative;
-  width: 400px;
-  height: 150px;
-}
-
-/* Setiap kartu dalam tumpukan memiliki posisi dinamis */
-.stacked-card {
-  position: absolute;
-  width: 120px;
-  height: auto;
-  left: calc(60px * var(--card-index));
-  z-index: calc(10 - var(--card-index));
-  transition: transform 0.3s ease, background-color 0.3s ease;
-}
-
-.stacked-card:hover {
-  transform: translateY(-20px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
-}
-
-/* Posisi kartu tumpukan berdasarkan indeks */
-.stacked-card-0 { left: 0; z-index: 5; }
-.stacked-card-1 { left: 60px; z-index: 4; }
-.stacked-card-2 { left: 120px; z-index: 3; }
-.stacked-card-3 { left: 180px; z-index: 2; }
-.stacked-card-4 { left: 240px; z-index: 1; }
-.stacked-card-5 { left: 300px; z-index: 0; }
-
-/* Kartu yang terpilih pindah ke posisi di samping Shuffle Icon */
-.selected-deck-card {
-  position: absolute !important;
-  width: 120px;
-  height: auto;
-  top: 50% !important;
-  left: 85% !important;
-  transform: translate(-50%, -50%) !important;
-  transition: all 1.2s ease;
-  z-index: 1000 !important;
-}
-
-/* Animasi pemindahan kartu */
-@keyframes moveToRight {
-  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-  100% { transform: translate(200%, -100%) rotate(90deg); opacity: 0; }
-}
-
-.stacked-card.moving {
-  animation: moveToRight 0.5s forwards;
-}
-
-.stacked-card.fade-out { opacity: 0; }
-
-/* Shuffle Icon */
-.shuffle-icon {
-  position: absolute;
-  top: -185px;
-  left: 62%;
-  transform: translate(-50%, -50%);
-  width: 255px;
-  height: auto;
-  z-index: 10;
-  transition: transform 3s ease;
-}
-
-.shuffling {
-  transform: translate(-50%, -50%) rotate(0deg);
-  animation: spin 1s linear infinite;
-}
-
-/* ===== Tumpukan Kartu Vertikal di Sebelah Kanan ===== */
-.card-right-section {
-  position: absolute;
-  right: 0;
-  top: 53%;
-  transform: translateY(-50%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 15%;
-}
-
-.card-right-stack {
-  position: relative;
-  width: 150px;
-  height: 300px;
-}
-
-.right-card {
-  position: absolute;
-  width: 170px;
-  height: auto;
-}
-
-/* Mengatur posisi tumpukan kartu kanan */
-.right-card-0 { top: 0; z-index: 5; }
-.right-card-1 { top: 30px; z-index: 4; }
-.right-card-2 { top: 60px; z-index: 3; }
-.right-card-3 { top: 90px; z-index: 2; }
-.right-card-4 { top: 120px; z-index: 1; }
-
-/* ===== Tumpukan Kartu Vertikal di Sebelah Kiri ===== */
-.card-left-section {
-  position: absolute;
-  left: 0;
-  top: 53%;
-  transform: translateY(-50%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 15%;
-}
-
-.card-left-stack {
-  position: relative;
-  width: 150px;
-  height: 300px;
-}
-
-.left-card {
-  position: absolute;
-  width: 170px;
-  height: auto;
-}
-
-/* Mengatur posisi tumpukan kartu kiri */
-.left-card-0 { top: 0; z-index: 5; }
-.left-card-1 { top: 30px; z-index: 4; }
-.left-card-2 { top: 60px; z-index: 3; }
-.left-card-3 { top: 90px; z-index: 2; }
-.left-card-4 { top: 120px; z-index: 1; }
-
-/* ===== Style untuk Modal Pertanyaan ===== */
-.transparent-modal .modal-content {
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 20px;
-  padding: 20px;
-  text-align: center;
-  border: none;
-}
-
-.modal-category {
-  font-size: 0.9em;
-  color: rgba(255, 255, 255, 0.326);
-  text-align: left;
-  margin-bottom: 10px;
-  text-decoration: underline;
-  font-weight: bold;
-  z-index: 100;
-}
-
-.modal-text {
-  color: white;
-  font-size: 1.1em;
-  margin-bottom: 12px;
-}
-
-/* Style untuk Opsi Pertanyaan */
-.question-options {
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
-.answer-option {
-  background-color: #4a90e2;
-  border: 1px solid white;
-  border-radius: 10px;
-  padding: 10px 20px;
-  color: white;
-  font-size: 1.1em;
+.gameplay-container {
+  flex-grow: 1;
+  position: relative;
   width: 100%;
-  transition: background-color 0.1s ease;
+  height: calc(100% - 60px); /* Adjust based on your HeaderNuca height */
 }
 
-.answer-option:hover { background-color: #2d6fa9; }
-
-.answer-option.btn-success { background-color: #28a745; border-color: #28a745; }
-.answer-option.btn-danger { background-color: #dc3545; border-color: #dc3545; }
-
-/* Animasi Shake */
-@keyframes shake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  50% { transform: translateX(5px); }
-  75% { transform: translateX(-5px); }
-  100% { transform: translateX(0); }
-}
-
-.shake { animation: shake 0.3s; }
-
-/* ===== Potion Modal Style ===== */
-.potion-modal .modal-content {
-  background-color: transparent;
-  backdrop-filter: blur(3.5px);
-  padding: 70px;
-  text-align: center;
-  min-height: auto;
-  border: none;
-  width: 80vw;
-  max-width: 1200px;
-  margin: 0 auto;
-  z-index: 500;
-}
-
-.potion-modal .modal-dialog {
-  max-width: 80vw;
-  margin: 1.75rem auto;
-  z-index: 300;
-}
-
-.potion-modal-content {
-  font-size: 2rem;
-  color: #ffffff;
-  white-space: nowrap;
-  padding: 20px;
-  font-weight: bolder;
-}
-
-.potion-modal-buttons {
+.deck-wrapper {
+  position: absolute;
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.ya-potion-button,
-.tidak-potion-button {
-  padding: 10px 100px;
-  font-size: 20px;
-  border-radius: 10px;
-  border: 1px solid white;
-  transition: background-color 0.3s;
-}
-
-.ya-potion-button {
-  background-color: rgba(0, 97, 57, 0.616);
-}
-
-.ya-potion-button:hover {
-  background-color: rgba(0, 194, 113, 0.5);
-}
-
-.tidak-potion-button {
-  background-color: transparent;
-}
-
-.tidak-potion-button:hover {
-  background-color: rgba(0, 0, 0, 0.103);
-}
-
-/* ===== Animasi dan Efek Modal ===== */
-.modal-open .room-ruca-container {
-  filter: blur(2px);
-  transition: filter 0.3s ease-in-out;
-  z-index: 100;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal-open:before,
-.modal-open:after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 500;
-  pointer-events: none;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.potion-modal .modal-dialog {
-  animation: fadeIn 0.3s ease-out;
-}
-
-/* ===== Ramuan Icon Style ===== */
-.ramuan-icon-container {
-  position: absolute;
-  bottom: -168px;
-  right: -450px;
-  width: 75px;
-  height: auto;
-  background-color: transparent;
-  background: none;
-  animation: ramuan-fade 0.5s ease-in-out;
-}
-
-.ramuan-icon {
-  width: 100%;
-  height: auto;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.ramuan-icon-container.clicked { transform: scale(1.3); }
-
-.ramuan-icon:hover { transform: scale(1.2); }
-
-@keyframes ramuan-fade {
-  0% { opacity: 0; transform: scale(0.5); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-/* ===== Animasi untuk Kartu yang Hilang ===== */
-@keyframes disappear {
-  0% { opacity: 1; transform: scale(1) rotate(0deg); }
-  100% { opacity: 0; transform: scale(0) rotate(360deg); }
-}
-
-.card-disappear {
-  animation: disappear 0.5s ease-out forwards;
-}
-
-.right-card.card-disappear { transform-origin: left center; }
-.left-card.card-disappear { transform-origin: right center; }
-.stacked-card.card-disappear { transform-origin: center bottom; }
-
-/* ===== Kartu Terpilih dan Animasi Hover ===== */
-.stacked-card {
-  transition: opacity 0.3s ease;
-}
-
-.stacked-card.hidden { opacity: 0; }
-
-.animate-card {
-  animation: card-lift 1s ease-in-out;
-  animation-fill-mode: forwards;
-}
-
-@keyframes card-lift {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-  100% { transform: translateY(0); }
-}
-
-.displayed-card {
-  position: absolute;
-  top: 50%;
-  left: 60%;
-  bottom: 50%;
-  transform: translate(-50%, -50%);
-  width: 100px;
-  height: auto;
-  z-index: 999;
-}
-
-.stacked-card.moving {
-  transform: translate(-50%, -50%);
-  transition: transform 1.2s ease, opacity 0.5s ease;
-  opacity: 1;
-}
-
-.shuffle-icon { position: absolute; z-index: 999; }
-
-/* Efek Fade untuk Pindah Kartu */
-.fade-animation {
-  opacity: 1;
-  transition: opacity 0.5s ease;
-}
-
-.selected-deck-card.fade-animation {
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-.stacked-card {
-  transition: transform 0.3s ease;
-}
-
-.stacked-card:hover {
-  transform: scale(1.1);
-  z-index: 10; /* Make sure the hovered card is on top */
-}
-
-.selected-deck-card {
-  position: absolute;
-  transition: all 5s ease; /* Durasi animasi 5 detik */
-  top: 80%; /* Atur posisi vertikal kartu */
-  left: 50%; /* Atur posisi horizontal kartu */
-  transform: translate(-50%, -50%); /* Memastikan kartu dipusatkan */
-  z-index: 1000; /* Agar kartu berada di depan elemen lain */
-}
-
-/* Jika kartu bergerak menuju shuffleIcon */
-.moving-toward-shuffle {
-  top: 50%; /* Posisi vertikal sama dengan shuffleIcon */
-  left: 85%; /* Sedikit disesuaikan agar dekat shuffleIcon */
-  transform: translate(-50%, -50%); /* Tetap di pusat */
-}
-
-.status-indicator {
-  position: absolute;
-  top: 50%;
-  right: 100%; /* Pindahkan ke sebelah kiri gambar profil */
-  transform: translateY(-50%);
-  font-size: 60px; /* Ukuran teks yang lebih besar */
-  color: #ffffff; /* Warna teks untuk status berpikir */
-  display: flex;
   align-items: center;
 }
 
-.thinking {
-  animation: dots 1.5s infinite; /* Animasi bergantian untuk berpikir */
+.deck-wrapper.left {
+  left: 5%;
+  bottom: 70%;
+  transform: translateY(-50%);
 }
 
-.incorrect {
-  color: red; /* Warna merah untuk tanda silang */
-  font-weight: bold; /* Tanda silang lebih tebal */
-  font-size: 60px;
+.deck-wrapper.center {
+  right: 60%;
+  bottom: 70%;
+  transform: translate(-50%, -50%);
 }
 
-/* Animasi untuk tiga titik bergantian */
-@keyframes dots {
-  0% {
-    content: '';
-    opacity: 0;
-  }
-  25% {
-    content: '.';
-    opacity: 1;
-  }
-  50% {
-    content: '..';
-    opacity: 1;
-  }
-  75% {
-    content: '...';
-    opacity: 1;
-  }
-  100% {
-    content: '';
-    opacity: 0;
-  }
+.deck-wrapper.right {
+  right: 15%;
+  bottom: 70%;
+  transform: translateY(-50%);
 }
 
+.deck-wrapper.bottom {
+  left: 50%;
+  bottom: 5%;
+  transform: translateX(-50%);
+}
+
+
+
+/* BottomDeckCard specific styles */
+.bottom-card-deck {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.stacked-card {
+  transition: transform 0.3s;
+  margin: 0 -30px; /* Adjust this value to control card overlap */
+}
+
+.stacked-card:hover {
+  transform: translateY(-10px) scale(1.05);
+  z-index: 10;
+}

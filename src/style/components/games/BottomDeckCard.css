@@ -1,0 +1,26 @@
+.bottom-card-deck {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 200px;  /* Increased width to accommodate horizontal stacking */
+  height: 200px; /* Adjust this to match the height of your backCard */
+}
+
+.stacked-card {
+  position: absolute;
+  width: 150px;  /* Adjust this to match the width of your backCard */
+  height: 100%;
+  transition: transform 0.3s;
+  transform-origin: bottom center;}
+
+.stacked-card:hover {
+  transform-origin: bottom center;  z-index: 10;
+}
+
+/* Create the stacked effect */
+.stacked-card-0 { z-index: 5; left: 0; }
+.stacked-card-1 { z-index: 4; left: 40px; }
+.stacked-card-2 { z-index: 3; left: 80px; }
+.stacked-card-3 { z-index: 2; left: 120px; }
+.stacked-card-4 { z-index: 1; left: 160px; }

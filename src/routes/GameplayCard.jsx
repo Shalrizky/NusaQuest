@@ -25,34 +25,34 @@ function GameplayCard() {
       <HeaderNuca />
       <div className="gameplay-container">
         {/* Left Player Deck */}
-        <div className="deck-wrapper left">
+        <div className="deck-wrapper left stackable-cards">
           <DeckPlayer
             position="left"
-            cards={[]}
+            cards={[1, 2, 3, 4, 5]}
             onShuffle={handleShuffle}
             isShuffling={isShuffling}
           />
         </div>
         {/* Center Player Deck */}
-        <div className="deck-wrapper center">
+        <div className="deck-wrapper center stackable-cards">
           <DeckPlayer
             position="center"
-            cards={[]}
+            cards={[1, 2, 3, 4, 5]}
             onShuffle={handleShuffle}
             isShuffling={isShuffling}
           />
         </div>
         {/* Right Player Deck */}
-        <div className="deck-wrapper right">
+        <div className="deck-wrapper right stackable-cards">
           <DeckPlayer
             position="right"
-            cards={[]}
+            cards={[1, 2, 3, 4, 5]}
             onShuffle={handleShuffle}
             isShuffling={isShuffling}
           />
         </div>
         {/* Bottom Player Deck */}
-        <div className="deck-wrapper bottom">
+        <div className="deck-wrapper bottom stackable-cards">
           <BottomDeckCard 
             onCardClick={handleBottomCardClick}
             canClick={true}

@@ -65,7 +65,7 @@ const App = () => {
           )
         },
         {
-          path: '/RoomPlayer', element: (
+          path: '/roomplayer', element: (
             <ProtectedRoute>
               {withLoader(RoomPlayer)()}
             </ProtectedRoute>

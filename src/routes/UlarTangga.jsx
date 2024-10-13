@@ -12,7 +12,7 @@ import Achievement2 from "../assets/games/Utangga/achievement2.png"
 import potionImage from "../assets/games/Utangga/potion.png"
 import bgUlarTangga from "../assets/common/bg-ular.png";
 
-// Definisi pemain
+// Definisi pemain dummy
 const players = [
   {
     id: 1,

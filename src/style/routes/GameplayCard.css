@@ -34,19 +34,19 @@ html, body, #root {
 
 .deck-wrapper.left {
   left: 5%;
-  bottom: 70%;
+  bottom: 80%;
   transform: translateY(-50%);
 }
 
 .deck-wrapper.center {
-  right: 60%;
-  bottom: 70%;
-  transform: translate(-50%, -50%);
+  left: 40%;
+  top: 20%;
+  display: flex;
 }
 
 .deck-wrapper.right {
   right: 15%;
-  bottom: 70%;
+  bottom: 80%;
   transform: translateY(-50%);
 }
 
@@ -56,8 +56,6 @@ html, body, #root {
   transform: translateX(-50%);
 }
 
-
-
 /* BottomDeckCard specific styles */
 .bottom-card-deck {
   display: flex;
@@ -65,17 +63,31 @@ html, body, #root {
   align-items: center;
 }
 
-.stacked-card {
-  transition: transform 0.3s;
-  margin: 0 -30px; /* Adjust this value to control card overlap */
+/* Shuffle Icon Styles */
+.shuffle-icon-container {
+  position: absolute;
+  top: 40%;
+  left: 47%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
 }
 
-.stacked-card:hover {
-  transform: translateY(-10px) scale(1.05);
-  z-index: 10;
+.shuffle-icon {
+  width: 310px;
+  height: auto;
 }
 
-.bg-orange {
-  background-color: orange;
+.shuffle-icon.rotating {
+  animation: rotate 2s linear; /* Slower rotation, one complete rotation in 4 seconds */
 }
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 

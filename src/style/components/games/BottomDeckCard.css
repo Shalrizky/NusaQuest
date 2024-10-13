@@ -12,6 +12,30 @@
 }
 
 .stackable-cards .card:hover {
-  transform: translateX(50%) scale(1.1);
+  transform: translateX(30%) scale(1.2);
   z-index: 10;
+}
+
+/* Tambahan untuk styling Card */
+.card-container {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.card-custom {
+  width: 140px;
+  height: 180px;
+  border-radius: 10px;
+  padding: 0.5rem;
+  border: 5px solid white;
+  background-color: orange;
+}
+
+.card-title-custom {
+  font-size: 15px;
+}
+
+.card-text-custom {
+  font-size: 0.875rem;
 }

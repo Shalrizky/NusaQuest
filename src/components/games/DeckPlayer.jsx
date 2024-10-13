@@ -1,10 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Image } from 'react-bootstrap';
 import backCard from '../../assets/common/backCard.png';
 import rightCard from '../../assets/common/rightCard.png';
 import leftCard from '../../assets/common/leftCard.png';
-import shuffleIcon from '../../assets/common/shuffle.png';
-
 
 const DeckPlayer = ({
   position,
@@ -12,14 +10,9 @@ const DeckPlayer = ({
   isActive,
   timer,
   onBackCardClick,
-  onShuffle,
-  isShuffling,
   cardsToAdd,
   size
 }) => {
-  const [rotation, setRotation] = useState(0);
-  const shuffleIconRef = useRef(null);
-
   const getDeckClass = () => {
     switch (position) {
       case 'left':
@@ -64,10 +57,10 @@ const DeckPlayer = ({
     const maxCards = 5; // Maximum cards to show in a stack
     const cardsToRender = cards.length ? cards.slice(0, maxCards) : Array(maxCards).fill({}); // Generate empty card for placeholder
   
-    // Tentukan ukuran kartu yang sama untuk semua posisi
+    // Adjust card size based on position
     const cardSize = {
-      width: '150px',  // Atur ukuran width yang sama
-      height: 'auto'  // Atur ukuran height yang sama
+      width: position === 'center' ? '120px' : '150px', 
+      height: 'auto'
     };
   
     return cardsToRender.map((card, index) => (
@@ -82,22 +75,21 @@ const DeckPlayer = ({
           left: position === 'center' ? `${index * (size === 'small' ? 13 : 20)}px` : undefined,
           top: position !== 'center' ? `${index * 15}px` : undefined,
           zIndex: maxCards - index,
-          width: cardSize.width,  // Gunakan ukuran yang sama di semua posisi
-          height: cardSize.height, // Gunakan ukuran yang sama di semua posisi
+          width: cardSize.width, // Apply the adjusted size here
+          height: cardSize.height,
         }}
       />
     ));
   };
-
-  const handleShuffle = () => {
-    setRotation((prevRotation) => prevRotation + 360);
-    if (onShuffle) {
-      onShuffle();
-    }
-  };
+  
 
   return (
     <div className={`player-deck ${getDeckClass()} ${size === 'small' ? 'small' : ''}`}>
+      {position === 'center' && (
+        <div className="back-card-container">
+          
+        </div>
+      )}
       <div className={`card-${position}-stack ${size === 'small' ? 'small' : ''}`}>
         {renderCards()}
       </div>

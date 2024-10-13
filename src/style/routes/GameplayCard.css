@@ -74,3 +74,8 @@ html, body, #root {
   transform: translateY(-10px) scale(1.05);
   z-index: 10;
 }
+
+.bg-orange {
+  background-color: orange;
+}
+

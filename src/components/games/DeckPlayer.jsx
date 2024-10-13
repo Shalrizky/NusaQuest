@@ -3,6 +3,7 @@ import { Image } from 'react-bootstrap';
 import backCard from '../../assets/common/backCard.png';
 import rightCard from '../../assets/common/rightCard.png';
 import leftCard from '../../assets/common/leftCard.png';
+import shuffleIcon from '../../assets/common/shuffle.png';
 
 
 const DeckPlayer = ({

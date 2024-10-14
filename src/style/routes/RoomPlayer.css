@@ -3,81 +3,154 @@
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
+  background-attachment: fixed;
+  overflow: hidden;
   min-height: 100vh;
-  overflow: hidden;
-}
-
-.chat-row {
-  width: 100%;
-}
-
-.start-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 5px 80px;
-  font-size: 25px;
-  font-weight: bold;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
-  box-shadow: 0 4px 6px rgba(255, 255, 255, 0.3);
-}
-
-.start-button:hover {
-  box-shadow: 0 8px 12px rgba(255, 255, 255, 0.5);
-  transform: translateY(-3px);
-}
-
-.start-button:active {
-  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.2);
-  transform: translateY(2px);
-}
-
-.chat-column {
-  width: 100%;
-  max-width: 340px;
-  border-radius: 12px;
-  background-color: #007bff;
-  padding: 10px;
-  transition: height 0.3s ease, width 0.3s ease;
-  pointer-events: auto;
-  margin-top: auto;
-}
-
-.chat-box {
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
+}
+
+.btn-start-game {
   width: 100%;
-  position: relative;
-  overflow: hidden;
+  max-width: 300px;
+  border: 4px solid;
+  background-color: transparent;
+  border-image: linear-gradient(354deg, rgba(92, 136, 196, 1) 0%, rgba(111, 220, 227, 1) 52%, rgba(213, 212, 188) 100%) 1;
+  color: white;
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 1.2px;
+  padding: 10px 40px;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.5);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn-start-game:hover {
+  background-color: rgba(57, 115, 211, 0.4) !important;
+  box-shadow: 0 0 20px 2px rgba(111, 220, 227, 0.8);
+}
+
+.btn-start-game:active {
+  background-color: rgba(218, 218, 218, 0.8);
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+.btn-start-game .icon-start {
+  width: 28px;
+}
+
+/* Chat input style section */
+.chat-wrapper {
+  padding: 30px 20px 20px 20px;
+  width: 100%;
 }
 
 .chat-input-form {
-  color: #fff;
-  background-color: #007bff;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  width: 100%;
+  position: relative;
 }
 
 .chat-input {
-  padding: 10px;
+  padding: 12px 40px;
+  font-size: 14px;
+  border: 3px solid #ffffff42;
+  background-color: rgba(57, 115, 211, 0.4); 
+  color: #fff; 
+  box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
+  -webkit-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
+  -moz-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
+}
+
+.chat-input:focus {
+  outline: none;
+  box-shadow: none;
+  color: #fff;
+  border-color: rgba(111, 220, 227, 1); 
+  background-color: rgba(57, 115, 211, 0.4); 
+}
+
+.chat-input::placeholder {
+  color: rgba(255, 255, 255, 0.831);
+  opacity: 1;
+}
+
+.input-icon-left {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  width: 25px;
+  pointer-events: none;
+}
+
+.btn-send-chat {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
   border: none;
-  border-radius: 5px;
-  background-color: rgba(255, 255, 255, 0.3);
-  color: white;
-  flex-grow: 1;
-}
-
-.send-button {
-  border-radius: 12px;
-  background-color: #0056b3;
-  color: white;
+  background: none;
+  padding: 0;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-left: 5px;
 }
 
-.send-button:hover {
-  background-color: #004494;
+.btn-send-chat svg {
+  width: 22px;
+  color: white;
+}
+
+.btn-send-chat:hover svg {
+  color: rgba(111, 220, 227, 1) ;
+}
+
+/* Chat Box Style Section */
+.chat-box {
+  position: fixed; /* Pastikan kotak chat berada pada posisi tetap */
+  bottom: 80px; /* Atur posisi kotak chat di bagian bawah */
+  left: 20px;
+  right: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 1000; /* Pastikan kotak chat muncul di atas elemen lainnya */
+}
+
+.chat-message {
+  margin-bottom: 8px;
+}
+
+.sender-name {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+
+/* Larger tablets and smaller desktops */
+@media (min-width: 780px) and (max-width: 1020px) {
+  .btn-start-game {
+    padding: 12px 30px;
+    font-size: 20px;
+    max-width: 280px;
+  }
+}
+
+/* Small tablets and large phones */
+@media (min-width: 580px) and (max-width: 780px) {
+  .btn-start-game {
+    padding: 10px 20px;
+    font-size: 18px;
+    max-width: 260px;
+  }
+}
+
+/* Phones and smaller devices */
+@media (min-width: 280px) and (max-width: 580px) {
+  .btn-start-game {
+    padding: 8px 12px;
+    font-size: 16px;
+    max-width: 200px;
+  }
 }

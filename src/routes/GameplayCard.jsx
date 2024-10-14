@@ -69,23 +69,30 @@ function GameplayCard() {
       </div>
 
       <Container fluid className="gameplay-container">
-      {/* Deck Player Top (Center) */}
-      <div className="deck-wrapper center stackable-cards">
-        <DeckPlayer position="center" cards={[1, 2, 3, 4, 5]} />
-      </div>
+      <Row className="justify-content-center">
+        {/* Deck Player Top (Center) */}
+        <Col xs="auto" className="text-center">
+          <DeckPlayer position="center" cards={[1, 2, 3, 4, 5]} />
+        </Col>
+      </Row>
 
-      {/* Left Player Deck */}
-      <div className="deck-wrapper left stackable-cards">
-        <Image src={playerProfile} roundedCircle className="player-image mb-3 img-fluid" style={{ width: "100px", height: "100px" }} />
-        <DeckPlayer position="left" cards={[1, 2, 3, 4, 5]} />
-      </div>
+      <Row className="align-items-center">
+        {/* Left Player Deck */}
+        <Col xs={3} className="text-center">
+          <Image src={playerProfile} roundedCircle className="player-image mb-3 img-fluid" style={{ width: "100px", height: "100px" }} />
+          <DeckPlayer position="left" cards={[1, 2, 3, 4, 5]} />
+        </Col>
 
-      {/* Right Player Deck */}
-      <div className="deck-wrapper right stackable-cards">
-        <DeckPlayer position="right" cards={[1, 2, 3, 4, 5]} />
-        <Image src={playerProfile} roundedCircle className="player-image mt-3 img-fluid" style={{ width: "100px", height: "100px" }} />
-      </div>
+        {/* Spacer Column for Center Alignment */}
+        <Col xs={6}></Col>
 
+        {/* Right Player Deck */}
+        <Col xs={3} className="text-center">
+          <DeckPlayer position="right" cards={[1, 2, 3, 4, 5]} />
+          <Image src={playerProfile} roundedCircle className="player-image mt-3 img-fluid" style={{ width: "100px", height: "100px" }} />
+        </Col>
+      </Row>
+      
       {/* Bottom Player Deck */}
       <div className="deck-wrapper bottom stackable-cards">
         <BottomDeckCard onCardClick={handleBottomCardClick} canClick={true} />

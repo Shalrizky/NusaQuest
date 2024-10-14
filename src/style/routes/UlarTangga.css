@@ -155,8 +155,9 @@
     margin: 5px 10px;
     width: 120px;
     height:100px ;
-}
 
+  }
+  
 /* Responsive styles */
 @media (max-width: 768px) {
   .utu-konva {

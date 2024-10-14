@@ -67,9 +67,9 @@ const CardPlayer = () => {
               className="img-card-notavail img-fluid"
               width={80}
             />
-            <Card.Text className="text-player-notavail">
+            <div className="text-player-notavail">
               <p>Menunggu Pemain Lain Untuk Masuk</p>
-            </Card.Text>
+            </div>
           </Card.Body>
         </Card>
       </div>

@@ -10,6 +10,8 @@ import PertanyaanNuca from '../components/games/PertanyaanNuca';
 import backgroundImage from '../assets/common/background.png';
 import shuffleIcon from '../assets/common/shuffle.png';
 import '../style/routes/GameplayCard.css';
+import playerProfile from '../assets/common/imageOne.png';
+
 
 function GameplayCard() {
   const [isShuffling, setIsShuffling] = useState(false);
@@ -66,24 +68,30 @@ function GameplayCard() {
         />
       </div>
 
-      <div className="gameplay-container">
-        {/* Left Player Deck */}
-        <div className="deck-wrapper left stackable-cards">
-          <DeckPlayer position="left" cards={[1, 2, 3, 4, 5]} />
-        </div>
-        {/* Center Player Deck */}
-        <div className="deck-wrapper center stackable-cards">
-          <DeckPlayer position="center" cards={[1, 2, 3, 4, 5]} />
-        </div>
-        {/* Right Player Deck */}
-        <div className="deck-wrapper right stackable-cards">
-          <DeckPlayer position="right" cards={[1, 2, 3, 4, 5]} />
-        </div>
-        {/* Bottom Player Deck */}
-        <div className="deck-wrapper bottom stackable-cards">
-          <BottomDeckCard onCardClick={handleBottomCardClick} canClick={true} />
-        </div>
+      <Container fluid className="gameplay-container">
+      {/* Deck Player Top (Center) */}
+      <div className="deck-wrapper center stackable-cards">
+        <DeckPlayer position="center" cards={[1, 2, 3, 4, 5]} />
       </div>
+
+      {/* Left Player Deck */}
+      <div className="deck-wrapper left stackable-cards">
+        <Image src={playerProfile} roundedCircle className="player-image mb-3 img-fluid" style={{ width: "100px", height: "100px" }} />
+        <DeckPlayer position="left" cards={[1, 2, 3, 4, 5]} />
+      </div>
+
+      {/* Right Player Deck */}
+      <div className="deck-wrapper right stackable-cards">
+        <DeckPlayer position="right" cards={[1, 2, 3, 4, 5]} />
+        <Image src={playerProfile} roundedCircle className="player-image mt-3 img-fluid" style={{ width: "100px", height: "100px" }} />
+      </div>
+
+      {/* Bottom Player Deck */}
+      <div className="deck-wrapper bottom stackable-cards">
+        <BottomDeckCard onCardClick={handleBottomCardClick} canClick={true} />
+        <Image src={playerProfile} roundedCircle className="player-image mt-3 img-fluid" style={{ width: "100px", height: "100px" }} />
+      </div>
+    </Container>
 
       {/* Pop-up Question */}
       {showPopup && (

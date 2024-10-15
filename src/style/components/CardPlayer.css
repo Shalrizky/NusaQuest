@@ -1,0 +1,131 @@
+.card-player-container {
+  overflow: hidden;
+  gap: 80px;
+}
+
+.card-wrapper {
+  width: 190px;
+  height: 420px;
+  padding: 3px;
+  box-sizing: border-box;
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+  background: rgb(92, 136, 196);
+  background: linear-gradient(0deg, rgba(92, 136, 196, 1) 0%, rgba(111, 220, 227, 1) 59%, rgba(213, 212, 188, 1) 100%);
+}
+
+.card-player {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #061E4A 0%, #061E4A 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+  box-shadow: inset 8px 0 20px -10px #6fdce3,
+    inset -8px 0 20px -10px #6fdce3;
+}
+
+.img-card-player {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.card-player .title {
+  color: white;
+  font-size: 18px;
+  text-align: center;
+}
+
+.badge-image {
+  width: 24px;
+}
+
+.badge-card-title {
+  color: white;
+  font-size: 14px;
+}
+
+/* Not Available User Styles */
+.card-wrapper-notavail {
+  width: 190px;
+  height: 420px;
+  box-sizing: border-box;
+}
+
+.player-not-available {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+  background: linear-gradient(180deg, rgba(143, 143, 143, 0%) 0%, rgba(41, 41, 41, 0.5) 100%);
+  box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
+  -webkit-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
+  -moz-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
+}
+
+.card-wrapper-notavail .title {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.639);
+}
+
+@media (min-width: 780px) and (max-width: 1024px) {
+
+  .card-wrapper,
+  .card-wrapper-notavail {
+    transform: scale(0.9);
+    height: 380px;
+  }
+
+  .card-player-container {
+    gap: 20px;
+  }
+}
+
+@media (min-width: 580px) and (max-width: 780px) {
+
+  .card-wrapper,
+  .card-wrapper-notavail {
+    transform: scale(0.8);
+    height: 350px;
+  }
+
+  .card-player-container {
+    gap: 10px;
+  }
+  
+  .img-card-notavail {
+    width: 60px;
+  }
+
+}
+
+@media (min-width: 280px) and (max-width: 580px) {
+
+  .card-wrapper,
+  .card-wrapper-notavail {
+    transform: scale(0.8);
+    height: 280px;
+  }
+
+  .card-player-container {
+    gap: 6px;
+  }
+
+  .img-card-notavail {
+    width: 30px;
+  }
+
+  .card-player .title {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .card-wrapper-notavail .title {
+    font-size: 10px;
+    text-align: center;
+  }
+
+  .card-player-container .badge-card-title {
+    color: white;
+    font-size: 12px;
+  }
+
+}

@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Container, Row, Col, Image, Form } from "react-bootstrap";
+import { SendHorizontal, MessageSquareText } from "lucide-react";
+import { gsap } from "gsap";
 import Header from "../components/Header";
-import { SendHorizontal } from "lucide-react";
-import PlayGameIcon from "../assets/common/play-game-icon.svg";
-import ChatIcon from "../assets/common/chat-icon.svg";
-import { gsap, Power2 } from "gsap"; // Import GSAP for animations and easing
-
 import CardPlayer from "../components/CardPlayer";
-import "../style/routes/RoomPlayer.css"; // Import file CSS
+import PlayGameIcon from "../assets/common/play-game-icon.svg";
+import "../style/routes/RoomPlayer.css";
 
 function RoomPlayer() {
   const [chat, setChat] = useState([]);
@@ -15,9 +13,9 @@ function RoomPlayer() {
   const [lastMessage, setLastMessage] = useState("Chat With Others");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const chatInputRef = useRef(null);
-  const chatBoxRef = useRef(null); // Ref for the chatbox
+  const chatBoxRef = useRef(null);
 
-  // Function to scroll chat to the bottom
+  // Fungsi chatbox akan selalu kebawah scrollnya
   const scrollToBottom = () => {
     if (chatBoxRef.current) {
       chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
@@ -25,28 +23,50 @@ function RoomPlayer() {
   };
 
   useEffect(() => {
-    // Set chatbox to hidden (display: none) when page first loads
-    if (chatBoxRef.current) {
-      chatBoxRef.current.style.display = "none";
-    }
-  }, []);
-
-  useEffect(() => {
     if (chat.length > 0) {
       const lastChat = chat[chat.length - 1];
-      setLastMessage(`${lastChat.user} : ${lastChat.message}`);
-      if (isChatOpen) {
-        scrollToBottom(); // Scroll ke bawah jika ada chat baru
-      }
+      setLastMessage(`${lastChat.user}: ${lastChat.message}`);
     }
-  }, [chat, isChatOpen]);
+  }, [chat]);
+
+  // Menyembunyikan chatbox di awal menggunakan GSAP
+  useEffect(() => {
+    const chatBox = chatBoxRef.current;
+    gsap.set(chatBox, { opacity: 0, y: 50, display: "none" });
+  }, []);
+
+  // Close Chatbox dengan klik di berbagai halaman
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        chatBoxRef.current &&
+        !chatBoxRef.current.contains(event.target) &&
+        chatInputRef.current &&
+        !chatInputRef.current.contains(event.target) &&
+        isChatOpen
+      ) {
+        closeChatBox();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isChatOpen]);
 
   const sendMessage = (e) => {
     e.preventDefault();
     if (currentMessage.trim() !== "") {
       setChat([...chat, { user: "Abrar", message: currentMessage }]);
       setCurrentMessage("");
-      setTimeout(() => scrollToBottom(), 50); // Scroll otomatis setelah kirim pesan
+
+      if (!isChatOpen) {
+        openChatBox();
+      }
+
+      setTimeout(() => scrollToBottom(), 50);
     }
   };
 
@@ -56,37 +76,38 @@ function RoomPlayer() {
     }
   };
 
-  const toggleChat = () => {
+  const openChatBox = () => {
+    const chatBox = chatBoxRef.current;
+    setIsChatOpen(true);
+
+    gsap.fromTo(
+      chatBox,
+      { opacity: 0, y: 50, display: "block" },
+      { opacity: 1, y: 0, duration: 0.5, ease: "power3.inOut" }
+    );
+  };
+
+  const closeChatBox = () => {
     const chatBox = chatBoxRef.current;
 
-    if (isChatOpen) {
-      // Animasi GSAP saat menutup chatbox dengan easing Power2
-      gsap.to(chatBox, {
-        y: 50, // Menggeser ke bawah
-        opacity: 0,
-        duration: 0.5,
-        ease: "power2.inOut", 
-        onComplete: () => {
-          chatBox.style.display = "none"; // Sembunyikan setelah animasi selesai
-        }
-      });
-    } else {
-      chatBox.style.display = "block"; // Tampilkan sebelum animasi dimulai
-      // Animasi GSAP saat membuka chatbox
-      gsap.fromTo(
-        chatBox,
-        { y: 50, opacity: 0 }, // Mulai dari posisi di bawah dengan opacity 0
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.5,
-           ease: "power3.inOut",
-        }
-      );
-      scrollToBottom(); // Scroll otomatis ke bawah saat chatbox dibuka
-    }
+    gsap.to(chatBox, {
+      opacity: 0,
+      y: 50,
+      duration: 0.5,
+      ease: "power2.inOut",
+      onComplete: () => {
+        gsap.set(chatBox, { display: "none" });
+        setIsChatOpen(false);
+      },
+    });
+  };
 
-    setIsChatOpen(!isChatOpen);
+  const toggleChat = () => {
+    if (isChatOpen) {
+      closeChatBox();
+    } else {
+      openChatBox();
+    }
   };
 
   return (
@@ -116,15 +137,11 @@ function RoomPlayer() {
         </Col>
       </Row>
 
-      <Row className="chat-wrapper align-items-center mt-auto position-relative">
+      <Row className="chat-wrapper align-items-center mt-auto position-relative ">
         <Col xs={8} sm={6} md={5} lg={4}>
           <div className="chat-input-form d-flex align-items-center justify-content-center position-relative">
             <button className="btn-chat-box" onClick={toggleChat}>
-              <Image
-                src={ChatIcon}
-                className="input-icon-left"
-                alt="Chat Icon"
-              />
+              <MessageSquareText />
             </button>
 
             <Form.Control
@@ -139,16 +156,17 @@ function RoomPlayer() {
 
             <button
               type="submit"
-              className="btn-send-chat input-icon-right"
+              className="btn-send-chat"
               onClick={sendMessage}
             >
               <SendHorizontal />
             </button>
 
+            {/* Render chatbox */}
             <div ref={chatBoxRef} className="chat-box">
               {chat.map((chatMessage, index) => (
                 <div key={index} className="chat-message">
-                  <span className="sender-name">{chatMessage.user}</span>:{" "}
+                  <span className="sender-name">{chatMessage.user} :</span>{" "}
                   {chatMessage.message}
                 </div>
               ))}

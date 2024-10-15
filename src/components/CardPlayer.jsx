@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Card, Row, Col, Image } from "react-bootstrap";
+import { Card, Col, Image } from "react-bootstrap";
 import ImagePlayer from "../assets/common/image-player-1.png";
 import badge1 from "../assets/common/badge.png";
 import vector from "../assets/common/Vector.png";
@@ -25,7 +25,7 @@ const CardPlayer = () => {
         </Card>
       </div>
 
-      <div className="card-wrapper">
+      {/* <div className="card-wrapper">
         <Card className="card-player d-flex justify-content-center align-items-center">
           <Card.Img
             variant="top"
@@ -57,7 +57,7 @@ const CardPlayer = () => {
             </div>
           </Card.Body>
         </Card>
-      </div>
+      </div> */}
 
       <div className="card-wrapper-notavail">
         <Card className="player-not-available">
@@ -67,12 +67,38 @@ const CardPlayer = () => {
               className="img-card-notavail img-fluid"
               width={80}
             />
-            <div className="text-player-notavail">
-              <p>Menunggu Pemain Lain Untuk Masuk</p>
-            </div>
+            <Card.Title className="title">Menunggu Pemain Lain Untuk Masuk</Card.Title>
           </Card.Body>
         </Card>
       </div>
+      
+      <div className="card-wrapper-notavail">
+        <Card className="player-not-available">
+          <Card.Body className="d-flex flex-column justify-content-top align-items-center mt-5 text-center gap-3">
+            <Image
+              src={vector}
+              className="img-card-notavail img-fluid"
+              width={80}
+            />
+            <Card.Title className="title">Menunggu Pemain Lain Untuk Masuk</Card.Title>
+          </Card.Body>
+        </Card>
+      </div>
+      
+      <div className="card-wrapper-notavail">
+        <Card className="player-not-available">
+          <Card.Body className="d-flex flex-column justify-content-top align-items-center mt-5 text-center gap-3">
+            <Image
+              src={vector}
+              className="img-card-notavail img-fluid"
+              width={80}
+            />
+            <Card.Title className="title">Menunggu Pemain Lain Untuk Masuk</Card.Title>
+          </Card.Body>
+        </Card>
+      </div>
+      
+      
     </Col>
   );
 };

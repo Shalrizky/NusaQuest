@@ -1,5 +1,4 @@
 .card-player-container {
-  display: flex;
   overflow: hidden;
   gap: 80px;
 }
@@ -62,20 +61,21 @@
   -moz-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
 }
 
-.text-player-notavail {
-  font-size: 14px;
-  color: white;
+.card-wrapper-notavail .title {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.639);
 }
 
-@media (min-width: 780px) and (max-width: 1020px) {
+@media (min-width: 780px) and (max-width: 1024px) {
 
   .card-wrapper,
   .card-wrapper-notavail {
-    transform: scale(1);
+    transform: scale(0.9);
+    height: 380px;
   }
 
   .card-player-container {
-    gap: 50px;
+    gap: 20px;
   }
 }
 
@@ -83,12 +83,16 @@
 
   .card-wrapper,
   .card-wrapper-notavail {
-    transform: scale(0.9);
-    height: 360px;
+    transform: scale(0.8);
+    height: 350px;
   }
 
   .card-player-container {
     gap: 10px;
+  }
+  
+  .img-card-notavail {
+    width: 60px;
   }
 
 }
@@ -97,31 +101,31 @@
 
   .card-wrapper,
   .card-wrapper-notavail {
-    transform: scale(0.9);
+    transform: scale(0.8);
     height: 280px;
   }
 
   .card-player-container {
-    gap: 8px;
-  }
-
-  .text-player-notavail {
-    font-size: 12px;
-
+    gap: 6px;
   }
 
   .img-card-notavail {
-    width: 50px;
+    width: 30px;
   }
 
   .card-player .title {
-    font-size: 14px;
+    font-size: 12px;
     text-align: center;
   }
 
-  .badge-card-title {
-    color: white;
+  .card-wrapper-notavail .title {
     font-size: 10px;
+    text-align: center;
+  }
+
+  .card-player-container .badge-card-title {
+    color: white;
+    font-size: 12px;
   }
 
 }

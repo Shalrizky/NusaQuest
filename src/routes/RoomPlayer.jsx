@@ -4,6 +4,7 @@ import { SendHorizontal, MessageSquareText } from "lucide-react";
 import { gsap } from "gsap";
 import Header from "../components/Header";
 import CardPlayer from "../components/CardPlayer";
+import CardVsAi from "../components/CardVsAi";
 import PlayGameIcon from "../assets/common/play-game-icon.svg";
 import "../style/routes/RoomPlayer.css";
 
@@ -65,7 +66,6 @@ function RoomPlayer() {
       if (!isChatOpen) {
         openChatBox();
       }
-
       setTimeout(() => scrollToBottom(), 50);
     }
   };
@@ -122,9 +122,9 @@ function RoomPlayer() {
       <Row className="d-flex flex-column justify-content-center align-items-center text-center">
         <Col
           md={12}
-          className="d-flex justify-content-center mt-lg-3 mb-lg-5 mb-4"
+          className="d-flex justify-content-center mt-lg-3 mb-lg-5 mb-3"
         >
-          <CardPlayer />
+          <CardVsAi />
         </Col>
         <Col
           md={12}

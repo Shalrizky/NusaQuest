@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Container, Row, Col, Image, Form } from "react-bootstrap";
+import { useParams } from "react-router-dom";
+import { fetchRooms } from "../services/roomsDataServices"; 
+import { Container, Row, Col, Image, Form, Spinner } from "react-bootstrap";
 import { SendHorizontal, MessageSquareText } from "lucide-react";
 import { gsap } from "gsap";
 import Header from "../components/Header";
@@ -9,6 +11,9 @@ import PlayGameIcon from "../assets/common/play-game-icon.svg";
 import "../style/routes/RoomPlayer.css";
 
 function RoomPlayer() {
+  const [loading, setLoading] = useState(true);
+  const { gameID, topicID, roomID } = useParams();
+  const [roomData, setRoomData] = useState(null);
   const [chat, setChat] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [lastMessage, setLastMessage] = useState("Chat With Others");
@@ -16,12 +21,16 @@ function RoomPlayer() {
   const chatInputRef = useRef(null);
   const chatBoxRef = useRef(null);
 
-  // Fungsi chatbox akan selalu kebawah scrollnya
-  const scrollToBottom = () => {
-    if (chatBoxRef.current) {
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-    }
-  };
+  useEffect(() => {
+    fetchRooms(topicID, gameID, (rooms) => {
+      if (rooms && rooms[roomID]) {
+        setRoomData(rooms[roomID]);
+      } else {
+        setRoomData(null);
+      }
+      setLoading(false);
+    });
+  }, [gameID, topicID, roomID]);
 
   useEffect(() => {
     if (chat.length > 0) {
@@ -30,13 +39,14 @@ function RoomPlayer() {
     }
   }, [chat]);
 
-  // Menyembunyikan chatbox di awal menggunakan GSAP
-  useEffect(() => {
-    const chatBox = chatBoxRef.current;
-    gsap.set(chatBox, { opacity: 0, y: 50, display: "none" });
-  }, []);
+  // Fungsi chatbox akan selalu kebawah scrollnya
+  const scrollToBottom = () => {
+    if (chatBoxRef.current) {
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    }
+  };
 
-  // Close Chatbox dengan klik di berbagai halaman
+  // Close Chatbox dengan klik di luar elemen
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -110,12 +120,26 @@ function RoomPlayer() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <Spinner animation="border" role="status" variant="dark">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
+
+  if (!roomData) {
+    return <div>Room not found.</div>;
+  }
+
   return (
     <Container fluid className="lobbyroom-container d-flex flex-column">
       <Header
         showLogoIcon={false}
         showIcons={true}
-        showTextHeader="ROOM 1"
+        showTextHeader={roomData.title}
         showBackIcon={true}
       />
 
@@ -124,7 +148,8 @@ function RoomPlayer() {
           md={12}
           className="d-flex justify-content-center mt-lg-3 mb-lg-5 mb-3"
         >
-          <CardVsAi />
+          {/* Cek apakah room adalah single player */}
+          {roomData.isSinglePlayer ? <CardVsAi /> : <CardPlayer />}
         </Col>
         <Col
           md={12}
@@ -162,7 +187,6 @@ function RoomPlayer() {
               <SendHorizontal />
             </button>
 
-            {/* Render chatbox */}
             <div ref={chatBoxRef} className="chat-box">
               {chat.map((chatMessage, index) => (
                 <div key={index} className="chat-message">

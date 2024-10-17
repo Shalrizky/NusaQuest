@@ -1,35 +1,17 @@
-.player-deck {
-  display: flex;
-  justify-content: center; /* Ensures center card is in the middle */
-  align-items: center;
+/* DeckPlayer.css */
+.deck-player {
   position: relative;
+  width: 300px; /* Adjust width to allow cards to stack horizontally */
+  height: 220px; /* Adjust height to match card size */
 }
 
-.card-stack {
-  position: relative;
-  width: 60px;
-  height: 90px;
-}
-
-.card {
+.stacked-card {
   position: absolute;
-  width: 100%;
+  width: 100px; /* Adjust card width */
   height: auto;
-  transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease;
 }
 
-.cards-to-add {
-  position: absolute;
-  top: -15px;
-  right: -15px;
-  background-color: red;
-  color: white;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
+.stacked-card:hover {
+  transform: scale(1.1); /* Optional hover effect */
 }
-

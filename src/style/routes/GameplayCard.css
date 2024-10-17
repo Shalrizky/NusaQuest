@@ -13,55 +13,10 @@ html, body, #root {
   height: 100vh;
   width: 100vw;
   position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.gameplay-container {
-  flex-grow: 5;
-  position: relative;
-  width: 100%;
-  height: calc(100% - 60px); /* Adjust based on your HeaderNuca height */
-}
-
-.deck-wrapper {
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.deck-wrapper.left {
-  left: 5%;
-  bottom: 80%;
-  transform: translateY(-50%);
-}
-
-.deck-wrapper.center {
-  left: 40%;
-  top: 20%;
-  display: flex;
-}
-
-.deck-wrapper.right {
-  right: 15%;
-  bottom: 80%;
-  transform: translateY(-50%);
-}
-
-.deck-wrapper.bottom {
-  left: 50%;
-  bottom: 5%;
-  transform: translateX(-50%);
-}
-
-/* BottomDeckCard specific styles */
-.bottom-card-deck {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
 /* Shuffle Icon Styles */
 .shuffle-icon-container {
@@ -73,12 +28,12 @@ html, body, #root {
 }
 
 .shuffle-icon {
-  width: 310px;
+  width: 250px;
   height: auto;
 }
 
 .shuffle-icon.rotating {
-  animation: rotate 2s linear; /* Slower rotation, one complete rotation in 4 seconds */
+  animation: rotate 2s linear;
 }
 
 @keyframes rotate {
@@ -89,5 +44,3 @@ html, body, #root {
     transform: rotate(360deg);
   }
 }
-
-

@@ -1,17 +1,16 @@
-/* DeckPlayer.css */
 .deck-player {
   position: relative;
-  width: 300px; /* Adjust width to allow cards to stack horizontally */
-  height: 220px; /* Adjust height to match card size */
+  width: 150px; /* Lebar diperkecil untuk memastikan tidak mengganggu layout Col */
+  height: 200px; /* Disesuaikan agar cukup untuk tumpukan kartu */
 }
 
 .stacked-card {
   position: absolute;
-  width: 100px; /* Adjust card width */
+  width: 160px; /* Pastikan lebar kartu tidak terlalu besar */
   height: auto;
   transition: transform 0.3s ease;
 }
 
 .stacked-card:hover {
-  transform: scale(1.1); /* Optional hover effect */
+  transform: scale(1.1); /* Efek hover opsional */
 }

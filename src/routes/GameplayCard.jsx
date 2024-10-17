@@ -6,7 +6,6 @@ import BottomDeckCard from '../components/games/BottomDeckCard';
 import HeaderNuca from '../components/games/HeaderGame';
 import PertanyaanNuca from '../components/games/PertanyaanNuca';
 import backgroundImage from '../assets/common/background.png';
-import shuffleIcon from '../assets/common/shuffle.png';
 import playerProfile from '../assets/common/imageOne.png';
 
 function GameplayCard() {
@@ -49,49 +48,75 @@ function GameplayCard() {
     <div className="nuca-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
       <HeaderNuca />
 
-      {/* Shuffle Icon */}
-      <div className="shuffle-icon-container">
-        <img
-          src={shuffleIcon}
-          alt="Shuffle"
-          className={`shuffle-icon ${isShuffling ? 'rotating' : ''}`}
-        />
-      </div>
-
       <Container fluid className="h-100 text-center mt-2">
-        <Row className="h-100">
-        <Col xs={10} md={1} className="h-100"></Col>
-          {/* Player's Deck (Left Side, Vertically Centered) */}
-          <Col 
-            xs={10} 
-            md={2} 
-            className="d-flex justify-content-center align-items-center"
-            style={{ height: '100%' }} 
+      <Row 
+        className="h-100 d-flex align-items-center justify-content-between"
+        style={{ height: '100%' }}
+      >
+        {/* Deck 1 - Left */}
+        <Col 
+          xs={4} 
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: '100%' }}
+        >
+          <div 
+            className="deck-wrapper-left"
+            style={{ 
+              transform: 'rotate(90deg)', 
+              width: '150px',  // Perbesar untuk memungkinkan tampilan deck yang penuh
+              height: 'auto',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
           >
-            <div className="deck-wrapper-left text-center" style={{ transform: "rotate(90deg)", transformOrigin: "left center" }}>
-              <DeckPlayer />
-            </div>
-          </Col>
-        </Row>
-      </Container>
+            <DeckPlayer />
+          </div>
+        </Col>
 
-      <Container fluid className="h-50 text-center mt-2">
-        <Row className="h-50">
-          {/* Dummy Col to occupy space on the left */}
-          <Col xs={12} md={9} className="h-50"></Col>
-          {/* Player's Deck (Right Side, Vertically Centered) */}
-          <Col 
-            xs={10} 
-            md={1} 
-            className="d-flex justify-content-center align-items-center" 
-            style={{ height: '100%' }} 
+        {/* Deck 2 - Center */}
+        <Col 
+          xs={4} 
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: '100%' }}
+        >
+          <div 
+            className="deck-wrapper-middle"
+            style={{ 
+              width: '150px', // Pastikan ukuran ini sama dengan deck lainnya
+              height: 'auto',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
           >
-            <div className="deck-wrapper-left text-center" style={{ transform: "rotate(-90deg)", transformOrigin: "right center" }}>
-              <DeckPlayer />
-            </div>
-          </Col>
-        </Row>
-      </Container>
+            <DeckPlayer />
+          </div>
+        </Col>
+
+        {/* Deck 3 - Right */}
+        <Col 
+          xs={4} 
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: '100%' }}
+        >
+          <div 
+            className="deck-wrapper-right"
+            style={{ 
+              transform: 'rotate(90deg)', 
+              width: '150px',  // Ukuran konsisten di semua deck
+              height: 'auto',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            <DeckPlayer />
+          </div>
+        </Col>
+      </Row>
+    </Container>
+
 
       <Container fluid className="h-100 text-center mt-2">
         <Row className="h-100 align-items-end" style={{ height: 'calc(100vh - 100px)' }}> {/* Ensure it takes the full height */}

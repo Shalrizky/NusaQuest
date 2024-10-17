@@ -19,10 +19,10 @@ html, body, #root {
 }
 
 .gameplay-container {
-  flex-grow: 1;
+  flex-grow: 5;
   position: relative;
   width: 100%;
-  height: calc(100% - 60px); 
+  height: calc(100% - 60px); /* Adjust based on your HeaderNuca height */
 }
 
 .deck-wrapper {
@@ -89,3 +89,5 @@ html, body, #root {
     transform: rotate(360deg);
   }
 }
+
+

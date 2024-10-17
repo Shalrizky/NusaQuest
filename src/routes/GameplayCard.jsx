@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Col from 'react-bootstrap/Col';
-import Container from 'react-bootstrap/Container';
-import Image from 'react-bootstrap/Image';
-import Row from 'react-bootstrap/Row';
+import { Col, Container, Image, Row } from 'react-bootstrap';
 import DeckPlayer from '../components/games/DeckPlayer';
 import BottomDeckCard from '../components/games/BottomDeckCard';
 import HeaderNuca from '../components/games/HeaderGame';
@@ -11,7 +8,6 @@ import backgroundImage from '../assets/common/background.png';
 import shuffleIcon from '../assets/common/shuffle.png';
 import '../style/routes/GameplayCard.css';
 import playerProfile from '../assets/common/imageOne.png';
-
 
 function GameplayCard() {
   const [isShuffling, setIsShuffling] = useState(false);
@@ -68,37 +64,68 @@ function GameplayCard() {
         />
       </div>
 
-      <Container fluid className="gameplay-container">
-      <Row className="justify-content-center">
-        {/* Deck Player Top (Center) */}
-        <Col xs="auto" className="text-center">
-          <DeckPlayer position="center" cards={[1, 2, 3, 4, 5]} />
-        </Col>
-      </Row>
+      <Container fluid className="gameplay-container" style={{ height: '100vh' }}>
+          {/* Left Player Deck */}
+          <Row className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+      <Col xs="auto" className="d-flex flex-column justify-content-center align-items-center">
+        <Image
+          src="playerProfile.jpg" // Ganti dengan path gambar profil
+          roundedCircle
+          className="player-image mb-3 img-fluid"
+          style={{ width: "100px", height: "100px" }}
+        />
+        <DeckPlayer position="left" cards={[1, 2, 3, 4, 5]} />
+      </Col>
+    </Row>
 
-      <Row className="align-items-center">
-        {/* Left Player Deck */}
-        <Col xs={3} className="text-center">
-          <Image src={playerProfile} roundedCircle className="player-image mb-3 img-fluid" style={{ width: "100px", height: "100px" }} />
-          <DeckPlayer position="left" cards={[1, 2, 3, 4, 5]} />
-        </Col>
 
-        {/* Spacer Column for Center Alignment */}
-        <Col xs={6}></Col>
+          {/* Center Column for Shuffle Icon and Deck Player */}
+          <Col md="auto" className="text-center position-relative">
+            
+            {/* Shuffle Icon */}
+            <div
+              className="shuffle-icon-container"
+              style={{
+                position: 'absolute',
+                top: '0', // Ensure it's at the top of the container
+                left: '50%', // Center horizontally
+                transform: 'translateX(-50%)', // Correct the centering (shift it back by 50% of its width)
+              }}
+            >
+              <img
+                src={shuffleIcon}
+                alt="Shuffle"
+                className="shuffle-icon"
+                style={{ width: '40px', height: '40px' }}
+              />
+            </div>
+            
+            {/* Deck Player Center */}
+            <DeckPlayer position="center" cards={[1, 2, 3, 4, 5]} />
+          </Col>
 
-        {/* Right Player Deck */}
-        <Col xs={3} className="text-center">
-          <DeckPlayer position="right" cards={[1, 2, 3, 4, 5]} />
-          <Image src={playerProfile} roundedCircle className="player-image mt-3 img-fluid" style={{ width: "100px", height: "100px" }} />
-        </Col>
-      </Row>
-      
-      {/* Bottom Player Deck */}
-      <div className="deck-wrapper bottom stackable-cards">
-        <BottomDeckCard onCardClick={handleBottomCardClick} canClick={true} />
-        <Image src={playerProfile} roundedCircle className="player-image mt-3 img-fluid" style={{ width: "100px", height: "100px" }} />
-      </div>
-    </Container>
+          {/* Right Player Deck */}
+          <Col xs={3} className="text-center">
+            <DeckPlayer position="right" cards={[1, 2, 3, 4, 5]} />
+            <Image
+              src={playerProfile}
+              roundedCircle
+              className="player-image mt-3 img-fluid"
+              style={{ width: "100px", height: "100px" }}
+            />
+          </Col>
+
+        {/* Bottom Player Deck */}
+        <div className="deck-wrapper bottom stackable-cards text-center">
+          <BottomDeckCard onCardClick={handleBottomCardClick} canClick={true} />
+          <Image
+            src={playerProfile}
+            roundedCircle
+            className="player-image mt-3 img-fluid"
+            style={{ width: "100px", height: "100px" }}
+          />
+        </div>
+      </Container>
 
       {/* Pop-up Question */}
       {showPopup && (

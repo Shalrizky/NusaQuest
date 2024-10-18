@@ -3,10 +3,11 @@ import { Col, Container, Image, Row } from 'react-bootstrap';
 import '../style/routes/GameplayCard.css';
 import DeckPlayer from '../components/games/DeckPlayer';
 import BottomDeckCard from '../components/games/BottomDeckCard';
-import HeaderNuca from '../components/games/HeaderGame';
+import HeaderNuca from '../components/games/HeaderGame'; 
 import PertanyaanNuca from '../components/games/PertanyaanNuca';
 import backgroundImage from '../assets/common/background.png';
 import playerProfile from '../assets/common/imageOne.png';
+import shuffleIcon from '../assets/common/shuffle.png';
 
 function GameplayCard() {
   const [isShuffling, setIsShuffling] = useState(false);
@@ -46,86 +47,43 @@ function GameplayCard() {
 
   return (
     <div className="nuca-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
-      <HeaderNuca />
+      <HeaderNuca layout="home" />
 
       <Container fluid className="h-100 text-center mt-2">
-      <Row 
-        className="h-100 d-flex align-items-center justify-content-between"
-        style={{ height: '100%' }}
-      >
-        {/* Deck 1 - Left */}
-        <Col 
-          xs={4} 
-          className="d-flex justify-content-center align-items-center"
-          style={{ height: '100%' }}
-        >
-          <div 
-            className="deck-wrapper-left"
-            style={{ 
-              transform: 'rotate(90deg)', 
-              width: '150px',  // Perbesar untuk memungkinkan tampilan deck yang penuh
-              height: 'auto',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
-          >
-            <DeckPlayer />
-          </div>
-        </Col>
+        <Row className="h-75 d-flex align-items-center justify-content-center">
+          {/* Deck Left */}
+          <Col xs={4} className="d-flex justify-content-center align-items-center">
+            <div className="deck-wrapper-left" style={{ transform: 'rotate(270deg)' }}>
+              <DeckPlayer />
+            </div>
+          </Col>
 
-        {/* Deck 2 - Center */}
-        <Col 
-          xs={4} 
-          className="d-flex justify-content-center align-items-center"
-          style={{ height: '100%' }}
-        >
-          <div 
-            className="deck-wrapper-middle"
-            style={{ 
-              width: '150px', // Pastikan ukuran ini sama dengan deck lainnya
-              height: 'auto',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
-          >
-            <DeckPlayer />
-          </div>
-        </Col>
+          {/* Deck Center */}
+          <Col xs={4} className="d-flex justify-content-center align-items-center position-relative">
+            <div className="deck-wrapper-middle" style={{ transform: 'scale(0.6)', position: 'relative' }}>
+              <DeckPlayer />
+              <img
+                src={shuffleIcon}
+                alt="Shuffle Icon"
+                className={`shuffle-icon ${isShuffling ? 'rotating' : ''}`}
+                style={{ width: '350px', height: 'auto', position: 'absolute', bottom: '0px', right: '0px', left: '10px',  zIndex: '10' }}
+              />
+            </div>
+          </Col>
 
-        {/* Deck 3 - Right */}
-        <Col 
-          xs={4} 
-          className="d-flex justify-content-center align-items-center"
-          style={{ height: '100%' }}
-        >
-          <div 
-            className="deck-wrapper-right"
-            style={{ 
-              transform: 'rotate(90deg)', 
-              width: '150px',  // Ukuran konsisten di semua deck
-              height: 'auto',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
-          >
-            <DeckPlayer />
-          </div>
-        </Col>
-      </Row>
-    </Container>
+          {/* Deck Right */}
+          <Col xs={4} className="d-flex justify-content-center align-items-center">
+            <div className="deck-wrapper-right" style={{ transform: 'rotate(270deg)' }}>
+              <DeckPlayer />
+            </div>
+          </Col>
+        </Row>
+      </Container>
 
-
-      <Container fluid className="h-100 text-center mt-2">
-        <Row className="h-100 align-items-end" style={{ height: 'calc(100vh - 100px)' }}> {/* Ensure it takes the full height */}
-          {/* Bottom Player Deck (Center, Bottom-Aligned) */}
-          <Col 
-            xs={12} 
-            md={12} 
-            className="d-flex justify-content-center" 
-          >
+      <Container fluid className="h-25 text-center">
+        <Row className="align-items-center">
+          {/* Bottom Player Deck */}
+          <Col xs={12} className="d-flex justify-content-center">
             <div className="stackable-cards text-center">
               <BottomDeckCard onCardClick={handleBottomCardClick} canClick={true} />
               <Image

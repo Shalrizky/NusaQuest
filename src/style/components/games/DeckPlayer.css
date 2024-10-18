@@ -10,7 +10,3 @@
   height: auto;
   transition: transform 0.3s ease;
 }
-
-.stacked-card:hover {
-  transform: scale(1.1); /* Efek hover opsional */
-}

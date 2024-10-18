@@ -19,26 +19,24 @@ html, body, #root {
 
 
 .shuffle-icon-container {
-  position: absolute;
-  top: 40%;
-  left: 47%;
-  z-index: 1000;
+  position: fixed; /* Tetap di layar, meskipun di-scroll */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000; /* Pastikan berada di atas elemen lain */
 }
 
-.shuffle-icon {
-  width: 200px;
-  height: 200px;
-}
-
-.shuffle-icon.rotating {
-  animation: rotate 2s linear; /* Slower rotation, one complete rotation in 4 seconds */
-}
-
-/* @keyframes rotate {
+@keyframes rotate {
   from {
     transform: rotate(0deg);
   }
   to {
-    transform: rotate(360deg);
+    transform: rotate(260deg);
   }
-} */
+}
+
+.shuffle-icon.rotating {
+  animation: rotate 2s linear; /* 2 detik untuk satu putaran */
+}
+

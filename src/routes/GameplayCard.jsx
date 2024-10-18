@@ -20,8 +20,10 @@ function GameplayCard() {
     { title: "Buah", text: "Apel adalah?" },
     { title: "Sayuran", text: "Bayam adalah?" },
   ]);
-  const [activeCard, setActiveCard] = useState(null); // Track kartu di tengah
-  const timerRef = useRef(null); // Timer untuk penghapusan kartu
+  const [activeCard, setActiveCard] = useState(null); // Kartu di tengah
+  const [leftDeckCount, setLeftDeckCount] = useState(4); // Deck kiri
+  const [rightDeckCount, setRightDeckCount] = useState(4); // Deck kanan
+  const timerRef = useRef(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowPopup(true), 2000);
@@ -34,25 +36,28 @@ function GameplayCard() {
   };
 
   const handleBottomCardClick = (card) => {
-    setActiveCard(card); // Simpan konten kartu yang dilempar ke tengah
+    setActiveCard(card); // Simpan kartu di tengah
 
-    // Hapus kartu dari deck setelah diklik
+    // Hapus kartu dari deck bawah
     setCards((prevCards) => prevCards.filter((c) => c !== card));
 
     // Timer untuk menghilangkan kartu dari tengah setelah 10 detik
     timerRef.current = setTimeout(() => {
       setActiveCard(null); // Bersihkan kartu dari tengah
+      setRightDeckCount((prevCount) => prevCount + 1); // Tambahkan kartu ke deck kanan
     }, 10000);
   };
 
   const handleAnswerSelect = (isCorrect) => {
-    if (isCorrect) {
-      console.log("Correct answer, removing card.");
-      clearTimeout(timerRef.current); // Hentikan timer jika dijawab
-      setActiveCard(null); // Hapus kartu dari tengah
+    if (!isCorrect) {
+      console.log("Jawaban salah, tambah kartu ke deck lawan.");
+      setRightDeckCount((prevCount) => prevCount + 1); // Tambah kartu ke deck kanan
     } else {
-      console.log("Incorrect answer or no answer.");
+      console.log("Jawaban benar.");
     }
+    clearTimeout(timerRef.current); // Hentikan timer
+    setActiveCard(null); // Hapus kartu dari tengah
+
     setIsExitingPopup(true);
     setTimeout(() => {
       setShowPopup(false);
@@ -72,7 +77,7 @@ function GameplayCard() {
         <Row className="h-75 d-flex align-items-center justify-content-center">
           <Col xs={4} className="d-flex justify-content-center align-items-center">
             <div className="deck-wrapper-left" style={{ transform: 'rotate(270deg)' }}>
-              <DeckPlayer />
+              <DeckPlayer cardCount={leftDeckCount} /> {/* Deck kiri */}
             </div>
           </Col>
 
@@ -84,7 +89,7 @@ function GameplayCard() {
               className="deck-wrapper-middle"
               style={{ transform: 'scale(0.6)', position: 'relative' }}
             >
-              <DeckPlayer />
+              <DeckPlayer cardCount={5} /> {/* Deck tengah */}
               {activeCard && (
                 <div className="moving-card">
                   <h3>{activeCard.title}</h3>
@@ -110,7 +115,7 @@ function GameplayCard() {
 
           <Col xs={4} className="d-flex justify-content-center align-items-center">
             <div className="deck-wrapper-right" style={{ transform: 'rotate(270deg)' }}>
-              <DeckPlayer />
+              <DeckPlayer cardCount={rightDeckCount} /> {/* Deck kanan */}
             </div>
           </Col>
         </Row>

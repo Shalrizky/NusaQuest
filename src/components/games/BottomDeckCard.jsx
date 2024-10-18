@@ -1,46 +1,27 @@
-import Card from 'react-bootstrap/Card';
+// BottomDeckCard.js
+import React from 'react';
+import { Card } from 'react-bootstrap';
 import '../../style/components/games/BottomDeckCard.css';
 
-function FoodQuestionCard() {
+const BottomDeckCard = ({ cards, onCardClick }) => {
   return (
     <div className="card-container">
-      <Card className="bg-orange text-white card-custom">
-        <Card.Body>
-          <Card.Title className="card-title-custom">Q: Makanan</Card.Title>
-          <Card.Text className="card-text-custom">
-            Sayur Asem Adalah?
-          </Card.Text>
-        </Card.Body>
-      </Card>
-
-      <Card className="bg-orange text-white card-custom">
-        <Card.Body>
-          <Card.Title className="card-title-custom">Q: Minuman</Card.Title>
-          <Card.Text className="card-text-custom">
-            Es Teh Adalah?
-          </Card.Text>
-        </Card.Body>
-      </Card>
-
-      <Card className="bg-orange text-white card-custom">
-        <Card.Body>
-          <Card.Title className="card-title-custom">Q: Buah</Card.Title>
-          <Card.Text className="card-text-custom">
-            Apel Adalah?
-          </Card.Text>
-        </Card.Body>
-      </Card>
-
-      <Card className="bg-orange text-white card-custom">
-        <Card.Body>
-          <Card.Title className="card-title-custom">Q: Sayuran</Card.Title>
-          <Card.Text className="card-text-custom">
-            Bayam Adalah?
-          </Card.Text>
-        </Card.Body>
-      </Card>
+      {cards.map((card, index) => (
+        <Card
+          key={index}
+          className="bg-orange text-white card-custom"
+          onClick={() => onCardClick(card)} // Kirim seluruh konten kartu
+        >
+          <Card.Body>
+            <Card.Title className="card-title-custom">{`Q: ${card.title}`}</Card.Title>
+            <Card.Text className="card-text-custom">
+              {card.text}
+            </Card.Text>
+          </Card.Body>
+        </Card>
+      ))}
     </div>
   );
-}
+};
 
-export default FoodQuestionCard;
+export default BottomDeckCard;

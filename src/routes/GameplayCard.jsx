@@ -8,9 +8,9 @@ import PertanyaanNuca from '../components/games/PertanyaanNuca';
 import backgroundImage from '../assets/common/background.png';
 import playerProfile from '../assets/common/imageOne.png';
 import shuffleIcon from '../assets/common/shuffle.png';
-import Potion from "../components/games/potion"; // Komponen Potion
-import checkIcon from '../assets/common/checklist.png'; // Checklist PNG
-import crossIcon from '../assets/common/cross.png'; // Cross PNG
+import Potion from "../components/games/potion";
+import checkIcon from '../assets/common/checklist.png';
+import crossIcon from '../assets/common/cross.png';
 
 function GameplayCard() {
   const [isShuffling, setIsShuffling] = useState(false);
@@ -22,13 +22,15 @@ function GameplayCard() {
     { title: "Buah", text: "Apel adalah?" },
     { title: "Sayuran", text: "Bayam adalah?" },
   ]);
-  const [activeCard, setActiveCard] = useState(null); // Kartu di kanan
-  const [leftDeckCount, setLeftDeckCount] = useState(4); // Deck kiri
-  const [rightDeckCount, setRightDeckCount] = useState(4); // Deck kanan
-  const [isLoading, setIsLoading] = useState(false); // Untuk loading
-  const [isCorrectAnswer, setIsCorrectAnswer] = useState(null); // Untuk status jawaban (benar/salah)
-  const [showPotion, setShowPotion] = useState(false); // Untuk menampilkan ikon potion
-  const [isPotionActive, setIsPotionActive] = useState(false); // Status apakah potion aktif
+  const [activeCard, setActiveCard] = useState(null);
+  const [leftDeckCount, setLeftDeckCount] = useState(4);
+  const [rightDeckCount, setRightDeckCount] = useState(4);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState(null);
+  const [showPotion, setShowPotion] = useState(false);
+  const [isPotionActive, setIsPotionActive] = useState(false);
+  const [topDeckLoading, setTopDeckLoading] = useState(false);
+  const [topDeckAnswer, setTopDeckAnswer] = useState(null);
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -38,15 +40,30 @@ function GameplayCard() {
 
   useEffect(() => {
     if (showPopup) {
-      setShowPotion(true); // Menampilkan ikon potion saat popup muncul
+      setShowPotion(true);
     } else {
-      setShowPotion(false); // Menyembunyikan ikon potion saat popup ditutup
+      setShowPotion(false);
     }
   }, [showPopup]);
 
   const handleShuffle = () => {
     setIsShuffling(true);
-    setTimeout(() => setIsShuffling(false), 2000);
+    setTimeout(() => {
+      setIsShuffling(false);
+      handleTopDeckAction();
+    }, 2000);
+  };
+
+  const handleTopDeckAction = () => {
+    setTopDeckLoading(true);
+    setTimeout(() => {
+      setTopDeckLoading(false);
+      const isCorrect = Math.random() < 0.5;
+      setTopDeckAnswer(isCorrect);
+      setTimeout(() => {
+        setTopDeckAnswer(null);
+      }, 2000);
+    }, 2000);
   };
 
   const handleBottomCardClick = (card) => {
@@ -59,18 +76,17 @@ function GameplayCard() {
   };
 
   const handleRightDeckAnswer = () => {
-    const isCorrect = Math.random() < 0.5; // 50% benar atau salah secara random
+    const isCorrect = Math.random() < 0.5;
+    setIsCorrectAnswer(isCorrect);
     if (!isCorrect) {
-      setIsCorrectAnswer(false);
       setRightDeckCount((prevCount) => prevCount + 1);
-    } else {
-      setIsCorrectAnswer(true);
     }
     setActiveCard(null);
     clearTimeout(timerRef.current);
     setIsLoading(false);
     setTimeout(() => {
       setIsCorrectAnswer(null);
+      handleShuffle();
     }, 2000);
   };
 
@@ -89,39 +105,43 @@ function GameplayCard() {
   };
 
   return (
-    <div
-      className="nuca-container"
-      style={{ backgroundImage: `url(${backgroundImage})` }}
-    >
+    <div className="nuca-container" style={{ backgroundImage: `url(${backgroundImage})` }}>
       <HeaderNuca layout="home" />
 
       <Container fluid className="h-100 text-center mt-5">
         <Row className="h-75 d-flex align-items-center justify-content-center position-relative">
           {/* Deck Atas */}
           <Col xs={12} className="d-flex justify-content-center align-items-center position-absolute" style={{ top: '-100px', zIndex: '15', transform: 'scale(0.8)' }}>
-            <DeckPlayer cardCount={5} /> {/* Deck atas */}
+            <div style={{ position: 'relative' }}>
+              <DeckPlayer cardCount={5} />
+              {topDeckLoading && (
+                <div className="loading-spinner" style={{ position: 'absolute', top: '50%', right: '-40px', transform: 'translateY(-50%)' }}>
+                  <div className="spinner"></div>
+                </div>
+              )}
+              {topDeckAnswer !== null && (
+                <div style={{ position: 'absolute', top: '50%', right: '-40px', transform: 'translateY(-50%)' }}>
+                  <img 
+                    src={topDeckAnswer ? checkIcon : crossIcon} 
+                    alt={topDeckAnswer ? "Check Icon" : "Cross Icon"} 
+                    style={{ width: '40px', height: '40px' }} 
+                  />
+                </div>
+              )}
+            </div>
           </Col>
 
           {/* Deck Kiri */}
           <Col xs={4} className="d-flex justify-content-center align-items-center">
-            <div
-              className="deck-wrapper-left mt-5"
-              style={{ transform: 'rotate(90deg) scale(0.8)', marginBottom: '-50px' }}
-            >
-              <DeckPlayer cardCount={leftDeckCount} /> {/* Deck kiri */}
+            <div className="deck-wrapper-left mt-5" style={{ transform: 'rotate(90deg) scale(0.8)', marginBottom: '-50px' }}>
+              <DeckPlayer cardCount={leftDeckCount} />
             </div>
           </Col>
 
           {/* Deck Tengah */}
-          <Col
-            xs={4}
-            className="d-flex justify-content-center align-items-center position-relative"
-          >
-            <div
-              className="deck-wrapper-middle"
-              style={{ transform: 'scale(0.6)', position: 'relative' }}
-            >
-              <DeckPlayer cardCount={5} /> {/* Deck tengah */}
+          <Col xs={4} className="d-flex justify-content-center align-items-center position-relative">
+            <div className="deck-wrapper-middle" style={{ transform: 'scale(0.6)', position: 'relative' }}>
+              <DeckPlayer cardCount={5} />
               <img
                 src={shuffleIcon}
                 alt="Shuffle Icon"
@@ -147,7 +167,7 @@ function GameplayCard() {
           {/* Deck Kanan */}
           <Col xs={4} className="d-flex justify-content-center align-items-center position-relative">
             <div className="deck-wrapper-right" style={{ transform: 'rotate(270deg) scale(0.8)' }}>
-              <DeckPlayer cardCount={rightDeckCount} /> {/* Deck kanan */}
+              <DeckPlayer cardCount={rightDeckCount} />
             </div>
             {isLoading && (
               <div className="loading-spinner" style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)' }}>
@@ -155,20 +175,12 @@ function GameplayCard() {
               </div>
             )}
             {isCorrectAnswer !== null && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '-40px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  zIndex: '20',
-                }}
-              >
-                {isCorrectAnswer ? (
-                  <img src={checkIcon} alt="Check Icon" style={{ width: '60px', height: '60px' }} />
-                ) : (
-                  <img src={crossIcon} alt="Cross Icon" style={{ width: '60px', height: '60px' }} />
-                )}
+              <div style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', zIndex: '20' }}>
+                <img 
+                  src={isCorrectAnswer ? checkIcon : crossIcon} 
+                  alt={isCorrectAnswer ? "Check Icon" : "Cross Icon"} 
+                  style={{ width: '60px', height: '60px' }} 
+                />
               </div>
             )}
           </Col>
@@ -191,15 +203,7 @@ function GameplayCard() {
       </Container>
 
       {showPotion && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '-50px',
-            right: '30px',
-            zIndex: '2300',
-            pointerEvents: 'auto',
-          }}
-        >
+        <div style={{ position: 'absolute', bottom: '-50px', right: '30px', zIndex: '2300', pointerEvents: 'auto' }}>
           <Potion />
         </div>
       )}
@@ -207,12 +211,7 @@ function GameplayCard() {
       {isPotionActive && <Potion />}
 
       {showPopup && (
-        <div
-          style={{
-            position: 'relative',
-            zIndex: '2200', // Popup di atas potion icon
-          }}
-        >
+        <div style={{ position: 'relative', zIndex: '2200' }}>
           <PertanyaanNuca
             onAnswerSelect={handleAnswerSelect}
             isExiting={isExitingPopup}

@@ -8,7 +8,7 @@ import PertanyaanNuca from '../components/games/PertanyaanNuca';
 import backgroundImage from '../assets/common/background.png';
 import playerProfile from '../assets/common/imageOne.png';
 import shuffleIcon from '../assets/common/shuffle.png';
-import potionImage from "../assets/games/Utangga/potion.png"; // Gambar untuk potion
+import Potion from "../components/games/potion"; // Komponen Potion
 import checkIcon from '../assets/common/checklist.png'; // Checklist PNG
 import crossIcon from '../assets/common/cross.png'; // Cross PNG
 
@@ -50,67 +50,42 @@ function GameplayCard() {
   };
 
   const handleBottomCardClick = (card) => {
-    // Simpan kartu di kanan
     setActiveCard(card);
-
-    // Hapus kartu dari deck bawah
     setCards((prevCards) => prevCards.filter((c) => c !== card));
-
-    // Menampilkan animasi loading setelah melempar kartu
     setIsLoading(true);
-
-    // Timer untuk menghilangkan kartu dari kanan setelah 10 detik
     timerRef.current = setTimeout(() => {
-      handleRightDeckAnswer(); // Jalankan fungsi jawaban otomatis dari deck kanan
+      handleRightDeckAnswer();
     }, 10000);
   };
 
-  // Fungsi untuk menghasilkan jawaban dari deck kanan
   const handleRightDeckAnswer = () => {
     const isCorrect = Math.random() < 0.5; // 50% benar atau salah secara random
-
     if (!isCorrect) {
-      setIsCorrectAnswer(false); // Jawaban salah
-      console.log("Deck kanan menjawab salah, menambah kartu ke deck kanan.");
-      setRightDeckCount((prevCount) => prevCount + 1); // Tambah kartu ke deck kanan jika salah
+      setIsCorrectAnswer(false);
+      setRightDeckCount((prevCount) => prevCount + 1);
     } else {
-      setIsCorrectAnswer(true); // Jawaban benar
-      console.log("Deck kanan menjawab benar.");
+      setIsCorrectAnswer(true);
     }
-
-    // Bersihkan kartu aktif setelah jawaban
     setActiveCard(null);
-    clearTimeout(timerRef.current); // Hentikan timer yang berjalan
-    setIsLoading(false); // Sembunyikan loading setelah jawaban
-
-    // Hapus checklist atau cross setelah 1 detik
+    clearTimeout(timerRef.current);
+    setIsLoading(false);
     setTimeout(() => {
-      setIsCorrectAnswer(null); // Menghapus ikon checklist/cross
+      setIsCorrectAnswer(null);
     }, 2000);
   };
 
   const handleAnswerSelect = (isCorrect) => {
     if (!isCorrect) {
-      console.log("Jawaban salah, tambah kartu ke deck lawan.");
-      setRightDeckCount((prevCount) => prevCount + 1); // Tambah kartu ke deck kanan
-    } else {
-      console.log("Jawaban benar.");
+      setRightDeckCount((prevCount) => prevCount + 1);
     }
-    clearTimeout(timerRef.current); // Hentikan timer
-    setActiveCard(null); // Hapus kartu
-
+    clearTimeout(timerRef.current);
+    setActiveCard(null);
     setIsExitingPopup(true);
     setTimeout(() => {
       setShowPopup(false);
       setIsExitingPopup(false);
       handleShuffle();
     }, 2000);
-  };
-
-  // Fungsi untuk menangani klik pada ikon potion
-  const handlePotionClick = () => {
-    setIsPotionActive(!isPotionActive); // Mengaktifkan atau menonaktifkan potion
-    console.log(isPotionActive ? "Potion diaktifkan!" : "Potion dinonaktifkan!");
   };
 
   return (
@@ -121,12 +96,17 @@ function GameplayCard() {
       <HeaderNuca layout="home" />
 
       <Container fluid className="h-100 text-center mt-5">
-        <Row className="h-75 d-flex align-items-center justify-content-center">
+        <Row className="h-75 d-flex align-items-center justify-content-center position-relative">
+          {/* Deck Atas */}
+          <Col xs={12} className="d-flex justify-content-center align-items-center position-absolute" style={{ top: '-100px', zIndex: '15', transform: 'scale(0.8)' }}>
+            <DeckPlayer cardCount={5} /> {/* Deck atas */}
+          </Col>
+
           {/* Deck Kiri */}
           <Col xs={4} className="d-flex justify-content-center align-items-center">
             <div
               className="deck-wrapper-left mt-5"
-              style={{ transform: 'rotate(90deg)', marginBottom: '-50px' }}
+              style={{ transform: 'rotate(90deg) scale(0.8)', marginBottom: '-50px' }}
             >
               <DeckPlayer cardCount={leftDeckCount} /> {/* Deck kiri */}
             </div>
@@ -155,8 +135,6 @@ function GameplayCard() {
                   zIndex: '10',
                 }}
               />
-
-              {/* Moving card positioned to the right of shuffle icon */}
               {activeCard && (
                 <div className="moving-card animate">
                   <h3>{activeCard.title}</h3>
@@ -168,18 +146,14 @@ function GameplayCard() {
 
           {/* Deck Kanan */}
           <Col xs={4} className="d-flex justify-content-center align-items-center position-relative">
-            <div className="deck-wrapper-right" style={{ transform: 'rotate(270deg)' }}>
+            <div className="deck-wrapper-right" style={{ transform: 'rotate(270deg) scale(0.8)' }}>
               <DeckPlayer cardCount={rightDeckCount} /> {/* Deck kanan */}
             </div>
-
-            {/* Loading spinner manually created */}
             {isLoading && (
               <div className="loading-spinner" style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)' }}>
                 <div className="spinner"></div>
               </div>
             )}
-
-            {/* Checklist or Cross Icon */}
             {isCorrectAnswer !== null && (
               <div
                 style={{
@@ -199,29 +173,11 @@ function GameplayCard() {
             )}
           </Col>
         </Row>
-      </Container>
 
-      {showPotion && (
-  <div
-    className="potion-icon"
-    style={{
-      position: 'absolute',
-      bottom: '50px',
-      right: '50px',
-      zIndex: '2300', // Memastikan zIndex cukup tinggi
-      pointerEvents: 'auto', // Menjamin elemen bisa menerima klik
-    }}
-    onClick={handlePotionClick} // Menambahkan fungsi klik
-  >
-    <img src={potionImage} alt="Potion Icon" style={{ width: '80px', height: 'auto' }} />
-  </div>
-)}
-
-
-      <Container fluid className="h-25 text-center">
-        <Row className="align-items-center">
+        {/* Bottom Deck */}
+        <Row className="align-items-center text-center">
           <Col xs={12} className="d-flex justify-content-center">
-            <div className="stackable-cards text-center">
+            <div className="stackable-cards">
               <BottomDeckCard cards={cards} onCardClick={handleBottomCardClick} />
               <Image
                 src={playerProfile}
@@ -233,6 +189,22 @@ function GameplayCard() {
           </Col>
         </Row>
       </Container>
+
+      {showPotion && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '-50px',
+            right: '30px',
+            zIndex: '2300',
+            pointerEvents: 'auto',
+          }}
+        >
+          <Potion />
+        </div>
+      )}
+
+      {isPotionActive && <Potion />}
 
       {showPopup && (
         <div

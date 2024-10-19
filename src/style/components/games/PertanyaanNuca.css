@@ -14,7 +14,7 @@
 }
 
 .popup-content {
-  background-color: #ADD8E6; /* Warna biru muda */
+  background-color: #313cd1; /* Warna biru muda */
   padding: 20px;
   border-radius: 10px;
   text-align: center;
@@ -22,6 +22,7 @@
   width: 400px; /* Lebar pop-up, bisa diubah sesuai kebutuhan */
   max-width: 90%; /* Membatasi lebar maksimum agar responsif */
   transition: opacity 0.5s ease, transform 0.5s ease; /* Tambahkan transisi */
+  color: white;
 }
 
 /* Kelas untuk menghilangkan pop-up */
@@ -41,16 +42,15 @@
   padding: 10px;
   font-size: 16px;
   cursor: pointer;
-  border: none; /* Menghilangkan border default */
+  border: solid 0.1px rgb(255, 255, 255); /* Menghilangkan border default */
   border-radius: 5px; /* Sudut tombol yang lebih bulat */
-  background-color: #ffffff; /* Warna latar belakang tombol */
+  background-color: transparent; /* Warna latar belakang tombol */
   transition: background-color 0.3s ease; /* Transisi halus untuk hover */
+  color : white;
 }
 
 .answer-options button:hover {
-  border: 1px solid rgb(107, 107, 107);
-  background-color: transparent; /* Warna latar belakang saat hover (biru cerah) */
-  color: white; /* Ubah warna teks saat hover */
+  background-color:rgba(0, 0, 0, 0.308); /* Warna latar belakang saat hover (biru cerah) */
 }
 
 /* Kelas untuk jawaban benar dan salah */

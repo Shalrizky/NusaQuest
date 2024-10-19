@@ -1,4 +1,3 @@
-// GameplayCard.js
 import React, { useState, useEffect, useRef } from 'react';
 import { Col, Container, Image, Row } from 'react-bootstrap';
 import '../style/routes/GameplayCard.css';
@@ -9,6 +8,8 @@ import PertanyaanNuca from '../components/games/PertanyaanNuca';
 import backgroundImage from '../assets/common/background.png';
 import playerProfile from '../assets/common/imageOne.png';
 import shuffleIcon from '../assets/common/shuffle.png';
+import Potion from "../components/games/potion";
+import potionImage from "../assets/games/Utangga/potion.png";
 
 function GameplayCard() {
   const [isShuffling, setIsShuffling] = useState(false);
@@ -20,7 +21,7 @@ function GameplayCard() {
     { title: "Buah", text: "Apel adalah?" },
     { title: "Sayuran", text: "Bayam adalah?" },
   ]);
-  const [activeCard, setActiveCard] = useState(null); // Kartu di tengah
+  const [activeCard, setActiveCard] = useState(null); // Kartu di kanan
   const [leftDeckCount, setLeftDeckCount] = useState(4); // Deck kiri
   const [rightDeckCount, setRightDeckCount] = useState(4); // Deck kanan
   const timerRef = useRef(null);
@@ -36,16 +37,32 @@ function GameplayCard() {
   };
 
   const handleBottomCardClick = (card) => {
-    setActiveCard(card); // Simpan kartu di tengah
+    // Simpan kartu di kanan
+    setActiveCard(card);
 
     // Hapus kartu dari deck bawah
     setCards((prevCards) => prevCards.filter((c) => c !== card));
 
-    // Timer untuk menghilangkan kartu dari tengah setelah 10 detik
+    // Timer untuk menghilangkan kartu dari kanan setelah 10 detik
     timerRef.current = setTimeout(() => {
-      setActiveCard(null); // Bersihkan kartu dari tengah
-      setRightDeckCount((prevCount) => prevCount + 1); // Tambahkan kartu ke deck kanan
+      handleRightDeckAnswer(); // Jalankan fungsi jawaban otomatis dari deck kanan
     }, 10000);
+  };
+
+  // Fungsi untuk menghasilkan jawaban dari deck kanan
+  const handleRightDeckAnswer = () => {
+    const isCorrect = Math.random() < 0.5; // 50% benar atau salah secara random
+
+    if (!isCorrect) {
+      console.log("Deck kanan menjawab salah, menambah kartu ke deck kanan.");
+      setRightDeckCount((prevCount) => prevCount + 1); // Tambah kartu ke deck kanan jika salah
+    } else {
+      console.log("Deck kanan menjawab benar.");
+    }
+
+    // Bersihkan kartu aktif setelah jawaban
+    setActiveCard(null);
+    clearTimeout(timerRef.current); // Hentikan timer yang berjalan
   };
 
   const handleAnswerSelect = (isCorrect) => {
@@ -56,7 +73,7 @@ function GameplayCard() {
       console.log("Jawaban benar.");
     }
     clearTimeout(timerRef.current); // Hentikan timer
-    setActiveCard(null); // Hapus kartu dari tengah
+    setActiveCard(null); // Hapus kartu
 
     setIsExitingPopup(true);
     setTimeout(() => {
@@ -73,10 +90,13 @@ function GameplayCard() {
     >
       <HeaderNuca layout="home" />
 
-      <Container fluid className="h-100 text-center mt-2">
+      <Container fluid className="h-100 text-center mt-5">
         <Row className="h-75 d-flex align-items-center justify-content-center">
           <Col xs={4} className="d-flex justify-content-center align-items-center">
-            <div className="deck-wrapper-left" style={{ transform: 'rotate(270deg)' }}>
+            <div
+              className="deck-wrapper-left mt-5"
+              style={{ transform: 'rotate(90deg)', marginBottom: '-50px' }}
+            >
               <DeckPlayer cardCount={leftDeckCount} /> {/* Deck kiri */}
             </div>
           </Col>
@@ -90,30 +110,31 @@ function GameplayCard() {
               style={{ transform: 'scale(0.6)', position: 'relative' }}
             >
               <DeckPlayer cardCount={5} /> {/* Deck tengah */}
-              {activeCard && (
-                <div className="moving-card">
-                  <h3>{activeCard.title}</h3>
-                  <p>{activeCard.text}</p>
-                </div>
-              )}
               <img
                 src={shuffleIcon}
                 alt="Shuffle Icon"
                 className={`shuffle-icon ${isShuffling ? 'rotating' : ''}`}
                 style={{
-                  width: '350px',
+                  width: '400px',
                   height: 'auto',
                   position: 'absolute',
-                  bottom: '0px',
-                  right: '0px',
-                  left: '10px',
-                  zIndex: '10',
+                  bottom: '-100px',
+                  left: '-170px',
+                  zIndex: '10'
                 }}
               />
+
+              {/* Moving card positioned to the right of shuffle icon */}
+              {activeCard && (
+                <div className={`moving-card animate`}>
+                  <h3>{activeCard.title}</h3>
+                  <p>{activeCard.text}</p>
+                </div>
+              )}
             </div>
           </Col>
 
-          <Col xs={4} className="d-flex justify-content-center align-items-center">
+          <Col xs={4} className="d-flex justify-content-center align-items-center position-relative">
             <div className="deck-wrapper-right" style={{ transform: 'rotate(270deg)' }}>
               <DeckPlayer cardCount={rightDeckCount} /> {/* Deck kanan */}
             </div>

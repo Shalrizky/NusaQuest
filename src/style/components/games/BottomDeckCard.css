@@ -41,23 +41,44 @@
 }
 
 
+@keyframes moveAndGrow {
+  0% {
+    transform: translateY(100%) translateX(-50%) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) translateX(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
 .moving-card {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  transition: all 0.5s ease-in-out;
+  top: 5%; /* Adjust height to align with shuffle icon */
+  left: 200%; /* Move closer to shuffle icon */
   z-index: 100;
-  width: 200px;
-  height: 300px;
+  width: 150px;
+  height: 200px;
   background-color: orange;
   color: white;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 18px;
   border-radius: 10px;
   text-align: center;
   border: 5px solid white;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+  opacity: 0;
 }
+
+.moving-card.animate {
+  animation: moveAndGrow 1s ease forwards; /* Menambahkan animasi */
+}
+
+
+

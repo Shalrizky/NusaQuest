@@ -57,18 +57,19 @@
 
 .moving-card {
   position: absolute;
-  top: 5%; /* Adjust height to align with shuffle icon */
-  left: 200%; /* Move closer to shuffle icon */
+  top: 1%; /* Adjust height to align with shuffle icon */
+  left: 250%; /* Move closer to shuffle icon */
   z-index: 100;
-  width: 150px;
-  height: 200px;
+  width: 220px;
+  height: 300px;
   background-color: orange;
   color: white;
   display: flex;
+  padding: 2px, 2px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 20px;
   border-radius: 10px;
   text-align: center;
   border: 5px solid white;

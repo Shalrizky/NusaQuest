@@ -1,23 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card } from 'react-bootstrap';
 import '../../style/components/games/BottomDeckCard.css';
-import { getRandomQuestion } from './NucaQuestions';
 
-const BottomDeckCard = ({ cardCount, onCardClick }) => {
-  const [cards, setCards] = useState([]);
-
-  useEffect(() => {
-    const newCards = Array.from({ length: cardCount }, () => getRandomQuestion());
-    setCards(newCards);
-  }, [cardCount]);
-
+const BottomDeckCard = ({ cards, onCardClick }) => {
   return (
     <div className="card-container">
       {cards.map((card, index) => (
         <Card
           key={index}
           className="bg-orange text-white card-custom"
-          onClick={() => onCardClick(card)}
+          onClick={() => onCardClick(card, index)} // Meneruskan kartu yang diklik dan index-nya ke parent
         >
           <Card.Body>
             <Card.Title className="card-title-custom">{`Kategori: ${card.category}`}</Card.Title>

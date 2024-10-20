@@ -55,3 +55,16 @@ html, body, #root {
   100% { transform: rotate(360deg); }
 }
 
+@keyframes rotate-once {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.rotating-once {
+  animation: rotate-once 3s ease-in-out; /* Mengubah durasi rotasi menjadi 3 detik */
+}
+

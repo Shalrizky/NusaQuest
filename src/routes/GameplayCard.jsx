@@ -114,7 +114,7 @@ function GameplayCard() {
             setIsLoadingTopDeck(true); // Set animasi loading hanya untuk deck atas saat deck kanan diklik
             setTimeout(() => {
               setIsLoadingTopDeck(false);
-              const randomAnswer = Math.random() < 0.5;
+              const randomAnswer = Math.random() < 0.2;
               setTopDeckAnswer(randomAnswer);
               setTimeout(() => {
                 setTopDeckAnswer(null);
@@ -185,7 +185,7 @@ function GameplayCard() {
                 </div>
               )}
               {leftDeckAnswer !== null && (
-                <div style={{ position: 'absolute', top: '130px', left: '-150%', transform: 'translateY(-50% )' }}>
+                <div style={{ position: 'absolute', top: '120px', left: '-150%', transform: 'translateY(-50% )' }}>
                   <img 
                     src={leftDeckAnswer ? checkIcon : crossIcon} 
                     alt={leftDeckAnswer ? "Check Icon" : "Cross Icon"} 
@@ -240,7 +240,7 @@ function GameplayCard() {
                 </div>
               )}
             {isCorrectAnswer !== null && (
-              <div style={{ position: 'absolute', top: '-90px', left: '50%', transform: 'translateX(-50%)' }}>
+              <div style={{ position: 'absolute', top: '-70px', left: '50%', transform: 'translateX(-50%)' }}>
                 <img 
                   src={isCorrectAnswer ? checkIcon : crossIcon} 
                   alt={isCorrectAnswer ? "Check Icon" : "Cross Icon"} 

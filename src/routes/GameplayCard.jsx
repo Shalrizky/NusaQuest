@@ -92,10 +92,13 @@ function GameplayCard() {
             setIsLoadingLeftDeck(true); // Set animasi loading untuk deck kiri ketika deck atas diklik
             setTimeout(() => {
               setIsLoadingLeftDeck(false);
-              const randomAnswer = Math.random() < 0.5;
+              const randomAnswer = Math.random() < 0.2;
               setLeftDeckAnswer(randomAnswer);
               setTimeout(() => {
                 setLeftDeckAnswer(null);
+                if (!randomAnswer) {
+                  setLeftDeckCount((prevCount) => prevCount + 1); // Tambah kartu di deck kiri jika jawaban salah
+                }
               }, 2000);
             }, 2000);
           }
@@ -103,6 +106,18 @@ function GameplayCard() {
         case 'left':
           if (leftDeckCount > 0) {
             setLeftDeckCount((prevCount) => prevCount - 1);
+            setIsLoadingLeftDeck(false); // Set animasi loading untuk deck kiri ketika deck kiri diklik
+            setTimeout(() => {
+              setIsLoadingLeftDeck(false);
+              const randomAnswer = Math.random() < 0.5;
+              setLeftDeckAnswer(randomAnswer);
+              setTimeout(() => {
+                setLeftDeckAnswer(null);
+                if (!randomAnswer) {
+                  setLeftDeckCount((prevCount) => prevCount + 1); // Perbaikan: Tambah kartu di deck kiri jika jawaban salah
+                }
+              }, 2000);
+            }, 2000);
             const newQuestion = getWestJavaQuestion(); // Mendapatkan pertanyaan dari West Java Questions
             setActiveCard(newQuestion);  // Simpan data pertanyaan ke state activeCard
             setShowPopup(true);   // Tampilkan popup pertanyaan tanpa memindahkan kartu ke depan
@@ -123,6 +138,9 @@ function GameplayCard() {
                   setIsShuffling(false); // Menghentikan animasi shuffle setelah beberapa waktu
                 }, 3000); // Durasi animasi shuffle setelah menghilangkan indikator
               }, 2000);
+              if (!randomAnswer) {
+                setTopDeckCount((prevCount) => prevCount + 1); // Tambah kartu di deck kiri jika jawaban salah
+              }
             }, 2000);
           }
           break;

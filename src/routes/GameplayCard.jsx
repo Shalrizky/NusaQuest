@@ -89,7 +89,7 @@ function GameplayCard() {
         case 'top':
           if (topDeckCount > 0) {
             setTopDeckCount((prevCount) => prevCount - 1);
-            setIsLoadingLeftDeck(true); // Set animasi loading untuk deck kiri saat deck atas diklik
+            setIsLoadingLeftDeck(true); // Set animasi loading untuk deck kiri ketika deck atas diklik
             setTimeout(() => {
               setIsLoadingLeftDeck(false);
               const randomAnswer = Math.random() < 0.5;
@@ -141,25 +141,26 @@ function GameplayCard() {
           {/* Deck atas */}
           <Col xs={12} className="d-flex justify-content-center align-items-center position-absolute" style={{ top: '-100px', zIndex: '15', transform: 'scale(0.8)' }}>
             <div style={{ position: 'relative' }} onClick={() => handleDeckCardClick('top')}>
-              <DeckPlayer cardCount={topDeckCount} />
               {isLoadingTopDeck && (
-                <div className="loading-spinner" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                  <Spinner animation="border" role="status" variant="light" style={{ width: '4rem', height: '4rem' }}>
+                <div className="loading-spinner" style={{ position: 'absolute', top: '120px', left: '150%', transform: 'translate(-50%, -50%)', zIndex: '50' }}>
+                  <Spinner animation="border" role="status" variant="light" style={{ width: '5rem', height: '5rem' }}>
                     <span className="visually-hidden">Loading...</span>
                   </Spinner>
                 </div>
               )}
+              <DeckPlayer cardCount={topDeckCount} />
               <Image
                 src={playerProfile}
                 roundedCircle
                 className="player-image mt-3 img-fluid"
-                style={{ width: "120px", height: "120px", position: 'absolute', right: '-140px', top: '50%', transform: 'translateY(-50%)', marginLeft: '20px' }}              />
+                style={{ width: "120px", height: "120px", position: 'absolute', right: '-140px', top: '50%', transform: 'translateY(-50%)', marginLeft: '20px', zIndex: '20' }}              
+              />
               {topDeckAnswer !== null && (
-                <div style={{ position: 'absolute', top: '50%', right: '-40px', transform: 'translateY(-50%)' }}>
+                <div style={{ position: 'absolute', top: '50%', left: '150%', transform: 'translate(-50%, -50%)', zIndex: '20' }}>
                   <img 
                     src={topDeckAnswer ? checkIcon : crossIcon} 
                     alt={topDeckAnswer ? "Check Icon" : "Cross Icon"} 
-                    style={{ width: '40px', height: '40px' }} 
+                    style={{ width: '60px', height: '60px' }} 
                   />
                 </div>
               )}
@@ -177,18 +178,18 @@ function GameplayCard() {
               />
               <DeckPlayer cardCount={leftDeckCount} />
               {isLoadingLeftDeck && (
-                <div className="loading-spinner" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                  <Spinner animation="border" role="status" variant="light" style={{ width: '4rem', height: '4rem' }}>
+                <div className="loading-spinner" style={{ position: 'absolute', top: '125px', left: '-125%', transform: 'translate(-50%, -50%)' }}>
+                  <Spinner animation="border" role="status" variant="light" style={{ width: '5rem', height: '5rem' }}>
                     <span className="visually-hidden">Loading...</span>
                   </Spinner>
                 </div>
               )}
               {leftDeckAnswer !== null && (
-                <div style={{ position: 'absolute', top: '50%', left: '-60px', transform: 'translateY(-50%)' }}>
+                <div style={{ position: 'absolute', top: '130px', left: '-150%', transform: 'translateY(-50% )' }}>
                   <img 
                     src={leftDeckAnswer ? checkIcon : crossIcon} 
                     alt={leftDeckAnswer ? "Check Icon" : "Cross Icon"} 
-                    style={{ width: '40px', height: '40px' }} 
+                    style={{ width: '60px', height: '60px', transform: 'rotate(-90deg)' }} 
                   />
                 </div>
               )}
@@ -235,12 +236,11 @@ function GameplayCard() {
             {isLoading === 'right' && (
                 <div className="loading-spinner" style={{ position: 'absolute', top: '-90px', left: '50%', transform: 'translateX(-50%)' }}>
                   <Spinner animation="border" role="status" variant="light" style={{ width: '4rem', height: '4rem' }}>
-                    <span className="visually-hidden">Loading...</span>
                   </Spinner>
                 </div>
               )}
             {isCorrectAnswer !== null && (
-              <div style={{ position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)', zIndex: '20' }}>
+              <div style={{ position: 'absolute', top: '-90px', left: '50%', transform: 'translateX(-50%)' }}>
                 <img 
                   src={isCorrectAnswer ? checkIcon : crossIcon} 
                   alt={isCorrectAnswer ? "Check Icon" : "Cross Icon"} 

@@ -109,60 +109,56 @@ function Profile() {
   
   const handleSaveChanges = async (event) => {
     event.preventDefault();
-
     setLoading(true);
-
+  
     const usernameValidation = validateUsername(newUsername);
     if (usernameValidation) {
       setUsernameError(usernameValidation);
       setLoading(false);
       return;
     }
-
+  
     if (photoError) {
       setLoading(false);
       return;
     }
-
+  
     try {
       const updatedUserData = {
         ...userData,
-        displayName: newUsername,
+        displayName: newUsername, // Perbarui username dengan yang baru
       };
-
+  
       if (selectedPhoto) {
-        if (userData.photoPath) {
-          await deletePreviousPhoto(userData.photoPath);
+        const isGooglePhoto = userData.photoURL?.startsWith("https://lh3.googleusercontent.com/");
+        if (userData.photoURL && !isGooglePhoto) {
+          await deletePreviousPhoto(userData.photoURL);
         }
-
-        const { downloadURL, filePath } = await uploadPhoto(
-          selectedPhoto,
-          userData.uid
-        );
+        const { downloadURL } = await uploadPhoto(selectedPhoto, userData.uid);
         updatedUserData.photoURL = downloadURL;
-        updatedUserData.photoPath = filePath;
       }
-
-      // Perbarui data pengguna di database
+  
+      // Simpan perubahan username dan photoURL ke Firebase Database
       await updateUserData(updatedUserData);
+  
+      // Perbarui di local storage dan state aplikasi
       setLocalStorageItem("user", updatedUserData);
       setUserData(updatedUserData);
-
+  
       toggleShowToast("Profile updated successfully!", "success");
-
+  
       setTimeout(() => {
         window.location.reload();
       }, 500);
     } catch (error) {
-      toggleShowToast(
-        "Failed to update profile. Please try again later.",
-        "danger"
-      );
+      toggleShowToast("Failed to update profile. Please try again later.", "danger");
     } finally {
       setLoading(false);
       handleClose();
     }
   };
+  
+  
 
   return (
     <Container fluid id="profile-container">

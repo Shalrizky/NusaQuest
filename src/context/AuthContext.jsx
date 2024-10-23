@@ -9,9 +9,13 @@ import {
 import {
   saveNewUserData,
   checkIfUserExists,
-  getUserDataFromDatabase,
   updateUserData,
+  getUserDataFromDatabase,
 } from "../services/userDataService";
+import {
+  initializeUserAchievement,
+  checkIfAchievementExists,
+} from "../services/achievementDataServices"; 
 import {
   getLocalStorageItem,
   setLocalStorageItem,
@@ -48,7 +52,11 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const handleSessionExpiration = useCallback(() => {
-    showToastMessage("Session Expired", "Your session is about to expire. Would you like to extend it?", "warning");
+    showToastMessage(
+      "Session Expired",
+      "Your session is about to expire. Would you like to extend it?",
+      "warning"
+    );
     setSessionExpired(true);
     setLocalStorageItem("sessionExpired", "true");
   }, [showToastMessage]);
@@ -64,7 +72,11 @@ export const AuthProvider = ({ children }) => {
     removeLocalStorageItem("lastActiveTab");
     removeLocalStorageItem("sessionExpired");
 
-    showToastMessage("Logout Successful", "You have been logged out.", "success");
+    showToastMessage(
+      "Logout Successful",
+      "You have been logged out.",
+      "success"
+    );
     setSessionExpired(false);
     clearSessionTimeout();
   }, [navigate, showToastMessage]);
@@ -96,51 +108,70 @@ export const AuthProvider = ({ children }) => {
   }, [logout, handleSessionExpiration]);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      const handleUserActivity = () => {
-        if (!sessionExpired) {
-          resetSessionTimeout(handleSessionExpiration);
-        }
-      };
+    const handleUserActivity = () => {
+      if (!sessionExpired) {
+        resetSessionTimeout(handleSessionExpiration);
+      }
+    };
 
-      const activityEvents = ["mousemove", "mousedown", "keydown", "touchstart"];
+    const activityEvents = ["mousemove", "mousedown", "keydown", "touchstart"];
 
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, handleUserActivity);
+    });
+
+    startSessionTimeout(handleSessionExpiration);
+
+    return () => {
+      clearSessionTimeout();
       activityEvents.forEach((event) => {
-        window.addEventListener(event, handleUserActivity);
+        window.removeEventListener(event, handleUserActivity);
       });
-
-      startSessionTimeout(handleSessionExpiration);
-      return () => {
-        clearSessionTimeout();
-        activityEvents.forEach((event) => {
-          window.removeEventListener(event, handleUserActivity);
-        });
-      };
-    }
+    };
   }, [isLoggedIn, sessionExpired, handleSessionExpiration]);
 
   const handleSignIn = async () => {
     setShowToast(false);
     try {
-      const result = await signInWithPopup(auth, googleProvider); // Ensure auth is passed
+      const result = await signInWithPopup(auth, googleProvider);
       const userData = result.user;
 
-      const userDetails = {
-        displayName: userData.displayName,
-        email: userData.email,
-        photoURL: userData.photoURL,
-        uid: userData.uid,
-      };
+      // Validasi data user
+      if (!userData || !userData.uid) {
+        throw new Error("User data is missing or incomplete.");
+      }
 
-      const userExists = await checkIfUserExists(userDetails.uid);
+      let userDetails;
 
-      if (!userExists) {
-        await saveNewUserData(userDetails);
+      // Mengecek apakah user sudah ada di database
+      const userExists = await checkIfUserExists(userData.uid);
+
+      if (userExists) {
+        // Jika user sudah ada, ambil data dari Firebase
+        const existingUserData = await getUserDataFromDatabase(userData.uid);
+        userDetails = {
+          displayName: existingUserData.displayName || userData.displayName,
+          email: existingUserData.email || userData.email,
+          uid: userData.uid,
+          photoURL: existingUserData.photoURL || userData.photoURL,
+        };
       } else {
-        const existingUserData = await getUserDataFromDatabase(userDetails.uid);
-        if (existingUserData) {
-          Object.assign(userDetails, existingUserData);
-        }
+        // Jika user baru, gunakan data dari Google dan simpan ke database
+        userDetails = {
+          displayName: userData.displayName,
+          email: userData.email,
+          uid: userData.uid,
+          photoURL: userData.photoURL,
+        };
+        await saveNewUserData(userDetails);
+      }
+
+      // Cek apakah achievement sudah ada untuk user ini
+      const achievementExists = await checkIfAchievementExists(userDetails.uid);
+
+      if (!achievementExists) {
+        // Inisialisasi achievement jika belum ada
+        await initializeUserAchievement(userDetails.uid);
       }
 
       updateUserLoginStatus(userDetails);
@@ -157,7 +188,11 @@ export const AuthProvider = ({ children }) => {
       setLocalStorageItem("isLoggedIn", "true");
       setLocalStorageItem("user", userData);
       removeLocalStorageItem("sessionExpired");
-      showToastMessage("Login Successful", `Welcome ${userData.displayName}!`, "success");
+      showToastMessage(
+        "Login Successful",
+        `Welcome ${userData.displayName}!`,
+        "success"
+      );
       setSessionExpired(false);
       startSessionTimeout(handleSessionExpiration);
     },
@@ -168,7 +203,11 @@ export const AuthProvider = ({ children }) => {
     (error) => {
       if (error.code === "auth/popup-closed-by-user") {
         console.log("User cancelled the sign-in process");
-        showToastMessage("Sign-in Cancelled", "Sign-in cancelled. Please try again.", "danger");
+        showToastMessage(
+          "Sign-in Cancelled",
+          "Sign-in cancelled. Please try again.",
+          "danger"
+        );
       } else {
         console.error("Error signing in:", error);
         showToastMessage(

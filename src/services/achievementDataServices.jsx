@@ -1,4 +1,4 @@
-import { database, ref, set, get, child } from "../firebaseConfig";
+import { database, ref, set, get } from "../firebaseConfig";
 
 // Fungsi membuat data achievement untuk user 
 export const initializeUserAchievement = async (uid) => {

@@ -3,6 +3,7 @@
    background-repeat: no-repeat;
    background-position: center;
    background-size: cover;
+
    min-height: 100vh;
 }
 
@@ -41,8 +42,9 @@
    display: flex;
    flex-direction: column;
    justify-content: start;
-   padding: 25px 30px;
+   padding: 30px 30px;
    height: 100%;
+   overflow: hidden;
 }
 
 .profile-info {
@@ -60,7 +62,6 @@
    font-size: 1rem;
    color: #b1b1b1;
    text-indent: inherit;
-
 }
 
 #profile-container .btn-edit,
@@ -90,6 +91,57 @@
    border: none;
 }
 
+.badge-container {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
+   /* Increase the gap to allow space for scaling */
+   overflow: hidden;
+   /* Prevent scrollbars */
+   padding: 10px;
+   /* Add padding */
+}
+
+.badge-item {
+   position: relative;
+   width: 80px;
+   height: 80px;
+   flex-shrink: 0;
+   /* Prevent shrinking */
+}
+
+.badge-image-profile {
+   width: 80px;
+   height: 80px;
+   transition: transform 0.3s ease-in-out;
+   will-change: transform;
+   transform-origin: center;
+   /* Scale from the center */
+}
+
+.badge-image-profile:hover {
+   transform: scale(1.1);
+   /* Add slight zoom effect */
+}
+
+.custom-tooltip {
+   background-color: #333;
+   /* Dark background for contrast */
+   color: #fff;
+   /* White text for visibility */
+   padding: 6px 10px;
+   /* Padding for comfort */
+   border-radius: 6px;
+   /* Rounded corners */
+   font-size: 0.85rem;
+   /* Slightly smaller font */
+   text-align: center;
+   /* Center the text */
+   opacity: 0.9;
+   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+   /* Add a shadow for depth */
+}
+
 /* Modal Section */
 #modal-edit-profile .modal-content {
    color: #00000087;
@@ -100,7 +152,6 @@
    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.957),
       0 0 20px rgba(70, 70, 70, 0.616);
 }
-
 
 #modal-edit-profile .modal-footer {
    display: flex;

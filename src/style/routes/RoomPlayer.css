@@ -10,6 +10,14 @@
   flex-direction: column;
 }
 
+.desc-title p {
+  color: #fff;
+  font-weight: bold;
+  font-size: 20px;
+  letter-spacing: 0.5px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Tambahkan shadow */
+}
+
 .btn-start-game {
   width: 100%;
   max-width: 300px;
@@ -168,6 +176,10 @@
 
 /* Responsive style */
 @media (min-width: 780px) and (max-width: 1020px) {
+  .desc-title p {
+    font-size: 18px;
+  }
+
   .btn-start-game {
     padding: 12px 30px;
     font-size: 20px;
@@ -176,6 +188,10 @@
 }
 
 @media (min-width: 580px) and (max-width: 780px) {
+  .desc-title p {
+    font-size: 16px;
+  }
+
   .btn-start-game {
     padding: 10px 20px;
     font-size: 18px;
@@ -192,6 +208,10 @@
 }
 
 @media (min-width: 280px) and (max-width: 580px) {
+  .desc-title p {
+    font-size: 14px;
+  }
+
   .btn-start-game {
     padding: 8px 12px;
     font-size: 16px;

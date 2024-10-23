@@ -144,9 +144,12 @@ function RoomPlayer() {
       />
 
       <Row className="d-flex flex-column justify-content-center align-items-center text-center">
+        <Col md={12} className="desc-title">
+          <p>{roomData.description}</p>
+        </Col>
         <Col
           md={12}
-          className="d-flex justify-content-center mt-lg-3 mb-lg-5 mb-3"
+          className="d-flex justify-content-center mt-lg-4 mb-lg-5 mb-3"
         >
           {/* Cek apakah room adalah single player */}
           {roomData.isSinglePlayer ? <CardVsAi /> : <CardPlayer />}

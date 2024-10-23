@@ -15,7 +15,11 @@ import {
 import {
   initializeUserAchievement,
   checkIfAchievementExists,
-} from "../services/achievementDataServices"; 
+} from "../services/achievementDataServices";
+import {
+  initializeUserPotion,
+  checkIfPotionExists,
+} from "../services/itemsDataServices";
 import {
   getLocalStorageItem,
   setLocalStorageItem,
@@ -136,7 +140,6 @@ export const AuthProvider = ({ children }) => {
       const result = await signInWithPopup(auth, googleProvider);
       const userData = result.user;
 
-      // Validasi data user
       if (!userData || !userData.uid) {
         throw new Error("User data is missing or incomplete.");
       }
@@ -168,10 +171,14 @@ export const AuthProvider = ({ children }) => {
 
       // Cek apakah achievement sudah ada untuk user ini
       const achievementExists = await checkIfAchievementExists(userDetails.uid);
-
       if (!achievementExists) {
-        // Inisialisasi achievement jika belum ada
         await initializeUserAchievement(userDetails.uid);
+      }
+
+      // Cek apakah potion sudah ada untuk user ini
+      const potionExists = await checkIfPotionExists(userDetails.uid);
+      if (!potionExists) {
+        await initializeUserPotion(userDetails.uid); // Inisialisasi potion untuk user baru
       }
 
       updateUserLoginStatus(userDetails);

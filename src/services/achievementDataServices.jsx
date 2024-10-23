@@ -16,7 +16,7 @@ export const initializeUserAchievement = async (uid) => {
   ];
 
   // Membuat achievement data langsung dalam fungsi ini
-  const achievements = {};
+  const achievements = {}
   games.forEach((game) => {
     achievements[game] = {};
     topics.forEach((topic) => {
@@ -25,7 +25,7 @@ export const initializeUserAchievement = async (uid) => {
         achievement_name: topic.name,
         badge: {
           badgeName: "No Badge",
-          iconURL: "/assets/badges/no-badge.png",
+          iconURL: "/assets/game/no-badge.png",
           level: "None",
         },
         achievementAwarded: false,

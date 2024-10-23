@@ -1,20 +1,10 @@
-html, body, #root {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  /* overflow: hidden; */
-}
-
 .nuca-container {
-  background-size: cover;
-  background-position: center;
+  background-image: url('../../assets/common/background.png');
   background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
   height: 100vh;
-  width: 100vw;
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
 }
 
 
@@ -67,4 +57,3 @@ html, body, #root {
 .rotating-once {
   animation: rotate-once 3s ease-in-out; /* Mengubah durasi rotasi menjadi 3 detik */
 }
-

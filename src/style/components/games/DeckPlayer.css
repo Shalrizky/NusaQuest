@@ -1,12 +1,17 @@
-.deck-player {
-  position: relative;
-  width: 150px; /* Lebar diperkecil untuk memastikan tidak mengganggu layout Col */
-  height: 200px; /* Disesuaikan agar cukup untuk tumpukan kartu */
+.deck-container {
+  display: flex;
+  height: 150px;
 }
 
-.stacked-card {
+.card-stack {
+  position: relative;
+  margin-left: -20px;
+}
+
+.card-stack img {
   position: absolute;
-  width: 160px; /* Pastikan lebar kartu tidak terlalu besar */
-  height: auto;
-  transition: transform 0.3s ease;
+  bottom: 0;
+  transition: transform 0.2s;
+  width: 100px; /* Atur lebar gambar yang lebih besar */
+  height: auto; /* Sesuaikan tinggi secara otomatis */
 }

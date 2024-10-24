@@ -9,12 +9,19 @@ import {
   Modal,
   Form,
   Spinner,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import {
   updateUserData,
   uploadPhoto,
   deletePreviousPhoto,
 } from "../services/userDataService";
+import {
+  checkIfAchievementExists,
+  getUserAchievements,
+} from "../services/achievementDataServices";
+import { getPotionData } from "../services/itemsDataServices";
 import useAuth from "../hooks/useAuth";
 import useUserPhoto from "../hooks/useUserPhoto";
 import Header from "../components/Header";
@@ -33,12 +40,13 @@ function Profile() {
   const { user, logout } = useAuth();
   const [userData, setUserData] = useState(user);
   const [userPhoto, handlePhotoError] = useUserPhoto(userData);
+  const [userAchievements, setUserAchievements] = useState({});
+  const [potionData, setPotionData] = useState(null);
+  const [loading, setLoading] = useState(true); // Single loading state
   const [show, setShow] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
-  const [loading, setLoading] = useState(false);
-
   const [newUsername, setNewUsername] = useState(user?.displayName || "");
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [previewPhoto, setPreviewPhoto] = useState(userData.photoURL);
@@ -51,6 +59,30 @@ function Profile() {
       hasChanges(userData.displayName, newUsername) || selectedPhoto !== null
     );
   }, [newUsername, selectedPhoto, userData.displayName]);
+
+  useEffect(() => {
+    const fetchAchievementsAndPotion = async () => {
+      try {
+        const exists = await checkIfAchievementExists(user.uid);
+        if (exists) {
+          const achievements = await getUserAchievements(user.uid);
+          setUserAchievements(achievements);
+        }
+
+        // Fetch potion data
+        const potion = await getPotionData(user.uid);
+        if (potion) {
+          setPotionData(potion); // Set potion data to state
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false); // Stop loading once both data are fetched
+      }
+    };
+
+    fetchAchievementsAndPotion();
+  }, [user.uid]);
 
   const handleClose = () => {
     setShow(false);
@@ -82,23 +114,22 @@ function Profile() {
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
-  
+
     if (!file) {
       setSelectedPhoto(null);
       setPreviewPhoto(userData.photoURL);
       return;
     }
-  
-    // Preview the photo first
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewPhoto(reader.result);
-  
+
       const validationError = validatePhoto(file);
-  
+
       if (validationError) {
         setPhotoError(validationError);
-        setSelectedPhoto(null); 
+        setSelectedPhoto(null);
       } else {
         setPhotoError(null);
         setSelectedPhoto(file);
@@ -106,10 +137,9 @@ function Profile() {
     };
     reader.readAsDataURL(file);
   };
-  
+
   const handleSaveChanges = async (event) => {
     event.preventDefault();
-
     setLoading(true);
 
     const usernameValidation = validateUsername(newUsername);
@@ -131,19 +161,16 @@ function Profile() {
       };
 
       if (selectedPhoto) {
-        if (userData.photoPath) {
-          await deletePreviousPhoto(userData.photoPath);
-        }
-
-        const { downloadURL, filePath } = await uploadPhoto(
-          selectedPhoto,
-          userData.uid
+        const isGooglePhoto = userData.photoURL?.startsWith(
+          "https://lh3.googleusercontent.com/"
         );
+        if (userData.photoURL && !isGooglePhoto) {
+          await deletePreviousPhoto(userData.photoURL);
+        }
+        const { downloadURL } = await uploadPhoto(selectedPhoto, userData.uid);
         updatedUserData.photoURL = downloadURL;
-        updatedUserData.photoPath = filePath;
       }
 
-      // Perbarui data pengguna di database
       await updateUserData(updatedUserData);
       setLocalStorageItem("user", updatedUserData);
       setUserData(updatedUserData);
@@ -166,18 +193,21 @@ function Profile() {
 
   return (
     <Container fluid id="profile-container">
-      <Header  showTextHeader="PROFILE" showBackIcon={true} showLogoIcon={false} />
+      <Header
+        showTextHeader="PROFILE"
+        showBackIcon={true}
+        showLogoIcon={false}
+      />
       <Row className="d-flex justify-content-center py-2 ">
         <Col md={3} className="d-flex align-items-center ">
-          <Card id="profile-card">
-            <Card.Body id="profile-card-content" className="text-center">
-              <div className="profile-info py-3">
+          <Card className="profile-card">
+            <Card.Body className="profile-card-content">
+              <div className="profile-info text-center pb-3 d-flex justify-content-center align-items-center flex-column gap-3">
                 <Image
-                  id="img-profile"
+                  className="user-img-profile"
                   src={userPhoto}
-                  className="mx-auto"
-                  onError={handlePhotoError}
                   alt="Profile"
+                  onError={handlePhotoError}
                   width={100}
                   height={100}
                 />
@@ -186,7 +216,7 @@ function Profile() {
                   <p>{userData?.email}</p>
                 </div>
               </div>
-              <div className="d-grid gap-3">
+              <div className="d-grid justify-content-center align-items-center gap-3">
                 <Button className="btn-edit" onClick={handleShowModalEdit}>
                   <UserPen /> Edit Profile
                 </Button>
@@ -197,21 +227,125 @@ function Profile() {
             </Card.Body>
           </Card>
         </Col>
+
         <Col md={9} className="d-flex align-items-center">
-          <Card id="profile-card-Achievement">
-            <Card.Body id="profile-card-Achievement-content">
-              <div className="text-white">
-                <h4 className="fw-bold">Badge</h4>
-              </div>
-              <div className="text-white">
-                <h4 className="fw-bold">Achievement</h4>
-              </div>
+          <Card className="profile-card-achievement">
+            <Card.Body className="profile-card-achievement-content d-flex flex-column align-items-start">
+              {loading ? (
+                <Spinner
+                  animation="border"
+                  role="status"
+                  style={{ color: "#fff" }}
+                  className="m-auto"
+                >
+                  <span className="visually-hidden">Loading...</span>
+                </Spinner>
+              ) : (
+                <>
+                  {/* Badges Section */}
+                  <div className="text-white mb-3">
+                    <h4 className="fw-bold">Your Badges</h4>
+                  </div>
+                  <div className="badge-container d-flex flex-wrap align-items-center justify-content-between">
+                    {Object.keys(userAchievements).map((game) =>
+                      Object.keys(userAchievements[game]).map((topic) => {
+                        const achievement = userAchievements[game][topic];
+                        return (
+                          <div key={topic} className="badge-item">
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={
+                                <Tooltip
+                                  id={`tooltip-badge-${topic}`}
+                                  className="custom-tooltip"
+                                >
+                                  {achievement.badge.badgeName}
+                                </Tooltip>
+                              }
+                              container={document.body}
+                            >
+                              <Image
+                                src={achievement.badge.iconURL}
+                                alt={achievement.badge.badgeName}
+                                className="badge-image-user"
+                              />
+                            </OverlayTrigger>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Achievements Section */}
+                  <div className="text-white mb-3 mt-4">
+                    <h4 className="fw-bold">Your Achievements</h4>
+                  </div>
+
+                  {Object.keys(userAchievements).length === 0 ||
+                  Object.keys(userAchievements).every((game) =>
+                    Object.keys(userAchievements[game]).every(
+                      (topic) => userAchievements[game][topic].totalWins < 5
+                    )
+                  ) ? (
+                    <div className="text-white text-center">
+                      <h5>You don’t have any achievements</h5>
+                    </div>
+                  ) : (
+                    <div className="achievement-container d-flex flex-wrap align-items-center justify-content-between">
+                      {Object.keys(userAchievements).map((game) =>
+                        Object.keys(userAchievements[game]).map((topic) => {
+                          const achievement = userAchievements[game][topic];
+
+                          if (achievement.totalWins >= 5) {
+                            return (
+                              <div key={topic} className="achievement-item">
+                                <div className="trophy-item d-flex justify-content-center align-items-center gap-2">
+                                  <Image
+                                    src={achievement.achievement_trophy}
+                                    alt={achievement.achievement_name}
+                                    className="trophy-image-profile"
+                                    width={70}
+                                  />
+                                  <div className="text-white fs-6">
+                                    {achievement.achievement_name}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return null;
+                        })
+                      )}
+                    </div>
+                  )}
+
+                  {/* Potion Section */}
+                  <div className="text-white mb-3 mt-4">
+                    <h4 className="fw-bold">Your Items</h4>
+                  </div>
+                  <div className="potion-container d-flex flex-wrap align-items-center justify-content-between">
+                    <div className="potion-item">
+                      <div className="potion-item d-flex justify-content-center align-items-center gap-2">
+                        <Image
+                          src={potionData.item_img}
+                          alt={potionData.item_name}
+                          className="potion-image-profile"
+                          width={60}
+                        />
+                        <div className="text-white fs-6">
+                          x{potionData.item_count} {potionData.item_name}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </Card.Body>
           </Card>
         </Col>
       </Row>
 
-      {/* Modal Section */}
       <Modal
         id="modal-edit-profile"
         show={show}

@@ -11,7 +11,7 @@ const useUserPhoto = (user) => {
     } else if (user.photoURL !== userPhoto) {
       setUserPhoto(user.photoURL);
     }
-  }, [user, photoLoadError, userPhoto]);
+  }, [user?.photoURL, photoLoadError, userPhoto]); 
 
   const handlePhotoError = () => {
     if (!photoLoadError) {

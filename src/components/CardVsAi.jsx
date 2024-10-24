@@ -4,7 +4,7 @@ import { Plus, Minus } from "lucide-react";
 import { gsap } from "gsap";
 import ImagePlayer from "../assets/common/image-player-1.png";
 import NusaQuestLogo from "../assets/common/nusaQuest-logo.png";
-import badge1 from "../assets/common/badge.png";
+// import badge1 from "../assets/common/badge.png";
 import vector from "../assets/common/Vector.png";
 import "../style/components/CardVsAi.css";
 
@@ -56,7 +56,7 @@ const CardVsAi = () => {
           <Card.Body>
             <Card.Title className="title">KAMAL ABRAR</Card.Title>
             <div className="d-flex flex-lg-row flex-column align-items-center gap-1 text-center">
-              <Image src={badge1} alt="badge" className="badge-image-vs-ai" />
+              {/* <Image src={badge1} alt="badge" className="badge-image-vs-ai" /> */}
               <span className="badge-card-title-vs-ai">Master Kuliner</span>
             </div>
           </Card.Body>

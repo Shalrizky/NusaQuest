@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Card, Col, Image } from "react-bootstrap";
 import ImagePlayer from "../assets/common/image-player-1.png";
-import badge1 from "../assets/common/badge.png";
+// import badge1 from "../assets/common/badge.png";
 import vector from "../assets/common/Vector.png";
 import "../style/components/CardPlayer.css";
 
@@ -18,7 +18,7 @@ const CardPlayer = () => {
           <Card.Body>
             <Card.Title className="title">KAMAL ABRAR</Card.Title>
             <div className="d-flex flex-lg-row flex-column align-items-center gap-1 text-center">
-              <Image src={badge1} alt="badge" className="badge-image" />
+              {/* <Image src={badge1} alt="badge" className="badge-image" /> */}
               <span className="badge-card-title">Master Kuliner</span>
             </div>
           </Card.Body>

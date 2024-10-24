@@ -24,17 +24,16 @@ export const initializeUserAchievement = async (uid) => {
   const achievements = {};
 
   games.forEach((game) => {
-    achievements[game.key] = {}; // Store data under each game key
+    achievements[game.key] = {}; 
 
     topics.forEach((topic) => {
-      // Add the game-specific prefix to the achievement name
       achievements[game.key][topic.key] = {
         totalWins: 0,
-        achievement_name: `${game.prefix} ${topic.name}`, // Add prefix here
+        achievement_name: `${game.prefix} ${topic.name}`, 
         achievement_trophy: "/assets/game/trophy.png",
         badge: {
-          badgeName: getBadgeName(0, game.prefix, topic.name), // Dynamic badge name based on wins, game, and topic
-          iconURL: getBadgeIconURL(0), // Dynamic badge icon based on wins
+          badgeName: getBadgeName(0, game.prefix, topic.name), 
+          iconURL: getBadgeIconURL(0), 
         },
       };
     });
@@ -54,7 +53,6 @@ const getBadgeName = (totalWins, gamePrefix, topicName) => {
    } else if (totalWins >= 1) {
      return `Bronze Badge - ${totalWins} Wins in ${gameName} ${topicName}`;
    } else {
-     // Menampilkan game dan topik tanpa kata "Master" untuk No Badge
      return `No Badge in ${topicName} (${gameName})`;
    }
  };

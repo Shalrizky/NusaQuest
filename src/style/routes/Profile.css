@@ -3,54 +3,37 @@
    background-repeat: no-repeat;
    background-position: center;
    background-size: cover;
-
+   background-attachment: fixed;
+   overflow: hidden;
    min-height: 100vh;
 }
 
-#profile-card,
-#profile-card-Achievement {
-   border: 3px solid #4d4d4dba;
-   border-radius: 30px;
-   overflow: hidden;
+.profile-card,
+.profile-card-achievement {
    background-image: url('../../assets/common/water-bg.png');
    background-size: cover;
-   background-position: center;
-   flex-grow: 1;
    padding: 10px;
-   min-height: 72vh;
-   height: auto;
+   background-position: center;
+   height: 80vh;
+   max-height: 100%;
+   border: 3px solid #4d4d4dba;
+   border-radius: 30px;
+   flex-grow: 1;
+   overflow-y: hidden;
 }
 
-#img-profile {
+.profile-card-content {
+   border: 3px solid #4D4C4C;
+   border-radius: 20px;
+   display: flex;
+   flex-direction: column;
+   justify-content: space-evenly;
+   height: 100%;
+   overflow: hidden;
+}
+
+.profile-info .user-img-profile {
    border-radius: 100%;
-   margin-bottom: 20px;
-}
-
-#profile-card-content {
-   border: 3px solid #4D4C4C;
-   border-radius: 20px;
-   display: flex;
-   flex-direction: column;
-   justify-content: space-between;
-   height: 100%;
-   overflow: hidden;
-}
-
-#profile-card-Achievement-content {
-   border: 3px solid #4D4C4C;
-   border-radius: 20px;
-   display: flex;
-   flex-direction: column;
-   justify-content: start;
-   padding: 30px 30px;
-   height: 100%;
-   overflow: hidden;
-}
-
-.profile-info {
-   display: flex;
-   flex-direction: column;
-   align-items: center;
 }
 
 .profile-info h1 {
@@ -64,82 +47,97 @@
    text-indent: inherit;
 }
 
-#profile-container .btn-edit,
-#profile-container .btn-logout {
-   padding: 6px;
+.profile-card-content .btn-edit,
+.profile-card-content .btn-logout {
+   padding: 6px 50px;
    border-radius: 20px;
-   width: 100%;
 }
 
-#profile-container .btn-edit {
+.profile-card-content .btn-edit {
    background-color: #0C48A8;
    border: none;
 }
 
-#profile-container .btn-edit:hover {
+.profile-card-content .btn-edit:hover {
    background-color: #073276;
    border: none;
 }
 
-#profile-container .btn-logout {
+.profile-card-content .btn-logout {
    background-color: #f37070;
    border: none;
 }
 
-#profile-container .btn-logout:hover {
+.profile-card-content .btn-logout:hover {
    background-color: #fe4545;
    border: none;
 }
 
+/* achievement content */
+.profile-card-achievement-content {
+   height: 80vh;
+   max-height: 100%;
+   padding: 20px 25px;
+   border: 3px solid #4D4C4C;
+   border-radius: 20px;
+   overflow-y: auto;
+}
+
+/* for badge user */
 .badge-container {
-   display: flex;
-   flex-wrap: wrap;
-   gap: 8px;
-   /* Increase the gap to allow space for scaling */
-   overflow: hidden;
-   /* Prevent scrollbars */
-   padding: 10px;
-   /* Add padding */
+   gap: 20px;
 }
 
 .badge-item {
-   position: relative;
-   width: 80px;
-   height: 80px;
-   flex-shrink: 0;
-   /* Prevent shrinking */
+   flex-basis: calc(20% - 20px);
+   display: flex;
+   justify-content: center;
 }
 
-.badge-image-profile {
+.badge-image-user {
    width: 80px;
-   height: 80px;
    transition: transform 0.3s ease-in-out;
-   will-change: transform;
    transform-origin: center;
-   /* Scale from the center */
 }
 
-.badge-image-profile:hover {
+.badge-image-user:hover {
    transform: scale(1.1);
-   /* Add slight zoom effect */
 }
 
-.custom-tooltip {
-   background-color: #333;
-   /* Dark background for contrast */
-   color: #fff;
-   /* White text for visibility */
-   padding: 6px 10px;
-   /* Padding for comfort */
-   border-radius: 6px;
-   /* Rounded corners */
-   font-size: 0.85rem;
-   /* Slightly smaller font */
-   text-align: center;
-   /* Center the text */
-   opacity: 0.9;
-   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-   /* Add a shadow for depth */
+/* For achievement user */
+.achievement-container {
+   gap: 20px;
+}
+
+.achievement-item {
+   background-color: #3871CF;
+   padding: 15px 10px;
+   border: 3px solid #d4a645;
+   border-radius: 20px;
+   display: flex;
+   flex-direction: center;
+   align-items: start;
+   justify-content: start;
+   width: calc(50% - 10px);
+   min-height: 5px;
+}
+
+/* Scrollbar styling */
+.profile-card-achievement-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-card-achievement-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.profile-card-achievement-content::-webkit-scrollbar-thumb {
+  background-color: #ffffff42;
+  border-radius: 6px;
+}
+
+.profile-card-achievement-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(111, 219, 227);
 }
 
 /* Modal Section */

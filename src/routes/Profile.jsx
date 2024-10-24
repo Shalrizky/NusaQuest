@@ -21,6 +21,7 @@ import {
   checkIfAchievementExists,
   getUserAchievements,
 } from "../services/achievementDataServices";
+import { getPotionData } from "../services/itemsDataServices";
 import useAuth from "../hooks/useAuth";
 import useUserPhoto from "../hooks/useUserPhoto";
 import Header from "../components/Header";
@@ -40,14 +41,12 @@ function Profile() {
   const [userData, setUserData] = useState(user);
   const [userPhoto, handlePhotoError] = useUserPhoto(userData);
   const [userAchievements, setUserAchievements] = useState({});
-  const [loadingAchievements, setLoadingAchievements] = useState(true);
+  const [potionData, setPotionData] = useState(null);
+  const [loading, setLoading] = useState(true); // Single loading state
   const [show, setShow] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastVariant, setToastVariant] = useState("success");
-  const [loading, setLoading] = useState(false);
-
-  // useState pada Modal Edit Profile
   const [newUsername, setNewUsername] = useState(user?.displayName || "");
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [previewPhoto, setPreviewPhoto] = useState(userData.photoURL);
@@ -62,24 +61,27 @@ function Profile() {
   }, [newUsername, selectedPhoto, userData.displayName]);
 
   useEffect(() => {
-    const fetchAchievements = async () => {
+    const fetchAchievementsAndPotion = async () => {
       try {
         const exists = await checkIfAchievementExists(user.uid);
         if (exists) {
           const achievements = await getUserAchievements(user.uid);
           setUserAchievements(achievements);
-        } else {
-          const achievements = await getUserAchievements(user.uid);
-          setUserAchievements(achievements);
+        }
+
+        // Fetch potion data
+        const potion = await getPotionData(user.uid);
+        if (potion) {
+          setPotionData(potion); // Set potion data to state
         }
       } catch (error) {
-        console.error("Error fetching achievements:", error);
+        console.error("Error fetching data:", error);
       } finally {
-        setLoadingAchievements(false);
+        setLoading(false); // Stop loading once both data are fetched
       }
     };
 
-    fetchAchievements();
+    fetchAchievementsAndPotion();
   }, [user.uid]);
 
   const handleClose = () => {
@@ -119,7 +121,6 @@ function Profile() {
       return;
     }
 
-    // Preview the photo first
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewPhoto(reader.result);
@@ -156,7 +157,7 @@ function Profile() {
     try {
       const updatedUserData = {
         ...userData,
-        displayName: newUsername, // Perbarui username dengan yang baru
+        displayName: newUsername,
       };
 
       if (selectedPhoto) {
@@ -170,10 +171,7 @@ function Profile() {
         updatedUserData.photoURL = downloadURL;
       }
 
-      // Simpan perubahan username dan photoURL ke Firebase Database
       await updateUserData(updatedUserData);
-
-      // Perbarui di local storage dan state aplikasi
       setLocalStorageItem("user", updatedUserData);
       setUserData(updatedUserData);
 
@@ -202,15 +200,14 @@ function Profile() {
       />
       <Row className="d-flex justify-content-center py-2 ">
         <Col md={3} className="d-flex align-items-center ">
-          <Card id="profile-card">
-            <Card.Body id="profile-card-content" className="text-center">
-              <div className="profile-info py-3">
+          <Card className="profile-card">
+            <Card.Body className="profile-card-content">
+              <div className="profile-info text-center pb-3 d-flex justify-content-center align-items-center flex-column gap-3">
                 <Image
-                  id="img-profile"
+                  className="user-img-profile"
                   src={userPhoto}
-                  className="mx-auto"
-                  onError={handlePhotoError}
                   alt="Profile"
+                  onError={handlePhotoError}
                   width={100}
                   height={100}
                 />
@@ -219,7 +216,7 @@ function Profile() {
                   <p>{userData?.email}</p>
                 </div>
               </div>
-              <div className="d-grid gap-3">
+              <div className="d-grid justify-content-center align-items-center gap-3">
                 <Button className="btn-edit" onClick={handleShowModalEdit}>
                   <UserPen /> Edit Profile
                 </Button>
@@ -230,119 +227,125 @@ function Profile() {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={9} className="d-flex align-items-center">
-          <Card id="profile-card-Achievement" className="w-100">
-            <Card.Body id="profile-card-Achievement-content">
-              {/* Your Badges Section */}
-              <div className="text-white mb-4">
-                <h4 className="fw-bold">Your Badges</h4>
-              </div>
 
-              {loadingAchievements ? (
-                <Spinner animation="border" role="status">
+        <Col md={9} className="d-flex align-items-center">
+          <Card className="profile-card-achievement">
+            <Card.Body className="profile-card-achievement-content d-flex flex-column align-items-start">
+              {loading ? (
+                <Spinner
+                  animation="border"
+                  role="status"
+                  style={{ color: "#fff" }}
+                  className="m-auto"
+                >
                   <span className="visually-hidden">Loading...</span>
                 </Spinner>
-              ) : Object.keys(userAchievements).length === 0 ? (
-                // Display "You don’t have any badges" if no badges exist
-                <div className="text-white text-center">
-                  <h5>You don’t have any badges</h5>
-                </div>
               ) : (
-                <div className="badge-container d-flex flex-wrap gap-4 align-items-center mb-4">
-                  {Object.keys(userAchievements).map((game) =>
-                    Object.keys(userAchievements[game]).map((topic) => {
-                      const achievement = userAchievements[game][topic];
-                      return (
-                        <div
-                          key={topic}
-                          className="badge-item d-flex flex-column align-items-center"
-                        >
-                          {/* Badge (always displayed with tooltip) */}
-                          <OverlayTrigger
-                            placement="top"
-                            overlay={
-                              <Tooltip
-                                id={`tooltip-badge-${topic}`}
-                                className="custom-tooltip"
-                              >
-                                {achievement.badge.badgeName}
-                              </Tooltip>
-                            }
-                            container={document.body}
-                          >
-                            <div className="badge-item">
+                <>
+                  {/* Badges Section */}
+                  <div className="text-white mb-3">
+                    <h4 className="fw-bold">Your Badges</h4>
+                  </div>
+                  <div className="badge-container d-flex flex-wrap align-items-center justify-content-between">
+                    {Object.keys(userAchievements).map((game) =>
+                      Object.keys(userAchievements[game]).map((topic) => {
+                        const achievement = userAchievements[game][topic];
+                        return (
+                          <div key={topic} className="badge-item">
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={
+                                <Tooltip
+                                  id={`tooltip-badge-${topic}`}
+                                  className="custom-tooltip"
+                                >
+                                  {achievement.badge.badgeName}
+                                </Tooltip>
+                              }
+                              container={document.body}
+                            >
                               <Image
                                 src={achievement.badge.iconURL}
                                 alt={achievement.badge.badgeName}
-                                className="badge-image-profile"
+                                className="badge-image-user"
                               />
-                            </div>
-                          </OverlayTrigger>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              )}
-
-              {/* Your Achievements Section */}
-              <div className="text-white mb-4 mt-5">
-                <h4 className="fw-bold">Your Achievements</h4>
-              </div>
-
-              {loadingAchievements ? (
-                <Spinner animation="border" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </Spinner>
-              ) : Object.keys(userAchievements).length === 0 ||
-                Object.keys(userAchievements).every((game) =>
-                  Object.keys(userAchievements[game]).every(
-                    (topic) => userAchievements[game][topic].totalWins < 5
-                  )
-                ) ? (
-                // Display "You don’t have any achievements" if no achievements with wins exist
-                <div className="text-white text-center">
-                  <h5>You don’t have any achievements</h5>
-                </div>
-              ) : (
-                <div className="achievement-container d-flex flex-wrap gap-4 align-items-center mb-4">
-                  {Object.keys(userAchievements).map((game) =>
-                    Object.keys(userAchievements[game]).map((topic) => {
-                      const achievement = userAchievements[game][topic];
-
-                      // Show achievements only if totalWins >= 5
-                      if (achievement.totalWins >= 5) {
-                        return (
-                          <div
-                            key={topic}
-                            className="achievement-item d-flex flex-column align-items-center"
-                          >
-                            <div className="trophy-item mt-3">
-                              <Image
-                                src={achievement.achievement_trophy}
-                                alt={achievement.achievement_name}
-                                className="trophy-image-profile"
-                              />
-                              {/* Display the title of the achievement */}
-                              <div className="text-white mt-2">
-                                {achievement.achievement_name}
-                              </div>
-                            </div>
+                            </OverlayTrigger>
                           </div>
                         );
-                      }
+                      })
+                    )}
+                  </div>
 
-                      return null; // If totalWins < 5, do not return anything
-                    })
+                  {/* Achievements Section */}
+                  <div className="text-white mb-3 mt-4">
+                    <h4 className="fw-bold">Your Achievements</h4>
+                  </div>
+
+                  {Object.keys(userAchievements).length === 0 ||
+                  Object.keys(userAchievements).every((game) =>
+                    Object.keys(userAchievements[game]).every(
+                      (topic) => userAchievements[game][topic].totalWins < 5
+                    )
+                  ) ? (
+                    <div className="text-white text-center">
+                      <h5>You don’t have any achievements</h5>
+                    </div>
+                  ) : (
+                    <div className="achievement-container d-flex flex-wrap align-items-center justify-content-between">
+                      {Object.keys(userAchievements).map((game) =>
+                        Object.keys(userAchievements[game]).map((topic) => {
+                          const achievement = userAchievements[game][topic];
+
+                          if (achievement.totalWins >= 5) {
+                            return (
+                              <div key={topic} className="achievement-item">
+                                <div className="trophy-item d-flex justify-content-center align-items-center gap-2">
+                                  <Image
+                                    src={achievement.achievement_trophy}
+                                    alt={achievement.achievement_name}
+                                    className="trophy-image-profile"
+                                    width={70}
+                                  />
+                                  <div className="text-white fs-6">
+                                    {achievement.achievement_name}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return null;
+                        })
+                      )}
+                    </div>
                   )}
-                </div>
+
+                  {/* Potion Section */}
+                  <div className="text-white mb-3 mt-4">
+                    <h4 className="fw-bold">Your Items</h4>
+                  </div>
+                  <div className="potion-container d-flex flex-wrap align-items-center justify-content-between">
+                    <div className="potion-item">
+                      <div className="potion-item d-flex justify-content-center align-items-center gap-2">
+                        <Image
+                          src={potionData.item_img}
+                          alt={potionData.item_name}
+                          className="potion-image-profile"
+                          width={60}
+                        />
+                        <div className="text-white fs-6">
+                          x{potionData.item_count} {potionData.item_name}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
               )}
             </Card.Body>
           </Card>
         </Col>
       </Row>
 
-      {/* Modal Section */}
       <Modal
         id="modal-edit-profile"
         show={show}

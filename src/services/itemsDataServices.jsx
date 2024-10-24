@@ -7,7 +7,7 @@ export const initializeUserPotion = async (uid) => {
   }
 
   const potionData = {
-    item_name: "Potion",
+    item_name: "Potion of Evasion (POE)",
     item_count: 3,
     item_img: "/assets/game/potion.png" 
   };
@@ -34,5 +34,20 @@ export const checkIfPotionExists = async (uid) => {
   } catch (error) {
     console.error("Error checking potion data:", error);
     throw new Error("Could not check potion data");
+  }
+};
+
+export const getPotionData = async (uid) => {
+  try {
+    const potionRef = ref(database, `items/${uid}/potion`);
+    const snapshot = await get(potionRef);
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      return null; // No potion data found
+    }
+  } catch (error) {
+    console.error("Error fetching potion data:", error);
+    throw new Error("Could not fetch potion data");
   }
 };

@@ -44,7 +44,7 @@ export const getPotionData = async (uid) => {
     if (snapshot.exists()) {
       return snapshot.val();
     } else {
-      return null; // No potion data found
+      return null; 
     }
   } catch (error) {
     console.error("Error fetching potion data:", error);

@@ -31,7 +31,7 @@ export const checkIfUserExists = async (uid) => {
   }
 };
 
-export const getUserDataFromDatabase = async (uid) => {
+export const getUserData = async (uid) => {
   try {
     const usersRef = ref(database, "users/" + uid);
     const snapshot = await get(usersRef);

@@ -10,7 +10,7 @@ import {
   saveNewUserData,
   checkIfUserExists,
   updateUserData,
-  getUserDataFromDatabase,
+  getUserData,
 } from "../services/userDataService";
 import {
   initializeUserAchievement,
@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }) => {
 
       if (userExists) {
         // Jika user sudah ada, ambil data dari Firebase
-        const existingUserData = await getUserDataFromDatabase(userData.uid);
+        const existingUserData = await getUserData(userData.uid);
         userDetails = {
           displayName: existingUserData.displayName || userData.displayName,
           email: existingUserData.email || userData.email,

@@ -7,28 +7,32 @@
   overflow: hidden;
 }
 
+.shuffle-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Tetap di tengah */
+  width: 250px; /* Sesuaikan ukuran sesuai kebutuhan */
+  height: auto;
+  transition: transform 0.5s; /* Transisi yang halus saat tidak berputar */
+  transform-origin: center; /* Mengatur titik pusat rotasi */
+}
 
-.shuffle-icon-container {
-  position: fixed; /* Tetap di layar, meskipun di-scroll */
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 1000; /* Pastikan berada di atas elemen lain */
+.rotating-once {
+  animation: rotate 1s linear infinite; 
 }
 
 @keyframes rotate {
   from {
-    transform: rotate(0deg);
+    transform: rotate(0deg); /* Hanya berputar */
   }
   to {
-    transform: rotate(260deg);
+    transform: rotate(360deg);
   }
 }
 
-.shuffle-icon.rotating {
-  animation: rotate 2s linear; /* 2 detik untuk satu putaran */
-}
+
+
 
 /* CSS untuk spinner */
 .loading-spinner .spinner {
@@ -56,4 +60,22 @@
 
 .rotating-once {
   animation: rotate-once 3s ease-in-out; /* Mengubah durasi rotasi menjadi 3 detik */
+}
+
+.deck-kiri-rotate {
+  display: flex;
+  align-items: center; /* Memastikan kartu berada di tengah */
+  justify-content: center; /* Memastikan kartu berada di tengah */
+  transform: rotate(90deg); /* Memutar 90 derajat */
+  transform-origin: center; /* Mengatur titik pusat rotasi */
+  height: 100px; /* Atur tinggi sesuai kebutuhan */
+}
+
+.deck-kanan-rotate {
+  display: flex;
+  align-items: center; /* Memastikan kartu berada di tengah */
+  justify-content: center; /* Memastikan kartu berada di tengah */
+  transform: rotate(-90deg); /* Memutar 90 derajat */
+  transform-origin: center; /* Mengatur titik pusat rotasi */
+  height: 100px; /* Atur tinggi sesuai kebutuhan */
 }

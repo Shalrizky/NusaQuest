@@ -1,31 +1,25 @@
 .stackable-cards {
   position: relative;
   display: flex;
-  align-items: center;
+  justify-content: center; /* Pusatkan tumpukan */
+  align-items: flex-start; /* Memastikan kartu terletak di atas */
 }
 
 .stackable-cards .card {
   position: relative;
-  margin-left: -50px;
+  margin-left: -30px; /* Adjusted margin for a larger card size */
   transition: transform 0.3s ease, z-index 0.3s;
   cursor: pointer;
 }
 
 .stackable-cards .card:hover {
-  transform: translateX(30%) scale(1.2);
+  transform: translateY(-10px) scale(1.05); /* Efek hover yang halus */
   z-index: 10;
 }
 
-/* Tambahan untuk styling Card */
-.card-container {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
 .card-custom {
-  width: 140px;
-  height: 180px;
+  width: 150px; /* Increased width */
+  height: 180px; /* Increased height */
   border-radius: 10px;
   padding: 0.5rem;
   border: 5px solid white;
@@ -33,53 +27,9 @@
 }
 
 .card-title-custom {
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .card-text-custom {
   font-size: 0.875rem;
 }
-
-
-@keyframes moveAndGrow {
-  0% {
-    transform: translateY(100%) translateX(-50%) scale(0.8);
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0) translateX(-50%) scale(1);
-    opacity: 1;
-  }
-}
-
-.moving-card {
-  position: absolute;
-  top: 1%; /* Adjust height to align with shuffle icon */
-  left: 250%; /* Move closer to shuffle icon */
-  z-index: 100;
-  width: 220px;
-  height: 300px;
-  background-color: orange;
-  color: white;
-  display: flex;
-  padding: 2px, 2px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  border-radius: 10px;
-  text-align: center;
-  border: 5px solid white;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
-  opacity: 0;
-}
-
-.moving-card.animate {
-  animation: moveAndGrow 1s ease forwards; /* Menambahkan animasi */
-}
-
-
-

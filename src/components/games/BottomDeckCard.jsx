@@ -4,12 +4,12 @@ import '../../style/components/games/BottomDeckCard.css';
 
 const BottomDeckCard = ({ cards, onCardClick }) => {
   return (
-    <div className="card-container">
+    <div className="stackable-cards">
       {cards.map((card, index) => (
         <Card
           key={index}
           className="bg-orange text-white card-custom"
-          onClick={() => onCardClick(card, index)} // Meneruskan kartu yang diklik dan index-nya ke parent
+          onClick={() => onCardClick(card, index)}
         >
           <Card.Body>
             <Card.Title className="card-title-custom">{`Kategori: ${card.category}`}</Card.Title>

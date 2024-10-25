@@ -94,7 +94,7 @@ function Profile() {
   };
 
   const handleShowModalEdit = () => {
-    setPreviewPhoto(userData.photoURL);
+    setPreviewPhoto(userData.firebasePhotoURL || userData.googlePhotoURL );
     setShow(true);
   };
 
@@ -114,19 +114,19 @@ function Profile() {
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
-
+  
     if (!file) {
       setSelectedPhoto(null);
-      setPreviewPhoto(userData.photoURL);
+      setPreviewPhoto(userData.firebasePhotoURL || userData.googlePhotoURL );
       return;
     }
-
+  
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPreviewPhoto(reader.result);
-
+      setPreviewPhoto(reader.result); // Tampilkan pratinjau foto yang baru diunggah
+  
       const validationError = validatePhoto(file);
-
+  
       if (validationError) {
         setPhotoError(validationError);
         setSelectedPhoto(null);
@@ -137,6 +137,7 @@ function Profile() {
     };
     reader.readAsDataURL(file);
   };
+  
 
   const handleSaveChanges = async (event) => {
     event.preventDefault();
@@ -161,14 +162,11 @@ function Profile() {
       };
 
       if (selectedPhoto) {
-        const isGooglePhoto = userData.photoURL?.startsWith(
-          "https://lh3.googleusercontent.com/"
-        );
-        if (userData.photoURL && !isGooglePhoto) {
-          await deletePreviousPhoto(userData.photoURL);
+        if (userData.firebasePhotoURL) {
+          await deletePreviousPhoto(userData.firebasePhotoURL);
         }
         const { downloadURL } = await uploadPhoto(selectedPhoto, userData.uid);
-        updatedUserData.photoURL = downloadURL;
+        updatedUserData.firebasePhotoURL = downloadURL;
       }
 
       await updateUserData(updatedUserData);

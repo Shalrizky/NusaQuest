@@ -150,21 +150,21 @@ export const AuthProvider = ({ children }) => {
       const userExists = await checkIfUserExists(userData.uid);
 
       if (userExists) {
-        // Jika user sudah ada, ambil data dari Firebase
         const existingUserData = await getUserData(userData.uid);
         userDetails = {
           displayName: existingUserData.displayName || userData.displayName,
           email: existingUserData.email || userData.email,
           uid: userData.uid,
-          photoURL: existingUserData.photoURL || userData.photoURL,
+          googlePhotoURL: existingUserData.googlePhotoURL || userData.photoURL,
+          firebasePhotoURL: existingUserData.firebasePhotoURL || null,
         };
       } else {
-        // Jika user baru, gunakan data dari Google dan simpan ke database
         userDetails = {
           displayName: userData.displayName,
           email: userData.email,
           uid: userData.uid,
-          photoURL: userData.photoURL,
+          googlePhotoURL: userData.photoURL,
+          firebasePhotoURL: null,
         };
         await saveNewUserData(userDetails);
       }
@@ -178,7 +178,7 @@ export const AuthProvider = ({ children }) => {
       // Cek apakah potion sudah ada untuk user ini
       const potionExists = await checkIfPotionExists(userDetails.uid);
       if (!potionExists) {
-        await initializeUserPotion(userDetails.uid); // Inisialisasi potion untuk user baru
+        await initializeUserPotion(userDetails.uid); 
       }
 
       updateUserLoginStatus(userDetails);

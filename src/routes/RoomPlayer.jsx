@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { fetchRooms } from "../services/roomsDataServices"; 
+import { useParams, useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
+import useUserPhoto from "../hooks/useUserPhoto";
+import { fetchRooms } from "../services/roomsDataServices";
+import { getUserAchievements } from "../services/achievementDataServices";
 import { Container, Row, Col, Image, Form, Spinner } from "react-bootstrap";
 import { SendHorizontal, MessageSquareText } from "lucide-react";
 import { gsap } from "gsap";
@@ -14,6 +17,8 @@ function RoomPlayer() {
   const [loading, setLoading] = useState(true);
   const { gameID, topicID, roomID } = useParams();
   const [roomData, setRoomData] = useState(null);
+  const [achievements, setAchievements] = useState(null);
+  const [badge, setBadge] = useState(null); 
   const [chat, setChat] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [lastMessage, setLastMessage] = useState("Chat With Others");
@@ -21,17 +26,49 @@ function RoomPlayer() {
   const chatInputRef = useRef(null);
   const chatBoxRef = useRef(null);
 
-  useEffect(() => {
-    fetchRooms(topicID, gameID, (rooms) => {
-      if (rooms && rooms[roomID]) {
-        setRoomData(rooms[roomID]);
-      } else {
-        setRoomData(null);
-      }
-      setLoading(false);
-    });
-  }, [gameID, topicID, roomID]);
+  const { isLoggedIn, user } = useAuth();
+  const [userPhoto, handlePhotoError] = useUserPhoto(user);
+  const navigate = useNavigate();
 
+  // Fetch data user
+  useEffect(() => {
+    const fetchRoomAndAchievements = async () => {
+      setLoading(true);
+      try {
+        fetchRooms(topicID, gameID, (rooms) => {
+          if (rooms && rooms[roomID]) {
+            setRoomData(rooms[roomID]);
+          } else {
+            setRoomData(null);
+          }
+        });
+
+        if (isLoggedIn && user) {
+          const userAchievements = await getUserAchievements(user.uid);
+          const achievementData = userAchievements[gameID]?.[topicID];
+          if (achievementData) {
+            setAchievements(achievementData);
+            setBadge(achievementData.badge);
+          } else {
+            setAchievements(null);
+            setBadge(null);
+          }
+        } else {
+          console.warn("User is not logged in");
+          navigate("/login");
+        }
+      } catch (error) {
+        console.error("Error fetching room or user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoomAndAchievements();
+}, [gameID, topicID, roomID, isLoggedIn, user, navigate]);
+
+
+  // kode chatbox
   useEffect(() => {
     if (chat.length > 0) {
       const lastChat = chat[chat.length - 1];
@@ -39,14 +76,12 @@ function RoomPlayer() {
     }
   }, [chat]);
 
-  // Fungsi chatbox akan selalu kebawah scrollnya
   const scrollToBottom = () => {
     if (chatBoxRef.current) {
       chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
     }
   };
 
-  // Close Chatbox dengan klik di luar elemen
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -70,7 +105,7 @@ function RoomPlayer() {
   const sendMessage = (e) => {
     e.preventDefault();
     if (currentMessage.trim() !== "") {
-      setChat([...chat, { user: "Abrar", message: currentMessage }]);
+      setChat([...chat, { user: user.displayName, message: currentMessage }]);
       setCurrentMessage("");
 
       if (!isChatOpen) {
@@ -151,8 +186,17 @@ function RoomPlayer() {
           md={12}
           className="d-flex justify-content-center mt-lg-4 mb-lg-5 mb-3"
         >
-          {/* Cek apakah room adalah single player */}
-          {roomData.isSinglePlayer ? <CardVsAi /> : <CardPlayer />}
+          {roomData.isSinglePlayer ? (
+            <CardVsAi />
+          ) : (
+            <CardPlayer
+              username={user?.displayName}
+              userPhoto={userPhoto}
+              achievements={achievements} // Achievement spesifik user
+              badge={badge} // Badge spesifik user
+              handlePhotoError={handlePhotoError}
+            />
+          )}
         </Col>
         <Col
           md={12}

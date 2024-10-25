@@ -1,11 +1,11 @@
 .card-player-container {
   overflow: hidden;
-  gap: 80px;
+  gap: 100px;
 }
 
 .card-wrapper {
   width: 190px;
-  height: 420px;
+  height: 450px;
   padding: 3px;
   box-sizing: border-box;
   clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
@@ -24,7 +24,7 @@
 
 .img-card-player {
   width: 100%;
-  height: auto;
+  height: 35%;
   object-fit: cover;
 }
 
@@ -34,19 +34,36 @@
   text-align: center;
 }
 
-.badge-image {
-  width: 24px;
+.badge-section, .achievement-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; 
 }
 
-.badge-card-title {
+.badge-image, .achievement-image {
+  width: 24px;
+  flex-shrink: 0; /* Prevent the image from shrinking */
+}
+
+.badge-card-title, .achievement-name {
   color: white;
-  font-size: 14px;
+  font-size: 12px;
+  white-space: normal; /* Allow wrapping */
+  overflow: hidden; /* Hide overflowing text */
+  text-overflow: ellipsis; /* Add ellipsis for overflow */
+  line-clamp: 2;
+  -webkit-line-clamp: 2; /* Webkit-based */
+  display: -webkit-box; /* Webkit-based browsers */
+  -webkit-box-orient: vertical; /* For multi-line clamp */
+  display: box; /* Standard property */
+  box-orient: vertical; /* Standard property */
 }
 
 /* Not Available User Styles */
 .card-wrapper-notavail {
   width: 190px;
-  height: 420px;
+  height: 450px;
   box-sizing: border-box;
 }
 
@@ -67,7 +84,6 @@
 }
 
 @media (min-width: 780px) and (max-width: 1024px) {
-
   .card-wrapper,
   .card-wrapper-notavail {
     transform: scale(0.9);
@@ -80,7 +96,6 @@
 }
 
 @media (min-width: 580px) and (max-width: 780px) {
-
   .card-wrapper,
   .card-wrapper-notavail {
     transform: scale(0.8);
@@ -90,15 +105,13 @@
   .card-player-container {
     gap: 10px;
   }
-  
+
   .img-card-notavail {
     width: 60px;
   }
-
 }
 
 @media (min-width: 280px) and (max-width: 580px) {
-
   .card-wrapper,
   .card-wrapper-notavail {
     transform: scale(0.8);
@@ -125,7 +138,6 @@
 
   .card-player-container .badge-card-title {
     color: white;
-    font-size: 12px;
+    font-size: 10px;
   }
-
 }

@@ -1,4 +1,4 @@
-import { database, ref, runTransaction, remove, set } from "../firebaseConfig";
+import { database, ref, remove, set, get } from "../firebaseConfig";
 
 export const roomsParticipation = async (
   topicID,
@@ -12,37 +12,58 @@ export const roomsParticipation = async (
     database,
     `rooms/${topicID}/${gameID}/${roomID}/players/${user.uid}`
   );
+  const playersRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/players`
+  );
   const currentPlayersRef = ref(
     database,
     `rooms/${topicID}/${gameID}/${roomID}/currentPlayers`
   );
 
-  if (isJoining) {
-    // Tambahkan user ke daftar players dan perbarui jumlah currentPlayers
-    await set(playerRef, {
-      uid: user.uid,
-      displayName: user.displayName,
-      photoURL: userPhoto || "", 
-    }).catch((error) => console.error("Error adding player:", error));
+  try {
+    if (isJoining) {
+      await set(playerRef, {
+        uid: user.uid,
+        displayName: user.displayName,
+        photoURL: userPhoto || "",
+        joinedAt: Date.now(),
+      });
 
-    // Menambahkan transaksi untuk menaikkan currentPlayers
-    await runTransaction(currentPlayersRef, (currentPlayers) => {
-      return (currentPlayers || 0) + 1;
-    }).catch((error) => {
-      console.error("Error updating currentPlayers on join:", error);
-    });
-  } else {
-    // Hapus user dari daftar players dan perbarui jumlah currentPlayers
-    await remove(playerRef).catch((error) =>
-      console.error("Error removing player:", error)
-    );
+      const snapshot = await get(playersRef);
+      const playerCount = snapshot.val() ? Object.keys(snapshot.val()).length : 0;
+      await set(currentPlayersRef, playerCount);
 
-    // Menambahkan transaksi untuk mengurangi currentPlayers
-    await runTransaction(currentPlayersRef, (currentPlayers) => {
-      const newCount = (currentPlayers || 0) - 1;
-      return newCount < 0 ? 0 : newCount; // Pastikan currentPlayers tidak kurang dari 0
-    }).catch((error) => {
-      console.error("Error updating currentPlayers on leave:", error);
-    });
+    } else {
+      await remove(playerRef);
+
+      const snapshot = await get(playersRef);
+      const playerCount = snapshot.val() ? Object.keys(snapshot.val()).length : 0;
+      await set(currentPlayersRef, playerCount);
+    }
+  } catch (error) {
+    console.error("Error in roomsParticipation:", error);
+    throw error;
+  }
+};
+
+export const syncCurrentPlayers = async (topicID, gameID, roomID) => {
+  const playersRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/players`
+  );
+  const currentPlayersRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/currentPlayers`
+  );
+
+  try {
+    const snapshot = await get(playersRef);
+    const actualPlayerCount = snapshot.val() ? Object.keys(snapshot.val()).length : 0;
+    await set(currentPlayersRef, actualPlayerCount);
+    return actualPlayerCount;
+  } catch (error) {
+    console.error("Error syncing currentPlayers:", error);
+    throw error;
   }
 };

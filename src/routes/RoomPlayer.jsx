@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { database, onValue, ref, set } from "../firebaseConfig";
+import { database, onValue, ref } from "../firebaseConfig";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
 import { fetchRooms } from "../services/roomsDataServices";
 import { getUserAchievements } from "../services/achievementDataServices";
-import { roomsParticipation } from "../services/roomsParticipation";
+import { roomsParticipation, syncCurrentPlayers } from "../services/roomsParticipation";
 import useAuth from "../hooks/useAuth";
 import useUserPhoto from "../hooks/useUserPhoto";
 import Header from "../components/Header";
@@ -29,23 +29,18 @@ function RoomPlayer() {
   const prevPlayers = useRef([]);
 
   useEffect(() => {
+    // Sync currentPlayers pada mount
+    syncCurrentPlayers(topicID, gameID, roomID).catch(console.error);
+    
     if (isLoggedIn && user) {
       (async () => {
-        const playerRef = ref(
-          database,
-          `rooms/${topicID}/${gameID}/${roomID}/players/${user.uid}`
-        );
-        await set(playerRef, {
-          uid: user.uid,
-          displayName: user.displayName,
-          photoURL: userPhoto,
-          joinedAt: Date.now(),
-        });
+        await roomsParticipation(topicID, gameID, roomID, user, true, userPhoto);
       })();
 
-      const handleLeaveRoom = () => {
-        roomsParticipation(topicID, gameID, roomID, user, false);
+      const handleLeaveRoom = async () => {
+        await roomsParticipation(topicID, gameID, roomID, user, false);
       };
+
       window.addEventListener("beforeunload", handleLeaveRoom);
 
       return () => {
@@ -114,6 +109,9 @@ function RoomPlayer() {
 
       prevPlayers.current = playersArray;
       setPlayers(playersArray);
+
+      // Update currentPlayers
+      await syncCurrentPlayers(topicID, gameID, roomID);
     };
 
     const unsubscribe = onValue(playersRef, handlePlayersUpdate);

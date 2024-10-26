@@ -18,6 +18,7 @@ function RoomPlayer() {
   const [loading, setLoading] = useState(true);
   const { gameID, topicID, roomID } = useParams();
   const [roomData, setRoomData] = useState(null);
+  const [roomCapacity, setRoomCapacity] = useState(4);
   const [chat, setChat] = useState([]);
   const [lastMessage, setLastMessage] = useState("Chat With Others");
 
@@ -29,12 +30,18 @@ function RoomPlayer() {
   const prevPlayers = useRef([]);
 
   useEffect(() => {
-    // Sync currentPlayers pada mount
     syncCurrentPlayers(topicID, gameID, roomID).catch(console.error);
     
     if (isLoggedIn && user) {
       (async () => {
-        await roomsParticipation(topicID, gameID, roomID, user, true, userPhoto);
+        try {
+          await roomsParticipation(topicID, gameID, roomID, user, true, userPhoto);
+        } catch (error) {
+          if (error.message === "Room is full") {
+            alert("Room is full. Please choose another room.");
+            navigate(`/${gameID}/${topicID}`);
+          }
+        }
       })();
 
       const handleLeaveRoom = async () => {
@@ -48,7 +55,7 @@ function RoomPlayer() {
         handleLeaveRoom();
       };
     }
-  }, [isLoggedIn, user, topicID, gameID, roomID, userPhoto]);
+  }, [isLoggedIn, user, topicID, gameID, roomID, userPhoto, navigate]);
 
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -57,6 +64,7 @@ function RoomPlayer() {
         fetchRooms(topicID, gameID, (rooms) => {
           if (rooms && rooms[roomID]) {
             setRoomData(rooms[roomID]);
+            setRoomCapacity(rooms[roomID].capacity || 4);
           } else {
             setRoomData(null);
           }
@@ -100,7 +108,7 @@ function RoomPlayer() {
 
       playersArray = playersArray
         .sort((a, b) => a.joinedAt - b.joinedAt)
-        .slice(0, 4);
+        .slice(0, roomCapacity);
 
       const latestPlayer = playersArray.find(
         (p) => !prevPlayers.current.some((prevPlayer) => prevPlayer?.uid === p.uid)
@@ -110,13 +118,12 @@ function RoomPlayer() {
       prevPlayers.current = playersArray;
       setPlayers(playersArray);
 
-      // Update currentPlayers
       await syncCurrentPlayers(topicID, gameID, roomID);
     };
 
     const unsubscribe = onValue(playersRef, handlePlayersUpdate);
     return () => unsubscribe();
-  }, [topicID, gameID, roomID]);
+  }, [topicID, gameID, roomID, roomCapacity]);
 
   if (loading || !roomData) {
     return (
@@ -128,7 +135,7 @@ function RoomPlayer() {
     );
   }
 
-  const totalSlots = 4;
+  const totalSlots = roomCapacity;
   const playerBadge = players.find((player) => player.uid === user.uid)?.badge;
 
   const playerCards = roomData.isSinglePlayer ? (
@@ -142,7 +149,7 @@ function RoomPlayer() {
     />
   ) : (
     [...players, ...Array(totalSlots - players.length).fill(null)]
-      .slice(0, 4)
+      .slice(0, totalSlots)
       .map((player, index) =>
         player ? (
           <CardPlayer

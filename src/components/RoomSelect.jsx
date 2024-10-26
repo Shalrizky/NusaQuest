@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Row } from "react-bootstrap";
-import { useNavigate, useParams } from "react-router-dom"; // Import useNavigate dan useParams
+import { useNavigate, useParams } from "react-router-dom";
+import { database, ref, onValue } from "../firebaseConfig";
 import Room1 from "../assets/common/room-select-1.png";
 import Room2 from "../assets/common/room-select-2.png";
 import Room3 from "../assets/common/room-select-3.png";
@@ -11,14 +12,25 @@ import RoomActive2 from "../assets/common/room-select-active-2.png";
 import RoomActive3 from "../assets/common/room-select-active-3.png";
 import RoomActive4 from "../assets/common/room-select-active-4.png";
 import RoomActiveVsAi from "../assets/common/room-select-active-vsAI.png";
-import { gsap } from "gsap"; 
+import { gsap } from "gsap";
 import "../style/components/RoomSelect.css";
 
 function RoomSelect({ closeRoomSelect }) {
-  const [hoveredRoom, setHoveredRoom] = useState(null); 
-  const roomSelectRef = useRef(null); 
-  const navigate = useNavigate(); 
-  const { gameID, topicID } = useParams(); 
+  const [hoveredRoom, setHoveredRoom] = useState(null);
+  const [roomsData, setRoomsData] = useState({});
+  const roomSelectRef = useRef(null);
+  const navigate = useNavigate();
+  const { gameID, topicID } = useParams();
+
+  useEffect(() => {
+    const roomsRef = ref(database, `rooms/${topicID}/${gameID}`);
+    const unsubscribe = onValue(roomsRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      setRoomsData(data);
+    });
+
+    return () => unsubscribe();
+  }, [topicID, gameID]);
 
   useEffect(() => {
     gsap.fromTo(
@@ -28,18 +40,32 @@ function RoomSelect({ closeRoomSelect }) {
     );
   }, []);
 
-  // Fungsi untuk menghentikan propagasi klik di dalam kontainer
   const stopPropagation = (e) => {
     e.stopPropagation();
   };
 
-  // Fungsi untuk meng-handle klik pada Room
-  const handleRoomClick = (roomNumber) => {
-    navigate(`/${gameID}/${topicID}/room${roomNumber}`); 
-  };
-  
+  const handleRoomClick = async (roomNumber) => {
+    // Jika room 5 (VS AI), langsung navigate
+    if (roomNumber === 5) {
+      navigate(`/${gameID}/${topicID}/room${roomNumber}`);
+      return;
+    }
 
-  // Mapping antara index room dan image untuk room dan room aktif
+    // Untuk room multiplayer, check kapasitas
+    const roomData = roomsData[`room${roomNumber}`];
+    if (roomData) {
+      const currentPlayers = roomData.currentPlayers || 0;
+      const capacity = roomData.capacity || 4;
+
+      if (currentPlayers >= capacity) {
+        alert("This room is full. Please choose another room.");
+        return;
+      }
+    }
+
+    navigate(`/${gameID}/${topicID}/room${roomNumber}`);
+  };
+
   const roomImages = {
     1: { normal: Room1, active: RoomActive1 },
     2: { normal: Room2, active: RoomActive2 },
@@ -59,20 +85,28 @@ function RoomSelect({ closeRoomSelect }) {
           {[1, 2, 3, 4, 5].map((roomNumber) => (
             <div
               key={roomNumber}
-              className="room-box mx-lg-3 mx-2"
+              className="room-box"
               onMouseEnter={() => setHoveredRoom(roomNumber)}
               onMouseLeave={() => setHoveredRoom(null)}
-              onClick={() => handleRoomClick(roomNumber)} 
+              onClick={() => handleRoomClick(roomNumber)}
             >
-              <img
-                src={
-                  hoveredRoom === roomNumber
-                    ? roomImages[roomNumber].active
-                    : roomImages[roomNumber].normal
-                }
-                alt={`Room ${roomNumber}`}
-                className="room-img"
-              />
+              <div className="room-content">
+                {/* Hanya tampilkan player counter untuk room 1-4 */}
+                {roomNumber !== 5 && (
+                  <div className="player-counter">
+                    {(roomsData[`room${roomNumber}`]?.currentPlayers || 0)} / {(roomsData[`room${roomNumber}`]?.capacity || 4)}
+                  </div>
+                )}
+                <img
+                  src={
+                    hoveredRoom === roomNumber
+                      ? roomImages[roomNumber].active
+                      : roomImages[roomNumber].normal
+                  }
+                  alt={`Room ${roomNumber}`}
+                  className="room-img"
+                />
+              </div>
             </div>
           ))}
         </div>

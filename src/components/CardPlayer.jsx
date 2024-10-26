@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Col, Image } from "react-bootstrap";
-import vector from "../assets/common/Vector.png";
+import vector from "../assets/common/Vector.png"; // Placeholder image
 import { Award } from "lucide-react";
 import "../style/components/CardPlayer.css";
 
@@ -10,8 +10,25 @@ const CardPlayer = ({
   achievements,
   badge,
   handlePhotoError,
+  isAvailable = true, // Flag untuk menentukan apakah card ini milik pemain atau placeholder
 }) => {
-  // Ambil nama badge dan total wins, default jika tidak ada untuk user
+  // Jika isAvailable adalah false, tampilkan tampilan "not available"
+  if (!isAvailable) {
+    return (
+      <Col className="card-player-container d-flex justify-content-center align-items-center px-4">
+        <div className="card-wrapper-notavail">
+          <Card className="player-not-available">
+            <Card.Body className="d-flex flex-column justify-content-top align-items-center mt-5 text-center gap-3">
+              <Image src={vector} className="img-card-notavail img-fluid" width={80} />
+              <Card.Title className="title">Menunggu Pemain Lain Untuk Masuk</Card.Title>
+            </Card.Body>
+          </Card>
+        </div>
+      </Col>
+    );
+  }
+
+  // Tampilkan card pemain jika isAvailable adalah true
   const badgeName = badge?.badgeName
     ? badge.badgeName.split(" ")[0] + " " + badge.badgeName.split(" ")[1]
     : "No Badge";
@@ -26,12 +43,12 @@ const CardPlayer = ({
         <Card className="card-player d-flex justify-content-center align-items-center">
           <Card.Img
             variant="top"
-            src={userPhoto}
+            src={userPhoto || vector} // Default ke placeholder jika tidak ada foto pengguna
             className="img-card-player"
             onError={handlePhotoError}
           />
           <Card.Body>
-            <Card.Title className="title">{username}</Card.Title>
+            <Card.Title className="title">{username || "Pemain Tidak Dikenal"}</Card.Title>
 
             {/* Bagian Badge dan Total Wins */}
             {badge?.iconURL ? (
@@ -72,24 +89,6 @@ const CardPlayer = ({
           </Card.Body>
         </Card>
       </div>
-
-      {/* Kartu Placeholder untuk pemain lain */}
-      {[...Array(3)].map((_, index) => (
-        <div key={index} className="card-wrapper-notavail">
-          <Card className="player-not-available">
-            <Card.Body className="d-flex flex-column justify-content-top align-items-center mt-5 text-center gap-3">
-              <Image
-                src={vector}
-                className="img-card-notavail img-fluid"
-                width={80}
-              />
-              <Card.Title className="title">
-                Menunggu Pemain Lain Untuk Masuk
-              </Card.Title>
-            </Card.Body>
-          </Card>
-        </div>
-      ))}
     </Col>
   );
 };

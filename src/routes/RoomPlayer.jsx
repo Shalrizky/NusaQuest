@@ -84,7 +84,7 @@ function RoomPlayer() {
         showTextHeader={roomData.title}
         showBackIcon={true}
       />
-
+  
       <Row className="d-flex flex-column justify-content-center align-items-center text-center">
         <Col md={12} className="desc-title">
           <p>{roomData.description}</p>
@@ -94,13 +94,19 @@ function RoomPlayer() {
           className="d-flex justify-content-center mt-lg-4 mb-lg-5 mb-3"
         >
           {roomData.isSinglePlayer ? (
-            <CardVsAi />
+            <CardVsAi
+              username={user?.displayName}
+              userPhoto={userPhoto}
+              achievements={achievements}
+              badge={badge}
+              handlePhotoError={handlePhotoError}
+            />
           ) : (
             <CardPlayer
               username={user?.displayName}
               userPhoto={userPhoto}
-              achievements={achievements} // Achievement spesifik user
-              badge={badge} // Badge spesifik user
+              achievements={achievements}
+              badge={badge}
               handlePhotoError={handlePhotoError}
             />
           )}
@@ -115,16 +121,20 @@ function RoomPlayer() {
           </button>
         </Col>
       </Row>
-
-      <ChatPlayer
-        chat={chat}
-        setChat={setChat}
-        user={user}
-        lastMessage={lastMessage}
-        setLastMessage={setLastMessage}
-      />
+  
+      {/* Render ChatPlayer only if it's a multiplayer room */}
+      {!roomData.isSinglePlayer && (
+        <ChatPlayer
+          chat={chat}
+          setChat={setChat}
+          user={user}
+          lastMessage={lastMessage}
+          setLastMessage={setLastMessage}
+        />
+      )}
     </Container>
   );
+  
 }
 
 export default RoomPlayer;

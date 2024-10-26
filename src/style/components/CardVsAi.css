@@ -1,11 +1,11 @@
 .card-vs-ai-container {
    overflow: hidden;
-   gap: 80px;
+   gap: 100px;
 }
 
 .card-wrapper-vs-ai {
    width: 190px;
-   height: 420px;
+   height: 450px;
    padding: 3px;
    box-sizing: border-box;
    clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
@@ -23,31 +23,59 @@
       inset -8px 0 20px -10px #6fdce3;
 }
 
+
 .img-card-player-vs-ai {
    width: 100%;
+   height: 35%;
    object-fit: cover;
 }
-
 
 .card-player-vs-ai .title,
 .card-ai .title {
    color: white;
    font-size: 18px;
+   text-align: center;
 }
 
-.badge-image-vs-ai {
+.badge-section-vs-ai,
+.achievement-section-vs-ai {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 8px;
+}
+
+.badge-image-vs-ai,
+.achievement-image-vs-ai {
    width: 24px;
+   flex-shrink: 0;
 }
 
-.badge-card-title-vs-ai {
+.badge-card-title-vs-ai,
+.achievement-name-vs-ai {
    color: white;
-   font-size: 14px;
+   font-size: 12px;
+   white-space: normal;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   line-clamp: 2;
+   -webkit-line-clamp: 2;
+   display: -webkit-box;
+   -webkit-box-orient: vertical;
+   box-orient: vertical;
+}
+
+.empty-icon-vs-ai {
+   width: 24px;
+   height: 24px;
+   color: rgba(255, 255, 255, 0.2);
+   flex-shrink: 0;
 }
 
 /* Add User Card Styles */
 .card-wrapper-add-ai {
    width: 190px;
-   height: 420px;
+   height: 450px;
    box-sizing: border-box;
 }
 
@@ -90,7 +118,7 @@
 
    .img-card-card-add-ai {
       width: 60px;
-    }
+   }
 }
 
 @media (min-width: 280px) and (max-width: 580px) {
@@ -109,13 +137,24 @@
       width: 30px;
    }
 
-   .card-player-vs-ai .title,
-   .card-ai .title {
+   .card-player-vs-ai .title {
       font-size: 12px;
+      text-align: center;
    }
 
-   .badge-card-title-vs-ai {
-      font-size: 12px;
+   .card-wrapper-add-ai .title {
+      font-size: 10px;
+      text-align: center;
    }
-   
+
+   .badge-image-vs-ai,
+   .achievement-image-vs-ai {
+      width: 20px;
+   }
+
+   .badge-card-title-vs-ai,
+   .achievement-name-vs-ai {
+      font-size: 10px;
+   }
+
 }

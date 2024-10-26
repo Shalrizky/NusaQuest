@@ -11,7 +11,7 @@ const CardPlayer = ({
   badge,
   handlePhotoError,
 }) => {
-  // Ambil nama badge dan total wins, default jika tidak ada
+  // Ambil nama badge dan total wins, default jika tidak ada untuk user
   const badgeName = badge?.badgeName
     ? badge.badgeName.split(" ")[0] + " " + badge.badgeName.split(" ")[1]
     : "No Badge";

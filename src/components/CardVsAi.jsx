@@ -1,16 +1,29 @@
 import React, { useState, useRef } from "react";
 import { Card, Col, Image } from "react-bootstrap";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Award } from "lucide-react";
 import { gsap } from "gsap";
-import ImagePlayer from "../assets/common/image-player-1.png";
-import NusaQuestLogo from "../assets/common/nusaQuest-logo.png";
-// import badge1 from "../assets/common/badge.png";
 import vector from "../assets/common/Vector.png";
+import NusaQuestLogo from "../assets/common/nusaQuest-logo.png";
 import "../style/components/CardVsAi.css";
 
-const CardVsAi = () => {
+const CardVsAi = ({
+  username,
+  userPhoto,
+  achievements,
+  badge,
+  handlePhotoError,
+}) => {
   const [aiCards, setAiCards] = useState([false, false, false]);
   const cardRefs = useRef([]);
+
+  // Ambil nama badge dan total wins, default jika tidak ada untuk user
+  const badgeName = badge?.badgeName
+    ? badge.badgeName.split(" ")[0] + " " + badge.badgeName.split(" ")[1]
+    : "No Badge";
+  const totalWins =
+    badge?.badgeName && badge.badgeName.match(/\d+/)
+      ? parseInt(badge.badgeName.match(/\d+/)[0], 10)
+      : 0;
 
   const handleAddAiClick = (index) => {
     const newAiCards = [...aiCards];
@@ -50,15 +63,48 @@ const CardVsAi = () => {
         <Card className="card-player-vs-ai d-flex justify-content-center align-items-center">
           <Card.Img
             variant="top"
-            src={ImagePlayer}
+            src={userPhoto}
             className="img-card-player-vs-ai"
+            onError={handlePhotoError}
           />
           <Card.Body>
-            <Card.Title className="title">KAMAL ABRAR</Card.Title>
-            <div className="d-flex flex-lg-row flex-column align-items-center gap-1 text-center">
-              {/* <Image src={badge1} alt="badge" className="badge-image-vs-ai" /> */}
-              <span className="badge-card-title-vs-ai">Master Kuliner</span>
-            </div>
+            <Card.Title className="title">{username}</Card.Title>
+
+            {badge?.iconURL ? (
+              <div className="badge-section-vs-ai mt-3 text-start">
+                <Image
+                  src={badge.iconURL}
+                  alt="Badge Icon"
+                  className="badge-image-vs-ai"
+                />
+                <span className="badge-card-title-vs-ai">
+                  {badgeName} {totalWins ? `(${totalWins} Wins)` : ""}
+                </span>
+              </div>
+            ) : (
+              <div className="badge-section-vs-ai mt-3 text-start">
+                <span className="badge-card-title">No Badge</span>
+              </div>
+            )}
+
+            {/* Bagian Achievement */}
+            {totalWins >= 5 && achievements?.achievement_name ? (
+              <div className="achievement-section-vs-ai mt-3 text-start">
+                <Image
+                  src={achievements.achievement_trophy}
+                  alt="Achievement Image"
+                  className="achievement-image-vs-ai"
+                />
+                <span className="achievement-name-vs-ai">
+                  {achievements.achievement_name}
+                </span>
+              </div>
+            ) : (
+              <div className="achievement-section-vs-ai mt-3 text-start">
+                <Award className="achievement-image empty-icon-vs-ai" />
+                <span className="achievement-name">No Achievement</span>
+              </div>
+            )}
           </Card.Body>
         </Card>
       </div>

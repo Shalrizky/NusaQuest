@@ -62,7 +62,7 @@
 .empty-icon {
   width: 24px;
   height: 24px;
-  color: rgba(255, 255, 255, 0.2); /* Warna abu-abu transparan */
+  color: rgba(255, 255, 255, 0.2); 
   flex-shrink: 0;
 }
 

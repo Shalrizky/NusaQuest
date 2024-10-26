@@ -34,38 +34,39 @@
   text-align: center;
 }
 
-.badge-section, .achievement-section {
+.badge-section,
+.achievement-section {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px; 
+  gap: 8px;
 }
 
-.badge-image, .achievement-image {
+.badge-image,
+.achievement-image {
   width: 24px;
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
-.badge-card-title, .achievement-name {
+.badge-card-title,
+.achievement-name {
   color: white;
   font-size: 12px;
-  white-space: normal; 
-  overflow: hidden;
-  text-overflow: ellipsis; 
-  line-clamp: 2;
-  -webkit-line-clamp: 2; 
-  display: -webkit-box; 
-  -webkit-box-orient: vertical; 
-  box-orient: vertical; 
+  overflow: hidden; 
+  text-overflow: ellipsis;
+  display: block;
+  white-space: normal;
+  line-height: 1.2em; 
+  max-height: 2.4em; 
+  width: 100%; 
 }
 
 .empty-icon {
   width: 24px;
   height: 24px;
-  color: rgba(255, 255, 255, 0.2); 
+  color: rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
 }
-
 
 /* Not Available User Styles */
 .card-wrapper-notavail {
@@ -91,26 +92,28 @@
 }
 
 @media (min-width: 780px) and (max-width: 1024px) {
+
   .card-wrapper,
   .card-wrapper-notavail {
-    transform: scale(0.9);
-    height: 380px;
+    width: 180px;
+    height: 400px;
   }
 
   .card-player-container {
-    gap: 20px;
+    gap: 30px;
   }
 }
 
 @media (min-width: 580px) and (max-width: 780px) {
+
   .card-wrapper,
   .card-wrapper-notavail {
-    transform: scale(0.8);
+    width: 130px;
     height: 350px;
   }
 
   .card-player-container {
-    gap: 10px;
+    gap: 25px;
   }
 
   .img-card-notavail {
@@ -119,14 +122,15 @@
 }
 
 @media (min-width: 280px) and (max-width: 580px) {
+
   .card-wrapper,
   .card-wrapper-notavail {
-    transform: scale(0.8);
-    height: 280px;
+    width: 100px;
+    height: 300px;
   }
 
   .card-player-container {
-    gap: 6px;
+    gap: 20px;
   }
 
   .img-card-notavail {
@@ -143,11 +147,13 @@
     text-align: center;
   }
 
-  .badge-image, .achievement-image {
+  .badge-image,
+  .achievement-image {
     width: 20px;
   }
-  
-  .badge-card-title, .achievement-name {
+
+  .badge-card-title,
+  .achievement-name {
     font-size: 10px;
   }
 }

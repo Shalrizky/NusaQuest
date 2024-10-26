@@ -1,19 +1,18 @@
-// RoomPlayer.js
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { database, onValue, ref, set } from "../firebaseConfig";
 import { useParams, useNavigate } from "react-router-dom";
-import useAuth from "../hooks/useAuth";
-import useUserPhoto from "../hooks/useUserPhoto";
+import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
 import { fetchRooms } from "../services/roomsDataServices";
 import { getUserAchievements } from "../services/achievementDataServices";
 import { roomsParticipation } from "../services/roomsParticipation";
-import { onValue, ref } from "firebase/database";
-import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
+import useAuth from "../hooks/useAuth";
+import useUserPhoto from "../hooks/useUserPhoto";
 import Header from "../components/Header";
 import CardPlayer from "../components/CardPlayer";
+import CardVsAi from "../components/CardVsAi";
 import ChatPlayer from "../components/ChatPlayer";
 import PlayGameIcon from "../assets/common/play-game-icon.svg";
 import "../style/routes/RoomPlayer.css";
-import { database } from "../firebaseConfig";
 
 function RoomPlayer() {
   const [loading, setLoading] = useState(true);
@@ -26,15 +25,26 @@ function RoomPlayer() {
   const [userPhoto, handlePhotoError] = useUserPhoto(user);
   const navigate = useNavigate();
   const [players, setPlayers] = useState([]);
+  const [newPlayerUid, setNewPlayerUid] = useState(null);
+  const prevPlayers = useRef([]);
 
-  // Menambahkan pengguna ke room saat halaman dimuat
   useEffect(() => {
     if (isLoggedIn && user) {
-      roomsParticipation(topicID, gameID, roomID, user, true, userPhoto);
+      (async () => {
+        const playerRef = ref(
+          database,
+          `rooms/${topicID}/${gameID}/${roomID}/players/${user.uid}`
+        );
+        await set(playerRef, {
+          uid: user.uid,
+          displayName: user.displayName,
+          photoURL: userPhoto,
+          joinedAt: Date.now(),
+        });
+      })();
 
-      // Fungsi untuk menghapus pengguna dari room
       const handleLeaveRoom = () => {
-        roomsParticipation(topicID, gameID, roomID, user, false, userPhoto);
+        roomsParticipation(topicID, gameID, roomID, user, false);
       };
       window.addEventListener("beforeunload", handleLeaveRoom);
 
@@ -45,7 +55,6 @@ function RoomPlayer() {
     }
   }, [isLoggedIn, user, topicID, gameID, roomID, userPhoto]);
 
-  // Memuat data room dan validasi user login
   useEffect(() => {
     const fetchRoomData = async () => {
       setLoading(true);
@@ -73,29 +82,44 @@ function RoomPlayer() {
     fetchRoomData();
   }, [gameID, topicID, roomID, isLoggedIn, user, navigate]);
 
-  // Mengambil data player dan achievement secara individual
   useEffect(() => {
-    const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
-    const unsubscribe = onValue(playersRef, async (snapshot) => {
-      const playersData = snapshot.val() || {};
-      const playersArray = await Promise.all(
-        Object.values(playersData).slice(0, 4).map(async (player) => {
-          const playerAchievements = await getUserAchievements(player.uid);
-          const playerAchievementData = playerAchievements[gameID]?.[topicID];
-          return {
-            ...player,
-            achievements: playerAchievementData,
-            badge: playerAchievementData ? playerAchievementData.badge : null,
-          };
-        })
-      );
-      setPlayers(playersArray);
-    });
+    const playersRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/players`
+    );
 
+    const handlePlayersUpdate = async (snapshot) => {
+      const playersData = snapshot.val() || {};
+      const playerPromises = Object.values(playersData).map(async (player) => {
+        const playerAchievements = await getUserAchievements(player.uid);
+        const playerAchievementData = playerAchievements[gameID]?.[topicID];
+
+        return {
+          ...player,
+          achievements: playerAchievementData,
+          badge: playerAchievementData ? playerAchievementData.badge : null,
+        };
+      });
+
+      let playersArray = await Promise.all(playerPromises);
+
+      playersArray = playersArray
+        .sort((a, b) => a.joinedAt - b.joinedAt)
+        .slice(0, 4);
+
+      const latestPlayer = playersArray.find(
+        (p) => !prevPlayers.current.some((prevPlayer) => prevPlayer?.uid === p.uid)
+      );
+      setNewPlayerUid(latestPlayer?.uid || null);
+
+      prevPlayers.current = playersArray;
+      setPlayers(playersArray);
+    };
+
+    const unsubscribe = onValue(playersRef, handlePlayersUpdate);
     return () => unsubscribe();
   }, [topicID, gameID, roomID]);
 
-  // Menampilkan loading spinner jika data belum siap
   if (loading || !roomData) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
@@ -106,45 +130,82 @@ function RoomPlayer() {
     );
   }
 
-  // Menampilkan placeholder atau data pemain jika kurang dari 4
   const totalSlots = 4;
-  const playerCards = players
-    .concat(Array(totalSlots - players.length).fill(null))
-    .map((player, index) =>
-      player ? (
-        <CardPlayer
-          key={player.uid}
-          username={player.displayName}
-          userPhoto={player.photoURL}
-          achievements={player.achievements}
-          badge={player.badge}
-          handlePhotoError={handlePhotoError}
-          isAvailable={true}
-        />
-      ) : (
-        <CardPlayer key={`not-available-${index}`} isAvailable={false} />
+  const playerBadge = players.find((player) => player.uid === user.uid)?.badge;
+
+  const playerCards = roomData.isSinglePlayer ? (
+    <CardVsAi
+      key="vs-ai-card"
+      username={user.displayName}
+      userPhoto={userPhoto}
+      handlePhotoError={handlePhotoError}
+      badge={playerBadge}
+      isAvailable={true}
+    />
+  ) : (
+    [...players, ...Array(totalSlots - players.length).fill(null)]
+      .slice(0, 4)
+      .map((player, index) =>
+        player ? (
+          <CardPlayer
+            key={player.uid}
+            username={player.displayName}
+            userPhoto={player.photoURL}
+            achievements={player.achievements}
+            badge={player.badge}
+            handlePhotoError={handlePhotoError}
+            isAvailable={true}
+            isNew={player.uid === newPlayerUid}
+            playerIndex={index}
+          />
+        ) : (
+          <CardPlayer 
+            key={`not-available-${index}`} 
+            isAvailable={false}
+            playerIndex={index}
+          />
+        )
       )
-    );
+  );
 
   return (
     <Container fluid className="lobbyroom-container d-flex flex-column">
-      <Header showLogoIcon={false} showIcons={true} showTextHeader={roomData.title} showBackIcon={true} />
+      <Header
+        showLogoIcon={false}
+        showIcons={true}
+        showTextHeader={roomData.title}
+        showBackIcon={true}
+      />
+
       <Row className="d-flex flex-column justify-content-center align-items-center text-center">
         <Col md={12} className="desc-title">
           <p>{roomData.description}</p>
         </Col>
-        <Col md={12} className="d-flex justify-content-center mt-lg-4 mb-lg-5 mb-3">
+        <Col
+          md={12}
+          className="d-flex justify-content-center mt-lg-4 mb-lg-5 mb-3"
+        >
           {playerCards}
         </Col>
-        <Col md={12} className="d-flex justify-content-center align-items-center mb-4">
+        <Col
+          md={12}
+          className="d-flex justify-content-center align-items-center mb-4"
+        >
           <button className="btn-start-game d-flex align-items-center justify-content-center">
             <Image className="icon-start me-2" src={PlayGameIcon} />
             Start Game
           </button>
         </Col>
       </Row>
+
       {!roomData.isSinglePlayer && (
-        <ChatPlayer chat={chat} setChat={setChat} user={user} lastMessage={lastMessage} setLastMessage={setLastMessage} />
+        <ChatPlayer
+          chat={chat}
+          setChat={setChat}
+          user={user}
+          lastMessage={lastMessage}
+          setLastMessage={setLastMessage}
+        />
       )}
     </Container>
   );

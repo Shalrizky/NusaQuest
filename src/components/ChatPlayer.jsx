@@ -1,5 +1,4 @@
-// ChatPlayer.jsx
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Row, Col, Form } from "react-bootstrap";
 import { SendHorizontal, MessageSquareText } from "lucide-react";
 import { gsap } from "gsap";

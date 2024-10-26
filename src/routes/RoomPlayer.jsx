@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import useUserPhoto from "../hooks/useUserPhoto";
 import { fetchRooms } from "../services/roomsDataServices";
 import { getUserAchievements } from "../services/achievementDataServices";
-import { Container, Row, Col, Image, Form, Spinner } from "react-bootstrap";
-import { SendHorizontal, MessageSquareText } from "lucide-react";
-import { gsap } from "gsap";
+import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
 import Header from "../components/Header";
 import CardPlayer from "../components/CardPlayer";
 import CardVsAi from "../components/CardVsAi";
+import ChatPlayer from "../components/ChatPlayer";
 import PlayGameIcon from "../assets/common/play-game-icon.svg";
 import "../style/routes/RoomPlayer.css";
 
@@ -18,13 +17,9 @@ function RoomPlayer() {
   const { gameID, topicID, roomID } = useParams();
   const [roomData, setRoomData] = useState(null);
   const [achievements, setAchievements] = useState(null);
-  const [badge, setBadge] = useState(null); 
+  const [badge, setBadge] = useState(null);
   const [chat, setChat] = useState([]);
-  const [currentMessage, setCurrentMessage] = useState("");
   const [lastMessage, setLastMessage] = useState("Chat With Others");
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const chatInputRef = useRef(null);
-  const chatBoxRef = useRef(null);
 
   const { isLoggedIn, user } = useAuth();
   const [userPhoto, handlePhotoError] = useUserPhoto(user);
@@ -65,95 +60,7 @@ function RoomPlayer() {
     };
 
     fetchRoomAndAchievements();
-}, [gameID, topicID, roomID, isLoggedIn, user, navigate]);
-
-
-  // kode chatbox
-  useEffect(() => {
-    if (chat.length > 0) {
-      const lastChat = chat[chat.length - 1];
-      setLastMessage(`${lastChat.user}: ${lastChat.message}`);
-    }
-  }, [chat]);
-
-  const scrollToBottom = () => {
-    if (chatBoxRef.current) {
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        chatBoxRef.current &&
-        !chatBoxRef.current.contains(event.target) &&
-        chatInputRef.current &&
-        !chatInputRef.current.contains(event.target) &&
-        isChatOpen
-      ) {
-        closeChatBox();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isChatOpen]);
-
-  const sendMessage = (e) => {
-    e.preventDefault();
-    if (currentMessage.trim() !== "") {
-      setChat([...chat, { user: user.displayName, message: currentMessage }]);
-      setCurrentMessage("");
-
-      if (!isChatOpen) {
-        openChatBox();
-      }
-      setTimeout(() => scrollToBottom(), 50);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      sendMessage(e);
-    }
-  };
-
-  const openChatBox = () => {
-    const chatBox = chatBoxRef.current;
-    setIsChatOpen(true);
-
-    gsap.fromTo(
-      chatBox,
-      { opacity: 0, y: 50, display: "block" },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power3.inOut" }
-    );
-  };
-
-  const closeChatBox = () => {
-    const chatBox = chatBoxRef.current;
-
-    gsap.to(chatBox, {
-      opacity: 0,
-      y: 50,
-      duration: 0.5,
-      ease: "power2.inOut",
-      onComplete: () => {
-        gsap.set(chatBox, { display: "none" });
-        setIsChatOpen(false);
-      },
-    });
-  };
-
-  const toggleChat = () => {
-    if (isChatOpen) {
-      closeChatBox();
-    } else {
-      openChatBox();
-    }
-  };
+  }, [gameID, topicID, roomID, isLoggedIn, user, navigate]);
 
   if (loading) {
     return (
@@ -209,42 +116,13 @@ function RoomPlayer() {
         </Col>
       </Row>
 
-      <Row className="chat-wrapper align-items-center mt-auto position-relative ">
-        <Col xs={8} sm={6} md={5} lg={4}>
-          <div className="chat-input-form d-flex align-items-center justify-content-center position-relative">
-            <button className="btn-chat-box" onClick={toggleChat}>
-              <MessageSquareText />
-            </button>
-
-            <Form.Control
-              ref={chatInputRef}
-              className="chat-input"
-              aria-label="Type your message"
-              placeholder={lastMessage}
-              value={currentMessage}
-              onChange={(e) => setCurrentMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-
-            <button
-              type="submit"
-              className="btn-send-chat"
-              onClick={sendMessage}
-            >
-              <SendHorizontal />
-            </button>
-
-            <div ref={chatBoxRef} className="chat-box">
-              {chat.map((chatMessage, index) => (
-                <div key={index} className="chat-message">
-                  <span className="sender-name">{chatMessage.user} :</span>{" "}
-                  {chatMessage.message}
-                </div>
-              ))}
-            </div>
-          </div>
-        </Col>
-      </Row>
+      <ChatPlayer
+        chat={chat}
+        setChat={setChat}
+        user={user}
+        lastMessage={lastMessage}
+        setLastMessage={setLastMessage}
+      />
     </Container>
   );
 }

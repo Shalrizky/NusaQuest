@@ -43,22 +43,29 @@
 
 .badge-image, .achievement-image {
   width: 24px;
-  flex-shrink: 0; /* Prevent the image from shrinking */
+  flex-shrink: 0; 
 }
 
 .badge-card-title, .achievement-name {
   color: white;
   font-size: 12px;
-  white-space: normal; /* Allow wrapping */
-  overflow: hidden; /* Hide overflowing text */
-  text-overflow: ellipsis; /* Add ellipsis for overflow */
+  white-space: normal; 
+  overflow: hidden;
+  text-overflow: ellipsis; 
   line-clamp: 2;
-  -webkit-line-clamp: 2; /* Webkit-based */
-  display: -webkit-box; /* Webkit-based browsers */
-  -webkit-box-orient: vertical; /* For multi-line clamp */
-  display: box; /* Standard property */
-  box-orient: vertical; /* Standard property */
+  -webkit-line-clamp: 2; 
+  display: -webkit-box; 
+  -webkit-box-orient: vertical; 
+  box-orient: vertical; 
 }
+
+.empty-icon {
+  width: 24px;
+  height: 24px;
+  color: rgba(255, 255, 255, 0.2); /* Warna abu-abu transparan */
+  flex-shrink: 0;
+}
+
 
 /* Not Available User Styles */
 .card-wrapper-notavail {
@@ -136,8 +143,11 @@
     text-align: center;
   }
 
-  .card-player-container .badge-card-title {
-    color: white;
+  .badge-image, .achievement-image {
+    width: 20px;
+  }
+  
+  .badge-card-title, .achievement-name {
     font-size: 10px;
   }
 }

@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, Col, Image } from "react-bootstrap";
 import vector from "../assets/common/Vector.png";
+import { Award } from "lucide-react";
 import "../style/components/CardPlayer.css";
 
 const CardPlayer = ({
@@ -33,7 +34,6 @@ const CardPlayer = ({
             <Card.Title className="title">{username}</Card.Title>
 
             {/* Bagian Badge dan Total Wins */}
-
             {badge?.iconURL ? (
               <div className="badge-section mt-3 text-start">
                 <Image
@@ -65,6 +65,7 @@ const CardPlayer = ({
               </div>
             ) : (
               <div className="achievement-section mt-3 text-start">
+                <Award className="achievement-image empty-icon" />
                 <span className="achievement-name">No Achievement</span>
               </div>
             )}

@@ -1,37 +1,102 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Row, Col, Form } from "react-bootstrap";
 import { SendHorizontal, MessageSquareText } from "lucide-react";
 import { gsap } from "gsap";
+import {
+  sendMessageToChat,
+  listenToChatMessages,
+} from "../services/roomsDataServices";
 import "../style/components/ChatPlayer.css";
 
-const ChatPlayer = ({ chat, setChat, user, lastMessage, setLastMessage }) => {
+const ChatPlayer = ({
+  user,
+  userPhoto,
+  handlePhotoError,
+  topicID,
+  gameID,
+  roomID,
+  lastMessage,
+  setLastMessage,
+}) => {
+  const [chat, setChat] = useState([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [isChatOpen, setIsChatOpen] = useState(false);
   const chatInputRef = useRef(null);
   const chatBoxRef = useRef(null);
 
-  const sendMessage = (e) => {
-    e.preventDefault();
-    if (currentMessage.trim() !== "") {
-      const newMessage = { user: user.displayName, message: currentMessage };
-      setChat((prevChat) => [...prevChat, newMessage]);
-      setCurrentMessage("");
-      setLastMessage(`${newMessage.user}: ${newMessage.message}`);
-      if (!isChatOpen) openChatBox();
-      setTimeout(() => scrollToBottom(), 50);
-    }
-  };
+  // Ref to keep track of isChatOpen state
+  const isChatOpenRef = useRef(isChatOpen);
 
-  const openChatBox = () => {
+  // Update the ref whenever isChatOpen changes
+  useEffect(() => {
+    isChatOpenRef.current = isChatOpen;
+  }, [isChatOpen]);
+
+  const openChatBox = useCallback(() => {
     setIsChatOpen(true);
     gsap.fromTo(
       chatBoxRef.current,
       { opacity: 0, y: 50, display: "block" },
       { opacity: 1, y: 0, duration: 0.5, ease: "power3.inOut" }
     );
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    if (chatBoxRef.current)
+      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = listenToChatMessages(
+      topicID,
+      gameID,
+      roomID,
+      (messageData) => {
+        setChat((prevChat) => [...prevChat, messageData]);
+        setLastMessage(`${messageData.user}: ${messageData.message}`);
+
+        // Use the ref to get the latest value of isChatOpen
+        if (messageData.user === user.displayName && !isChatOpenRef.current) {
+          openChatBox();
+        }
+
+        setTimeout(() => scrollToBottom(), 50);
+      }
+    );
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [
+    topicID,
+    gameID,
+    roomID,
+    user.displayName,
+    openChatBox,
+    scrollToBottom,
+    setLastMessage,
+  ]);
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (currentMessage.trim() !== "") {
+      const newMessage = {
+        user: user.displayName,
+        userPhoto: userPhoto, 
+        message: currentMessage,
+        timestamp: Date.now(),
+      };
+
+      try {
+        await sendMessageToChat(topicID, gameID, roomID, newMessage);
+        setCurrentMessage("");
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
+    }
   };
 
-  const closeChatBox = () => {
+  const closeChatBox = useCallback(() => {
     gsap.to(chatBoxRef.current, {
       opacity: 0,
       y: 50,
@@ -42,16 +107,11 @@ const ChatPlayer = ({ chat, setChat, user, lastMessage, setLastMessage }) => {
         setIsChatOpen(false);
       },
     });
-  };
+  }, []);
 
   const toggleChat = () => {
     if (isChatOpen) closeChatBox();
     else openChatBox();
-  };
-
-  const scrollToBottom = () => {
-    if (chatBoxRef.current)
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
   };
 
   const handleKeyDown = (e) => {
@@ -73,7 +133,7 @@ const ChatPlayer = ({ chat, setChat, user, lastMessage, setLastMessage }) => {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isChatOpen]);
+  }, [isChatOpen, closeChatBox]);
 
   return (
     <Row className="chat-wrapper align-items-center mt-auto">
@@ -100,8 +160,13 @@ const ChatPlayer = ({ chat, setChat, user, lastMessage, setLastMessage }) => {
           <div ref={chatBoxRef} className="chat-box">
             {chat.map((chatMessage, index) => (
               <div key={index} className="chat-message">
-                <span className="sender-name">{chatMessage.user} :</span>{" "}
-                {chatMessage.message}
+                <img
+                  src={chatMessage.userPhoto} // Use the userPhoto from each message
+                  onError={handlePhotoError}
+                  alt={`${chatMessage.user}`}
+                  className="img-profile-chat"
+                />
+                : {chatMessage.message}
               </div>
             ))}
           </div>

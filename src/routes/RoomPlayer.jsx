@@ -32,6 +32,10 @@ function RoomPlayer() {
   const [newPlayerUid, setNewPlayerUid] = useState(null);
   const prevPlayers = useRef([]);
 
+  // Tambahkan state untuk menyimpan achievements dan badge pengguna
+  const [userAchievements, setUserAchievements] = useState(null);
+  const [userBadge, setUserBadge] = useState(null);
+
   // Effect untuk handle session expired/logout
   useEffect(() => {
     const handleSessionExpired = async () => {
@@ -162,6 +166,22 @@ function RoomPlayer() {
     return () => unsubscribe();
   }, [topicID, gameID, roomID, roomCapacity]);
 
+  // Fetch achievements dan badge pengguna saat ini
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user?.uid) {
+        const playerAchievements = await getUserAchievements(user.uid);
+        const playerAchievementData = playerAchievements?.[gameID]?.[topicID];
+
+        setUserAchievements(playerAchievementData);
+        setUserBadge(
+          playerAchievementData ? playerAchievementData.badge : null
+        );
+      }
+    };
+    fetchUserData();
+  }, [user, topicID, gameID]);
+
   if (loading || !roomData) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
@@ -173,7 +193,6 @@ function RoomPlayer() {
   }
 
   const totalSlots = roomCapacity;
-  const playerBadge = players.find((player) => player.uid === user.uid)?.badge;
 
   const playerCards = roomData.isSinglePlayer ? (
     <CardVsAi
@@ -181,7 +200,8 @@ function RoomPlayer() {
       username={user.displayName}
       userPhoto={userPhoto}
       handlePhotoError={handlePhotoError}
-      badge={playerBadge}
+      badge={userBadge}
+      achievements={userAchievements}
       isAvailable={true}
     />
   ) : (

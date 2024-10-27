@@ -1,4 +1,4 @@
-const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 hours in milliseconds
+const SESSION_TIMEOUT = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
 
 let sessionTimeoutRef = null;
 

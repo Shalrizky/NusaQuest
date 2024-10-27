@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, Col, Image } from "react-bootstrap";
 import { Plus, Minus, Award } from "lucide-react";
 import { gsap } from "gsap";
@@ -16,6 +16,10 @@ const CardVsAi = ({
   const [aiCards, setAiCards] = useState([false, false, false]);
   const cardRefs = useRef([]);
 
+  // Tambahkan ref untuk kartu pemain utama
+  const playerCardRef = useRef(null);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
   // Ambil nama badge dan total wins, default jika tidak ada untuk user
   const badgeName = badge?.badgeName
     ? badge.badgeName.split(" ")[0] + " " + badge.badgeName.split(" ")[1]
@@ -25,6 +29,19 @@ const CardVsAi = ({
       ? parseInt(badge.badgeName.match(/\d+/)[0], 10)
       : 0;
 
+  // UseEffect untuk animasi kartu pemain utama saat komponen dimuat
+  useEffect(() => {
+    if (!hasAnimated) {
+      gsap.fromTo(
+        playerCardRef.current,
+        { y: -200, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: "power1.out" }
+      );
+      setHasAnimated(true);
+    }
+  }, [hasAnimated]);
+
+  // Handle Click untuk animasi kartu AI  saat di klik
   const handleAddAiClick = (index) => {
     const newAiCards = [...aiCards];
     newAiCards[index] = true;
@@ -59,7 +76,7 @@ const CardVsAi = ({
   return (
     <Col className="card-vs-ai-container d-flex justify-content-center align-items-center px-4">
       {/* Card untuk Player */}
-      <div className="card-wrapper-vs-ai">
+      <div className="card-wrapper-vs-ai" ref={playerCardRef}>
         <Card className="card-player-vs-ai d-flex justify-content-center align-items-center">
           <Card.Img
             variant="top"
@@ -83,7 +100,7 @@ const CardVsAi = ({
               </div>
             ) : (
               <div className="badge-section-vs-ai mt-3 text-start">
-                <span className="badge-card-title">No Badge</span>
+                <span className="badge-card-title-vs-ai">No Badge</span>
               </div>
             )}
 
@@ -102,7 +119,7 @@ const CardVsAi = ({
             ) : (
               <div className="achievement-section-vs-ai mt-3 text-start">
                 <Award className="achievement-image empty-icon-vs-ai" />
-                <span className="achievement-name">No Achievement</span>
+                <span className="achievement-name-vs-ai">No Achievement</span>
               </div>
             )}
           </Card.Body>

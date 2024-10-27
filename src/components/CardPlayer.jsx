@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card, Col, Image } from "react-bootstrap";
-import vector from "../assets/common/Vector.png";
 import { Award } from "lucide-react";
 import { gsap } from "gsap";
+import vector from "../assets/common/Vector.png";
 import "../style/components/CardPlayer.css";
 
 const CardPlayer = ({
@@ -12,14 +12,18 @@ const CardPlayer = ({
   badge,
   handlePhotoError,
   isAvailable = true,
+  isFirstPlayer = false,
   isNew = false,
-  playerIndex
+  playerIndex,
 }) => {
   const cardRef = useRef(null);
   const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
-    if (isAvailable && isNew && playerIndex !== 0 && !hasAnimated) {
+    if (
+      (isAvailable && isNew && playerIndex !== 0 && !hasAnimated) ||
+      (isFirstPlayer && !hasAnimated)
+    ) {
       gsap.fromTo(
         cardRef.current,
         { y: -200, opacity: 0 },
@@ -27,16 +31,23 @@ const CardPlayer = ({
       );
       setHasAnimated(true);
     }
-  }, [isAvailable, isNew, hasAnimated, playerIndex]);
+  }, [isAvailable, isNew, hasAnimated, playerIndex, isFirstPlayer]);
 
+  // Render untuk kartu yang tidak tersedia
   if (!isAvailable) {
     return (
       <Col className="card-player-container d-flex justify-content-center align-items-center px-4">
         <div className="card-wrapper-notavail">
           <Card className="player-not-available">
             <Card.Body className="d-flex flex-column justify-content-top align-items-center mt-5 text-center gap-3">
-              <Image src={vector} className="img-card-notavail img-fluid" width={80} />
-              <Card.Title className="title">Menunggu Pemain Lain Untuk Masuk</Card.Title>
+              <Image
+                src={vector}
+                className="img-card-notavail img-fluid"
+                width={80}
+              />
+              <Card.Title className="title">
+                Menunggu Pemain Lain Untuk Masuk
+              </Card.Title>
             </Card.Body>
           </Card>
         </div>
@@ -52,21 +63,28 @@ const CardPlayer = ({
       ? parseInt(badge.badgeName.match(/\d+/)[0], 10)
       : 0;
 
+  // Render untuk kartu yang tersedia
   return (
     <Col className="card-player-container d-flex justify-content-center align-items-center px-4">
       <div className="card-wrapper" ref={cardRef}>
         <Card className="card-player d-flex justify-content-center align-items-center">
           <Card.Img
             variant="top"
-            src={userPhoto || vector}
+            src={userPhoto}
             className="img-card-player"
             onError={handlePhotoError}
           />
           <Card.Body>
-            <Card.Title className="title">{username || "Pemain Tidak Dikenal"}</Card.Title>
+            <Card.Title className="title">
+              {username}
+            </Card.Title>
             {badge?.iconURL ? (
               <div className="badge-section mt-3 text-start">
-                <Image src={badge.iconURL} alt="Badge Icon" className="badge-image" />
+                <Image
+                  src={badge.iconURL}
+                  alt="Badge Icon"
+                  className="badge-image"
+                />
                 <span className="badge-card-title">
                   {badgeName} {totalWins ? `(${totalWins} Wins)` : ""}
                 </span>
@@ -78,8 +96,14 @@ const CardPlayer = ({
             )}
             {totalWins >= 5 && achievements?.achievement_name ? (
               <div className="achievement-section mt-3 text-start">
-                <Image src={achievements.achievement_trophy} alt="Achievement Image" className="achievement-image" />
-                <span className="achievement-name">{achievements.achievement_name}</span>
+                <Image
+                  src={achievements.achievement_trophy}
+                  alt="Achievement Image"
+                  className="achievement-image"
+                />
+                <span className="achievement-name">
+                  {achievements.achievement_name}
+                </span>
               </div>
             ) : (
               <div className="achievement-section mt-3 text-start">

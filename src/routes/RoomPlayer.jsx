@@ -1,126 +1,188 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { fetchRooms } from "../services/roomsDataServices"; 
-import { Container, Row, Col, Image, Form, Spinner } from "react-bootstrap";
-import { SendHorizontal, MessageSquareText } from "lucide-react";
-import { gsap } from "gsap";
+import { database, onValue, ref, get, set, remove } from "../firebaseConfig";
+import { useParams, useNavigate } from "react-router-dom";
+import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
+import { fetchRooms } from "../services/roomsDataServices";
+import { getUserAchievements } from "../services/achievementDataServices";
+import {
+  roomsParticipation,
+  syncCurrentPlayers,
+} from "../services/roomsParticipation";
+import useAuth from "../hooks/useAuth";
+import useUserPhoto from "../hooks/useUserPhoto";
 import Header from "../components/Header";
 import CardPlayer from "../components/CardPlayer";
 import CardVsAi from "../components/CardVsAi";
+import ChatPlayer from "../components/ChatPlayer";
 import PlayGameIcon from "../assets/common/play-game-icon.svg";
 import "../style/routes/RoomPlayer.css";
 
 function RoomPlayer() {
-  const [loading, setLoading] = useState(true);
   const { gameID, topicID, roomID } = useParams();
+  const { user, isLoggedIn } = useAuth();
+  const [userPhoto, handlePhotoError] = useUserPhoto(user);
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
   const [roomData, setRoomData] = useState(null);
+  const [roomCapacity, setRoomCapacity] = useState(4);
   const [chat, setChat] = useState([]);
-  const [currentMessage, setCurrentMessage] = useState("");
   const [lastMessage, setLastMessage] = useState("Chat With Others");
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const chatInputRef = useRef(null);
-  const chatBoxRef = useRef(null);
+  const [players, setPlayers] = useState([]);
+  const [newPlayerUid, setNewPlayerUid] = useState(null);
+  const prevPlayers = useRef([]);
+
+  // Tambahkan state untuk menyimpan achievements dan badge pengguna
+  const [userAchievements, setUserAchievements] = useState(null);
+  const [userBadge, setUserBadge] = useState(null);
+
+  // Effect untuk handle session expired/logout
+  useEffect(() => {
+    const handleSessionExpired = async () => {
+      if (!isLoggedIn) {
+        const playersRef = ref(
+          database,
+          `rooms/${topicID}/${gameID}/${roomID}/players`
+        );
+        const playersSnapshot = await get(playersRef);
+        const currentPlayers = playersSnapshot.val() || {};
+
+        if (user?.uid && currentPlayers[user.uid]) {
+          const currentCount = Object.keys(currentPlayers).length;
+          await set(
+            ref(
+              database,
+              `rooms/${topicID}/${gameID}/${roomID}/currentPlayers`
+            ),
+            Math.max(0, currentCount - 1)
+          );
+          await remove(
+            ref(
+              database,
+              `rooms/${topicID}/${gameID}/${roomID}/players/${user.uid}`
+            )
+          );
+        }
+        navigate("/login");
+      }
+    };
+
+    handleSessionExpired();
+  }, [isLoggedIn, user, topicID, gameID, roomID, navigate]);
 
   useEffect(() => {
-    fetchRooms(topicID, gameID, (rooms) => {
-      if (rooms && rooms[roomID]) {
-        setRoomData(rooms[roomID]);
-      } else {
-        setRoomData(null);
+    const initializeRoom = async () => {
+      await syncCurrentPlayers(topicID, gameID, roomID);
+      const existingPlayers = await get(
+        ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`)
+      );
+
+      if (!existingPlayers.val() || !existingPlayers.val()[user.uid]) {
+        await roomsParticipation(
+          topicID,
+          gameID,
+          roomID,
+          user,
+          true,
+          userPhoto
+        );
       }
-      setLoading(false);
-    });
+    };
+
+    const handleLeaveRoom = async () => {
+      if (user?.uid) {
+        await roomsParticipation(topicID, gameID, roomID, user, false);
+      }
+    };
+
+    initializeRoom();
+
+    window.addEventListener("beforeunload", handleLeaveRoom);
+    return () => {
+      window.removeEventListener("beforeunload", handleLeaveRoom);
+      handleLeaveRoom();
+    };
+  }, [user, topicID, gameID, roomID, userPhoto, navigate]);
+
+  useEffect(() => {
+    const fetchRoomData = async () => {
+      setLoading(true);
+      try {
+        fetchRooms(topicID, gameID, (rooms) => {
+          if (rooms && rooms[roomID]) {
+            setRoomData(rooms[roomID]);
+            setRoomCapacity(rooms[roomID].capacity || 4);
+          } else {
+            setRoomData(null);
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching room or user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoomData();
   }, [gameID, topicID, roomID]);
 
   useEffect(() => {
-    if (chat.length > 0) {
-      const lastChat = chat[chat.length - 1];
-      setLastMessage(`${lastChat.user}: ${lastChat.message}`);
-    }
-  }, [chat]);
-
-  // Fungsi chatbox akan selalu kebawah scrollnya
-  const scrollToBottom = () => {
-    if (chatBoxRef.current) {
-      chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
-    }
-  };
-
-  // Close Chatbox dengan klik di luar elemen
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        chatBoxRef.current &&
-        !chatBoxRef.current.contains(event.target) &&
-        chatInputRef.current &&
-        !chatInputRef.current.contains(event.target) &&
-        isChatOpen
-      ) {
-        closeChatBox();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isChatOpen]);
-
-  const sendMessage = (e) => {
-    e.preventDefault();
-    if (currentMessage.trim() !== "") {
-      setChat([...chat, { user: "Abrar", message: currentMessage }]);
-      setCurrentMessage("");
-
-      if (!isChatOpen) {
-        openChatBox();
-      }
-      setTimeout(() => scrollToBottom(), 50);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      sendMessage(e);
-    }
-  };
-
-  const openChatBox = () => {
-    const chatBox = chatBoxRef.current;
-    setIsChatOpen(true);
-
-    gsap.fromTo(
-      chatBox,
-      { opacity: 0, y: 50, display: "block" },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power3.inOut" }
+    const playersRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/players`
     );
-  };
 
-  const closeChatBox = () => {
-    const chatBox = chatBoxRef.current;
+    const handlePlayersUpdate = async (snapshot) => {
+      const playersData = snapshot.val() || {};
+      const playerPromises = Object.values(playersData).map(async (player) => {
+        const playerAchievements = await getUserAchievements(player.uid);
+        const playerAchievementData = playerAchievements[gameID]?.[topicID];
 
-    gsap.to(chatBox, {
-      opacity: 0,
-      y: 50,
-      duration: 0.5,
-      ease: "power2.inOut",
-      onComplete: () => {
-        gsap.set(chatBox, { display: "none" });
-        setIsChatOpen(false);
-      },
-    });
-  };
+        return {
+          ...player,
+          achievements: playerAchievementData,
+          badge: playerAchievementData ? playerAchievementData.badge : null,
+        };
+      });
 
-  const toggleChat = () => {
-    if (isChatOpen) {
-      closeChatBox();
-    } else {
-      openChatBox();
-    }
-  };
+      let playersArray = await Promise.all(playerPromises);
+      playersArray = playersArray
+        .sort((a, b) => a.joinedAt - b.joinedAt)
+        .slice(0, roomCapacity);
 
-  if (loading) {
+      const latestPlayer = playersArray.find(
+        (p) =>
+          !prevPlayers.current.some((prevPlayer) => prevPlayer?.uid === p.uid)
+      );
+      setNewPlayerUid(latestPlayer?.uid || null);
+
+      prevPlayers.current = playersArray;
+      setPlayers(playersArray);
+
+      await syncCurrentPlayers(topicID, gameID, roomID);
+    };
+
+    const unsubscribe = onValue(playersRef, handlePlayersUpdate);
+    return () => unsubscribe();
+  }, [topicID, gameID, roomID, roomCapacity]);
+
+  // Fetch achievements dan badge pengguna saat ini
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user?.uid) {
+        const playerAchievements = await getUserAchievements(user.uid);
+        const playerAchievementData = playerAchievements?.[gameID]?.[topicID];
+
+        setUserAchievements(playerAchievementData);
+        setUserBadge(
+          playerAchievementData ? playerAchievementData.badge : null
+        );
+      }
+    };
+    fetchUserData();
+  }, [user, topicID, gameID]);
+
+  if (loading || !roomData) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
         <Spinner animation="border" role="status" variant="dark">
@@ -130,9 +192,44 @@ function RoomPlayer() {
     );
   }
 
-  if (!roomData) {
-    return <div>Room not found.</div>;
-  }
+  const totalSlots = roomCapacity;
+
+  const playerCards = roomData.isSinglePlayer ? (
+    <CardVsAi
+      key="vs-ai-card"
+      username={user.displayName}
+      userPhoto={userPhoto}
+      handlePhotoError={handlePhotoError}
+      badge={userBadge}
+      achievements={userAchievements}
+      isAvailable={true}
+    />
+  ) : (
+    [...players, ...Array(totalSlots - players.length).fill(null)]
+      .slice(0, totalSlots)
+      .map((player, index) =>
+        player ? (
+          <CardPlayer
+            key={player.uid}
+            username={player.displayName}
+            userPhoto={player.photoURL}
+            achievements={player.achievements}
+            badge={player.badge}
+            handlePhotoError={handlePhotoError}
+            isAvailable={true}
+            isNew={player.uid === newPlayerUid}
+            playerIndex={index}
+            isFirstPlayer={index === 0 && players.length === 1}
+          />
+        ) : (
+          <CardPlayer
+            key={`not-available-${index}`}
+            isAvailable={false}
+            playerIndex={index}
+          />
+        )
+      )
+  );
 
   return (
     <Container fluid className="lobbyroom-container d-flex flex-column">
@@ -151,8 +248,7 @@ function RoomPlayer() {
           md={12}
           className="d-flex justify-content-center mt-lg-4 mb-lg-5 mb-3"
         >
-          {/* Cek apakah room adalah single player */}
-          {roomData.isSinglePlayer ? <CardVsAi /> : <CardPlayer />}
+          {playerCards}
         </Col>
         <Col
           md={12}
@@ -165,42 +261,15 @@ function RoomPlayer() {
         </Col>
       </Row>
 
-      <Row className="chat-wrapper align-items-center mt-auto position-relative ">
-        <Col xs={8} sm={6} md={5} lg={4}>
-          <div className="chat-input-form d-flex align-items-center justify-content-center position-relative">
-            <button className="btn-chat-box" onClick={toggleChat}>
-              <MessageSquareText />
-            </button>
-
-            <Form.Control
-              ref={chatInputRef}
-              className="chat-input"
-              aria-label="Type your message"
-              placeholder={lastMessage}
-              value={currentMessage}
-              onChange={(e) => setCurrentMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-
-            <button
-              type="submit"
-              className="btn-send-chat"
-              onClick={sendMessage}
-            >
-              <SendHorizontal />
-            </button>
-
-            <div ref={chatBoxRef} className="chat-box">
-              {chat.map((chatMessage, index) => (
-                <div key={index} className="chat-message">
-                  <span className="sender-name">{chatMessage.user} :</span>{" "}
-                  {chatMessage.message}
-                </div>
-              ))}
-            </div>
-          </div>
-        </Col>
-      </Row>
+      {!roomData.isSinglePlayer && (
+        <ChatPlayer
+          chat={chat}
+          setChat={setChat}
+          user={user}
+          lastMessage={lastMessage}
+          setLastMessage={setLastMessage}
+        />
+      )}
     </Container>
   );
 }

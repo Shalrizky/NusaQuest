@@ -21,7 +21,10 @@ import {
   checkIfAchievementExists,
   getUserAchievements,
 } from "../services/achievementDataServices";
-import { getPotionData } from "../services/itemsDataServices";
+import {
+  checkIfPotionExists,
+  getPotionData,
+} from "../services/itemsDataServices";
 import useAuth from "../hooks/useAuth";
 import useUserPhoto from "../hooks/useUserPhoto";
 import Header from "../components/Header";
@@ -42,7 +45,7 @@ function Profile() {
   const [userPhoto, handlePhotoError] = useUserPhoto(userData);
   const [userAchievements, setUserAchievements] = useState({});
   const [potionData, setPotionData] = useState(null);
-  const [loading, setLoading] = useState(true); // Single loading state
+  const [loading, setLoading] = useState(true);
   const [show, setShow] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -54,35 +57,41 @@ function Profile() {
   const [photoError, setPhotoError] = useState(null);
   const [hasChangesState, setHasChangesState] = useState(false);
 
+  // Untk data user ketika berubah
   useEffect(() => {
     setHasChangesState(
       hasChanges(userData.displayName, newUsername) || selectedPhoto !== null
     );
   }, [newUsername, selectedPhoto, userData.displayName]);
 
+  // Fetch data badge, achivement, dan potion user
   useEffect(() => {
     const fetchAchievementsAndPotion = async () => {
       try {
-        const exists = await checkIfAchievementExists(user.uid);
-        if (exists) {
+        const achievementExists = await checkIfAchievementExists(user.uid);
+        if (achievementExists) {
           const achievements = await getUserAchievements(user.uid);
           setUserAchievements(achievements);
         }
-
-        // Fetch potion data
-        const potion = await getPotionData(user.uid);
-        if (potion) {
-          setPotionData(potion); // Set potion data to state
+  
+        // Cek apakah potion ada
+        const potionExists = await checkIfPotionExists(user.uid);
+        if (potionExists) {
+          const potion = await getPotionData(user.uid);
+          if (potion) {
+            setPotionData(potion);
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
-        setLoading(false); // Stop loading once both data are fetched
+        setLoading(false);
       }
     };
-
+  
     fetchAchievementsAndPotion();
   }, [user.uid]);
+  
 
   const handleClose = () => {
     setShow(false);
@@ -94,7 +103,7 @@ function Profile() {
   };
 
   const handleShowModalEdit = () => {
-    setPreviewPhoto(userData.photoURL);
+    setPreviewPhoto(userData.firebasePhotoURL || userData.googlePhotoURL);
     setShow(true);
   };
 
@@ -117,7 +126,7 @@ function Profile() {
 
     if (!file) {
       setSelectedPhoto(null);
-      setPreviewPhoto(userData.photoURL);
+      setPreviewPhoto(userData.firebasePhotoURL || userData.googlePhotoURL);
       return;
     }
 
@@ -161,14 +170,11 @@ function Profile() {
       };
 
       if (selectedPhoto) {
-        const isGooglePhoto = userData.photoURL?.startsWith(
-          "https://lh3.googleusercontent.com/"
-        );
-        if (userData.photoURL && !isGooglePhoto) {
-          await deletePreviousPhoto(userData.photoURL);
+        if (userData.firebasePhotoURL) {
+          await deletePreviousPhoto(userData.firebasePhotoURL);
         }
         const { downloadURL } = await uploadPhoto(selectedPhoto, userData.uid);
-        updatedUserData.photoURL = downloadURL;
+        updatedUserData.firebasePhotoURL = downloadURL;
       }
 
       await updateUserData(updatedUserData);

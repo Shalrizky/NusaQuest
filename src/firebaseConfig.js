@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { getDatabase, ref, set, get, onValue } from 'firebase/database';
+import { getDatabase, ref, set, get, onValue, runTransaction, remove, update } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 const firebaseConfig = {
@@ -21,4 +21,4 @@ const googleProvider = new GoogleAuthProvider();
 const storage = getStorage(app);
 
 
-export { auth, database, googleProvider, storage, onValue, signInWithPopup, signOut, ref, set, get, storageRef, uploadBytes, getDownloadURL, deleteObject };
+export { auth, database, googleProvider, storage, runTransaction, update, remove, onValue, signInWithPopup, signOut, ref, set, get, storageRef, uploadBytes, getDownloadURL, deleteObject };

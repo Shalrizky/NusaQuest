@@ -18,6 +18,12 @@ const getRandomQuestion = () => {
 };
 
 function GameplayCard() {
+  const [deckCounts, setDeckCounts] = useState({
+    top: 4,
+    left: 4,
+    right: 4,
+  });
+
   const [isShuffling, setIsShuffling] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [isExitingPopup, setIsExitingPopup] = useState(false);
@@ -35,6 +41,19 @@ function GameplayCard() {
     generateCards();
   }, []);
 
+  const handleDeckCardClick = (deck) => {
+    if (deckCounts[deck] > 0) {
+      setDeckCounts((prevCounts) => ({
+        ...prevCounts,
+        [deck]: prevCounts[deck] - 1,
+      }));
+
+      const newQuestion = getRandomQuestion();
+      setActiveCard(newQuestion);
+      setShowPopup(true);
+    }
+  };
+
   const handleBottomCardClick = (card, index) => {
     setActiveCard(card);
     setShowPopup(true);
@@ -49,7 +68,7 @@ function GameplayCard() {
   const handleAnswerSelect = (isCorrect) => {
     setIsLoading(null);
     setIsCorrectAnswer(isCorrect);
-    
+
     setTimeout(() => {
       setIsCorrectAnswer(null);
       setIsShuffling(true);
@@ -67,32 +86,28 @@ function GameplayCard() {
     }, 2000);
   };
 
-  const handleDeckCardClick = () => {
-    const newQuestion = getRandomQuestion();
-    setActiveCard(newQuestion);
-    setShowPopup(true);
-  };
-
   return (
     <Container fluid className="nuca-container d-flex justify-content-around flex-column">
       <HeaderNuca layout="home" />
 
-      {/* Row Pertama */}
+      {/* Row Pertama atau deck atas */}
       <Row className="mb-5 justify-content-center flex-grow-1 align-items-center">
         <Col md={1} xs={12} className="text-center ml-5">
-          <DeckPlayer />
+          <div onClick={() => handleDeckCardClick('top')}>
+            <DeckPlayer count={deckCounts.top} />
+          </div>
         </Col>
       </Row>
 
-      {/* Row Kedua */}
+      {/* Row Kedua deck kiri tengah dan kanan */}
       <Row className="mb-5 justify-content-center flex-grow-1 align-items-center">
         <Col md={9} xs={12} className="d-flex justify-content-between">
-          <div className='deck-kiri-rotate' onClick={handleDeckCardClick}>
-            <DeckPlayer style={{ transform: 'rotate(90deg)' }} />
+          <div className="deck-kiri-rotate" onClick={() => handleDeckCardClick('left')}>
+            <DeckPlayer count={deckCounts.left} style={{ transform: 'rotate(90deg)' }} />
           </div>
 
-          <div className='deck-tengah position-relative' onClick={handleDeckCardClick}>
-            <DeckPlayer />
+          <div className="deck-tengah position-relative" onClick={() => handleDeckCardClick('top')}>
+            <DeckPlayer count={deckCounts.top} />
             <img
               src={shuffleIcon}
               alt="Shuffle Icon"
@@ -100,13 +115,13 @@ function GameplayCard() {
             />
           </div>
 
-          <div className='deck-kanan-rotate' onClick={handleDeckCardClick}>
-            <DeckPlayer style={{ transform: 'rotate(270deg)' }} />
+          <div className="deck-kanan-rotate" onClick={() => handleDeckCardClick('right')}>
+            <DeckPlayer count={deckCounts.right} style={{ transform: 'rotate(270deg)' }} />
           </div>
         </Col>
       </Row>
 
-      {/* Row Ketiga */}
+      {/* Row Ketiga deck bawah */}
       <Row className="justify-content-center flex-grow-1 align-items-center">
         <Col md={6} xs={12} className="text-center">
           <BottomDeckCard cards={cards} onCardClick={handleBottomCardClick} />

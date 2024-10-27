@@ -3,9 +3,9 @@
   import backCard from '../../assets/common/backCard.png';
   import '../../style/components/games/DeckPlayer.css';
 
-  const DeckPlayer = () => {
-    const stacks = Array(4).fill(0); // Membuat 4 tumpukan
-
+  const DeckPlayer = ({ count }) => {
+    const stacks = Array(count).fill(0); // Buat tumpukan sesuai jumlah kartu
+  
     return (
       <div className="deck-container">
         {stacks.map((_, index) => (
@@ -16,5 +16,5 @@
       </div>
     );
   };
-
+  
   export default DeckPlayer;

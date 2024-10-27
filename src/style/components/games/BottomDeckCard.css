@@ -1,35 +1,28 @@
 .stackable-cards {
   position: relative;
   display: flex;
-  justify-content: center; /* Pusatkan tumpukan */
-  align-items: flex-start; /* Memastikan kartu terletak di atas */
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .stackable-cards .card {
   position: relative;
-  margin-left: -30px; /* Adjusted margin for a larger card size */
+  margin-left: -30px;
   transition: transform 0.3s ease, z-index 0.3s;
   cursor: pointer;
 }
 
 .stackable-cards .card:hover {
-  transform: translateY(-10px) scale(1.05); /* Efek hover yang halus */
+  transform: translateY(-10px) scale(1.05);
   z-index: 10;
 }
 
 .card-custom {
-  width: 150px; /* Increased width */
-  height: 180px; /* Increased height */
+  width: 150px;
+  height: 180px;
   border-radius: 10px;
   padding: 0.5rem;
   border: 5px solid white;
   background-color: orange;
-}
-
-.card-title-custom {
-  font-size: 16px;
-}
-
-.card-text-custom {
-  font-size: 0.875rem;
+  display: flex;
 }

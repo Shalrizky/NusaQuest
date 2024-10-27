@@ -184,6 +184,29 @@
     font-size: 16px; 
   }
 }
+.game-timer-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* background-color: #1e3a8a; */
+  color: #e0f2fe;
+  /* border-radius: 12px;
+  padding: 10px 20px;
+  margin: 15px 0; */
+  font-weight: bold;
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
+}
+
+.game-time-text {
+  font-size: 24px;
+  margin-right: 8px;
+}
+
+.game-time-label {
+  font-size: 18px;
+  opacity: 0.8;
+}
+
 
 .timer-display {
   display: flex;

@@ -91,7 +91,10 @@ function UlarTangga() {
   const [victory, setVictory] = useState(false);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
   const [winner, setWinner] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(10); // Menambahkan state untuk timer
+  const [timeLeft, setTimeLeft] = useState(10);
+  const [gameTimeLeft, setGameTimeLeft] = useState(600);
+  const [gameOver, setGameOver] = useState(false);
+
   // const [questions, setQuestions] = useState([]);
 
   // useEffect(() => {
@@ -122,6 +125,26 @@ function UlarTangga() {
       nextPlayer(); // Pindah ke pemain berikutnya jika waktu habis
     }
   }, [timeLeft, isPionMoving]);
+
+  // Timer global untuk menghitung waktu permainan
+  useEffect(() => {
+    if (gameTimeLeft > 0) {
+      const gameTimer = setInterval(() => {
+        setGameTimeLeft((prevTime) => prevTime - 1);
+      }, 1000);
+      return () => clearInterval(gameTimer);
+    } else {
+      setGameOver(true); // Tandai permainan berakhir
+    }
+  }, [gameTimeLeft]);
+
+  // Arahkan ke halaman lain atau tampilkan pesan ketika waktu habis
+  useEffect(() => {
+    if (gameOver) {
+      alert("Waktu permainan habis! Permainan telah berakhir.");
+      navigate("/"); // Arahkan pemain ke halaman utama
+    }
+  }, [gameOver, navigate]);
 
   useEffect(() => {
     if (showQuestion) {
@@ -251,12 +274,21 @@ function UlarTangga() {
   };
 
   return (
+
     <Container
       fluid
       className="utangga-container"
       style={{ backgroundImage: `url(${bgUlarTangga})` }}
     >
       <HeaderUtangga layout="home" />
+
+      <div className="game-timer-display">
+        <span className="game-time-text">
+          {Math.floor(gameTimeLeft / 60)}:{String(gameTimeLeft % 60).padStart(2, '0')}
+        </span>
+        <span className="game-time-label"></span>
+      </div>
+
       <Row className="utu-container-left">
         <Col xs={12} md={6} className="utu-konva">
           <Board

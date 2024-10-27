@@ -4,7 +4,7 @@ import '../style/routes/GameplayCard.css';
 import DeckPlayer from '../components/games/DeckPlayer';
 import BottomDeckCard from '../components/games/BottomDeckCard';
 import HeaderNuca from '../components/games/HeaderGame';
-import PertanyaanNuca, { ListPertanyaanNuca } from '../components/games/PertanyaanNuca'; 
+import PertanyaanNuca, { ListPertanyaanNuca } from '../components/games/PertanyaanNuca';
 import shuffleIcon from '../assets/common/shuffle.png';
 
 const getRandomQuestion = () => {
@@ -24,6 +24,7 @@ function GameplayCard() {
     right: 4,
   });
 
+  const [lastActiveDeck, setLastActiveDeck] = useState(null); // Track the last active deck
   const [isShuffling, setIsShuffling] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [isExitingPopup, setIsExitingPopup] = useState(false);
@@ -47,7 +48,7 @@ function GameplayCard() {
         ...prevCounts,
         [deck]: prevCounts[deck] - 1,
       }));
-
+      setLastActiveDeck(deck); // Store the active deck
       const newQuestion = getRandomQuestion();
       setActiveCard(newQuestion);
       setShowPopup(true);
@@ -57,6 +58,7 @@ function GameplayCard() {
   const handleBottomCardClick = (card, index) => {
     setActiveCard(card);
     setShowPopup(true);
+    setLastActiveDeck('bottom'); // Set last active as bottom deck
     removeCardFromDeck(index);
     setIsLoading('right');
   };
@@ -65,9 +67,37 @@ function GameplayCard() {
     setCards((prevCards) => prevCards.filter((_, cardIndex) => cardIndex !== index));
   };
 
+  const incrementDeckCount = (deck) => {
+    setDeckCounts((prevCounts) => ({
+      ...prevCounts,
+      [deck]: prevCounts[deck] + 1,
+    }));
+  };
+
   const handleAnswerSelect = (isCorrect) => {
     setIsLoading(null);
     setIsCorrectAnswer(isCorrect);
+
+    if (!isCorrect) {
+      // Logic to increment based on the last active deck
+      switch (lastActiveDeck) {
+        case 'bottom':
+          incrementDeckCount('right');
+          break;
+        case 'right':
+          incrementDeckCount('top');
+          break;
+        case 'top':
+          incrementDeckCount('left');
+          break;
+        case 'left':
+          const newQuestion = getRandomQuestion();
+          setCards((prevCards) => [...prevCards, newQuestion]); // Add a new question to bottom deck
+          break;
+        default:
+          break;
+      }
+    }
 
     setTimeout(() => {
       setIsCorrectAnswer(null);
@@ -90,7 +120,6 @@ function GameplayCard() {
     <Container fluid className="nuca-container d-flex justify-content-around flex-column">
       <HeaderNuca layout="home" />
 
-      {/* Row Pertama atau deck atas */}
       <Row className="mb-5 justify-content-center flex-grow-1 align-items-center">
         <Col md={1} xs={12} className="text-center ml-5">
           <div onClick={() => handleDeckCardClick('top')}>
@@ -99,15 +128,14 @@ function GameplayCard() {
         </Col>
       </Row>
 
-      {/* Row Kedua deck kiri tengah dan kanan */}
       <Row className="mb-5 justify-content-center flex-grow-1 align-items-center">
         <Col md={9} xs={12} className="d-flex justify-content-between">
           <div className="deck-kiri-rotate" onClick={() => handleDeckCardClick('left')}>
             <DeckPlayer count={deckCounts.left} style={{ transform: 'rotate(90deg)' }} />
           </div>
 
-          <div className="deck-tengah position-relative" onClick={() => handleDeckCardClick('top')}>
-            <DeckPlayer count={deckCounts.top} />
+          <div className="deck-tengah position-relative">
+            <DeckPlayer count={4} />
             <img
               src={shuffleIcon}
               alt="Shuffle Icon"
@@ -121,14 +149,12 @@ function GameplayCard() {
         </Col>
       </Row>
 
-      {/* Row Ketiga deck bawah */}
       <Row className="justify-content-center flex-grow-1 align-items-center">
         <Col md={6} xs={12} className="text-center">
           <BottomDeckCard cards={cards} onCardClick={handleBottomCardClick} />
         </Col>
       </Row>
 
-      {/* Render Popup Pertanyaan */}
       {showPopup && activeCard && (
         <div style={{ position: 'relative', zIndex: '2200' }}>
           <PertanyaanNuca

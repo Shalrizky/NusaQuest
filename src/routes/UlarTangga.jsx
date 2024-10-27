@@ -3,7 +3,6 @@ import { Container, Row, Col, Image, Form } from "react-bootstrap";
 import { useNavigate } from 'react-router-dom';
 import HeaderUtangga from "../components/games/HeaderGame";
 import Board from "../components/games/React-KonvaUlar";
-import TimeGame from "../components/games/timeGame";
 import Dice from "../components/games/Dice";
 import Potion from "../components/games/potion";
 // import  {fetchQuestions} from "../services/questionServices";
@@ -92,7 +91,7 @@ function UlarTangga() {
   const [victory, setVictory] = useState(false);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
   const [winner, setWinner] = useState(false);
-
+  const [timeLeft, setTimeLeft] = useState(10); // Menambahkan state untuk timer
   // const [questions, setQuestions] = useState([]);
 
   // useEffect(() => {
@@ -107,47 +106,65 @@ function UlarTangga() {
 
   const navigate = useNavigate();
 
-
   const logPionPositions = (newPositions) => {
   };
 
-  const handleTimeOut = () => {
-    if (!isPionMoving && !waitingForAnswer) {
-      console.log(`Time out for player: ${players[currentPlayerIndex].name}`);
-      setCurrentPlayerIndex((prevIndex) => {
-        const nextIndex = (prevIndex + 1) % players.length;
-        console.log(`Moving turn to player: ${players[nextIndex].name}`);
-        return nextIndex;
-      });
-    }
+  const nextPlayer = () => {
+    setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+    setTimeLeft(10); // Reset waktu ke 3 detik untuk pemain berikutnya
   };
+
+  useEffect(() => {
+    if (!isPionMoving && timeLeft > 0) {
+      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timerId); // Bersihkan timer saat tidak digunakan
+    } else if (timeLeft === 0) {
+      nextPlayer(); // Pindah ke pemain berikutnya jika waktu habis
+    }
+  }, [timeLeft, isPionMoving]);
+
+  useEffect(() => {
+    if (showQuestion) {
+
+      if (timeLeft > 0) {
+        const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+        return () => clearTimeout(timerId); // Bersihkan timer jika waktu habis
+      } else {
+
+        nextPlayer();
+        setShowQuestion(false);
+        setWaitingForAnswer(false);
+      }
+    }
+  }, [timeLeft, showQuestion]);
+
   const handleDiceRollComplete = (diceNumber) => {
     setIsPionMoving(true);
-  
+
     setPionPositionIndex((prevPositions) => {
       const newPositions = [...prevPositions];
       let newPosition = newPositions[currentPlayerIndex] + diceNumber;
-  
+
       if (newPosition > 99) newPosition = 99;
-  
+
       newPositions[currentPlayerIndex] = newPosition;
-  
+
       if (newPosition === 99) {
         setVictory(true);
         setWinner(players[currentPlayerIndex].name);
       }
-  
+
       logPionPositions(newPositions);
       return newPositions;
     });
-  
+
     setTimeout(() => {
       setPionPositionIndex((prevPositions) => {
         const newPositions = [...prevPositions];
         let newPosition = newPositions[currentPlayerIndex];
-  
+
         if (victory) return prevPositions;
-  
+
         // Jika bertemu tangga, tampilkan pertanyaan khusus untuk naik tangga
         if (tanggaUp[newPosition]) {
           setShowQuestion(true);
@@ -161,7 +178,6 @@ function UlarTangga() {
           newPosition = snakesDown[newPosition];
           newPositions[currentPlayerIndex] = newPosition;
           logPionPositions(newPositions);
-          // Perpindahan giliran ke pemain berikutnya secara urut
           setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
         }
         // Jika mendapatkan angka 6, berikan pertanyaan untuk giliran ulang
@@ -175,24 +191,25 @@ function UlarTangga() {
         // Jika pemain sudah mendapat kesempatan roll ulang sebelumnya
         else if (allowExtraRoll) {
           setAllowExtraRoll(false);
-          // Perpindahan giliran ke pemain berikutnya secara urut
-          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+          nextPlayer(); // Pindah ke pemain berikutnya
         }
         // Jika bukan angka 6 dan tidak ada roll ulang, pindah ke pemain berikutnya
         else {
-          // Perpindahan giliran ke pemain berikutnya secara urut
-          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+          nextPlayer(); // Pindah ke pemain berikutnya
         }
-  
+
         return newPositions;
       });
-  
+
       setIsPionMoving(false);
     }, 2000);
+
+    // Reset state setelah pemain selesai
     setSubmitted(false);
     setIsCorrect(null);
+    setTimeLeft(10); // Reset timer ke 3 detik setelah lemparan selesai
   };
-  
+
 
   const handleAnswerChange = (e) => {
     const answer = e.target.value;
@@ -205,9 +222,7 @@ function UlarTangga() {
 
     if (isAnswerCorrect) {
       if (allowExtraRoll) {
-        // Jika pertanyaan dari dadu 6 dan jawabannya benar, beri kesempatan roll lagi
       } else {
-        // Jika pertanyaan dari tangga, pion naik ke posisi tangga
         setPionPositionIndex((prevPositions) => {
           const newPositions = [...prevPositions];
           const currentPos = newPositions[currentPlayerIndex];
@@ -307,11 +322,11 @@ function UlarTangga() {
               </Form>
             )}
           </div>
-          <TimeGame
-            onTimeOut={handleTimeOut}
-            currentPlayerIndex={currentPlayerIndex}
-            timeLimit={3} // Set the time limit for each turn in seconds
-          />
+
+          <div className="timer-display">
+            <span className="time-text">{timeLeft}</span>
+            <span className="time-label">Sec</span>
+          </div>
 
           {/* Komponen Dadu */}
           <Dice
@@ -362,3 +377,5 @@ function UlarTangga() {
 }
 
 export default UlarTangga;
+
+// ini yang bener + timer

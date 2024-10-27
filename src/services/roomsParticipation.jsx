@@ -1,6 +1,14 @@
-import { database, ref, remove, set, get } from "../firebaseConfig";
+import { database, ref, set, get, update } from "../firebaseConfig";
 
-
+/**
+ * Mengelola partisipasi pengguna dalam room.
+ * @param {string} topicID - ID topik
+ * @param {string} gameID - ID permainan
+ * @param {string} roomID - ID room
+ * @param {object} user - Objek pengguna
+ * @param {boolean} isJoining - True jika pengguna bergabung
+ * @param {string} userPhoto - URL foto pengguna
+ */
 export const roomsParticipation = async (
   topicID,
   gameID,
@@ -9,9 +17,12 @@ export const roomsParticipation = async (
   isJoining,
   userPhoto
 ) => {
-  if (roomID === "room5") {
+  if (!topicID || !gameID || !roomID || !user?.uid) {
+    console.error("Missing required parameters");
     return;
   }
+
+  if (roomID === "room5") return;
 
   const playerRef = ref(
     database,
@@ -28,35 +39,34 @@ export const roomsParticipation = async (
   const roomRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}`);
 
   try {
+    const roomSnapshot = await get(roomRef);
+    if (!roomSnapshot.exists()) {
+      console.error("Room does not exist");
+      return;
+    }
+
     if (isJoining) {
-      // Cek jika pengguna sudah ada di room
       const existingPlayerSnapshot = await get(playerRef);
       if (existingPlayerSnapshot.exists()) {
-        // Jika sudah ada, perbarui jika diperlukan, tidak memeriksa kapasitas lagi
         await set(playerRef, {
           ...existingPlayerSnapshot.val(),
           photoURL: userPhoto || existingPlayerSnapshot.val().photoURL,
           joinedAt: Date.now(),
         });
-        console.log("User already in room, updating info only.");
+        console.log("Updated existing player data");
         return;
       }
 
-      // Jika pengguna belum terdaftar, cek kapasitas room
-      const roomSnapshot = await get(roomRef);
       const roomData = roomSnapshot.val();
       const capacity = roomData.capacity || 4;
 
       const playersSnapshot = await get(playersRef);
-      let playerCount = playersSnapshot.val()
-        ? Object.keys(playersSnapshot.val()).length
-        : 0;
+      const playerCount = Object.keys(playersSnapshot.val() || {}).length;
 
       if (playerCount >= capacity) {
         throw new Error("Room is full");
       }
 
-      // Tambahkan pemain jika kapasitas memungkinkan
       await set(playerRef, {
         uid: user.uid,
         displayName: user.displayName,
@@ -64,31 +74,41 @@ export const roomsParticipation = async (
         joinedAt: Date.now(),
       });
 
-      // Sinkronisasi jumlah pemain yang valid di Firebase
-      playerCount += 1;
-      await set(currentPlayersRef, playerCount);
+      await set(currentPlayersRef, playerCount + 1);
     } else {
-      // Menghapus pemain saat keluar dari room
-      await remove(playerRef);
+      const playersSnapshot = await get(playersRef);
+      const playerCount = Object.keys(playersSnapshot.val() || {}).length;
 
-      const snapshot = await get(playersRef);
-      const playerCount = snapshot.val()
-        ? Object.keys(snapshot.val()).length
-        : 0;
-      await set(currentPlayersRef, playerCount);
+      const updates = {
+        [`rooms/${topicID}/${gameID}/${roomID}/players/${user.uid}`]: null,
+        [`rooms/${topicID}/${gameID}/${roomID}/currentPlayers`]: Math.max(0, playerCount - 1),
+      };
+
+      await update(ref(database), updates);
     }
   } catch (error) {
+    if (error.code === "PERMISSION_DENIED") {
+      console.log("Permission denied - session might be expired");
+      return;
+    }
     console.error("Error in roomsParticipation:", error);
     throw error;
   }
 };
 
-
+/**
+ * Mensinkronkan jumlah pemain saat ini dalam room.
+ * @param {string} topicID - ID topik
+ * @param {string} gameID - ID permainan
+ * @param {string} roomID - ID room
+ */
 export const syncCurrentPlayers = async (topicID, gameID, roomID) => {
-  // Jika room5 (VS AI), tidak perlu sync players
-  if (roomID === "room5") {
-    return 1; // Return 1 untuk single player
+  if (!topicID || !gameID || !roomID) {
+    console.error("Missing required parameters for syncCurrentPlayers");
+    return;
   }
+
+  if (roomID === "room5") return 1;
 
   const playersRef = ref(
     database,
@@ -101,12 +121,17 @@ export const syncCurrentPlayers = async (topicID, gameID, roomID) => {
 
   try {
     const snapshot = await get(playersRef);
-    const actualPlayerCount = snapshot.val()
+    const playerCount = snapshot.exists()
       ? Object.keys(snapshot.val()).length
       : 0;
-    await set(currentPlayersRef, actualPlayerCount);
-    return actualPlayerCount;
+
+    await set(currentPlayersRef, playerCount);
+    return playerCount;
   } catch (error) {
+    if (error.code === "PERMISSION_DENIED") {
+      console.log("Permission denied during sync - session might be expired");
+      return;
+    }
     console.error("Error syncing currentPlayers:", error);
     throw error;
   }

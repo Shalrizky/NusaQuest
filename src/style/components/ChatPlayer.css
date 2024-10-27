@@ -96,6 +96,24 @@
    z-index: 1;
 }
 
+.img-profile-chat {
+   width: 8%;
+   margin-right: 5px;
+   border-radius: 100%;
+}
+
+.chat-message {
+   margin-bottom: 10px;
+   letter-spacing: 0.8px;
+   font-size: 14px;
+}
+
+.sender-name {
+   color: #ffffff;
+   font-weight: bold;
+}
+
+
 /* Styling Scrollbar */
 .chat-box::-webkit-scrollbar {
    width: 8px;
@@ -114,16 +132,7 @@
    background-color: rgb(111, 219, 227);
 }
 
-.chat-message {
-   margin-bottom: 6px;
-   letter-spacing: 0.8px;
-   font-size: 14px;
-}
 
-.sender-name {
-   color: #ffffff;
-   font-weight: bold;
-}
 
 /* Responsive Styles */
 @media (min-width: 580px) and (max-width: 780px) {

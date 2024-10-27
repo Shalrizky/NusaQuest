@@ -1,3 +1,5 @@
+// src/services/roomsParticipation.js
+
 import { database, ref, set, get, update } from "../firebaseConfig";
 
 /**
@@ -79,12 +81,24 @@ export const roomsParticipation = async (
       const playersSnapshot = await get(playersRef);
       const playerCount = Object.keys(playersSnapshot.val() || {}).length;
 
+      const newPlayerCount = Math.max(0, playerCount - 1);
+
       const updates = {
         [`rooms/${topicID}/${gameID}/${roomID}/players/${user.uid}`]: null,
-        [`rooms/${topicID}/${gameID}/${roomID}/currentPlayers`]: Math.max(0, playerCount - 1),
+        [`rooms/${topicID}/${gameID}/${roomID}/currentPlayers`]: newPlayerCount,
       };
 
       await update(ref(database), updates);
+
+      // Setelah memperbarui, cek jika jumlah pemain adalah 0
+      if (newPlayerCount === 0) {
+        const chatMessagesRef = ref(
+          database,
+          `rooms/${topicID}/${gameID}/${roomID}/chatMessages`
+        );
+        await set(chatMessagesRef, null);
+        console.log("All players left. Chat messages have been deleted.");
+      }
     }
   } catch (error) {
     if (error.code === "PERMISSION_DENIED") {
@@ -136,3 +150,5 @@ export const syncCurrentPlayers = async (topicID, gameID, roomID) => {
     throw error;
   }
 };
+
+

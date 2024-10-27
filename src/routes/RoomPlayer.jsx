@@ -26,7 +26,6 @@ function RoomPlayer() {
   const [loading, setLoading] = useState(true);
   const [roomData, setRoomData] = useState(null);
   const [roomCapacity, setRoomCapacity] = useState(4);
-  const [chat, setChat] = useState([]);
   const [lastMessage, setLastMessage] = useState("Chat With Others");
   const [players, setPlayers] = useState([]);
   const [newPlayerUid, setNewPlayerUid] = useState(null);
@@ -263,9 +262,12 @@ function RoomPlayer() {
 
       {!roomData.isSinglePlayer && (
         <ChatPlayer
-          chat={chat}
-          setChat={setChat}
           user={user}
+          userPhoto={userPhoto}
+          handlePhotoError={handlePhotoError}
+          topicID={topicID}
+          gameID={gameID}
+          roomID={roomID}
           lastMessage={lastMessage}
           setLastMessage={setLastMessage}
         />

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Container, Row, Col, Spinner, Image } from "react-bootstrap";
 import { fetchDestinationById } from "../services/destinationDataServices";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import NotFound from "../assets/common/not-found-img.png";
 import "../style/routes/DetailDestination.css";
 
@@ -182,6 +183,8 @@ const DestinationDetail = () => {
           </div>
         </Col>
       </Row>
+
+      <Footer textColor="#fff" />
     </Container>
   );
 };

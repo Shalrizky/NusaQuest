@@ -11,6 +11,7 @@ import Profile from './routes/Profile';
 import LobbyGame from './routes/LobbyGame';
 import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
+import RoomPlayer from './routes/RoomPlayer';
 import UlarTangga from './routes/UlarTangga';
 import GameplayCard from './routes/GameplayCard';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -61,6 +62,13 @@ const App = () => {
           path: '/lobby/:topicID/:gameID', element: (
             <ProtectedRoute>
               {withLoader(LobbyGame)()}
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/:gameID/:topicID/:roomID', element: (
+            <ProtectedRoute>
+              {withLoader(RoomPlayer)()}
             </ProtectedRoute>
           )
         },

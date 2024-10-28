@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Container, Row, Col, Tabs, Tab, Spinner } from "react-bootstrap";
 import "../style/routes/InformationDestination.css";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import CardInformation from "../components/CardInformation";
 import {
   fetchDestinations,
@@ -139,6 +140,8 @@ const InformationDestination = () => {
           </Tabs>
         </Col>
       </Row>
+
+      <Footer textColor="#fff" />
     </Container>
   );
 };

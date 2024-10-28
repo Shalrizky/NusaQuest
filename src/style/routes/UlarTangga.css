@@ -29,11 +29,11 @@
 .player-turn-box {
   width: 500px;
   height: 300px;
-  background-color: #81B0FE; /*blue */
+  background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
   color: white;
   text-align: center;
   padding: 20px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -155,7 +155,73 @@
     margin: 5px 10px;
     width: 120px;
     height:100px ;
-}
+
+  }
+.game-timer-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* background-color: #1e3a8a; */
+    color: #e0f2fe;
+    /* border-radius: 12px;
+    padding: 10px 20px;
+    margin: 15px 0; */
+    font-weight: bold;
+    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
+  }
+  
+.game-time-text {
+    font-size: 24px;
+    margin-right: 8px;
+  }
+  
+.game-time-label {
+    font-size: 18px;
+    opacity: 0.8;
+  }
+  
+.timer-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
+    border-radius: 15px;
+    padding: 1px 10px;
+    box-shadow: 0px 8px 20px rgba(59, 130, 246, 0.4);
+    animation: pulse 1.2s infinite alternate;
+    width: fit-content;
+    margin: 15px auto;
+    transition: background 0.5s ease-in-out;
+  }
+  
+  .time-text {
+    font-size: 20px;
+    font-weight: bold;
+    color: #e0f2fe;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    animation: colorChange 10s linear infinite;
+  }
+  
+  .time-label {
+    font-size: 20px;
+    font-weight: 600;
+    color: #dbeafe;
+    opacity: 0.85;
+  }
+  
+  /* Animasi Pulse */
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      box-shadow: 0px 5px 15px rgba(59, 130, 246, 0.2);
+    }
+    100% {
+      transform: scale(1.05);
+      box-shadow: 0px 8px 25px rgba(59, 130, 246, 0.5);
+    }
+  }
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .utu-konva {
@@ -163,8 +229,8 @@
   }
 
   .player-turn-box {
-    width: 100%; /* Make the player turn box full width on mobile */
-    height: auto; /* Allow height to adjust */
+    width: 100%; 
+    height: auto; 
     text-align: center;
   }
 
@@ -174,12 +240,16 @@
   }
 
   .player-item img {
-    width: 40px; /* Smaller profile image on mobile */
+    width: 40px; 
     height: 40px;
   }
 
   .player-item span {
-    font-size: 16px; /* Adjust font size for mobile */
+    font-size: 16px; 
   }
 }
+
+
+
+
 

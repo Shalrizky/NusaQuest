@@ -31,7 +31,7 @@ export const checkIfUserExists = async (uid) => {
   }
 };
 
-export const getUserDataFromDatabase = async (uid) => {
+export const getUserData = async (uid) => {
   try {
     const usersRef = ref(database, "users/" + uid);
     const snapshot = await get(usersRef);
@@ -61,7 +61,9 @@ export const uploadPhoto = async (file, userId) => {
     const fileRef = storageRef(storage, `profilePhotos/${userId}/${file.name}`);
     const snapshot = await uploadBytes(fileRef, file);
     const downloadURL = await getDownloadURL(snapshot.ref);
-    return { downloadURL, filePath: snapshot.ref.fullPath };
+    
+    // Hanya kembalikan downloadURL tanpa mengubah struktur lainnya
+    return { downloadURL };
   } catch (error) {
     console.error("Error uploading file:", error);
     throw error;

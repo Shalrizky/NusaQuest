@@ -19,26 +19,106 @@
   position: relative;
 }
 
-.room-img {
-  width: 100%;
-  height: auto;
-}
-
-/* Menggunakan Flexbox untuk memastikan 5 elemen sejajar */
 .room-wrapper {
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
+  gap: 10px;
 }
 
 .room-box {
-  flex: 1 1 20%; 
-  max-width: 20%; 
+  flex: 1 1 20%;
+  max-width: 20%;
   padding: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.room-box:hover {
+  transform: scale(1.05);
+}
+
+.room-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.room-img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.player-counter {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 68, 68, 0.9);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+  .room-container {
+    padding: 15px;
+  }
+  
+  .room-wrapper {
+    gap: 8px;
+  }
+  
+  .room-box {
+    padding: 8px;
+  }
+  
+  .player-counter {
+    font-size: 12px;
+    padding: 3px 10px;
+  }
 }
 
 @media (max-width: 768px) {
+  .room-container {
+    padding: 10px;
+  }
+  
+  .room-wrapper {
+    gap: 5px;
+  }
+  
   .room-box {
-    padding: 5px; 
+    padding: 5px;
+  }
+  
+  .player-counter {
+    top: 5px;
+    right: 5px;
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+}
+
+@media (max-width: 576px) {
+  .room-container {
+    width: 95%;
+    padding: 5px;
+  }
+  
+  .room-wrapper {
+    gap: 3px;
+  }
+  
+  .room-box {
+    padding: 3px;
   }
 }

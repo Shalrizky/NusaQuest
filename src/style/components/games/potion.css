@@ -1,8 +1,21 @@
+.dice-potion-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* position: relative; */
+  margin-left: 225px;
+  margin-top: 20px; 
+}
+
 .potion-icon {
-    position: absolute;
-    bottom: 80px;
-    right: 50px;
-  }
+  position: sticky;
+  bottom: 20px; 
+  right: 0; 
+  z-index: 10;
+  background: none; 
+  margin-left: 150px; 
+  cursor: pointer;
+}
   .potion-text {
     font-weight: bold; 
     color: white;     

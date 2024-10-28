@@ -71,7 +71,14 @@ function GameplayCard() {
     setLastActiveDeck("bottom");
     removeCardFromDeck(index);
     setIsLoading("right");
+  
+    // Tambahkan kelas "animate" untuk memulai animasi
+    const movingCard = document.querySelector(".moving-card");
+    if (movingCard) {
+      movingCard.classList.add("animate");
+    }
   };
+  
 
   const removeCardFromDeck = (index) => {
     setCards((prevCards) =>

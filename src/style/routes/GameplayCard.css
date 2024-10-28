@@ -30,12 +30,12 @@
     transform: rotate(0deg);
   }
   100% {
-    transform: rotate(360deg);
+    transform: rotate(180deg);
   }
 }
 
 .shuffle-rotate {
-  animation: rotate 2s linear infinite;
+  animation: rotate 1.5s linear infinite;
 }
 
 

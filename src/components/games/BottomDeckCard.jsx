@@ -13,7 +13,6 @@ const BottomDeckCard = ({ cards, onCardClick }) => {
         >
           <Card.Body>
             {/* Menampilkan kategori di sini */}
-            <Card.Title className="card-title-custom">{`Kategori: ${card.category}`}</Card.Title>
             <Card.Text className="card-text-custom">
               {card.question}
             </Card.Text>

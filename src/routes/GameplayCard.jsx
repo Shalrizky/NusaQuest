@@ -7,7 +7,7 @@ import HeaderNuca from "../components/games/HeaderGame";
 import PertanyaanNuca, {
   ListPertanyaanNuca,
 } from "../components/games/PertanyaanNuca";
-import Potion from "../components/games/potion"; // Pastikan komponen Potion di Import yaa
+import Potion from "../components/games/potion"; // Pastikan komponen Potion diimport ya
 import shuffleIcon from "../assets/common/shuffle.png";
 import PlayerOne from "../assets/common/imageOne.png";
 
@@ -41,7 +41,6 @@ function GameplayCard() {
   const [cards, setCards] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState(null);
-  const timerRef = useRef(null);
 
   // Tambahkan variabel state untuk mengatur giliran
   const deckOrder = ["bottom", "right", "top", "left"];
@@ -50,6 +49,13 @@ function GameplayCard() {
   // Tambahkan variabel state untuk mencegah double click
   const [isActionInProgress, setIsActionInProgress] = useState(false);
 
+  // Tambahkan variabel state untuk timer
+  const [timeRemaining, setTimeRemaining] = useState(15);
+  const timerRef = useRef(null);
+
+  // Tambahkan state untuk pemain yang harus menjawab
+  const [answeringPlayer, setAnsweringPlayer] = useState(null);
+
   useEffect(() => {
     const generateCards = () => {
       const newCards = Array.from({ length: 4 }, () => getRandomQuestion());
@@ -57,6 +63,33 @@ function GameplayCard() {
     };
     generateCards();
   }, []);
+
+  // useEffect untuk mengatur timer ketika popup muncul
+  useEffect(() => {
+    if (showPopup && answeringPlayer) {
+      // Mulai timer
+      setTimeRemaining(15);
+      timerRef.current = setInterval(() => {
+        setTimeRemaining((prevTime) => {
+          if (prevTime <= 1) {
+            clearInterval(timerRef.current);
+            handleTimeOut(); // Waktu habis
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    } else {
+      // Bersihkan timer ketika popup ditutup
+      clearInterval(timerRef.current);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [showPopup, answeringPlayer]);
+
+  const handleTimeOut = () => {
+    // Jika waktu habis dan pemain belum menjawab
+    handleAnswerSelect(false); // Anggap jawaban salah
+  };
 
   const handleDeckCardClick = (deck) => {
     if (currentTurn !== deck || showPopup || isActionInProgress) return; // Bukan giliran pemain ini atau aksi sedang berlangsung
@@ -69,6 +102,19 @@ function GameplayCard() {
       setLastActiveDeck(deck);
       const newQuestion = getRandomQuestion();
       setActiveCard(newQuestion);
+
+      // Tentukan pemain yang harus menjawab
+      let answeringPlayer;
+      if (deck === "bottom") {
+        answeringPlayer = "right";
+      } else if (deck === "right") {
+        answeringPlayer = "top";
+      } else if (deck === "top") {
+        answeringPlayer = "left";
+      } else if (deck === "left") {
+        answeringPlayer = "bottom";
+      }
+      setAnsweringPlayer(answeringPlayer);
       setShowPopup(true);
     }
   };
@@ -83,11 +129,9 @@ function GameplayCard() {
     removeCardFromDeck(index);
     setIsLoading("right");
 
-    // Tambahkan kelas "animate" untuk memulai animasi
-    const movingCard = document.querySelector(".moving-card");
-    if (movingCard) {
-      movingCard.classList.add("animate");
-    }
+    // Tentukan pemain yang harus menjawab
+    let answeringPlayer = "right"; // Pemain kanan yang menjawab
+    setAnsweringPlayer(answeringPlayer);
   };
 
   const removeCardFromDeck = (index) => {
@@ -112,6 +156,9 @@ function GameplayCard() {
   };
 
   const handleAnswerSelect = (isCorrect) => {
+    // Hentikan timer ketika pemain menjawab
+    clearInterval(timerRef.current);
+
     setIsLoading(null);
     setIsCorrectAnswer(isCorrect);
 
@@ -148,13 +195,13 @@ function GameplayCard() {
       }, 2000);
     }, 3000);
 
-    clearTimeout(timerRef.current);
     setActiveCard(null);
     setIsExitingPopup(true);
     setTimeout(() => {
       setShowPopup(false);
       setIsExitingPopup(false);
       setIsActionInProgress(false); // Akhiri aksi
+      setAnsweringPlayer(null); // Reset pemain yang menjawab
     }, 2000);
   };
 
@@ -169,10 +216,17 @@ function GameplayCard() {
         <Col
           md={2}
           xs={12}
-          className="text-center ms-5 d-flex align-items-center"
+          className="text-center ms-5 d-flex align-items-center position-relative"
         >
           {/* Container untuk DeckPlayer dan Gambar Profil */}
-          <div className="d-flex align-items-center ml-5 ms-5 ">
+          <div
+            className="d-flex align-items-center ml-5 ms-5 position-relative"
+            style={{ position: "relative" }}
+          >
+            {/* Timer untuk pemain atas */}
+            {showPopup && answeringPlayer === "top" && (
+              <div className="timer-overlay">{timeRemaining}</div>
+            )}
             <div
               onClick={() => handleDeckCardClick("top")}
               style={{ position: "relative" }}
@@ -195,11 +249,16 @@ function GameplayCard() {
 
       <Row className="mb-0 mt-1 justify-content-center align-items-center">
         {/* Deck Kiri dengan Gambar PlayerOne */}
-        <Col md={4} xs={12}>
+        <Col md={4} xs={12} className="position-relative">
           <div
-            className="deck-kiri d-flex flex-column align-items-center"
+            className="deck-kiri d-flex flex-column align-items-center position-relative"
             onClick={() => handleDeckCardClick("left")}
+            style={{ position: "relative" }}
           >
+            {/* Timer untuk pemain kiri */}
+            {showPopup && answeringPlayer === "left" && (
+              <div className="timer-overlay">{timeRemaining}</div>
+            )}
             <Image
               src={PlayerOne}
               alt="Player One"
@@ -240,11 +299,16 @@ function GameplayCard() {
         </Col>
 
         {/* Deck Kanan dengan Gambar PlayerOne */}
-        <Col md={4} xs={12}>
+        <Col md={4} xs={12} className="position-relative">
           <div
-            className="deck-kanan d-flex flex-column align-items-center "
+            className="deck-kanan d-flex flex-column align-items-center position-relative"
             onClick={() => handleDeckCardClick("right")}
+            style={{ position: "relative" }}
           >
+            {/* Timer untuk pemain kanan */}
+            {showPopup && answeringPlayer === "right" && (
+              <div className="timer-overlay">{timeRemaining}</div>
+            )}
             <Image
               src={PlayerOne}
               alt="Player One"
@@ -265,8 +329,14 @@ function GameplayCard() {
 
       <Row className="align-items-center justify-content-center">
         {/* Bottom Deck Card */}
-        <Col xs={"auto"} className="text-center ml-5 ms-5">
-          <BottomDeckCard cards={cards} onCardClick={handleBottomCardClick} />
+        <Col xs={"auto"} className="text-center ml-5 ms-5 position-relative">
+          <div style={{ position: "relative" }}>
+            {/* Timer untuk pemain bawah */}
+            {showPopup && answeringPlayer === "bottom" && (
+              <div className="timer-overlay">{timeRemaining}</div>
+            )}
+            <BottomDeckCard cards={cards} onCardClick={handleBottomCardClick} />
+          </div>
         </Col>
 
         {/* Player One Image di Samping Kanan */}

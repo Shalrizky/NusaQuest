@@ -7,7 +7,7 @@ import HeaderNuca from "../components/games/HeaderGame";
 import PertanyaanNuca, {
   ListPertanyaanNuca,
 } from "../components/games/PertanyaanNuca";
-import Potion from "../components/games/potion"; // Pastikan komponen Potion diimport
+import Potion from "../components/games/potion"; // Pastikan komponen Potion di Import yaa
 import shuffleIcon from "../assets/common/shuffle.png";
 import PlayerOne from "../assets/common/imageOne.png";
 

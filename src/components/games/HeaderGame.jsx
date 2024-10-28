@@ -11,8 +11,8 @@ import song3 from "../../assets/sound/song3.mp3";
 import "../../style/components/games/HeaderGame.css";
 
 function HeaderUtangga({ toggleTemp }) {
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false); 
-  const [isSfxPlaying] = useState(true);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [isSfxPlaying, setIsSfxPlaying] = useState(true);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const audioRef = useRef(null);
   const playlist = [song1, song2, song3];
@@ -34,8 +34,11 @@ function HeaderUtangga({ toggleTemp }) {
     setIsMusicPlaying(!isMusicPlaying);
   };
 
+  const handleSfxClick = () => {
+    setIsSfxPlaying(!isSfxPlaying);
+  };
+
   const handleAudioEnded = () => {
-    // Move to the next song in the playlist, or loop back to the first song
     const nextSongIndex = (currentSongIndex + 1) % playlist.length;
     setCurrentSongIndex(nextSongIndex);
   };
@@ -62,6 +65,14 @@ function HeaderUtangga({ toggleTemp }) {
         </Col>
         <Col className="d-flex justify-content-end">
           <Image
+            src={isSfxPlaying ? iconsfxOff : iconsfx}
+            alt="icon sfx"
+            width={45}
+            className="me-3"
+            onClick={handleSfxClick}
+            style={{ cursor: "pointer" }}
+          />
+          <Image
             src={isMusicPlaying ? iconmusik : iconmusikOff}
             alt="icon music"
             width={45}
@@ -69,26 +80,17 @@ function HeaderUtangga({ toggleTemp }) {
             onClick={handleMusicClick}
             style={{ cursor: "pointer" }}
           />
-          <Image
-            src={isSfxPlaying ? iconsfx : iconsfxOff}
-            alt="icon sfx"
-            width={45}
-            className="me-3"
-            style={{ cursor: "pointer" }}
-          />
         </Col>
       </Row>
 
-      {/* Audio Element for Music Playback */}
       <audio
         ref={audioRef}
         src={playlist[currentSongIndex]}
         onEnded={handleAudioEnded}
-        autoPlay={false} 
-        loop={false} 
+        autoPlay={false}
+        loop={false}
       />
 
-      {/* Offcanvas component */}
       <Offcanvas
         show={showOffcanvas}
         onHide={handleCloseOffcanvas}

@@ -91,8 +91,8 @@ function UlarTangga() {
   const [victory, setVictory] = useState(false);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
   const [winner, setWinner] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(10);
-  const [gameTimeLeft, setGameTimeLeft] = useState(600);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [gameTimeLeft, setGameTimeLeft] = useState(1800);
   const [gameOver, setGameOver] = useState(false);
 
   // const [questions, setQuestions] = useState([]);
@@ -114,7 +114,7 @@ function UlarTangga() {
 
   const nextPlayer = () => {
     setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-    setTimeLeft(10); // Reset waktu ke 3 detik untuk pemain berikutnya
+    setTimeLeft(30); // Reset waktu ke 3 detik untuk pemain berikutnya
   };
 
   useEffect(() => {
@@ -126,17 +126,22 @@ function UlarTangga() {
     }
   }, [timeLeft, isPionMoving]);
 
-  // Timer global untuk menghitung waktu permainan
+  /// Timer global untuk menghitung waktu permainan
   useEffect(() => {
     if (gameTimeLeft > 0) {
       const gameTimer = setInterval(() => {
-        setGameTimeLeft((prevTime) => prevTime - 1);
+        setGameTimeLeft((prevTime) => {
+          const newTime = prevTime - 1;
+          console.log("Sisa waktu permainan:", Math.floor(newTime / 60) + ":" + String(newTime % 60).padStart(2, '0'));
+          return newTime;
+        });
       }, 1000);
       return () => clearInterval(gameTimer);
     } else {
       setGameOver(true); // Tandai permainan berakhir
     }
   }, [gameTimeLeft]);
+
 
   // Arahkan ke halaman lain atau tampilkan pesan ketika waktu habis
   useEffect(() => {
@@ -230,7 +235,7 @@ function UlarTangga() {
     // Reset state setelah pemain selesai
     setSubmitted(false);
     setIsCorrect(null);
-    setTimeLeft(10); // Reset timer ke 3 detik setelah lemparan selesai
+    setTimeLeft(30); // Reset timer ke 3 detik setelah lemparan selesai
   };
 
 
@@ -282,12 +287,7 @@ function UlarTangga() {
     >
       <HeaderUtangga layout="home" />
 
-      <div className="game-timer-display">
-        <span className="game-time-text">
-          {Math.floor(gameTimeLeft / 60)}:{String(gameTimeLeft % 60).padStart(2, '0')}
-        </span>
-        <span className="game-time-label"></span>
-      </div>
+
 
       <Row className="utu-container-left">
         <Col xs={12} md={6} className="utu-konva">
@@ -360,12 +360,11 @@ function UlarTangga() {
             <span className="time-label">Sec</span>
           </div>
 
-          {/* Komponen Dadu */}
-          <Dice
-            onRollComplete={handleDiceRollComplete}
-            disabled={isPionMoving || waitingForAnswer}
-          />
-          <button><Potion /></button>
+          <div className="dice-potion-container">
+            <Dice onRollComplete={handleDiceRollComplete} disabled={isPionMoving || waitingForAnswer} />
+            <Potion />
+          </div>
+
 
           {/* Daftar pemain */}
           <div className="player-list mt-3">

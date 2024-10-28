@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Image, Form } from "react-bootstrap";
 import { useNavigate } from 'react-router-dom';
 import HeaderUtangga from "../components/games/HeaderGame";
 import Board from "../components/games/React-KonvaUlar";
 import Dice from "../components/games/Dice";
 import Potion from "../components/games/potion";
+// import  {fetchQuestions} from "../services/questionServices";
 import "../style/routes/UlarTangga.css";
 import victoryImage from "../assets/games/Utangga/victory.png"
 import Achievement from "../assets/games/Utangga/achievement1.png"
@@ -16,22 +17,22 @@ import bgUlarTangga from "../assets/common/bg-ular.png";
 const players = [
   {
     id: 1,
-    name: "Anak Bego(AB)",
+    name: "Abrar",
     photo: require("../assets/games/Utangga/narutoa.png"),
   },
   {
     id: 2,
-    name: "Sahel Bau",
+    name: "Sahel",
     photo: require("../assets/games/Utangga/narutoa.png"),
   },
   {
     id: 3,
-    name: "RanggaSpinner",
+    name: "Rangga",
     photo: require("../assets/games/Utangga/narutoa.png"),
   },
   {
     id: 4,
-    name: "natahAFK",
+    name: "natah",
     photo: require("../assets/games/Utangga/narutoa.png"),
   },
 ];
@@ -89,11 +90,81 @@ function UlarTangga() {
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
   const [victory, setVictory] = useState(false);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
-  const navigate = useNavigate();
+  const [winner, setWinner] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [gameTimeLeft, setGameTimeLeft] = useState(1800);
+  const [gameOver, setGameOver] = useState(false);
 
+  // const [questions, setQuestions] = useState([]);
+
+  // useEffect(() => {
+  //   fetchQuestions(setQuestions);  // Panggil tanpa async/await
+  // }, []);
+
+  // useEffect(() => {
+  //   // Debug untuk memastikan questions ter-update
+  //   console.log("Updated Questions State:", questions);
+  // }, [questions]);  // Akan dipanggil setiap kali questions berubah
+
+
+  const navigate = useNavigate();
 
   const logPionPositions = (newPositions) => {
   };
+
+  const nextPlayer = () => {
+    setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+    setTimeLeft(30); // Reset waktu ke 3 detik untuk pemain berikutnya
+  };
+
+  useEffect(() => {
+    if (!isPionMoving && timeLeft > 0) {
+      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timerId); // Bersihkan timer saat tidak digunakan
+    } else if (timeLeft === 0) {
+      nextPlayer(); // Pindah ke pemain berikutnya jika waktu habis
+    }
+  }, [timeLeft, isPionMoving]);
+
+  /// Timer global untuk menghitung waktu permainan
+  useEffect(() => {
+    if (gameTimeLeft > 0) {
+      const gameTimer = setInterval(() => {
+        setGameTimeLeft((prevTime) => {
+          const newTime = prevTime - 1;
+          console.log("Sisa waktu permainan:", Math.floor(newTime / 60) + ":" + String(newTime % 60).padStart(2, '0'));
+          return newTime;
+        });
+      }, 1000);
+      return () => clearInterval(gameTimer);
+    } else {
+      setGameOver(true); // Tandai permainan berakhir
+    }
+  }, [gameTimeLeft]);
+
+
+  // Arahkan ke halaman lain atau tampilkan pesan ketika waktu habis
+  useEffect(() => {
+    if (gameOver) {
+      alert("Waktu permainan habis! Permainan telah berakhir.");
+      navigate("/"); // Arahkan pemain ke halaman utama
+    }
+  }, [gameOver, navigate]);
+
+  useEffect(() => {
+    if (showQuestion) {
+
+      if (timeLeft > 0) {
+        const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+        return () => clearTimeout(timerId); // Bersihkan timer jika waktu habis
+      } else {
+
+        nextPlayer();
+        setShowQuestion(false);
+        setWaitingForAnswer(false);
+      }
+    }
+  }, [timeLeft, showQuestion]);
 
   const handleDiceRollComplete = (diceNumber) => {
     setIsPionMoving(true);
@@ -104,12 +175,11 @@ function UlarTangga() {
 
       if (newPosition > 99) newPosition = 99;
 
-      // Update position before checking for interactions
       newPositions[currentPlayerIndex] = newPosition;
 
-      // Check for victory
       if (newPosition === 99) {
         setVictory(true);
+        setWinner(players[currentPlayerIndex].name);
       }
 
       logPionPositions(newPositions);
@@ -120,6 +190,8 @@ function UlarTangga() {
       setPionPositionIndex((prevPositions) => {
         const newPositions = [...prevPositions];
         let newPosition = newPositions[currentPlayerIndex];
+
+        if (victory) return prevPositions;
 
         // Jika bertemu tangga, tampilkan pertanyaan khusus untuk naik tangga
         if (tanggaUp[newPosition]) {
@@ -147,12 +219,11 @@ function UlarTangga() {
         // Jika pemain sudah mendapat kesempatan roll ulang sebelumnya
         else if (allowExtraRoll) {
           setAllowExtraRoll(false);
-          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+          nextPlayer(); // Pindah ke pemain berikutnya
         }
-
         // Jika bukan angka 6 dan tidak ada roll ulang, pindah ke pemain berikutnya
         else {
-          setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+          nextPlayer(); // Pindah ke pemain berikutnya
         }
 
         return newPositions;
@@ -160,9 +231,13 @@ function UlarTangga() {
 
       setIsPionMoving(false);
     }, 2000);
+
+    // Reset state setelah pemain selesai
     setSubmitted(false);
     setIsCorrect(null);
+    setTimeLeft(30); // Reset timer ke 3 detik setelah lemparan selesai
   };
+
 
   const handleAnswerChange = (e) => {
     const answer = e.target.value;
@@ -174,11 +249,8 @@ function UlarTangga() {
     setSubmitted(true);
 
     if (isAnswerCorrect) {
-      // Cek apakah pertanyaan ini berasal dari dadu 6 atau dari tangga
       if (allowExtraRoll) {
-        // Jika pertanyaan dari dadu 6 dan jawabannya benar, beri kesempatan roll lagi
       } else {
-        // Jika pertanyaan dari tangga, pion naik ke posisi tangga
         setPionPositionIndex((prevPositions) => {
           const newPositions = [...prevPositions];
           const currentPos = newPositions[currentPlayerIndex];
@@ -191,13 +263,10 @@ function UlarTangga() {
           logPionPositions(newPositions);
           return newPositions;
         });
-
-        // Setelah naik tangga, langsung pindah giliran ke pemain berikutnya
         setAllowExtraRoll(false);
         setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
       }
     } else {
-      // Jika jawaban salah, giliran berpindah ke pemain berikutnya
       setAllowExtraRoll(false);
       setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
     }
@@ -210,12 +279,16 @@ function UlarTangga() {
   };
 
   return (
+
     <Container
       fluid
       className="utangga-container"
       style={{ backgroundImage: `url(${bgUlarTangga})` }}
     >
       <HeaderUtangga layout="home" />
+
+
+
       <Row className="utu-container-left">
         <Col xs={12} md={6} className="utu-konva">
           <Board
@@ -282,12 +355,16 @@ function UlarTangga() {
             )}
           </div>
 
-          {/* Komponen Dadu */}
-          <Dice
-            onRollComplete={handleDiceRollComplete}
-            disabled={isPionMoving || waitingForAnswer}
-          />
-          <button><Potion /></button>
+          <div className="timer-display">
+            <span className="time-text">{timeLeft}</span>
+            <span className="time-label">Sec</span>
+          </div>
+
+          <div className="dice-potion-container">
+            <Dice onRollComplete={handleDiceRollComplete} disabled={isPionMoving || waitingForAnswer} />
+            <Potion />
+          </div>
+
 
           {/* Daftar pemain */}
           <div className="player-list mt-3">
@@ -316,7 +393,7 @@ function UlarTangga() {
       {victory && (
         <div className="victory-overlay" onClick={() => navigate("/")}>
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
-          <h2>{players[currentPlayerIndex].name} Wins!</h2>
+          <h2>{winner} Wins!</h2>
           <p>Kamu mendapatkan:</p>
           <div className="rewards">
             <img src={Achievement} alt="achievement" className="Achievement1-logo" />
@@ -331,3 +408,5 @@ function UlarTangga() {
 }
 
 export default UlarTangga;
+
+// ini yang bener + timer

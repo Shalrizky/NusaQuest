@@ -207,7 +207,7 @@ function GameplayCard() {
             onAnswerSelect={handleAnswerSelect}
             isExiting={isExitingPopup}
           />
-          <Potion style={{ zIndex: "3000" }} /> {/* Menambahkan komponen Potion di sini */}
+          <Potion style={{ zIndex: "5000" }} /> {/* Menambahkan komponen Potion di sini */}
         </div>
       )}
     </Container>

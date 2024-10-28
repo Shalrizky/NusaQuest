@@ -1,3 +1,40 @@
+.card-custom {
+  width: 150px;
+  height: 180px;
+  border-radius: 10px;
+  padding: 0.5rem;
+  border: 5px solid white;
+  background-color: orange;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 15px;
+  overflow: hidden;
+}
+
+.card-text-custom {
+  flex-grow: 1;
+  overflow-y: auto; /* Scroll secara vertikal jika teks terlalu panjang */
+  max-height: 100px; /* Batasi tinggi teks agar tidak melebihi container */
+  margin-bottom: 10px;
+  scrollbar-width: thin; /* Scrollbar lebih tipis (Firefox) */
+  scrollbar-color: #ffffff #ffa500; /* Warna scrollbar (Firefox) */
+}
+
+/* Scrollbar untuk WebKit (Chrome, Safari) */
+.card-text-custom::-webkit-scrollbar {
+  width: 8px;
+}
+
+.card-text-custom::-webkit-scrollbar-track {
+  background: #ffa500; /* Warna track scrollbar */
+}
+
+.card-text-custom::-webkit-scrollbar-thumb {
+  background-color: #ffffff; /* Warna thumb scrollbar */
+  border-radius: 10px;
+}
+
 .stackable-cards {
   position: relative;
   display: flex;
@@ -18,11 +55,11 @@
 }
 
 .card-custom {
-  width: 150px;
-  height: 180px;
-  border-radius: 10px;
-  padding: 0.5rem;
-  border: 5px solid white;
-  background-color: orange;
-  display: flex;
+  transition: transform 0.3s, box-shadow 0.3s; /* Transisi untuk transformasi dan bayangan */
+  cursor: pointer; /* Mengubah kursor saat hover */
+}
+
+.card-custom:hover {
+  transform: scale(1.05); /* Efek zoom saat hover */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Bayangan saat hover */
 }

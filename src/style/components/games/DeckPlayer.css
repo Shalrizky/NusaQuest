@@ -5,7 +5,8 @@
 
 .card-stack {
   position: relative;
-  margin-left: -20px;
+  margin-left: -20px; /* Atur margin untuk tumpukan */
+  transition: transform 0.2s; /* Efek transisi saat hover */
 }
 
 .card-stack img {
@@ -14,4 +15,19 @@
   transition: transform 0.2s;
   width: 100px; /* Atur lebar gambar yang lebih besar */
   height: auto; /* Sesuaikan tinggi secara otomatis */
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8); /* Gerakan awal dari atas */
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1); /* Gerakan akhir di posisi normal */
+  }
+}
+
+.new-card {
+  animation: slideIn 0.5s ease-in-out forwards; /* Animasi untuk kartu baru */
 }

@@ -9,26 +9,35 @@
   justify-content: center;
   align-items: center;
   z-index: 2000;
-  transition: filter 0.3s ease-in-out;
   background-color: rgba(0, 0, 0, 0.5);
+  transition: background-color 0.5s ease;
+}
+
+/* Background untuk jawaban benar dan salah */
+.correct-bg {
+  background-color: rgba(144, 238, 144, 0.8); /* Hijau */
+}
+
+.incorrect-bg {
+  background-color: rgba(255, 127, 127, 0.8); /* Merah */
 }
 
 .popup-content {
-  background-color: #313cd1; /* Warna biru muda */
+  background-color: #313cd1;
   padding: 20px;
   border-radius: 10px;
   text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Tambahkan bayangan untuk efek kedalaman */
-  width: 400px; /* Lebar pop-up, bisa diubah sesuai kebutuhan */
-  max-width: 90%; /* Membatasi lebar maksimum agar responsif */
-  transition: opacity 0.5s ease, transform 0.5s ease; /* Tambahkan transisi */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  width: 400px;
+  max-width: 90%;
   color: white;
+  transition: opacity 0.3s ease;
 }
 
-/* Kelas untuk menghilangkan pop-up */
-.popup-exit {
-  opacity: 0; /* Mengurangi opacity menjadi 0 */
-  transform: translateY(-20px); /* Geser ke atas sedikit */
+/* Animasi keluar */
+.exit-popup {
+  opacity: 0;
+  transition: opacity 2s ease;
 }
 
 .answer-options {
@@ -38,39 +47,39 @@
   margin-top: 20px;
 }
 
-.answer-options button {
+.answer-button {
   padding: 10px;
   font-size: 16px;
   cursor: pointer;
-  border: solid 0.1px rgb(255, 255, 255); /* Menghilangkan border default */
-  border-radius: 5px; /* Sudut tombol yang lebih bulat */
-  background-color: transparent; /* Warna latar belakang tombol */
-  transition: background-color 0.3s ease; /* Transisi halus untuk hover */
-  color : white;
+  border: 0.1px solid white;
+  border-radius: 5px;
+  background-color: transparent;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  color: white;
 }
 
-.answer-options button:hover {
-  background-color:rgba(0, 0, 0, 0.308); /* Warna latar belakang saat hover (biru cerah) */
+.answer-button:hover {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
-/* Kelas untuk jawaban benar dan salah */
 .correct-answer {
-  background-color: #90EE90; /* Warna hijau untuk jawaban benar */
+  background-color: #90ee90;
+  color: black;
 }
 
 .incorrect-answer {
-  background-color: #FF7F7F; /* Warna merah untuk jawaban salah */
+  background-color: #ff7f7f;
+  color: black;
 }
 
-/* Efek getaran */
+/* Animasi getaran */
 @keyframes shake {
-  0% { transform: translate(1px, 0); }
-  25% { transform: translate(-1px, 0); }
-  50% { transform: translate(1px, 0); }
-  75% { transform: translate(-1px, 0); }
-  100% { transform: translate(0, 0); }
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-2px, 0); }
+  50% { transform: translate(2px, 0); }
+  75% { transform: translate(-2px, 0); }
 }
 
 .shake {
-  animation: shake 0.5s; /* Durasi getaran */
+  animation: shake 0.5s;
 }

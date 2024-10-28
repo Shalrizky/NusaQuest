@@ -8,10 +8,11 @@ const BottomDeckCard = ({ cards, onCardClick }) => {
       {cards.map((card, index) => (
         <Card
           key={index}
-          className="bg-orange text-white card-custom"
+          className={`bg-orange text-white card-custom ${card.isNew ? 'new-card' : ''}`} // Tambahkan class 'new-card' untuk animasi
           onClick={() => onCardClick(card, index)}
         >
           <Card.Body>
+            {/* Menampilkan kategori di sini */}
             <Card.Title className="card-title-custom">{`Kategori: ${card.category}`}</Card.Title>
             <Card.Text className="card-text-custom">
               {card.question}

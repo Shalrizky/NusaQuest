@@ -3,7 +3,7 @@ import '../../style/components/games/PertanyaanNuca.css';
 
 const westJavaQuestions = [
   {
-    category: "Makanan",
+    category: "Makanan", // Kategori: Makanan
     questions: [
       {
         question: "Apa nama makanan khas Bandung yang terbuat dari singkong dan berbentuk bulat pipih?",
@@ -14,32 +14,28 @@ const westJavaQuestions = [
         question: "Sebutkan nama sate khas Purwakarta yang terbuat dari daging kambing muda!",
         options: ["A. Sate Lilit", "B. Sate Padang", "C. Sate Maranggi", "D. Sate Madura"],
         correctAnswer: "C"
-      },
-      {
-        question: "Apa nama makanan khas Sumedang yang terbuat dari tahu yang digoreng dua kali?",
-        options: ["A. Tahu Bulat", "B. Tahu Gejrot", "C. Tahu Isi", "D. Tahu Sumedang"],
-        correctAnswer: "B"
       }
     ]
   },
   {
-    category: "Minuman",
+    category: "Kesenian", // Kategori: Kesenian
     questions: [
       {
-        question: "Apa nama minuman khas Bandung yang terbuat dari susu dan sirup cocopandan?",
-        options: ["A. Bajigur", "B. Bandrek", "C. Es Lilin", "D. Es Goyobod"],
-        correctAnswer: "D"
+        question: "Apa nama alat musik khas Sunda yang terbuat dari bambu?",
+        options: ["A. Angklung", "B. Gamelan", "C. Kolintang", "D. Calung"],
+        correctAnswer: "A"
       },
       {
-        question: "Sebutkan nama minuman tradisional Sunda yang terbuat dari air kelapa muda dan gula aren!",
-        options: ["A. Cendol", "B. Es Dawet", "C. Es Cingcau", "D. Es Doger"],
-        correctAnswer: "D"
+        question: "Apa nama tarian khas Jawa Barat yang menggambarkan keceriaan dan kebahagiaan?",
+        options: ["A. Tari Pendet", "B. Tari Jaipong", "C. Tari Saman", "D. Tari Kecak"],
+        correctAnswer: "B"
       }
     ]
   }
 ];
 
-export const ListPertanyaanNuca = westJavaQuestions; // Ekspor daftar pertanyaan
+export const ListPertanyaanNuca = westJavaQuestions;
+
 
 const getRandomQuestion = () => {
   const randomCategory = westJavaQuestions[Math.floor(Math.random() * westJavaQuestions.length)];
@@ -51,7 +47,7 @@ const getRandomQuestion = () => {
   };
 };
 
-function PertanyaanNuca({ onAnswerSelect, isExiting }) {
+function PertanyaanNuca({ onAnswerSelect }) {
   const [questionData, setQuestionData] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
@@ -62,27 +58,36 @@ function PertanyaanNuca({ onAnswerSelect, isExiting }) {
   }, []);
 
   const handleAnswerSelect = (answer) => {
-    setSelectedAnswer(answer);
     const isCorrectAnswer = answer === questionData.correctAnswer;
+    setSelectedAnswer(answer);
     setIsCorrect(isCorrectAnswer);
     onAnswerSelect(isCorrectAnswer);
+
+    // Hilangkan pop-up setelah 1 detik
+    setTimeout(() => {
+      setSelectedAnswer(null);
+      setIsCorrect(null);
+    }, 8000);
   };
 
   if (!questionData) return null;
 
   return (
     <div className="popup-overlay">
-      <div className={`popup-content ${isExiting ? 'popup-exit' : ''}`}>
+      <div className="popup-content">
         <h2>{questionData.question}</h2>
         <div className="answer-options">
           {questionData.options.map((option, index) => (
             <button
               key={index}
               onClick={() => handleAnswerSelect(option.charAt(0))}
-              className={selectedAnswer === option.charAt(0)
-                ? isCorrect ? 'correct-answer' : 'incorrect-answer shake'
-                : ''
-              }
+              className={`answer-button ${
+                selectedAnswer === option.charAt(0)
+                  ? isCorrect
+                    ? 'correct-answer'
+                    : 'incorrect-answer shake'
+                  : ''
+              }`}
             >
               {option}
             </button>

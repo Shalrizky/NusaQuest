@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Col, Container, Row } from 'react-bootstrap';
+import { Col, Container, Row, Image } from 'react-bootstrap';
 import '../style/routes/GameplayCard.css';
 import DeckPlayer from '../components/games/DeckPlayer';
 import BottomDeckCard from '../components/games/BottomDeckCard';
 import HeaderNuca from '../components/games/HeaderGame';
 import PertanyaanNuca, { ListPertanyaanNuca } from '../components/games/PertanyaanNuca';
+import Potion from "../components/games/potion"; // Pastikan komponen Potion diimport
 import shuffleIcon from '../assets/common/shuffle.png';
+import PlayerOne from '../assets/common/imageOne.png';
 
 const getRandomQuestion = () => {
   const randomCategory = ListPertanyaanNuca[Math.floor(Math.random() * ListPertanyaanNuca.length)];
   const randomQuestion = randomCategory.questions[Math.floor(Math.random() * randomCategory.questions.length)];
   return {
+    category: randomCategory.category,
     question: randomQuestion.question,
     options: randomQuestion.options,
-    correctAnswer: randomQuestion.correctAnswer
+    correctAnswer: randomQuestion.correctAnswer,
   };
 };
 
@@ -24,7 +27,7 @@ function GameplayCard() {
     right: 4,
   });
 
-  const [lastActiveDeck, setLastActiveDeck] = useState(null); // Track the last active deck
+  const [lastActiveDeck, setLastActiveDeck] = useState(null);
   const [isShuffling, setIsShuffling] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [isExitingPopup, setIsExitingPopup] = useState(false);
@@ -48,7 +51,7 @@ function GameplayCard() {
         ...prevCounts,
         [deck]: prevCounts[deck] - 1,
       }));
-      setLastActiveDeck(deck); // Store the active deck
+      setLastActiveDeck(deck);
       const newQuestion = getRandomQuestion();
       setActiveCard(newQuestion);
       setShowPopup(true);
@@ -56,9 +59,10 @@ function GameplayCard() {
   };
 
   const handleBottomCardClick = (card, index) => {
+    console.log(card);
     setActiveCard(card);
     setShowPopup(true);
-    setLastActiveDeck('bottom'); // Set last active as bottom deck
+    setLastActiveDeck('bottom');
     removeCardFromDeck(index);
     setIsLoading('right');
   };
@@ -74,12 +78,19 @@ function GameplayCard() {
     }));
   };
 
+  const addNewCardToDeck = () => {
+    const newQuestion = getRandomQuestion();
+    setCards((prevCards) => [
+      ...prevCards,
+      { ...newQuestion, isNew: true } // Tandai kartu baru
+    ]);
+  };
+
   const handleAnswerSelect = (isCorrect) => {
     setIsLoading(null);
     setIsCorrectAnswer(isCorrect);
 
     if (!isCorrect) {
-      // Logic to increment based on the last active deck
       switch (lastActiveDeck) {
         case 'bottom':
           incrementDeckCount('right');
@@ -91,8 +102,7 @@ function GameplayCard() {
           incrementDeckCount('left');
           break;
         case 'left':
-          const newQuestion = getRandomQuestion();
-          setCards((prevCards) => [...prevCards, newQuestion]); // Add a new question to bottom deck
+          addNewCardToDeck(); // Tambah kartu baru dengan animasi
           break;
         default:
           break;
@@ -102,9 +112,10 @@ function GameplayCard() {
     setTimeout(() => {
       setIsCorrectAnswer(null);
       setIsShuffling(true);
+
       setTimeout(() => {
         setIsShuffling(false);
-      }, 3000);
+      }, 2000);
     }, 3000);
 
     clearTimeout(timerRef.current);
@@ -120,38 +131,70 @@ function GameplayCard() {
     <Container fluid className="nuca-container d-flex justify-content-around flex-column">
       <HeaderNuca layout="home" />
 
-      <Row className="mb-5 justify-content-center flex-grow-1 align-items-center">
-        <Col md={1} xs={12} className="text-center ml-5">
+      <Row className="mb-5 ms-5 justify-content-center flex-grow-1 align-items-center">
+        <Col md={1} xs={12} className="text-center ms-5">
           <div onClick={() => handleDeckCardClick('top')}>
-            <DeckPlayer count={deckCounts.top} />
+            <DeckPlayer count={deckCounts.top} isNew={deckCounts.top === 0} /> {/* Tambahkan isNew */}
           </div>
         </Col>
       </Row>
 
-      <Row className="mb-5 justify-content-center flex-grow-1 align-items-center">
-        <Col md={9} xs={12} className="d-flex justify-content-between">
-          <div className="deck-kiri-rotate" onClick={() => handleDeckCardClick('left')}>
-            <DeckPlayer count={deckCounts.left} style={{ transform: 'rotate(90deg)' }} />
-          </div>
-
-          <div className="deck-tengah position-relative">
-            <DeckPlayer count={7} />
-            <img
-              src={shuffleIcon}
-              alt="Shuffle Icon"
-              className={`shuffle-icon ${isShuffling ? 'rotating-once' : ''}`}
+      <Row className="mb-3 mt-1 justify-content-center flex-grow-1 align-items-center">
+        <Col md={9} xs={12} className="d-flex justify-content-between align-items-start">
+          {/* Deck Kiri dengan Gambar PlayerOne */}
+          <div className="d-flex flex-column align-items-center mt-n4">
+            <Image
+              src={PlayerOne}
+              alt="Player One"
+              style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '50px' }}
             />
+            <div className="deck-kiri-rotate" onClick={() => handleDeckCardClick('left')}>
+              <DeckPlayer count={deckCounts.left} isNew={deckCounts.left === 0} style={{ transform: 'rotate(90deg)' }} /> {/* Tambahkan isNew */}
+            </div>
           </div>
 
-          <div className="deck-kanan-rotate" onClick={() => handleDeckCardClick('right')}>
-            <DeckPlayer count={deckCounts.right} style={{ transform: 'rotate(270deg)' }} />
+          {/* Deck Tengah dengan Shuffle Icon */}
+          <div className="deck-tengah position-relative d-flex justify-content-center align-items-center">
+            <DeckPlayer count={4} isNew={false} /> {/* Tidak ada animasi untuk deck tengah */}
+            <div
+              className={`position-absolute d-flex justify-content-center align-items-center ${isShuffling ? 'shuffle-rotate' : ''}`}
+              style={{ width: '250px', height: '250px', zIndex: 1 }}
+            >
+              <Image
+                src={shuffleIcon}
+                alt="Shuffle Icon"
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+          </div>
+
+          {/* Deck Kanan dengan Gambar PlayerOne */}
+          <div className="d-flex flex-column align-items-center mt-n4">
+            <Image
+              src={PlayerOne}
+              alt="Player One"
+              style={{ width: '100px', height: '100px', borderRadius: '50%', marginBottom: '50px' }}
+            />
+            <div className="deck-kanan-rotate" onClick={() => handleDeckCardClick('right')}>
+              <DeckPlayer count={deckCounts.right} isNew={deckCounts.right === 0} /> {/* Tambahkan isNew */}
+            </div>
           </div>
         </Col>
       </Row>
 
-      <Row className="justify-content-center flex-grow-1 align-items-center">
-        <Col md={6} xs={12} className="text-center">
+      <Row className="align-items-center justify-content-center">
+        {/* Bottom Deck Card */}
+        <Col xs={"auto"} className="text-center ml-5 ms-5">
           <BottomDeckCard cards={cards} onCardClick={handleBottomCardClick} />
+        </Col>
+
+        {/* Player One Image di Samping Kanan */}
+        <Col xs="auto" className="d-flex align-items-center p-3">
+          <Image
+            src={PlayerOne}
+            alt="Player One"
+            style={{ width: '100px', height: '100px', borderRadius: '50%' }}
+          />
         </Col>
       </Row>
 
@@ -164,6 +207,7 @@ function GameplayCard() {
             onAnswerSelect={handleAnswerSelect}
             isExiting={isExitingPopup}
           />
+          <Potion style={{ zIndex: "3000" }} /> {/* Menambahkan komponen Potion di sini */}
         </div>
       )}
     </Container>

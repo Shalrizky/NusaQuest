@@ -7,61 +7,6 @@
   overflow: hidden;
 }
 
-.shuffle-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); /* Tetap di tengah */
-  width: 250px; /* Sesuaikan ukuran sesuai kebutuhan */
-  height: auto;
-  transition: transform 0.5s; /* Transisi yang halus saat tidak berputar */
-  transform-origin: center; /* Mengatur titik pusat rotasi */
-}
-
-.rotating-once {
-  animation: rotate 1s linear infinite; 
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg); /* Hanya berputar */
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-
-
-
-/* CSS untuk spinner */
-.loading-spinner .spinner {
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid #fff;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes rotate-once {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.rotating-once {
-  animation: rotate-once 3s ease-in-out; /* Mengubah durasi rotasi menjadi 3 detik */
-}
-
 .deck-kiri-rotate {
   display: flex;
   align-items: center; /* Memastikan kartu berada di tengah */
@@ -75,7 +20,86 @@
   display: flex;
   align-items: center; /* Memastikan kartu berada di tengah */
   justify-content: center; /* Memastikan kartu berada di tengah */
-  transform: rotate(-90deg); /* Memutar 90 derajat */
+  transform: rotate(270deg);
   transform-origin: center; /* Mengatur titik pusat rotasi */
   height: 100px; /* Atur tinggi sesuai kebutuhan */
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.shuffle-rotate {
+  animation: rotate 2s linear infinite;
+}
+
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.new-card {
+  animation: slideIn 0.5s ease-in-out forwards;
+}
+
+.bottom-deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.deck-card {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 5px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.deck-card:hover {
+  transform: scale(1.05);
+}
+
+/* CSS Animasi */
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.new-card {
+  animation: slideIn 0.5s ease-in-out forwards; /* Animasi untuk kartu baru */
+}
+
+/* Styling untuk semua deck */
+.deck-card {
+  transition: transform 0.3s; /* Efek transisi untuk interaksi */
+}
+
+.deck-card:hover {
+  transform: scale(1.05); /* Efek hover */
+}
+
+/* Mengatur posisi untuk deck kiri, kanan, dan atas */
+.deck-left, .deck-right, .deck-top {
+  margin: 10px;
+  width: 200px; /* Sesuaikan lebar sesuai kebutuhan */
 }

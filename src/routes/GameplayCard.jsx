@@ -43,6 +43,13 @@ function GameplayCard() {
   const [isCorrectAnswer, setIsCorrectAnswer] = useState(null);
   const timerRef = useRef(null);
 
+  // Tambahkan variabel state untuk mengatur giliran
+  const deckOrder = ["bottom", "right", "top", "left"];
+  const [currentTurn, setCurrentTurn] = useState("bottom");
+
+  // Tambahkan variabel state untuk mencegah double click
+  const [isActionInProgress, setIsActionInProgress] = useState(false);
+
   useEffect(() => {
     const generateCards = () => {
       const newCards = Array.from({ length: 4 }, () => getRandomQuestion());
@@ -52,7 +59,9 @@ function GameplayCard() {
   }, []);
 
   const handleDeckCardClick = (deck) => {
+    if (currentTurn !== deck || showPopup || isActionInProgress) return; // Bukan giliran pemain ini atau aksi sedang berlangsung
     if (deckCounts[deck] > 0) {
+      setIsActionInProgress(true); // Mulai aksi
       setDeckCounts((prevCounts) => ({
         ...prevCounts,
         [deck]: prevCounts[deck] - 1,
@@ -65,20 +74,21 @@ function GameplayCard() {
   };
 
   const handleBottomCardClick = (card, index) => {
+    if (currentTurn !== "bottom" || showPopup || isActionInProgress) return; // Bukan giliran pemain ini atau aksi sedang berlangsung
+    setIsActionInProgress(true); // Mulai aksi
     console.log(card);
     setActiveCard(card);
     setShowPopup(true);
     setLastActiveDeck("bottom");
     removeCardFromDeck(index);
     setIsLoading("right");
-  
+
     // Tambahkan kelas "animate" untuk memulai animasi
     const movingCard = document.querySelector(".moving-card");
     if (movingCard) {
       movingCard.classList.add("animate");
     }
   };
-  
 
   const removeCardFromDeck = (index) => {
     setCards((prevCards) =>
@@ -124,6 +134,11 @@ function GameplayCard() {
       }
     }
 
+    // Lanjutkan ke giliran pemain berikutnya
+    const currentPlayerIndex = deckOrder.indexOf(lastActiveDeck);
+    const nextPlayerIndex = (currentPlayerIndex + 1) % deckOrder.length;
+    setCurrentTurn(deckOrder[nextPlayerIndex]);
+
     setTimeout(() => {
       setIsCorrectAnswer(null);
       setIsShuffling(true);
@@ -139,6 +154,7 @@ function GameplayCard() {
     setTimeout(() => {
       setShowPopup(false);
       setIsExitingPopup(false);
+      setIsActionInProgress(false); // Akhiri aksi
     }, 2000);
   };
 
@@ -178,13 +194,12 @@ function GameplayCard() {
       </Row>
 
       <Row className="mb-0 mt-1 justify-content-center align-items-center">
-        
-          {/* Deck Kiri dengan Gambar PlayerOne */}
-          <Col  md={4} xs={12} >
-            <div
-               className="deck-kiri d-flex flex-column align-items-center"
-              onClick={() => handleDeckCardClick("left")}
-            >
+        {/* Deck Kiri dengan Gambar PlayerOne */}
+        <Col md={4} xs={12}>
+          <div
+            className="deck-kiri d-flex flex-column align-items-center"
+            onClick={() => handleDeckCardClick("left")}
+          >
             <Image
               src={PlayerOne}
               alt="Player One"
@@ -194,40 +209,43 @@ function GameplayCard() {
                 borderRadius: "50%",
               }}
             />
-              <DeckPlayer
-                count={deckCounts.left}
-                isNew={deckCounts.left === 0}
-                style={{ transform: "rotate(90deg)" }}
-              />
-            </div>
-          </Col>
+            <DeckPlayer
+              count={deckCounts.left}
+              isNew={deckCounts.left === 0}
+              style={{ transform: "rotate(90deg)" }}
+            />
+          </div>
+        </Col>
 
-          {/* Deck Tengah dengan Shuffle Icon */}
-          <Col  md={4} xs={12} className="deck-tengah position-relative d-flex justify-content-center align-items-center">
-            <DeckPlayer count={4} isNew={false} />{" "}
-            {/* Tidak ada animasi untuk deck tengah */}
-            <div
-              className={`position-absolute d-flex justify-content-center align-items-center ${
-                isShuffling ? "shuffle-rotate" : ""
-              }`}
-              style={{ width: "250px", height: "250px", zIndex: 1 }}
-            >
-              <Image
-                src={shuffleIcon}
-                alt="Shuffle Icon"
-                style={{ width: "100%", height: "100%" }}
-              />
-            </div>
-          </Col>
+        {/* Deck Tengah dengan Shuffle Icon */}
+        <Col
+          md={4}
+          xs={12}
+          className="deck-tengah position-relative d-flex justify-content-center align-items-center"
+        >
+          <DeckPlayer count={4} isNew={false} />{" "}
+          {/* Tidak ada animasi untuk deck tengah */}
+          <div
+            className={`position-absolute d-flex justify-content-center align-items-center ${
+              isShuffling ? "shuffle-rotate" : ""
+            }`}
+            style={{ width: "250px", height: "250px", zIndex: 1 }}
+          >
+            <Image
+              src={shuffleIcon}
+              alt="Shuffle Icon"
+              style={{ width: "100%", height: "100%" }}
+            />
+          </div>
+        </Col>
 
-          {/* Deck Kanan dengan Gambar PlayerOne */}
-          <Col  md={4} xs={12}>
-           
-            <div
-               className="deck-kanan d-flex flex-column align-items-center "
-              onClick={() => handleDeckCardClick("right")}
-            >
-               <Image
+        {/* Deck Kanan dengan Gambar PlayerOne */}
+        <Col md={4} xs={12}>
+          <div
+            className="deck-kanan d-flex flex-column align-items-center "
+            onClick={() => handleDeckCardClick("right")}
+          >
+            <Image
               src={PlayerOne}
               alt="Player One"
               style={{
@@ -236,14 +254,13 @@ function GameplayCard() {
                 borderRadius: "50%",
               }}
             />
-              <DeckPlayer
-                count={deckCounts.right}
-                isNew={deckCounts.right === 0}
-              />{" "}
-              {/* Tambahkan isNew */}
-            </div>
-          </Col>
-
+            <DeckPlayer
+              count={deckCounts.right}
+              isNew={deckCounts.right === 0}
+            />{" "}
+            {/* Tambahkan isNew */}
+          </div>
+        </Col>
       </Row>
 
       <Row className="align-items-center justify-content-center">

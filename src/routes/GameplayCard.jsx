@@ -135,7 +135,7 @@ function GameplayCard() {
           </div>
 
           <div className="deck-tengah position-relative">
-            <DeckPlayer count={4} />
+            <DeckPlayer count={7} />
             <img
               src={shuffleIcon}
               alt="Shuffle Icon"

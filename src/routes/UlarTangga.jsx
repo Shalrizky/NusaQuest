@@ -117,16 +117,17 @@ function UlarTangga() {
     setTimeLeft(30); // Reset waktu ke 3 detik untuk pemain berikutnya
   };
 
+  // Pindah ke pemain berikutnya jika waktu habis
   useEffect(() => {
     if (!isPionMoving && timeLeft > 0) {
       const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timerId); // Bersihkan timer saat tidak digunakan
+      return () => clearTimeout(timerId);
     } else if (timeLeft === 0) {
-      nextPlayer(); // Pindah ke pemain berikutnya jika waktu habis
+      nextPlayer();
     }
   }, [timeLeft, isPionMoving]);
 
-  /// Timer global untuk menghitung waktu permainan
+  // Timer global untuk menghitung waktu permainan
   useEffect(() => {
     if (gameTimeLeft > 0) {
       const gameTimer = setInterval(() => {
@@ -138,12 +139,11 @@ function UlarTangga() {
       }, 1000);
       return () => clearInterval(gameTimer);
     } else {
-      setGameOver(true); // Tandai permainan berakhir
+      setGameOver(true);
     }
   }, [gameTimeLeft]);
 
 
-  // Arahkan ke halaman lain atau tampilkan pesan ketika waktu habis
   useEffect(() => {
     if (gameOver) {
       alert("Waktu permainan habis! Permainan telah berakhir.");
@@ -151,12 +151,13 @@ function UlarTangga() {
     }
   }, [gameOver, navigate]);
 
+
   useEffect(() => {
     if (showQuestion) {
 
       if (timeLeft > 0) {
         const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-        return () => clearTimeout(timerId); // Bersihkan timer jika waktu habis
+        return () => clearTimeout(timerId);
       } else {
 
         nextPlayer();
@@ -287,8 +288,6 @@ function UlarTangga() {
     >
       <HeaderUtangga layout="home" />
 
-
-
       <Row className="utu-container-left">
         <Col xs={12} md={6} className="utu-konva">
           <Board
@@ -355,16 +354,17 @@ function UlarTangga() {
             )}
           </div>
 
+          {/*Timer pemain*/}
           <div className="timer-display">
             <span className="time-text">{timeLeft}</span>
             <span className="time-label">Sec</span>
           </div>
 
+          {/*kelas menggabungkan dice sama potion*/}
           <div className="dice-potion-container">
             <Dice onRollComplete={handleDiceRollComplete} disabled={isPionMoving || waitingForAnswer} />
             <Potion />
           </div>
-
 
           {/* Daftar pemain */}
           <div className="player-list mt-3">
@@ -389,7 +389,7 @@ function UlarTangga() {
         </Col>
       </Row>
 
-      {/*Show Overlay Victory */}
+      {/* Overlay Victory */}
       {victory && (
         <div className="victory-overlay" onClick={() => navigate("/")}>
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />

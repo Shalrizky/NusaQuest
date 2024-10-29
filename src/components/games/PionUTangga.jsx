@@ -12,18 +12,17 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
 
     const node = imageRef.current;
 
-    // Only animate if the pion has a different desired position and is not already animating
     if (positionIndex === desiredIndex || isAnimating.current) return;
 
-    // Kill any previous animations before starting new ones
+
     gsap.killTweensOf(node);
     isAnimating.current = true;
 
-    // Handle movement to desiredIndex
+
     const moveToIndex = (targetIndex) => {
       const targetPos = getPosition(targetIndex);
 
-      // Slide animation to target position
+
       gsap.to(node, {
         x: targetPos.x,
         y: targetPos.y,
@@ -33,7 +32,7 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
           setPositionIndex(targetIndex);
           isAnimating.current = false;
 
-          // Trigger callback after animation completes
+
           if (onAnimationComplete) {
             onAnimationComplete(index, targetIndex);
           }
@@ -41,19 +40,17 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
       });
     };
 
-    // Handle normal step-by-step movement to desiredIndex
+
     if (tanggaUp[positionIndex] && isCorrect) {
-      // If it's a ladder and answer is correct, move directly up
+
       const targetIndex = tanggaUp[positionIndex];
       moveToIndex(targetIndex);
     } else if (snakesDown[positionIndex]) {
-      // If it's a snake, slide down automatically
       const targetIndex = snakesDown[positionIndex];
       setTimeout(() => {
         moveToIndex(targetIndex);
-      }); // Delay for snake slide effect
+      });
     } else {
-      // Handle normal step-by-step movement (walking across board)
       const steps = Math.abs(desiredIndex - positionIndex);
       const direction = desiredIndex > positionIndex ? 1 : -1;
 
@@ -62,7 +59,7 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
           setPositionIndex(desiredIndex);
           isAnimating.current = false;
 
-          // Trigger callback when reaching the final step
+
           if (onAnimationComplete) {
             onAnimationComplete(index, desiredIndex);
           }

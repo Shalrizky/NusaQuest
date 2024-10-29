@@ -13,7 +13,7 @@ import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
 import RoomPlayer from './routes/RoomPlayer';
 import UlarTangga from './routes/UlarTangga';
-import GameplayCard from './routes/GameplayCard';
+import NusaCard from './routes/NusaCard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -80,16 +80,9 @@ const App = () => {
           )
         },
         {
-          path: '/GameplayCard', element: (
+          path: '/NusaCard', element: (
             <ProtectedRoute>
-              {withLoader(GameplayCard)()}
-            </ProtectedRoute>
-          )
-        },
-        {
-          path: '/gameplayCard', element: (
-            <ProtectedRoute>
-              {withLoader(GameplayCard)()}
+              {withLoader(NusaCard)()}
             </ProtectedRoute>
           )
         },

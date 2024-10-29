@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Col, Container, Row, Image } from "react-bootstrap";
-import "../style/routes/GameplayCard.css";
+import "../style/routes/NusaCard.css";
 import DeckPlayer from "../components/games/DeckPlayer";
 import BottomDeckCard from "../components/games/BottomDeckCard";
 import HeaderNuca from "../components/games/HeaderGame";
 import PertanyaanNuca, {
   ListPertanyaanNuca,
 } from "../components/games/PertanyaanNuca";
-import Potion from "../components/games/potion"; // Pastikan komponen Potion diimport ya
+import Potion from "../components/games/potion";
 import shuffleIcon from "../assets/common/shuffle.png";
 import PlayerOne from "../assets/common/imageOne.png";
 
@@ -26,7 +26,7 @@ const getRandomQuestion = () => {
   };
 };
 
-function GameplayCard() {
+function NusaCard() {
   const [deckCounts, setDeckCounts] = useState({
     top: 4,
     left: 4,
@@ -366,4 +366,4 @@ function GameplayCard() {
   );
 }
 
-export default GameplayCard;
+export default NusaCard;

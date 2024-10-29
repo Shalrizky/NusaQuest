@@ -63,7 +63,6 @@ function PertanyaanNuca({ onAnswerSelect }) {
     setIsCorrect(isCorrectAnswer);
     onAnswerSelect(isCorrectAnswer);
 
-    // Hilangkan pop-up setelah 1 detik
     setTimeout(() => {
       setSelectedAnswer(null);
       setIsCorrect(null);

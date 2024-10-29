@@ -7,32 +7,18 @@
   overflow: hidden;
 }
 
-.deck-kiri-rotate {
-  display: flex;
-  align-items: center; /* Memastikan kartu berada di tengah */
-  justify-content: center; /* Memastikan kartu berada di tengah */
-  transform: rotate(90deg); /* Memutar 90 derajat */
-  transform-origin: center; /* Mengatur titik pusat rotasi */
-  height: 100px; /* Atur tinggi sesuai kebutuhan */
-}
-
-.deck-kanan-rotate {
-  transform: rotate(270deg);
+.shuffle-rotate {
+  animation: rotate 0.5s linear forwards; /* Ensure you have the 'forwards' property */
 }
 
 @keyframes rotate {
   0% {
-    transform: rotate(0deg);
+    transform: rotate(0deg); /* Starting position */
   }
   100% {
-    transform: rotate(180deg);
+    transform: rotate(-90deg); /* Full reverse rotation */
   }
 }
-
-.shuffle-rotate {
-  animation: rotate 1.5s linear infinite;
-}
-
 
 @keyframes slideIn {
   0% {
@@ -93,46 +79,53 @@
   transform: scale(1.05); /* Efek hover */
 }
 
-/* Mengatur posisi untuk deck kiri, kanan, dan atas */
-.deck-left, .deck-right, .deck-top {
-  margin: 10px;
-  width: 200px; /* Sesuaikan lebar sesuai kebutuhan */
-}
-
 /* Timer Overlay dengan Desain Lebih Menarik */
 .timer-overlay {
   position: absolute;
-  top: -30px; /* Menyesuaikan posisi timer */
+  top: -30px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #ff416c, #ff4b2b); /* Gradient warna untuk kesan menarik */
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
   color: #fff;
   padding: 8px 15px;
   border-radius: 20px;
   font-size: 16px;
   font-weight: bold;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Efek bayangan */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   z-index: 1000;
-  transition: transform 0.2s ease; /* Animasi untuk gemetar */
+  transition: transform 0.2s ease;
 }
 
-/* Tambahkan animasi shake ketika waktu kurang dari atau sama dengan 5 detik */
-@keyframes shake {
-  0% { transform: translateX(-2px); }
-  25% { transform: translateX(2px); }
-  50% { transform: translateX(-2px); }
-  75% { transform: translateX(2px); }
-  100% { transform: translateX(0); }
+.position-absolute {
+  z-index: 10;
 }
 
-.shake-animation {
-  animation: shake 0.3s ease-in-out infinite; /* Gemetar saat 5 detik tersisa */
+.feedback-icon-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  pointer-events: none;
 }
 
-/* Animasi pada Popup Pertanyaan */
-.question-popup.shake {
-  animation: shake 0.3s ease-in-out infinite; /* Efek shake pada popup pertanyaan */
+.feedback-icon-profile {
+  width: 100px;
+  height: 100px;
+  animation: feedbackProfileAnimation 0.5s ease-in-out;
 }
 
-
-
+@keyframes feedbackProfileAnimation {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

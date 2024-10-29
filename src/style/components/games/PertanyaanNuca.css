@@ -37,7 +37,7 @@
 /* Animasi keluar */
 .exit-popup {
   opacity: 0;
-  transition: opacity 2s ease;
+  transition: opacity 1s ease;
 }
 
 .answer-options {
@@ -63,23 +63,13 @@
 }
 
 .correct-answer {
-  background-color: #90ee90;
-  color: black;
+  background-color: green;
+  color: white;
+  transition: background-color 0.3s ease;
 }
 
 .incorrect-answer {
-  background-color: #ff7f7f;
-  color: black;
-}
-
-/* Animasi getaran */
-@keyframes shake {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-2px, 0); }
-  50% { transform: translate(2px, 0); }
-  75% { transform: translate(-2px, 0); }
-} 
-
-.shake {
-  animation: shake 0.5s;
+  background-color: red;
+  color: white;
+  transition: background-color 0.3s ease;
 }

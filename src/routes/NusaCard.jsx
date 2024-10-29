@@ -10,6 +10,8 @@ import PertanyaanNuca, {
 import Potion from "../components/games/potion";
 import shuffleIcon from "../assets/common/shuffle.png";
 import PlayerOne from "../assets/common/imageOne.png";
+import checklist from "../assets/common/checklist.png"
+import cross from "../assets/common/cross.png"
 
 const getRandomQuestion = () => {
   const randomCategory =
@@ -67,25 +69,20 @@ function NusaCard() {
   // useEffect untuk mengatur timer ketika popup muncul
   useEffect(() => {
     if (showPopup && answeringPlayer) {
-      // Mulai timer
       setTimeRemaining(15);
       timerRef.current = setInterval(() => {
-        setTimeRemaining((prevTime) => {
-          if (prevTime <= 1) {
-            clearInterval(timerRef.current);
-            handleTimeOut(); // Waktu habis
-            return 0;
-          }
-          return prevTime - 1;
-        });
+        setTimeRemaining((prevTime) => prevTime - 1);
       }, 1000);
     } else {
-      // Bersihkan timer ketika popup ditutup
       clearInterval(timerRef.current);
     }
     return () => clearInterval(timerRef.current);
   }, [showPopup, answeringPlayer]);
-
+  
+  useEffect(() => {
+    if (timeRemaining === 0) handleTimeOut();
+  }, [timeRemaining]);
+  
   const handleTimeOut = () => {
     // Jika waktu habis dan pemain belum menjawab
     handleAnswerSelect(false); // Anggap jawaban salah
@@ -155,56 +152,95 @@ function NusaCard() {
     ]);
   };
 
-  const handleAnswerSelect = (isCorrect) => {
-    // Hentikan timer ketika pemain menjawab
-    clearInterval(timerRef.current);
+  const [answerStatus, setAnswerStatus] = useState({
+    top: null,
+    right: null,
+    bottom: null,
+    left: null,
+  });
 
-    setIsLoading(null);
-    setIsCorrectAnswer(isCorrect);
+  const [feedbackIcon, setFeedbackIcon] = useState({
+    show: false,
+    isCorrect: null,
+    position: null
+  });
 
-    if (!isCorrect) {
-      switch (lastActiveDeck) {
-        case "bottom":
-          incrementDeckCount("right");
-          break;
-        case "right":
-          incrementDeckCount("top");
-          break;
-        case "top":
-          incrementDeckCount("left");
-          break;
-        case "left":
-          addNewCardToDeck(); // Tambah kartu baru dengan animasi
-          break;
-        default:
-          break;
-      }
-    }
-
-    // Lanjutkan ke giliran pemain berikutnya
-    const currentPlayerIndex = deckOrder.indexOf(lastActiveDeck);
-    const nextPlayerIndex = (currentPlayerIndex + 1) % deckOrder.length;
-    setCurrentTurn(deckOrder[nextPlayerIndex]);
-
-    setTimeout(() => {
-      setIsCorrectAnswer(null);
-      setIsShuffling(true);
-
-      setTimeout(() => {
-        setIsShuffling(false);
-      }, 2000);
-    }, 3000);
-
-    setActiveCard(null);
-    setIsExitingPopup(true);
-    setTimeout(() => {
-      setShowPopup(false);
-      setIsExitingPopup(false);
-      setIsActionInProgress(false); // Akhiri aksi
-      setAnsweringPlayer(null); // Reset pemain yang menjawab
-    }, 2000);
+  const updateAnswerStatus = (player, isCorrect) => {
+    setAnswerStatus((prevStatus) => ({
+      ...prevStatus,
+      [player]: isCorrect,
+    }));
   };
 
+  const handleAnswerSelect = (isCorrect) => {
+    clearInterval(timerRef.current);
+    setIsLoading(null);
+    setIsCorrectAnswer(isCorrect);
+    
+    // Show feedback icon over the answering player's profile
+    setFeedbackIcon({
+      show: true,
+      isCorrect: isCorrect,
+      position: answeringPlayer
+    });
+    
+    updateAnswerStatus(answeringPlayer, isCorrect);
+    
+    if (!isCorrect) {
+      incrementDeckCount(
+        lastActiveDeck === "bottom" ? "right" :
+        lastActiveDeck === "right" ? "top" :
+        lastActiveDeck === "top" ? "left" : null
+      );
+    } else if (lastActiveDeck === "left") {
+      addNewCardToDeck();
+    }
+    
+    const nextTurn = deckOrder[(deckOrder.indexOf(lastActiveDeck) + 1) % deckOrder.length];
+    setCurrentTurn(nextTurn);
+    
+    setTimeout(() => {
+      setIsCorrectAnswer(null);
+      setActiveCard(null);
+      setIsExitingPopup(true);
+      
+      setTimeout(() => {
+        setShowPopup(false);
+        setIsExitingPopup(false);
+        setIsActionInProgress(false);
+        setAnsweringPlayer(null);
+        setFeedbackIcon({ show: false, isCorrect: null, position: null }); // Hide feedback icon
+        
+        setIsShuffling(true);
+        setTimeout(() => {
+          setIsShuffling(false);
+        }, 500); // Match this with the animation duration
+  
+        setAnswerStatus((prevStatus) => ({
+          ...prevStatus,
+          [answeringPlayer]: null,
+        }));
+      }, 2000);
+    }, 3000);
+  };
+
+   // Function to render feedback icon
+   const renderFeedbackIcon = (position) => {
+    if (!feedbackIcon.show || feedbackIcon.position !== position) return null;
+    
+    return (
+      <div className="feedback-icon-container">
+        <img
+          src={feedbackIcon.isCorrect ? checklist : cross}
+          alt={feedbackIcon.isCorrect ? "Correct" : "Incorrect"}
+          className="feedback-icon-profile"
+        />
+      </div>
+    );
+  };
+
+
+  
   return (
     <Container
       fluid
@@ -225,13 +261,15 @@ function NusaCard() {
           >
             {/* Timer untuk pemain atas */}
             {showPopup && answeringPlayer === "top" && (
-              <div className="timer-overlay">{timeRemaining}</div>
+              <div className={`timer-overlay ${timeRemaining <= 5 ? "shake-animation" : ""}`}>
+                {timeRemaining}
+              </div>
             )}
             <div
               onClick={() => handleDeckCardClick("top")}
               style={{ position: "relative" }}
             >
-              <DeckPlayer count={deckCounts.top} isNew={deckCounts.top === 0} />
+              <DeckPlayer count={deckCounts.top} isNew={deckCounts.top === 0} position="left" />
             </div>
             <Image
               src={PlayerOne}
@@ -243,6 +281,7 @@ function NusaCard() {
                 marginLeft: "100px",
               }}
             />
+            {renderFeedbackIcon("top")}
           </div>
         </Col>
       </Row>
@@ -268,6 +307,7 @@ function NusaCard() {
                 borderRadius: "50%",
               }}
             />
+            {renderFeedbackIcon("left")}
             <DeckPlayer
               count={deckCounts.left}
               isNew={deckCounts.left === 0}
@@ -318,11 +358,9 @@ function NusaCard() {
                 borderRadius: "50%",
               }}
             />
-            <DeckPlayer
-              count={deckCounts.right}
-              isNew={deckCounts.right === 0}
-              className="deck-kanan-rotate" 
-            />{" "}
+            {renderFeedbackIcon("left")}
+            <DeckPlayer count={deckCounts.right} isNew={deckCounts.right === 0} position="right" />
+            {" "}
             {/* Tambahkan isNew */}
           </div>
         </Col>
@@ -353,6 +391,7 @@ function NusaCard() {
             alt="Player One"
             style={{ width: "100px", height: "100px", borderRadius: "50%" }}
           />
+          {renderFeedbackIcon("bottom")}
         </Col>
       </Row>
 

@@ -12,6 +12,10 @@
   overflow: hidden;
 }
 
+.card-custom:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
 
 .stackable-cards {
   position: relative;
@@ -32,12 +36,94 @@
   z-index: 10;
 }
 
-.card-custom {
-  transition: transform 0.3s, box-shadow 0.3s; /* Transisi untuk transformasi dan bayangan */
-  cursor: pointer; /* Mengubah kursor saat hover */
+.moving-card {
+  position: fixed;
+  top: 50%;
+  right: 30%; /* Mengubah posisi ke kanan */
+  transform: translate(0, -50%);
+  z-index: 1000;
+  width: 150px;
+  height: 180px;
+  background-color: rgb(240, 149, 13);
+  color: white;
+  display: flex;
+  padding: 1rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border-radius: 10px;
+  text-align: center;
+  border: 5px solid white;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
 }
 
-.card-custom:hover {
-  transform: scale(1.05); /* Efek zoom saat hover */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Bayangan saat hover */
+/* Animasi kartu muncul dari bawah di sebelah kanan */
+@keyframes fadeInUpRight {
+  0% {
+    opacity: 0;
+    transform: translate(0, 100%) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, -50%) scale(1);
+  }
+}
+
+/* Animasi kartu menghilang ke bawah di sebelah kanan */
+@keyframes fadeOutDownRight {
+  0% {
+    opacity: 1;
+    transform: translate(0, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 100%) scale(0.8);
+  }
+}
+
+.moving-card.animate {
+  animation: fadeInUpRight 0.8s ease-out forwards;
+}
+
+.moving-card.exit {
+  animation: fadeOutDownRight 0.8s ease-out forwards;
+}
+
+.card-content {
+  max-width: 90%;
+  word-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+  .moving-card {
+    width: 180px;
+    height: 250px;
+    font-size: 16px;
+    right: 10%; /* Menyesuaikan posisi untuk layar mobile */
+  }
+  
+  @keyframes fadeInUpRight {
+    0% {
+      opacity: 0;
+      transform: translate(0, 100%) scale(0.8);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(0, -50%) scale(1);
+    }
+  }
+  
+  @keyframes fadeOutDownRight {
+    0% {
+      opacity: 1;
+      transform: translate(0, -50%) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(0, 100%) scale(0.8);
+    }
+  }
 }

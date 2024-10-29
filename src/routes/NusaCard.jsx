@@ -216,7 +216,7 @@ function NusaCard() {
         <Col
           md={2}
           xs={12}
-          className="text-center ms-5 d-flex align-items-center position-relative"
+          className="text-center ms-5 ml-5 d-flex align-items-center position-relative"
         >
           {/* Container untuk DeckPlayer dan Gambar Profil */}
           <div
@@ -247,11 +247,11 @@ function NusaCard() {
         </Col>
       </Row>
 
-      <Row className="mb-0 mt-1 justify-content-center align-items-center">
+      <Row className="mb-5 mt-0 justify-content-center align-items-center">
         {/* Deck Kiri dengan Gambar PlayerOne */}
         <Col md={4} xs={12} className="position-relative">
           <div
-            className="deck-kiri d-flex flex-column align-items-center position-relative"
+            className="d-flex flex-column align-items-center position-relative"
             onClick={() => handleDeckCardClick("left")}
             style={{ position: "relative" }}
           >
@@ -271,7 +271,7 @@ function NusaCard() {
             <DeckPlayer
               count={deckCounts.left}
               isNew={deckCounts.left === 0}
-              style={{ transform: "rotate(90deg)" }}
+              style={{ transform: "rotate(900deg)" }}
             />
           </div>
         </Col>
@@ -301,7 +301,7 @@ function NusaCard() {
         {/* Deck Kanan dengan Gambar PlayerOne */}
         <Col md={4} xs={12} className="position-relative">
           <div
-            className="deck-kanan d-flex flex-column align-items-center position-relative"
+            className="d-flex flex-column align-items-center position-relative"
             onClick={() => handleDeckCardClick("right")}
             style={{ position: "relative" }}
           >
@@ -321,21 +321,28 @@ function NusaCard() {
             <DeckPlayer
               count={deckCounts.right}
               isNew={deckCounts.right === 0}
+              className="deck-kanan-rotate" 
             />{" "}
             {/* Tambahkan isNew */}
           </div>
         </Col>
       </Row>
 
-      <Row className="align-items-center justify-content-center">
         {/* Bottom Deck Card */}
+      <Row className="align-items-center justify-content-center">
         <Col xs={"auto"} className="text-center ml-5 ms-5 position-relative">
           <div style={{ position: "relative" }}>
+
             {/* Timer untuk pemain bawah */}
             {showPopup && answeringPlayer === "bottom" && (
               <div className="timer-overlay">{timeRemaining}</div>
             )}
-            <BottomDeckCard cards={cards} onCardClick={handleBottomCardClick} />
+
+            <BottomDeckCard 
+            cards={cards}
+            onCardClick={handleBottomCardClick}
+            showPopup={showPopup}
+            isExitingPopup={isExitingPopup} />
           </div>
         </Col>
 

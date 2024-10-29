@@ -358,7 +358,7 @@ function NusaCard() {
                 borderRadius: "50%",
               }}
             />
-            {renderFeedbackIcon("left")}
+            {renderFeedbackIcon("right")}
             <DeckPlayer count={deckCounts.right} isNew={deckCounts.right === 0} position="right" />
             {" "}
             {/* Tambahkan isNew */}
@@ -381,6 +381,9 @@ function NusaCard() {
             onCardClick={handleBottomCardClick}
             showPopup={showPopup}
             isExitingPopup={isExitingPopup} />
+            
+            {renderFeedbackIcon("bottom")}
+
           </div>
         </Col>
 
@@ -391,7 +394,6 @@ function NusaCard() {
             alt="Player One"
             style={{ width: "100px", height: "100px", borderRadius: "50%" }}
           />
-          {renderFeedbackIcon("bottom")}
         </Col>
       </Row>
 

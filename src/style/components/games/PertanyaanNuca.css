@@ -8,7 +8,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
   background-color: rgba(0, 0, 0, 0.5);
   transition: background-color 0.5s ease;
 }
@@ -28,10 +27,17 @@
   border-radius: 10px;
   text-align: center;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  width: 400px;
-  max-width: 90%;
+  width: 600px; /* Lebar kontainer diperbesar */
+  max-width: 95%; /* Sesuaikan agar responsif */
   color: white;
   transition: opacity 0.3s ease;
+}
+
+/* Mengatur ukuran teks pertanyaan lebih kecil */
+.popup-content h2 {
+  font-size: 20px; /* Ukuran font dikurangi */
+  line-height: 1.4;
+  margin-bottom: 20px;
 }
 
 /* Animasi keluar */

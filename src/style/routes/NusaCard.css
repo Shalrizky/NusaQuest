@@ -7,6 +7,20 @@
   overflow: hidden;
 }
 
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 80px); /* Kurangi tinggi overlay */
+  pointer-events: none; /* Mengabaikan klik pada overlay */
+
+}
+.popup-content {
+  /* ... */
+  pointer-events: auto; /* Mengizinkan klik pada konten popup */
+}
+
 .shuffle-rotate {
   animation: rotate 0.5s linear forwards; /* Ensure you have the 'forwards' property */
 }

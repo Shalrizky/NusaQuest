@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import '../../style/components/games/PertanyaanNuca.css';
 
-const westJavaQuestions = [
+// Jika Anda membutuhkan ListPertanyaanNuca di tempat lain, Anda dapat mengekspornya
+export const ListPertanyaanNuca = [
   {
     category: "Makanan", // Kategori: Makanan
     questions: [
@@ -34,31 +35,12 @@ const westJavaQuestions = [
   }
 ];
 
-export const ListPertanyaanNuca = westJavaQuestions;
-
-
-const getRandomQuestion = () => {
-  const randomCategory = westJavaQuestions[Math.floor(Math.random() * westJavaQuestions.length)];
-  const randomQuestion = randomCategory.questions[Math.floor(Math.random() * randomCategory.questions.length)];
-  return {
-    question: randomQuestion.question,
-    options: randomQuestion.options,
-    correctAnswer: randomQuestion.correctAnswer
-  };
-};
-
-function PertanyaanNuca({ onAnswerSelect }) {
-  const [questionData, setQuestionData] = useState(null);
+function PertanyaanNuca({ question, options, correctAnswer, onAnswerSelect }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
 
-  useEffect(() => {
-    const question = getRandomQuestion();
-    setQuestionData(question);
-  }, []);
-
   const handleAnswerSelect = (answer) => {
-    const isCorrectAnswer = answer === questionData.correctAnswer;
+    const isCorrectAnswer = answer === correctAnswer;
     setSelectedAnswer(answer);
     setIsCorrect(isCorrectAnswer);
     onAnswerSelect(isCorrectAnswer);
@@ -69,14 +51,14 @@ function PertanyaanNuca({ onAnswerSelect }) {
     }, 8000);
   };
 
-  if (!questionData) return null;
+  if (!question) return null;
 
   return (
     <div className="popup-overlay">
       <div className="popup-content">
-        <h2>{questionData.question}</h2>
+        <h2>{question}</h2>
         <div className="answer-options">
-          {questionData.options.map((option, index) => (
+          {options.map((option, index) => (
             <button
               key={index}
               onClick={() => handleAnswerSelect(option.charAt(0))}

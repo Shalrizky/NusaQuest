@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Col, Container, Row, Image } from "react-bootstrap";
 import "../style/routes/NusaCard.css";
 import DeckPlayer from "../components/games/DeckPlayer";
@@ -8,10 +9,14 @@ import PertanyaanNuca, {
   ListPertanyaanNuca,
 } from "../components/games/PertanyaanNuca";
 import Potion from "../components/games/potion";
+import potionImage from "../assets/games/Utangga/potion.png"
 import shuffleIcon from "../assets/common/shuffle.png";
 import PlayerOne from "../assets/common/imageOne.png";
 import checklist from "../assets/common/checklist.png"
 import cross from "../assets/common/cross.png"
+import victoryImage from "../assets/games/Utangga/victory.png"
+import Achievement from "../assets/games/Utangga/achievement1.png"
+import Achievement2 from "../assets/games/Utangga/achievement2.png"
 
 const getRandomQuestion = () => {
   const randomCategory =
@@ -29,6 +34,7 @@ const getRandomQuestion = () => {
 };
 
 function NusaCard() {
+  const navigate = useNavigate();
   const [deckCounts, setDeckCounts] = useState({
     top: 4,
     left: 4,
@@ -43,6 +49,8 @@ function NusaCard() {
   const [cards, setCards] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState(null);
+  const [victory, setVictory] = useState(false);
+  const [winner, setWinner] = useState("");
 
   // Tambahkan variabel state untuk mengatur giliran
   const deckOrder = ["bottom", "right", "top", "left"];
@@ -65,6 +73,23 @@ function NusaCard() {
     };
     generateCards();
   }, []);
+
+// useEffect untuk memeriksa apakah ada deck yang habis
+useEffect(() => {
+  Object.keys(deckCounts).forEach((deck) => {
+    if (deckCounts[deck] === 0) {
+      console.log(`Deck ${deck} habis!`); // Tambahkan log
+      setVictory(true);
+      setWinner(deck);
+    }
+  });
+}, [deckCounts]);
+
+// Fungsi untuk menutup victory overlay
+const handleCloseVictoryOverlay = () => {
+  setVictory(false);
+  setWinner("");
+};
 
   // useEffect untuk mengatur timer ketika popup muncul
   useEffect(() => {
@@ -176,53 +201,61 @@ function NusaCard() {
     clearInterval(timerRef.current);
     setIsLoading(null);
     setIsCorrectAnswer(isCorrect);
-    
+
     // Show feedback icon over the answering player's profile
     setFeedbackIcon({
-      show: true,
-      isCorrect: isCorrect,
-      position: answeringPlayer
+        show: true,
+        isCorrect: isCorrect,
+        position: answeringPlayer,
     });
-    
+
     updateAnswerStatus(answeringPlayer, isCorrect);
-    
+
     if (!isCorrect) {
-      incrementDeckCount(
-        lastActiveDeck === "bottom" ? "right" :
-        lastActiveDeck === "right" ? "top" :
-        lastActiveDeck === "top" ? "left" : null
-      );
+        // Increment the opposite deck's count based on the lastActiveDeck
+        const nextDeck = 
+            lastActiveDeck === "bottom" ? "right" :
+            lastActiveDeck === "right" ? "top" :
+            lastActiveDeck === "top" ? "left" :
+            lastActiveDeck === "left" ? "bottom" : null;
+
+        if (nextDeck) {
+            incrementDeckCount(nextDeck); // Panggil fungsi untuk menambah kartu
+        }
     } else if (lastActiveDeck === "left") {
-      addNewCardToDeck();
+        addNewCardToDeck(); // Menambah kartu jika benar
     }
-    
+
     const nextTurn = deckOrder[(deckOrder.indexOf(lastActiveDeck) + 1) % deckOrder.length];
     setCurrentTurn(nextTurn);
-    
+
     setTimeout(() => {
-      setIsCorrectAnswer(null);
-      setActiveCard(null);
-      setIsExitingPopup(true);
-      
-      setTimeout(() => {
-        setShowPopup(false);
-        setIsExitingPopup(false);
-        setIsActionInProgress(false);
-        setAnsweringPlayer(null);
-        setFeedbackIcon({ show: false, isCorrect: null, position: null }); // Hide feedback icon
-        
-        setIsShuffling(true);
+        setIsCorrectAnswer(null);
+        setActiveCard(null);
+        setIsExitingPopup(true);
+
         setTimeout(() => {
-          setIsShuffling(false);
-        }, 500); // Match this with the animation duration
-  
-        setAnswerStatus((prevStatus) => ({
-          ...prevStatus,
-          [answeringPlayer]: null,
-        }));
-      }, 2000);
+            setShowPopup(false);
+            setIsExitingPopup(false);
+            setIsActionInProgress(false);
+            setAnsweringPlayer(null);
+            setFeedbackIcon({ show: false, isCorrect: null, position: null }); // Hide feedback icon
+
+            setIsShuffling(true);
+            setTimeout(() => {
+                setIsShuffling(false);
+            }, 500); // Match this with the animation duration
+
+            setAnswerStatus((prevStatus) => ({
+                ...prevStatus,
+                [answeringPlayer]: null,
+            }));
+        }, 2000);
     }, 3000);
-  };
+};
+
+
+
 
    // Function to render feedback icon
    const renderFeedbackIcon = (position) => {
@@ -340,30 +373,36 @@ function NusaCard() {
 
         {/* Deck Kanan dengan Gambar PlayerOne */}
         <Col md={4} xs={12} className="position-relative">
-          <div
-            className="d-flex flex-column align-items-center position-relative"
-            onClick={() => handleDeckCardClick("right")}
-            style={{ position: "relative" }}
-          >
-            {/* Timer untuk pemain kanan */}
-            {showPopup && answeringPlayer === "right" && (
-              <div className="timer-overlay">{timeRemaining}</div>
-            )}
-            <Image
-              src={PlayerOne}
-              alt="Player One"
-              style={{
-                width: "100px",
-                height: "100px",
-                borderRadius: "50%",
-              }}
-            />
-            {renderFeedbackIcon("right")}
-            <DeckPlayer count={deckCounts.right} isNew={deckCounts.right === 0} position="right" />
-            {" "}
-            {/* Tambahkan isNew */}
-          </div>
-        </Col>
+  <div
+    className="d-flex flex-column align-items-center position-relative"
+    onClick={() => handleDeckCardClick("right")}
+    style={{ position: "relative" }}
+  >
+    {/* Timer untuk pemain kanan */}
+    {showPopup && answeringPlayer === "right" && (
+      <div className="timer-overlay">{timeRemaining}</div>
+    )}
+    
+    <Image
+      src={PlayerOne}
+      alt="Player One"
+      style={{
+        width: "100px",
+        height: "100px",
+        borderRadius: "50%",
+      }}
+    />
+    
+    {renderFeedbackIcon("right")}
+    
+    <DeckPlayer 
+      count={deckCounts.right} 
+      isNew={deckCounts.right === 0} 
+      position="right" 
+      className="deck-kanan-rotate"
+    />
+  </div>
+</Col>
       </Row>
 
         {/* Bottom Deck Card */}
@@ -406,10 +445,31 @@ function NusaCard() {
             onAnswerSelect={handleAnswerSelect}
             isExiting={isExitingPopup}
           />
-          <Potion style={{ zIndex: "5000" }} />{" "}
+           <Potion 
+            style={{ 
+              bottom: "20px", 
+              left: "80%", 
+              zIndex: "2400" 
+            }} 
+          />
           {/* Menambahkan komponen Potion di sini */}
         </div>
       )}
+
+      {/*Show Overlay Victory */}
+      {victory && (
+  <div className="victory-overlay" onClick={() => navigate("/")}>
+    <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
+    <h2>{winner} Wins!</h2>
+    <p>Kamu mendapatkan:</p>
+    <div className="rewards">
+      <img src={Achievement} alt="achievement" className="Achievement1-logo" />
+      <img src={Achievement2} alt="achievement2" className="Achievement2-logo" />
+      <img src={potionImage} alt="potion" className="potion-logo" />
+    </div>
+    <p>Sentuh dimana saja untuk keluar.</p>
+  </div>
+)}
     </Container>
   );
 }

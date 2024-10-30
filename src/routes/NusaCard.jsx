@@ -411,8 +411,8 @@ function NusaCard() {
               src={getPlayerByPosition("top").photo}
               alt="Player Profile"
               style={{
-                width: "100px",
-                height: "100px",
+                width: "80px",
+                height: "80px",
                 borderRadius: "50%",
                 marginLeft: "100px",
               }}
@@ -438,8 +438,8 @@ function NusaCard() {
               src={getPlayerByPosition("left").photo}
               alt="Player Left"
               style={{
-                width: "100px",
-                height: "100px",
+                width: "80px",
+                height: "80px",
                 borderRadius: "50%",
               }}
             />
@@ -489,8 +489,8 @@ function NusaCard() {
               src={getPlayerByPosition("right").photo}
               alt="Player Right"
               style={{
-                width: "100px",
-                height: "100px",
+                width: "80px",
+                height: "80px",
                 borderRadius: "50%",
               }}
             />
@@ -532,7 +532,7 @@ function NusaCard() {
           <Image
             src={getPlayerByPosition("bottom").photo}
             alt="Player Bottom"
-            style={{ width: "100px", height: "100px", borderRadius: "50%" }}
+            style={{ width: "80px", height: "80px", borderRadius: "50%" }}
           />
         </Col>
       </Row>

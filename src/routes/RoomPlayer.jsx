@@ -1,13 +1,8 @@
+// FILE 1: src/routes/RoomPlayer.js
+
 import React, { useState, useEffect, useRef } from "react";
-import { database, onValue, ref, get, set, remove } from "../firebaseConfig";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
-import { fetchRooms } from "../services/roomsDataServices";
-import { getUserAchievements } from "../services/achievementDataServices";
-import {
-  roomsParticipation,
-  syncCurrentPlayers,
-} from "../services/roomsParticipation";
 import useAuth from "../hooks/useAuth";
 import useUserPhoto from "../hooks/useUserPhoto";
 import Header from "../components/Header";
@@ -15,109 +10,161 @@ import CardPlayer from "../components/CardPlayer";
 import CardVsAi from "../components/CardVsAi";
 import ChatPlayer from "../components/ChatPlayer";
 import PlayGameIcon from "../assets/common/play-game-icon.svg";
+import { fetchRooms } from "../services/roomsDataServices";
+import { getUserAchievements } from "../services/achievementDataServices";
+import {
+  roomsParticipation,
+  syncCurrentPlayers,
+  subscribeToPlayers,
+  resetRoom,
+  playerLeaveRoom,
+  getCurrentPlayers,
+  checkRoomType,
+} from "../services/PlayerDataServices";
 import "../style/routes/RoomPlayer.css";
 
 function RoomPlayer() {
   const { gameID, topicID, roomID } = useParams();
   const { user, isLoggedIn } = useAuth();
   const [userPhoto, handlePhotoError] = useUserPhoto(user);
-  const navigate = useNavigate();
-
   const [loading, setLoading] = useState(true);
   const [roomData, setRoomData] = useState(null);
   const [roomCapacity, setRoomCapacity] = useState(4);
-  const [lastMessage, setLastMessage] = useState("Chat With Others");
   const [players, setPlayers] = useState([]);
   const [newPlayerUid, setNewPlayerUid] = useState(null);
-  const prevPlayers = useRef([]);
-
-  // Tambahkan state untuk menyimpan achievements dan badge pengguna
+  const [playerProfiles, setPlayerProfiles] = useState({}); //? Fungsi untuk belancer profile
   const [userAchievements, setUserAchievements] = useState(null);
   const [userBadge, setUserBadge] = useState(null);
+  const [lastMessage, setLastMessage] = useState("Chat With Others");
+  const prevPlayers = useRef([]);
+  const navigate = useNavigate();
 
-  // Effect untuk handle session expired/logout
+  // Handle Session Expiration
   useEffect(() => {
-    const handleSessionExpired = async () => {
-      if (!isLoggedIn) {
-        const playersRef = ref(
-          database,
-          `rooms/${topicID}/${gameID}/${roomID}/players`
-        );
-        const playersSnapshot = await get(playersRef);
-        const currentPlayers = playersSnapshot.val() || {};
-
-        if (user?.uid && currentPlayers[user.uid]) {
-          const currentCount = Object.keys(currentPlayers).length;
-          await set(
-            ref(
-              database,
-              `rooms/${topicID}/${gameID}/${roomID}/currentPlayers`
-            ),
-            Math.max(0, currentCount - 1)
-          );
-          await remove(
-            ref(
-              database,
-              `rooms/${topicID}/${gameID}/${roomID}/players/${user.uid}`
-            )
-          );
-        }
-        navigate("/login");
-      }
-    };
-
-    handleSessionExpired();
+    if (!isLoggedIn) {
+      playerLeaveRoom(topicID, gameID, roomID, user);
+      navigate("/login");
+    }
   }, [isLoggedIn, user, topicID, gameID, roomID, navigate]);
 
+  // Initialize Room
   useEffect(() => {
     const initializeRoom = async () => {
-      await syncCurrentPlayers(topicID, gameID, roomID);
-      const existingPlayers = await get(
-        ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`)
-      );
+      if (!user?.uid) return;
 
-      if (!existingPlayers.val() || !existingPlayers.val()[user.uid]) {
-        await roomsParticipation(
-          topicID,
-          gameID,
-          roomID,
-          user,
-          true,
-          userPhoto
-        );
-      }
-    };
+      try {
+        const roomType = await checkRoomType(topicID, gameID, roomID);
+        if (!roomType.exists || roomType.isSinglePlayer || roomID === "room5")
+          return;
 
-    const handleLeaveRoom = async () => {
-      if (user?.uid) {
-        await roomsParticipation(topicID, gameID, roomID, user, false);
+        await syncCurrentPlayers(topicID, gameID, roomID);
+
+        const currentPlayers = await getCurrentPlayers(topicID, gameID, roomID);
+        if (!currentPlayers.some((p) => p.uid === user.uid)) {
+          await roomsParticipation(
+            topicID,
+            gameID,
+            roomID,
+            user,
+            true,
+            userPhoto
+          );
+        }
+      } catch (error) {
+        console.error("Error initializing room:", error);
       }
     };
 
     initializeRoom();
 
-    window.addEventListener("beforeunload", handleLeaveRoom);
+    // Hapus pemain dari room ketika komponen unmount
     return () => {
-      window.removeEventListener("beforeunload", handleLeaveRoom);
-      handleLeaveRoom();
+      if (user?.uid && roomID !== "room5") {
+        playerLeaveRoom(topicID, gameID, roomID, user);
+      }
     };
-  }, [user, topicID, gameID, roomID, userPhoto, navigate]);
+  }, [user, topicID, gameID, roomID, userPhoto]);
 
+  // Fetch and Update Players
+  useEffect(() => {
+    if (roomID === "room5" || roomData?.isSinglePlayer) return;
+
+    const fetchPlayerAchievements = async (player) => {
+      if (!playerProfiles[player.uid]) {
+        // Cek cache
+        const achievements = await getUserAchievements(player.uid);
+        const playerProfile = {
+          ...player,
+          achievements: achievements[gameID]?.[topicID],
+          badge: achievements[gameID]?.[topicID]?.badge || null,
+        };
+        setPlayerProfiles((prev) => ({
+          ...prev,
+          [player.uid]: playerProfile,
+        }));
+        return playerProfile;
+      }
+      return {
+        ...player,
+        ...playerProfiles[player.uid],
+      };
+    };
+
+    const handlePlayersUpdate = async (playersData) => {
+      try {
+        const playerPromises = playersData.map(async (player) => {
+          if (!player?.uid) return null;
+          return fetchPlayerAchievements(player);
+        });
+
+        const enrichedPlayers = (await Promise.all(playerPromises)).filter(
+          (player) => player !== null
+        );
+
+        const sortedPlayers = enrichedPlayers
+          .sort((a, b) => a.joinedAt - b.joinedAt)
+          .slice(0, roomCapacity);
+
+        const latestPlayer = sortedPlayers.find(
+          (p) =>
+            !prevPlayers.current.some((prevPlayer) => prevPlayer?.uid === p.uid)
+        );
+
+        setNewPlayerUid(latestPlayer?.uid || null);
+        prevPlayers.current = sortedPlayers;
+        setPlayers(sortedPlayers);
+      } catch (error) {
+        console.error("Error processing players data:", error);
+      }
+    };
+
+    const unsubscribe = subscribeToPlayers(
+      topicID,
+      gameID,
+      roomID,
+      handlePlayersUpdate
+    );
+    return () => unsubscribe();
+  }, [topicID, gameID, roomID, roomCapacity, roomData?.isSinglePlayer]);
+
+  // Fetch Room Data
   useEffect(() => {
     const fetchRoomData = async () => {
       setLoading(true);
       try {
         fetchRooms(topicID, gameID, (rooms) => {
-          if (rooms && rooms[roomID]) {
+          if (rooms?.[roomID]) {
+            console.log("Room data received:", rooms[roomID]);
             setRoomData(rooms[roomID]);
             setRoomCapacity(rooms[roomID].capacity || 4);
           } else {
+            console.log("No room data found");
             setRoomData(null);
           }
+          setLoading(false);
         });
       } catch (error) {
-        console.error("Error fetching room or user data:", error);
-      } finally {
+        console.error("Error fetching room data:", error);
         setLoading(false);
       }
     };
@@ -125,61 +172,28 @@ function RoomPlayer() {
     fetchRoomData();
   }, [gameID, topicID, roomID]);
 
-  useEffect(() => {
-    const playersRef = ref(
-      database,
-      `rooms/${topicID}/${gameID}/${roomID}/players`
-    );
-
-    const handlePlayersUpdate = async (snapshot) => {
-      const playersData = snapshot.val() || {};
-      const playerPromises = Object.values(playersData).map(async (player) => {
-        const playerAchievements = await getUserAchievements(player.uid);
-        const playerAchievementData = playerAchievements[gameID]?.[topicID];
-
-        return {
-          ...player,
-          achievements: playerAchievementData,
-          badge: playerAchievementData ? playerAchievementData.badge : null,
-        };
-      });
-
-      let playersArray = await Promise.all(playerPromises);
-      playersArray = playersArray
-        .sort((a, b) => a.joinedAt - b.joinedAt)
-        .slice(0, roomCapacity);
-
-      const latestPlayer = playersArray.find(
-        (p) =>
-          !prevPlayers.current.some((prevPlayer) => prevPlayer?.uid === p.uid)
-      );
-      setNewPlayerUid(latestPlayer?.uid || null);
-
-      prevPlayers.current = playersArray;
-      setPlayers(playersArray);
-
-      await syncCurrentPlayers(topicID, gameID, roomID);
-    };
-
-    const unsubscribe = onValue(playersRef, handlePlayersUpdate);
-    return () => unsubscribe();
-  }, [topicID, gameID, roomID, roomCapacity]);
-
-  // Fetch achievements dan badge pengguna saat ini
+  // Fetch User Achievements
   useEffect(() => {
     const fetchUserData = async () => {
       if (user?.uid) {
-        const playerAchievements = await getUserAchievements(user.uid);
-        const playerAchievementData = playerAchievements?.[gameID]?.[topicID];
-
-        setUserAchievements(playerAchievementData);
-        setUserBadge(
-          playerAchievementData ? playerAchievementData.badge : null
-        );
+        try {
+          const achievements = await getUserAchievements(user.uid);
+          const achievementData = achievements?.[gameID]?.[topicID];
+          setUserAchievements(achievementData);
+          setUserBadge(achievementData?.badge || null);
+        } catch (error) {
+          console.error("Error fetching user achievements:", error);
+        }
       }
     };
+
     fetchUserData();
   }, [user, topicID, gameID]);
+
+  // Reset Room Status setiap kali ada perubahan pada roomID, gameID, atau topicID
+  useEffect(() => {
+    resetRoom(topicID, gameID, roomID);
+  }, [topicID, gameID, roomID]);
 
   if (loading || !roomData) {
     return (
@@ -191,8 +205,7 @@ function RoomPlayer() {
     );
   }
 
-  const totalSlots = roomCapacity;
-
+  // Render players dengan cached data
   const playerCards = roomData.isSinglePlayer ? (
     <CardVsAi
       key="vs-ai-card"
@@ -204,16 +217,18 @@ function RoomPlayer() {
       isAvailable={true}
     />
   ) : (
-    [...players, ...Array(totalSlots - players.length).fill(null)]
-      .slice(0, totalSlots)
-      .map((player, index) =>
-        player ? (
+    [...players, ...Array(roomCapacity - players.length).fill(null)]
+      .slice(0, roomCapacity)
+      .map((player, index) => {
+        return player ? (
           <CardPlayer
             key={player.uid}
             username={player.displayName}
             userPhoto={player.photoURL}
-            achievements={player.achievements}
-            badge={player.badge}
+            achievements={
+              playerProfiles[player.uid]?.achievements || player.achievements
+            }
+            badge={playerProfiles[player.uid]?.badge || player.badge}
             handlePhotoError={handlePhotoError}
             isAvailable={true}
             isNew={player.uid === newPlayerUid}
@@ -226,8 +241,8 @@ function RoomPlayer() {
             isAvailable={false}
             playerIndex={index}
           />
-        )
-      )
+        );
+      })
   );
 
   return (
@@ -238,7 +253,6 @@ function RoomPlayer() {
         showTextHeader={roomData.title}
         showBackIcon={true}
       />
-
       <Row className="d-flex flex-column justify-content-center align-items-center text-center">
         <Col md={12} className="desc-title">
           <p>{roomData.description}</p>
@@ -253,13 +267,15 @@ function RoomPlayer() {
           md={12}
           className="d-flex justify-content-center align-items-center mb-4"
         >
-          <button className="btn-start-game d-flex align-items-center justify-content-center">
+          <button
+            className="btn-start-game d-flex align-items-center justify-content-center"
+            onClick={() => navigate(`/${gameID}/${topicID}/${roomID}/play`)}
+          >
             <Image className="icon-start me-2" src={PlayGameIcon} />
             Start Game
           </button>
         </Col>
       </Row>
-
       {!roomData.isSinglePlayer && (
         <ChatPlayer
           user={user}

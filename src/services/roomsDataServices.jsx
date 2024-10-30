@@ -1,4 +1,6 @@
-import { database, ref, onValue, push, onChildAdded } from "../firebaseConfig";
+// src/services/roomsDataServices.js
+
+import { database, ref, onValue, push, onChildAdded, remove, get } from "../firebaseConfig";
 
 export const fetchRooms = (topicID, gameID, callback) => {
   const roomsRef = ref(database, `rooms/${topicID}/${gameID}`);
@@ -6,33 +8,20 @@ export const fetchRooms = (topicID, gameID, callback) => {
     if (snapshot.exists()) {
       callback(snapshot.val());
     } else {
-      callback(null); // Jika data tidak ditemukan
+      callback(null);
     }
   });
 };
 
-/**
- * Mengirim pesan ke chat room.
- * @param {string} topicID - ID topik
- * @param {string} gameID - ID permainan
- * @param {string} roomID - ID room
- * @param {object} messageData - Data pesan yang akan dikirim
- */
-export const sendMessageToChat = async (
-  topicID,
-  gameID,
-  roomID,
-  messageData
-) => {
+export const sendMessageToChat = async (topicID, gameID, roomID, messageData) => {
   if (!topicID || !gameID || !roomID || !messageData) {
     console.error("Missing required parameters for sendMessageToChat");
     return;
   }
 
-  const chatRef = ref(
-    database,
-    `rooms/${topicID}/${gameID}/${roomID}/chatMessages`
-  );
+  if (roomID === "room5") return;
+
+  const chatRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/chatMessages`);
 
   try {
     await push(chatRef, messageData);
@@ -42,29 +31,69 @@ export const sendMessageToChat = async (
   }
 };
 
-/**
- * Mendengarkan pesan chat di room.
- * @param {string} topicID - ID topik
- * @param {string} gameID - ID permainan
- * @param {string} roomID - ID room
- * @param {function} callback - Fungsi callback yang dipanggil ketika ada pesan baru
- * @returns {function} - Fungsi untuk berhenti mendengarkan pesan
- */
-export const listenToChatMessages = (topicID, gameID, roomID, callback) => {
-  if (!topicID || !gameID || !roomID || !callback) {
-    console.error("Missing required parameters for listenToChatMessages");
+export const clearChatMessages = async (topicID, gameID, roomID) => {
+  if (!topicID || !gameID || !roomID || roomID === "room5") {
     return;
   }
 
-  const chatRef = ref(
-    database,
-    `rooms/${topicID}/${gameID}/${roomID}/chatMessages`
-  );
+  const chatRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/chatMessages`);
+  try {
+    await remove(chatRef);
+    console.log("Chat messages cleared successfully");
+  } catch (error) {
+    console.error("Error clearing chat messages:", error);
+  }
+};
 
-  const unsubscribe = onChildAdded(chatRef, (data) => {
+export const listenToChatMessages = (topicID, gameID, roomID, callback) => {
+  if (!topicID || !gameID || !roomID || !callback) {
+    console.error("Missing required parameters for listenToChatMessages");
+    return () => {};
+  }
+
+  if (roomID === "room5") return () => {};
+
+  const chatRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/chatMessages`);
+  let isInitialLoad = true;
+
+  // Listen for chat messages
+  const chatUnsubscribe = onChildAdded(chatRef, (data) => {
     const messageData = data.val();
     callback(messageData);
   });
 
-  return unsubscribe;
+  // Listen for player count changes
+  const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
+  const playerUnsubscribe = onValue(playersRef, async (snapshot) => {
+    // Skip the first load to prevent clearing messages when joining
+    if (isInitialLoad) {
+      isInitialLoad = false;
+      return;
+    }
+
+    const playerCount = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
+    if (playerCount === 0) {
+      await clearChatMessages(topicID, gameID, roomID);
+    }
+  });
+
+  // Return cleanup function
+  return () => {
+    chatUnsubscribe();
+    playerUnsubscribe();
+  };
+};
+
+// Tambahkan fungsi helper untuk cek player count
+export const getPlayerCount = async (topicID, gameID, roomID) => {
+  if (!topicID || !gameID || !roomID || roomID === "room5") return 0;
+  
+  try {
+    const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
+    const snapshot = await get(playersRef);
+    return snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
+  } catch (error) {
+    console.error("Error getting player count:", error);
+    return 0;
+  }
 };

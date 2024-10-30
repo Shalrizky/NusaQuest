@@ -1,3 +1,5 @@
+// src/App.js
+
 import ReactDOM from 'react-dom/client';
 import React, { useState, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
@@ -58,21 +60,24 @@ const App = () => {
         { path: '/information', element: withLoader(Information)() },
         { path: '/destination/:id', element: withLoader(DestinationDetail)() },
         {
-          path: '/lobby/:topicID/:gameID', element: (
+          path: '/lobby/:topicID/:gameID',
+          element: (
             <ProtectedRoute>
               {withLoader(LobbyGame)()}
             </ProtectedRoute>
           )
         },
         {
-          path: '/:gameID/:topicID/:roomID', element: (
+          path: '/:gameID/:topicID/:roomID',
+          element: (
             <ProtectedRoute>
               {withLoader(RoomPlayer)()}
             </ProtectedRoute>
           )
         },
         {
-          path: '/UlarTangga', element: (
+          path: '/:gameID/:topicID/:roomID/play',
+          element: (
             <ProtectedRoute>
               {withLoader(UlarTangga)()}
             </ProtectedRoute>

@@ -9,6 +9,7 @@ import PertanyaanNuca, {
   ListPertanyaanNuca,
 } from "../components/games/PertanyaanNuca";
 import Potion from "../components/games/potion";
+// image import
 import potionImage from "../assets/games/Utangga/potion.png";
 import shuffleIcon from "../assets/common/shuffle.png";
 import checklist from "../assets/common/checklist.png";
@@ -100,12 +101,12 @@ function NusaCard() {
   const [answeringPlayer, setAnsweringPlayer] = useState(null);
 
   // State dan ref untuk timer inaktivitas
-  const [inactivityTimeRemaining, setInactivityTimeRemaining] = useState(10);
+  const [inactivityTimeRemaining, setInactivityTimeRemaining] = useState(30000);
   const inactivityTimerRef = useRef(null);
 
   // Fungsi untuk reset timer inaktivitas
   const resetInactivityTimer = () => {
-    setInactivityTimeRemaining(10);
+    setInactivityTimeRemaining(30000);
     if (inactivityTimerRef.current) {
       clearInterval(inactivityTimerRef.current);
     }

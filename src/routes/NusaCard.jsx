@@ -6,7 +6,7 @@ import DeckPlayer from "../components/games/DeckPlayer";
 import BottomDeckCard from "../components/games/BottomDeckCard";
 import HeaderNuca from "../components/games/HeaderGame";
 import PertanyaanNuca, {
-  ListPertanyaanNuca,
+  ListPertanyaanNuca, getRandomQuestion
 } from "../components/games/PertanyaanNuca";
 import Potion from "../components/games/potion";
 // image import
@@ -41,21 +41,6 @@ const players = [
     photo: require("../assets/games/Utangga/narutoa.png"),
   },
 ];
-
-const getRandomQuestion = () => {
-  const randomCategory =
-    ListPertanyaanNuca[Math.floor(Math.random() * ListPertanyaanNuca.length)];
-  const randomQuestion =
-    randomCategory.questions[
-      Math.floor(Math.random() * randomCategory.questions.length)
-    ];
-  return {
-    category: randomCategory.category,
-    question: randomQuestion.question,
-    options: randomQuestion.options,
-    correctAnswer: randomQuestion.correctAnswer,
-  };
-};
 
 function NusaCard() {
   const navigate = useNavigate();

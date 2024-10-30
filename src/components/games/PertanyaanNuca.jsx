@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '../../style/components/games/PertanyaanNuca.css';
 
-// Jika Anda membutuhkan ListPertanyaanNuca di tempat lain, Anda dapat mengekspornya
+// List of questions with categories
 export const ListPertanyaanNuca = [
   {
     category: "Makanan", // Kategori: Makanan
@@ -35,6 +35,18 @@ export const ListPertanyaanNuca = [
   }
 ];
 
+// Function to get random question moved from NusaCard
+export const getRandomQuestion = () => {
+  const randomCategory = ListPertanyaanNuca[Math.floor(Math.random() * ListPertanyaanNuca.length)];
+  const randomQuestion = randomCategory.questions[Math.floor(Math.random() * randomCategory.questions.length)];
+  return {
+    category: randomCategory.category,
+    question: randomQuestion.question,
+    options: randomQuestion.options,
+    correctAnswer: randomQuestion.correctAnswer,
+  };
+};
+
 function PertanyaanNuca({ question, options, correctAnswer, onAnswerSelect }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
@@ -44,7 +56,6 @@ function PertanyaanNuca({ question, options, correctAnswer, onAnswerSelect }) {
     setSelectedAnswer(answer);
     setIsCorrect(isCorrectAnswer);
     onAnswerSelect(isCorrectAnswer);
-
     setTimeout(() => {
       setSelectedAnswer(null);
       setIsCorrect(null);

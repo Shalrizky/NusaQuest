@@ -5,19 +5,50 @@ import {
   get,
   remove,
   onValue,
-  runTransaction,
 } from "../firebaseConfig";
 import { resetRoom, getRoomPlayerCount } from "./roomDataServices";
 
-/**
- * Mengelola proses pemain bergabung atau keluar dari room.
- * @param {string} topicID - ID topik.
- * @param {string} gameID - ID game.
- * @param {string} roomID - ID room.
- * @param {object} user - Objek user yang berisi UID dan detail lainnya.
- * @param {boolean} isJoining - Menentukan apakah pemain bergabung (true) atau keluar (false).
- * @param {string} userPhoto - URL foto profil user.
- */
+// Function to find the first available player index in the room
+const findAvailablePlayerIndex = async (roomPath, capacity, uid) => {
+  const playersRef = ref(database, `${roomPath}/players`);
+  const playersSnapshot = await get(playersRef);
+  const playersData = playersSnapshot.val() || {};
+
+  // Check if the player is already in the room
+  const existingPlayerKey = Object.keys(playersData).find(
+    (key) => playersData[key].uid === uid
+  );
+
+  if (existingPlayerKey) {
+    // Return existing index
+    return parseInt(existingPlayerKey.split('-')[1]);
+  }
+
+  // Find the first available index
+  for (let i = 1; i <= capacity; i++) {
+    if (!playersData[`player-${i}`]) {
+      return i;
+    }
+  }
+  return null;
+};
+
+// Function to find the player's key based on UID
+const findPlayerKey = async (roomPath, uid) => {
+  const playersRef = ref(database, `${roomPath}/players`);
+  const playersSnapshot = await get(playersRef);
+
+  if (playersSnapshot.exists()) {
+    const playersData = playersSnapshot.val();
+    const playerKey = Object.keys(playersData).find(
+      (key) => playersData[key].uid === uid
+    );
+    return playerKey;
+  }
+  return null;
+};
+
+// Manage the process of a player joining or leaving a room
 export const playerJoinRoom = async (
   topicID,
   gameID,
@@ -26,15 +57,13 @@ export const playerJoinRoom = async (
   isJoining,
   userPhoto
 ) => {
-  if (roomID === "room5") return; // Room AI tidak memerlukan join/leave manual
-
+  if (roomID === "room5") return;
   if (!topicID || !gameID || !roomID || !user?.uid) {
     console.error("Missing required parameters in roomsParticipation");
     return;
   }
 
   const roomPath = `rooms/${topicID}/${gameID}/${roomID}`;
-  const playerPath = `${roomPath}/players/${user.uid}`;
 
   try {
     const roomRef = ref(database, roomPath);
@@ -48,10 +77,11 @@ export const playerJoinRoom = async (
     if (roomSnapshot.val().isSinglePlayer) return;
 
     if (!isJoining) {
-      // Menghapus pemain jika keluar
-      await remove(ref(database, playerPath));
+      const playerKey = await findPlayerKey(roomPath, user.uid);
+      if (playerKey) {
+        await remove(ref(database, `${roomPath}/players/${playerKey}`));
+      }
     } else {
-      // Gunakan getRoomPlayerCount  untuk memvalidasi kapasitas room sebelum menambahkan pemain
       const capacity = roomSnapshot.val().capacity || 4;
       const playerCount = await getRoomPlayerCount(topicID, gameID, roomID);
 
@@ -59,15 +89,27 @@ export const playerJoinRoom = async (
         throw new Error("Room is full");
       }
 
-      // Menambahkan data pemain ke room
+      const playerIndex = await findAvailablePlayerIndex(
+        roomPath,
+        capacity,
+        user.uid
+      );
+      if (!playerIndex) {
+        throw new Error("No available player index");
+      }
+
+      const playerPath = `${roomPath}/players/player-${playerIndex}`;
+
       await set(ref(database, playerPath), {
         uid: user.uid,
         displayName: user.displayName,
-        photoURL: userPhoto || "",
+        photoURL: userPhoto,
         joinedAt: Date.now(),
+        index: playerIndex,
       });
 
-      await set(ref(database, `${roomPath}/currentPlayers`), playerCount + 1);
+      // Synchronize currentPlayers count
+      await syncCurrentPlayers(topicID, gameID, roomID);
     }
   } catch (error) {
     console.error("Error in roomsParticipation:", error);
@@ -75,13 +117,7 @@ export const playerJoinRoom = async (
   }
 };
 
-/**
- * Mengawasi perubahan data pemain dalam room secara real-time.
- * @param {string} topicID - ID topik.
- * @param {string} gameID - ID game.
- * @param {string} roomID - ID room.
- * @param {function} onPlayersUpdate - Callback untuk mengirim data pemain.
- */
+// Watch for changes in player data in the room in real-time
 export const fetchPlayer = (topicID, gameID, roomID, onPlayersUpdate) => {
   if (roomID === "room5") return () => {};
 
@@ -94,19 +130,24 @@ export const fetchPlayer = (topicID, gameID, roomID, onPlayersUpdate) => {
     database,
     `rooms/${topicID}/${gameID}/${roomID}/players`
   );
-  return onValue(playersRef, (snapshot) => {
+
+  return onValue(playersRef, async (snapshot) => {
     const playersData = snapshot.val() || {};
-    onPlayersUpdate(Object.values(playersData));
+
+    await syncCurrentPlayers(topicID, gameID, roomID);
+
+    const sortedPlayers = Object.entries(playersData)
+      .map(([key, value]) => ({
+        ...value,
+        index: parseInt(key.split('-')[1]),
+      }))
+      .sort((a, b) => a.index - b.index);
+
+    onPlayersUpdate(sortedPlayers);
   });
 };
 
-/**
- * Mengambil data semua pemain yang ada dalam room.
- * @param {string} topicID - ID topik.
- * @param {string} gameID - ID game.
- * @param {string} roomID - ID room.
- * @returns {Array} - Daftar pemain dalam room.
- */
+// Get all current players in the room
 export const getCurrentPlayers = async (topicID, gameID, roomID) => {
   if (roomID === "room5") return [];
 
@@ -118,65 +159,70 @@ export const getCurrentPlayers = async (topicID, gameID, roomID) => {
   return snapshot.val() ? Object.values(snapshot.val()) : [];
 };
 
-/**
- * Sinkronisasi jumlah pemain dalam room ke database.
- * @param {string} topicID - ID topik.
- * @param {string} gameID - ID game.
- * @param {string} roomID - ID room.
- * @returns {number} - Jumlah pemain dalam room.
- */
+// Sync the number of players in the room to the database
 export const syncCurrentPlayers = async (topicID, gameID, roomID) => {
   if (!topicID || !gameID || !roomID || roomID === "room5") return;
 
   try {
-    // Menggunakan getRoomPlayerCount  untuk mendapatkan jumlah pemain
+    const currentPlayersRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/currentPlayers`
+    );
     const playerCount = await getRoomPlayerCount(topicID, gameID, roomID);
 
-    await set(
-      ref(database, `rooms/${topicID}/${gameID}/${roomID}/currentPlayers`),
-      playerCount
-    );
+    // Directly set the player count without using a transaction
+    await set(currentPlayersRef, playerCount);
     return playerCount;
   } catch (error) {
     console.error("Error syncing players:", error);
   }
 };
 
-/**
- * Mengelola keluarnya pemain dari room dan memperbarui currentPlayers dengan transaksi.
- * @param {string} topicID - ID topik.
- * @param {string} gameID - ID game.
- * @param {string} roomID - ID room.
- * @param {object} user - Objek user yang berisi UID dan detail lainnya.
- */
+// Manage player leaving the room and update currentPlayers
 export const playerLeaveRoom = async (topicID, gameID, roomID, user) => {
-  if (!topicID || !gameID || !roomID || !user?.uid || roomID === "room5")
-    return;
+  if (!topicID || !gameID || !roomID || !user?.uid || roomID === "room5") return;
 
-  const playerPath = `rooms/${topicID}/${gameID}/${roomID}/players/${user.uid}`;
-  const currentPlayersRef = ref(
-    database,
-    `rooms/${topicID}/${gameID}/${roomID}/currentPlayers`
-  );
+  const roomPath = `rooms/${topicID}/${gameID}/${roomID}`;
+  const playerPath = `${roomPath}/players`;
+  const currentPlayersRef = ref(database, `${roomPath}/currentPlayers`);
 
   try {
-    // Hapus pemain dari daftar pemain
-    await remove(ref(database, playerPath));
+    const playerKey = await findPlayerKey(roomPath, user.uid);
+    if (playerKey) {
+      // Remove player from room
+      await remove(ref(database, `${playerPath}/${playerKey}`));
 
-    // Perbarui currentPlayers menggunakan transaksi
-    await runTransaction(currentPlayersRef, (currentCount) => {
-      if (currentCount) {
-        return currentCount - 1;
-      } else {
-        return 0;
+      // Get all remaining players to update positions
+      const playersSnapshot = await get(ref(database, playerPath));
+      const playersData = playersSnapshot.val() || {};
+
+      // Sort remaining players by joinedAt time
+      const sortedPlayers = Object.entries(playersData)
+        .map(([key, value]) => value)
+        .sort((a, b) => a.joinedAt - b.joinedAt);
+
+      // Update positions of remaining players
+      const updates = {};
+      sortedPlayers.forEach((player, index) => {
+        const newIndex = index + 1;
+        updates[`player-${newIndex}`] = {
+          ...player,
+          index: newIndex,
+        };
+      });
+
+      await set(ref(database, playerPath), updates);
+
+      // Calculate the number of remaining players
+      const playerCount = sortedPlayers.length;
+
+      // Directly set the currentPlayers count
+      await set(currentPlayersRef, playerCount);
+
+      // Reset room if no players are left
+      if (playerCount === 0) {
+        await resetRoom(topicID, gameID, roomID);
       }
-    });
-
-    // Dapatkan jumlah pemain yang tersisa
-    const playerCount = await getRoomPlayerCount(topicID, gameID, roomID);
-    if (playerCount === 0) {
-      // Reset room jika pemain terakhir keluar
-      await resetRoom(topicID, gameID, roomID);
     }
   } catch (error) {
     console.error("Error in playerLeaveRoom:", error);

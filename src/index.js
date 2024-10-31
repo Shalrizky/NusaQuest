@@ -76,7 +76,15 @@ const App = () => {
           )
         },
         {
-          path: '/:gameID/:topicID/:roomID/play',
+          path: '/:gameID/:topicID/:roomID/playUTangga',
+          element: (
+            <ProtectedRoute>
+              {withLoader(UlarTangga)()}
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/:gameID/:topicID/:roomID/playNuca',
           element: (
             <ProtectedRoute>
               {withLoader(UlarTangga)()}

@@ -8,10 +8,7 @@ import CardPlayer from "../components/CardPlayer";
 import CardVsAi from "../components/CardVsAi";
 import ChatPlayer from "../components/ChatPlayer";
 import PlayGameIcon from "../assets/common/play-game-icon.svg";
-import {
-  fetchRooms,
-  checkRoomType,
-} from "../services/roomDataServices";
+import { fetchRooms, checkRoomType } from "../services/roomDataServices";
 import {
   fetchPlayer,
   playerJoinRoom,
@@ -39,11 +36,23 @@ function RoomPlayer() {
   const prevPlayers = useRef([]);
   const navigate = useNavigate();
 
+  // Route Url Untuk game agar dinamis
+  const getGamePath = (gameID) => {
+    switch (gameID) {
+      case "game1":
+        return "playUTangga";
+      case "game2":
+        return "playNuca";
+      default:
+        return "playUTangga";
+    }
+  };
+
   // Initialize Room and check accessibility
   useEffect(() => {
     const checkRoomAccess = async () => {
       if (!user?.uid) return;
-  
+
       try {
         const roomType = await checkRoomType(topicID, gameID, roomID);
         if (!roomType.exists || roomID === "room5") {
@@ -51,18 +60,24 @@ function RoomPlayer() {
           setLoading(false);
           return;
         }
-  
+
         // Check if player already in room
-        const currentPlayersData = await getCurrentPlayers(topicID, gameID, roomID);
-        const isPlayerInRoom = currentPlayersData.some(p => p.uid === user.uid);
-  
+        const currentPlayersData = await getCurrentPlayers(
+          topicID,
+          gameID,
+          roomID
+        );
+        const isPlayerInRoom = currentPlayersData.some(
+          (p) => p.uid === user.uid
+        );
+
         // Jika player sudah ada di room, tetap izinkan akses
         if (isPlayerInRoom) {
           setIsRoomAccessible(true);
           setLoading(false);
           return;
         }
-  
+
         // Jika player belum ada di room, cek kapasitas
         let currentRoomData = null;
         await new Promise((resolve) => {
@@ -73,14 +88,21 @@ function RoomPlayer() {
             resolve();
           });
         });
-  
+
         if (currentRoomData) {
           const currentPlayers = currentRoomData.currentPlayers || 0;
           const capacity = currentRoomData.capacity || 4;
-  
+
           if (currentPlayers < capacity) {
             setIsRoomAccessible(true);
-            await playerJoinRoom(topicID, gameID, roomID, user, true, userPhoto);
+            await playerJoinRoom(
+              topicID,
+              gameID,
+              roomID,
+              user,
+              true,
+              userPhoto
+            );
             await syncCurrentPlayers(topicID, gameID, roomID);
           } else {
             // Room penuh dan player tidak ada di dalamnya redirect ke halaman sebelumnya
@@ -93,9 +115,9 @@ function RoomPlayer() {
         navigate(-1);
       }
     };
-  
+
     checkRoomAccess();
-  
+
     // Cleanup function hanya untuk ketika benar-benar meninggalkan room
     return () => {
       const handleRealLeave = () => {
@@ -104,15 +126,15 @@ function RoomPlayer() {
           syncCurrentPlayers(topicID, gameID, roomID);
         }
       };
-  
+
       // Hanya jalankan cleanup jika benar-benar meninggalkan halaman
-      if (!window.location.pathname.includes(`/${gameID}/${topicID}/${roomID}`)) {
+      if (
+        !window.location.pathname.includes(`/${gameID}/${topicID}/${roomID}`)
+      ) {
         handleRealLeave();
       }
     };
   }, [user, topicID, gameID, roomID, userPhoto, navigate]);
-
-
 
   // Fetch and Update Players
   useEffect(() => {
@@ -220,7 +242,7 @@ function RoomPlayer() {
     );
   }
 
-  // Jika room penuh dan user akses lewat link jangan render room 
+  // Jika room penuh dan user akses lewat link jangan render room
   if (!isRoomAccessible) {
     return null;
   }
@@ -310,7 +332,9 @@ function RoomPlayer() {
         >
           <button
             className="btn-start-game d-flex align-items-center justify-content-center"
-            onClick={() => navigate(`/${gameID}/${topicID}/${roomID}/play`)}
+            onClick={() =>
+              navigate(`/${gameID}/${topicID}/${roomID}/${getGamePath(gameID)}`)
+            }
           >
             <Image className="icon-start me-2" src={PlayGameIcon} />
             Start Game

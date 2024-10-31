@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Row } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
-import { database, ref, onValue } from "../firebaseConfig";
+import { fetchRooms } from "../services/roomDataServices"; 
 import Room1 from "../assets/common/room-select-1.png";
 import Room2 from "../assets/common/room-select-2.png";
 import Room3 from "../assets/common/room-select-3.png";
@@ -22,14 +22,11 @@ function RoomSelect({ closeRoomSelect }) {
   const navigate = useNavigate();
   const { gameID, topicID } = useParams();
 
+  // Mengambil data rooms menggunakan fetchRooms dari roomDataServices
   useEffect(() => {
-    const roomsRef = ref(database, `rooms/${topicID}/${gameID}`);
-    const unsubscribe = onValue(roomsRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      setRoomsData(data);
+    fetchRooms(topicID, gameID, (data) => {
+      setRoomsData(data || {});
     });
-
-    return () => unsubscribe();
   }, [topicID, gameID]);
 
   useEffect(() => {
@@ -71,7 +68,7 @@ function RoomSelect({ closeRoomSelect }) {
     2: { normal: Room2, active: RoomActive2 },
     3: { normal: Room3, active: RoomActive3 },
     4: { normal: Room4, active: RoomActive4 },
-    5: { normal: RoomVsAi, active: RoomActiveVsAi }
+    5: { normal: RoomVsAi, active: RoomActiveVsAi },
   };
 
   return (
@@ -94,7 +91,8 @@ function RoomSelect({ closeRoomSelect }) {
                 {/* Hanya tampilkan player counter untuk room 1-4 */}
                 {roomNumber !== 5 && (
                   <div className="player-counter">
-                    {(roomsData[`room${roomNumber}`]?.currentPlayers || 0)} / {(roomsData[`room${roomNumber}`]?.capacity || 4)}
+                    {roomsData[`room${roomNumber}`]?.currentPlayers || 0} /{" "}
+                    {roomsData[`room${roomNumber}`]?.capacity || 4}
                   </div>
                 )}
                 <img

@@ -5,7 +5,7 @@ import { gsap } from "gsap";
 import {
   sendMessageToChat,
   listenToChatMessages,
-} from "../services/roomsDataServices";
+} from "../services/roomDataServices";
 import "../style/components/ChatPlayer.css";
 
 const ChatPlayer = ({

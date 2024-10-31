@@ -1,6 +1,4 @@
-// FILE 1: src/routes/RoomPlayer.js
-
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
 import useAuth from "../hooks/useAuth";
@@ -10,17 +8,19 @@ import CardPlayer from "../components/CardPlayer";
 import CardVsAi from "../components/CardVsAi";
 import ChatPlayer from "../components/ChatPlayer";
 import PlayGameIcon from "../assets/common/play-game-icon.svg";
-import { fetchRooms } from "../services/roomsDataServices";
-import { getUserAchievements } from "../services/achievementDataServices";
 import {
-  roomsParticipation,
-  syncCurrentPlayers,
-  subscribeToPlayers,
+  fetchRooms,
   resetRoom,
+  checkRoomType,
+} from "../services/roomDataServices";
+import {
+  fetchPlayer,
+  playerJoinRoom,
+  syncCurrentPlayers,
   playerLeaveRoom,
   getCurrentPlayers,
-  checkRoomType,
 } from "../services/PlayerDataServices";
+import { getUserAchievements } from "../services/achievementDataServices";
 import "../style/routes/RoomPlayer.css";
 
 function RoomPlayer() {
@@ -32,14 +32,14 @@ function RoomPlayer() {
   const [roomCapacity, setRoomCapacity] = useState(4);
   const [players, setPlayers] = useState([]);
   const [newPlayerUid, setNewPlayerUid] = useState(null);
-  const [playerProfiles, setPlayerProfiles] = useState({}); //? Fungsi untuk belancer profile
+  const [playerProfiles, setPlayerProfiles] = useState({});
   const [userAchievements, setUserAchievements] = useState(null);
   const [userBadge, setUserBadge] = useState(null);
   const [lastMessage, setLastMessage] = useState("Chat With Others");
   const prevPlayers = useRef([]);
   const navigate = useNavigate();
 
-  // Handle Session Expiration
+  // Handle Session Expiration or User Logout
   useEffect(() => {
     if (!isLoggedIn) {
       playerLeaveRoom(topicID, gameID, roomID, user);
@@ -47,7 +47,7 @@ function RoomPlayer() {
     }
   }, [isLoggedIn, user, topicID, gameID, roomID, navigate]);
 
-  // Initialize Room
+  // Initialize Room and handle unmount
   useEffect(() => {
     const initializeRoom = async () => {
       if (!user?.uid) return;
@@ -61,14 +61,7 @@ function RoomPlayer() {
 
         const currentPlayers = await getCurrentPlayers(topicID, gameID, roomID);
         if (!currentPlayers.some((p) => p.uid === user.uid)) {
-          await roomsParticipation(
-            topicID,
-            gameID,
-            roomID,
-            user,
-            true,
-            userPhoto
-          );
+          await playerJoinRoom(topicID, gameID, roomID, user, true, userPhoto);
         }
       } catch (error) {
         console.error("Error initializing room:", error);
@@ -77,19 +70,18 @@ function RoomPlayer() {
 
     initializeRoom();
 
-    // Hapus pemain dari room ketika komponen unmount
+    // Hapus pemain dan reset room ketika komponen unmount
     return () => {
       if (user?.uid && roomID !== "room5") {
         playerLeaveRoom(topicID, gameID, roomID, user);
+        resetRoom(topicID, gameID, roomID);
       }
     };
   }, [user, topicID, gameID, roomID, userPhoto]);
 
-  // Fetch and Update Players
-  useEffect(() => {
-    if (roomID === "room5" || roomData?.isSinglePlayer) return;
-
-    const fetchPlayerAchievements = async (player) => {
+  // Memoize fetchPlayerAchievements function with useCallback
+  const fetchPlayerAchievements = useCallback(
+    async (player) => {
       if (!playerProfiles[player.uid]) {
         // Cek cache
         const achievements = await getUserAchievements(player.uid);
@@ -108,28 +100,37 @@ function RoomPlayer() {
         ...player,
         ...playerProfiles[player.uid],
       };
-    };
+    },
+    [gameID, topicID, playerProfiles]
+  );
 
+  // Fetch and Update Players
+  useEffect(() => {
+    if (roomID === "room5" || roomData?.isSinglePlayer) return;
+  
     const handlePlayersUpdate = async (playersData) => {
       try {
         const playerPromises = playersData.map(async (player) => {
           if (!player?.uid) return null;
           return fetchPlayerAchievements(player);
         });
-
+  
+        // Filter pemain null dan urutkan berdasarkan joinedAt
         const enrichedPlayers = (await Promise.all(playerPromises)).filter(
           (player) => player !== null
         );
-
+  
+        // Urutkan pemain berdasarkan joinedAt agar posisi konsisten
         const sortedPlayers = enrichedPlayers
           .sort((a, b) => a.joinedAt - b.joinedAt)
           .slice(0, roomCapacity);
-
+  
+        // Temukan pemain baru yang masuk
         const latestPlayer = sortedPlayers.find(
           (p) =>
             !prevPlayers.current.some((prevPlayer) => prevPlayer?.uid === p.uid)
         );
-
+  
         setNewPlayerUid(latestPlayer?.uid || null);
         prevPlayers.current = sortedPlayers;
         setPlayers(sortedPlayers);
@@ -137,15 +138,22 @@ function RoomPlayer() {
         console.error("Error processing players data:", error);
       }
     };
-
-    const unsubscribe = subscribeToPlayers(
+  
+    const unsubscribe = fetchPlayer(
       topicID,
       gameID,
       roomID,
       handlePlayersUpdate
     );
     return () => unsubscribe();
-  }, [topicID, gameID, roomID, roomCapacity, roomData?.isSinglePlayer]);
+  }, [
+    topicID,
+    gameID,
+    roomID,
+    roomCapacity,
+    roomData?.isSinglePlayer,
+    fetchPlayerAchievements,
+  ]);
 
   // Fetch Room Data
   useEffect(() => {
@@ -189,11 +197,6 @@ function RoomPlayer() {
 
     fetchUserData();
   }, [user, topicID, gameID]);
-
-  // Reset Room Status setiap kali ada perubahan pada roomID, gameID, atau topicID
-  useEffect(() => {
-    resetRoom(topicID, gameID, roomID);
-  }, [topicID, gameID, roomID]);
 
   if (loading || !roomData) {
     return (

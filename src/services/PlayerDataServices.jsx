@@ -1,3 +1,5 @@
+// PlayerDataServices.js
+
 import {
   database,
   ref,
@@ -8,26 +10,16 @@ import {
 } from "../firebaseConfig";
 import { resetRoom, getRoomPlayerCount } from "./roomDataServices";
 
-// Function to find the first available player index in the room
-const findAvailablePlayerIndex = async (roomPath, capacity, uid) => {
+// Function to find the first available player key in the room
+const findAvailablePlayerKey = async (roomPath, capacity) => {
   const playersRef = ref(database, `${roomPath}/players`);
   const playersSnapshot = await get(playersRef);
   const playersData = playersSnapshot.val() || {};
 
-  // Check if the player is already in the room
-  const existingPlayerKey = Object.keys(playersData).find(
-    (key) => playersData[key].uid === uid
-  );
-
-  if (existingPlayerKey) {
-    // Return existing index
-    return parseInt(existingPlayerKey.split('-')[1]);
-  }
-
-  // Find the first available index
   for (let i = 1; i <= capacity; i++) {
-    if (!playersData[`player-${i}`]) {
-      return i;
+    const key = `player-${i}`;
+    if (!playersData[key]) {
+      return key;
     }
   }
   return null;
@@ -89,23 +81,15 @@ export const playerJoinRoom = async (
         throw new Error("Room is full");
       }
 
-      const playerIndex = await findAvailablePlayerIndex(
-        roomPath,
-        capacity,
-        user.uid
-      );
-      if (!playerIndex) {
-        throw new Error("No available player index");
+      const playerKey = await findAvailablePlayerKey(roomPath, capacity);
+      if (!playerKey) {
+        throw new Error("No available player key");
       }
 
-      const playerPath = `${roomPath}/players/player-${playerIndex}`;
-
-      await set(ref(database, playerPath), {
+      await set(ref(database, `${roomPath}/players/${playerKey}`), {
         uid: user.uid,
         displayName: user.displayName,
         photoURL: userPhoto,
-        joinedAt: Date.now(),
-        index: playerIndex,
       });
 
       // Synchronize currentPlayers count
@@ -136,14 +120,14 @@ export const fetchPlayer = (topicID, gameID, roomID, onPlayersUpdate) => {
 
     await syncCurrentPlayers(topicID, gameID, roomID);
 
-    const sortedPlayers = Object.entries(playersData)
-      .map(([key, value]) => ({
-        ...value,
-        index: parseInt(key.split('-')[1]),
-      }))
-      .sort((a, b) => a.index - b.index);
+    const playersWithPositions = Object.entries(playersData)
+      .map(([key, player]) => {
+        const position = parseInt(key.split('-')[1], 10) - 1; // Zero-based index
+        return { ...player, position };
+      })
+      .sort((a, b) => a.position - b.position);
 
-    onPlayersUpdate(sortedPlayers);
+    onPlayersUpdate(playersWithPositions);
   });
 };
 
@@ -156,7 +140,17 @@ export const getCurrentPlayers = async (topicID, gameID, roomID) => {
     `rooms/${topicID}/${gameID}/${roomID}/players`
   );
   const snapshot = await get(playersRef);
-  return snapshot.val() ? Object.values(snapshot.val()) : [];
+  if (!snapshot.exists()) return [];
+
+  const playersData = snapshot.val();
+  const playersWithPositions = Object.entries(playersData)
+    .map(([key, player]) => {
+      const position = parseInt(key.split('-')[1], 10) - 1; // Zero-based index
+      return { ...player, position };
+    })
+    .sort((a, b) => a.position - b.position);
+
+  return playersWithPositions;
 };
 
 // Sync the number of players in the room to the database
@@ -196,25 +190,20 @@ export const playerLeaveRoom = async (topicID, gameID, roomID, user) => {
       const playersSnapshot = await get(ref(database, playerPath));
       const playersData = playersSnapshot.val() || {};
 
-      // Sort remaining players by joinedAt time
-      const sortedPlayers = Object.entries(playersData)
-        .map(([key, value]) => value)
-        .sort((a, b) => a.joinedAt - b.joinedAt);
+      // Get remaining players and reassign positions
+      const remainingPlayers = Object.values(playersData);
 
-      // Update positions of remaining players
+      // Reassign players to keys
       const updates = {};
-      sortedPlayers.forEach((player, index) => {
-        const newIndex = index + 1;
-        updates[`player-${newIndex}`] = {
-          ...player,
-          index: newIndex,
-        };
+      remainingPlayers.forEach((player, index) => {
+        const key = `player-${index + 1}`;
+        updates[key] = player;
       });
 
       await set(ref(database, playerPath), updates);
 
       // Calculate the number of remaining players
-      const playerCount = sortedPlayers.length;
+      const playerCount = remainingPlayers.length;
 
       // Directly set the currentPlayers count
       await set(currentPlayersRef, playerCount);

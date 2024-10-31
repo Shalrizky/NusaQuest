@@ -1,3 +1,5 @@
+// RoomPlayer.js
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
@@ -10,7 +12,6 @@ import ChatPlayer from "../components/ChatPlayer";
 import PlayGameIcon from "../assets/common/play-game-icon.svg";
 import {
   fetchRooms,
-  resetRoom,
   checkRoomType,
 } from "../services/roomDataServices";
 import {
@@ -84,7 +85,7 @@ function RoomPlayer() {
     async (player) => {
       if (!playerProfiles[player.uid]) {
         const achievements = await getUserAchievements(player.uid);
-        const achievementData = achievements?.[gameID]?.[topicID];
+        const achievementData = achievements?.[gameID]?.[topicID] || {};
         const playerProfile = {
           ...player,
           achievements: achievementData,
@@ -96,7 +97,6 @@ function RoomPlayer() {
         }));
         return playerProfile;
       }
-      // Ensure index is preserved
       return {
         ...player,
         achievements: playerProfiles[player.uid].achievements,
@@ -121,22 +121,14 @@ function RoomPlayer() {
           (player) => player !== null
         );
 
-        // Sort players by index
-        const sortedPlayers = enrichedPlayers
-          .sort((a, b) => a.index - b.index)
-          .slice(0, roomCapacity);
-
-        // Determine if there is a new player (either not in previous list, or rejoined)
-        const latestPlayer = sortedPlayers.find((p) => {
-          const prevPlayer = prevPlayers.current.find(
-            (prevP) => prevP?.uid === p.uid
-          );
-          return !prevPlayer || prevPlayer.joinedAt !== p.joinedAt;
+        // Determine if there is a new player (either not in previous list)
+        const latestPlayer = enrichedPlayers.find((p) => {
+          return !prevPlayers.current.some((prevP) => prevP?.uid === p.uid);
         });
 
         setNewPlayerUid(latestPlayer?.uid || null);
-        prevPlayers.current = sortedPlayers;
-        setPlayers(sortedPlayers);
+        prevPlayers.current = enrichedPlayers;
+        setPlayers(enrichedPlayers);
       } catch (error) {
         console.error("Error processing players data:", error);
       }
@@ -149,13 +141,7 @@ function RoomPlayer() {
       handlePlayersUpdate
     );
     return () => unsubscribe();
-  }, [
-    topicID,
-    gameID,
-    roomID,
-    roomCapacity,
-    fetchPlayerAchievements,
-  ]);
+  }, [topicID, gameID, roomID, fetchPlayerAchievements]);
 
   // Fetch Room Data
   useEffect(() => {
@@ -214,12 +200,12 @@ function RoomPlayer() {
 
   const playerArray = Array.from({ length: roomCapacity }, () => null);
 
-  // Place each player in their correct position based on index
+  // Place players in their positions
   players.forEach((player) => {
-    playerArray[player.index - 1] = player;
+    playerArray[player.position] = player;
   });
 
-  // Render the player cards
+  // Render player cards
   const playerCards = isSinglePlayer ? (
     <CardVsAi
       key="vs-ai-card"

@@ -1,6 +1,4 @@
-// RoomPlayer.js
-
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
 import useAuth from "../hooks/useAuth";
@@ -25,10 +23,11 @@ import { getUserAchievements } from "../services/achievementDataServices";
 import "../style/routes/RoomPlayer.css";
 
 function RoomPlayer() {
-  const { gameID, topicID, roomID } = useParams();
-  const { user, isLoggedIn } = useAuth();
+  const { user } = useAuth();
   const [userPhoto, handlePhotoError] = useUserPhoto(user);
+  const { gameID, topicID, roomID } = useParams();
   const [loading, setLoading] = useState(true);
+  const [isRoomAccessible, setIsRoomAccessible] = useState(false);
   const [roomData, setRoomData] = useState(null);
   const [roomCapacity, setRoomCapacity] = useState(4);
   const [players, setPlayers] = useState([]);
@@ -40,71 +39,80 @@ function RoomPlayer() {
   const prevPlayers = useRef([]);
   const navigate = useNavigate();
 
-  // Handle Session Expiration or User Logout
+  // Initialize Room and check accessibility
   useEffect(() => {
-    if (!isLoggedIn) {
-      playerLeaveRoom(topicID, gameID, roomID, user);
-      navigate("/login");
-    }
-  }, [isLoggedIn, user, topicID, gameID, roomID, navigate]);
-
-  // Initialize Room and handle unmount
-  useEffect(() => {
-    const initializeRoom = async () => {
+    const checkRoomAccess = async () => {
       if (!user?.uid) return;
-
+  
       try {
         const roomType = await checkRoomType(topicID, gameID, roomID);
-        if (!roomType.exists || roomID === "room5") return;
-
-        await syncCurrentPlayers(topicID, gameID, roomID);
-
-        const currentPlayers = await getCurrentPlayers(topicID, gameID, roomID);
-        if (!currentPlayers.some((p) => p.uid === user.uid)) {
-          await playerJoinRoom(topicID, gameID, roomID, user, true, userPhoto);
-          await syncCurrentPlayers(topicID, gameID, roomID);
+        if (!roomType.exists || roomID === "room5") {
+          setIsRoomAccessible(true);
+          setLoading(false);
+          return;
         }
+  
+        // Check if player already in room
+        const currentPlayersData = await getCurrentPlayers(topicID, gameID, roomID);
+        const isPlayerInRoom = currentPlayersData.some(p => p.uid === user.uid);
+  
+        // Jika player sudah ada di room, tetap izinkan akses
+        if (isPlayerInRoom) {
+          setIsRoomAccessible(true);
+          setLoading(false);
+          return;
+        }
+  
+        // Jika player belum ada di room, cek kapasitas
+        let currentRoomData = null;
+        await new Promise((resolve) => {
+          fetchRooms(topicID, gameID, (rooms) => {
+            if (rooms?.[roomID]) {
+              currentRoomData = rooms[roomID];
+            }
+            resolve();
+          });
+        });
+  
+        if (currentRoomData) {
+          const currentPlayers = currentRoomData.currentPlayers || 0;
+          const capacity = currentRoomData.capacity || 4;
+  
+          if (currentPlayers < capacity) {
+            setIsRoomAccessible(true);
+            await playerJoinRoom(topicID, gameID, roomID, user, true, userPhoto);
+            await syncCurrentPlayers(topicID, gameID, roomID);
+          } else {
+            // Room penuh dan player tidak ada di dalamnya redirect ke halaman sebelumnya
+            navigate(-1);
+          }
+        }
+        setLoading(false);
       } catch (error) {
-        console.error("Error initializing room:", error);
+        console.error("Error checking room access:", error);
+        navigate(-1);
       }
     };
-
-    initializeRoom();
-
-    // Cleanup function when component unmounts
+  
+    checkRoomAccess();
+  
+    // Cleanup function hanya untuk ketika benar-benar meninggalkan room
     return () => {
-      if (user?.uid && roomID !== "room5") {
-        playerLeaveRoom(topicID, gameID, roomID, user);
-        syncCurrentPlayers(topicID, gameID, roomID);
+      const handleRealLeave = () => {
+        if (user?.uid && roomID !== "room5") {
+          playerLeaveRoom(topicID, gameID, roomID, user);
+          syncCurrentPlayers(topicID, gameID, roomID);
+        }
+      };
+  
+      // Hanya jalankan cleanup jika benar-benar meninggalkan halaman
+      if (!window.location.pathname.includes(`/${gameID}/${topicID}/${roomID}`)) {
+        handleRealLeave();
       }
     };
-  }, [user, topicID, gameID, roomID, userPhoto]);
+  }, [user, topicID, gameID, roomID, userPhoto, navigate]);
 
-  // Memoize fetchPlayerAchievements function with useCallback
-  const fetchPlayerAchievements = useCallback(
-    async (player) => {
-      if (!playerProfiles[player.uid]) {
-        const achievements = await getUserAchievements(player.uid);
-        const achievementData = achievements?.[gameID]?.[topicID] || {};
-        const playerProfile = {
-          ...player,
-          achievements: achievementData,
-          badge: achievementData?.badge || null,
-        };
-        setPlayerProfiles((prev) => ({
-          ...prev,
-          [player.uid]: playerProfile,
-        }));
-        return playerProfile;
-      }
-      return {
-        ...player,
-        achievements: playerProfiles[player.uid].achievements,
-        badge: playerProfiles[player.uid].badge,
-      };
-    },
-    [gameID, topicID, playerProfiles]
-  );
+
 
   // Fetch and Update Players
   useEffect(() => {
@@ -114,14 +122,32 @@ function RoomPlayer() {
       try {
         const playerPromises = playersData.map(async (player) => {
           if (!player?.uid) return null;
-          return fetchPlayerAchievements(player);
+
+          if (!playerProfiles[player.uid]) {
+            const achievements = await getUserAchievements(player.uid);
+            const achievementData = achievements?.[gameID]?.[topicID] || {};
+            const playerProfile = {
+              ...player,
+              achievements: achievementData,
+              badge: achievementData?.badge || null,
+            };
+            setPlayerProfiles((prev) => ({
+              ...prev,
+              [player.uid]: playerProfile,
+            }));
+            return playerProfile;
+          }
+          return {
+            ...player,
+            achievements: playerProfiles[player.uid].achievements,
+            badge: playerProfiles[player.uid].badge,
+          };
         });
 
         const enrichedPlayers = (await Promise.all(playerPromises)).filter(
           (player) => player !== null
         );
 
-        // Determine if there is a new player (either not in previous list)
         const latestPlayer = enrichedPlayers.find((p) => {
           return !prevPlayers.current.some((prevP) => prevP?.uid === p.uid);
         });
@@ -141,20 +167,17 @@ function RoomPlayer() {
       handlePlayersUpdate
     );
     return () => unsubscribe();
-  }, [topicID, gameID, roomID, fetchPlayerAchievements]);
+  }, [topicID, gameID, roomID, playerProfiles]);
 
   // Fetch Room Data
   useEffect(() => {
     const fetchRoomData = async () => {
-      setLoading(true);
       try {
         fetchRooms(topicID, gameID, (rooms) => {
           if (rooms?.[roomID]) {
-            console.log("Room data received:", rooms[roomID]);
             setRoomData(rooms[roomID]);
             setRoomCapacity(rooms[roomID].capacity || 4);
           } else {
-            console.log("No room data found");
             setRoomData(null);
           }
           setLoading(false);
@@ -186,7 +209,23 @@ function RoomPlayer() {
     fetchUserData();
   }, [user, topicID, gameID]);
 
-  if (loading || !roomData) {
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <Spinner animation="border" role="status" variant="dark">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
+
+  // Jika room penuh dan user akses lewat link jangan render room 
+  if (!isRoomAccessible) {
+    return null;
+  }
+
+  if (!roomData) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
         <Spinner animation="border" role="status" variant="dark">

@@ -1,5 +1,3 @@
-// PlayerDataServices.js
-
 import {
   database,
   ref,
@@ -10,7 +8,7 @@ import {
 } from "../firebaseConfig";
 import { resetRoom, getRoomPlayerCount } from "./roomDataServices";
 
-// Function to find the first available player key in the room
+// Fungsi untuk menemukan key pemain pertama yang tersedia di dalam room
 const findAvailablePlayerKey = async (roomPath, capacity) => {
   const playersRef = ref(database, `${roomPath}/players`);
   const playersSnapshot = await get(playersRef);
@@ -25,7 +23,7 @@ const findAvailablePlayerKey = async (roomPath, capacity) => {
   return null;
 };
 
-// Function to find the player's key based on UID
+// Fungsi untuk menemukan key pemain berdasarkan UID
 const findPlayerKey = async (roomPath, uid) => {
   const playersRef = ref(database, `${roomPath}/players`);
   const playersSnapshot = await get(playersRef);
@@ -40,7 +38,7 @@ const findPlayerKey = async (roomPath, uid) => {
   return null;
 };
 
-// Manage the process of a player joining or leaving a room
+// Mengelola proses pemain yang bergabung atau meninggalkan room
 export const playerJoinRoom = async (
   topicID,
   gameID,
@@ -51,7 +49,7 @@ export const playerJoinRoom = async (
 ) => {
   if (roomID === "room5") return;
   if (!topicID || !gameID || !roomID || !user?.uid) {
-    console.error("Missing required parameters in roomsParticipation");
+    console.error("Parameter yang diperlukan hilang dalam roomsParticipation");
     return;
   }
 
@@ -62,7 +60,7 @@ export const playerJoinRoom = async (
     const roomSnapshot = await get(roomRef);
 
     if (!roomSnapshot.exists()) {
-      console.error("Room does not exist");
+      console.error("Room tidak ada");
       return;
     }
 
@@ -78,12 +76,12 @@ export const playerJoinRoom = async (
       const playerCount = await getRoomPlayerCount(topicID, gameID, roomID);
 
       if (playerCount >= capacity) {
-        throw new Error("Room is full");
+        throw new Error("Room penuh");
       }
 
       const playerKey = await findAvailablePlayerKey(roomPath, capacity);
       if (!playerKey) {
-        throw new Error("No available player key");
+        throw new Error("Tidak ada key pemain yang tersedia");
       }
 
       await set(ref(database, `${roomPath}/players/${playerKey}`), {
@@ -92,21 +90,21 @@ export const playerJoinRoom = async (
         photoURL: userPhoto,
       });
 
-      // Synchronize currentPlayers count
+      // Sinkronisasi jumlah pemain saat ini
       await syncCurrentPlayers(topicID, gameID, roomID);
     }
   } catch (error) {
-    console.error("Error in roomsParticipation:", error);
+    console.error("Error dalam roomsParticipation:", error);
     throw error;
   }
 };
 
-// Watch for changes in player data in the room in real-time
+// Mengawasi perubahan data pemain di dalam room secara real-time
 export const fetchPlayer = (topicID, gameID, roomID, onPlayersUpdate) => {
   if (roomID === "room5") return () => {};
 
   if (!topicID || !gameID || !roomID || typeof onPlayersUpdate !== "function") {
-    console.error("Invalid parameters for fetch data player");
+    console.error("Parameter tidak valid untuk fetch data pemain");
     return () => {};
   }
 
@@ -122,7 +120,7 @@ export const fetchPlayer = (topicID, gameID, roomID, onPlayersUpdate) => {
 
     const playersWithPositions = Object.entries(playersData)
       .map(([key, player]) => {
-        const position = parseInt(key.split('-')[1], 10) - 1; // Zero-based index
+        const position = parseInt(key.split('-')[1], 10) - 1; // Index dimulai dari nol
         return { ...player, position };
       })
       .sort((a, b) => a.position - b.position);
@@ -131,7 +129,7 @@ export const fetchPlayer = (topicID, gameID, roomID, onPlayersUpdate) => {
   });
 };
 
-// Get all current players in the room
+// Mendapatkan semua pemain yang ada di dalam room
 export const getCurrentPlayers = async (topicID, gameID, roomID) => {
   if (roomID === "room5") return [];
 
@@ -145,7 +143,7 @@ export const getCurrentPlayers = async (topicID, gameID, roomID) => {
   const playersData = snapshot.val();
   const playersWithPositions = Object.entries(playersData)
     .map(([key, player]) => {
-      const position = parseInt(key.split('-')[1], 10) - 1; // Zero-based index
+      const position = parseInt(key.split('-')[1], 10) - 1; // Index dimulai dari nol
       return { ...player, position };
     })
     .sort((a, b) => a.position - b.position);
@@ -153,7 +151,7 @@ export const getCurrentPlayers = async (topicID, gameID, roomID) => {
   return playersWithPositions;
 };
 
-// Sync the number of players in the room to the database
+// Sinkronisasi jumlah pemain dalam room ke database
 export const syncCurrentPlayers = async (topicID, gameID, roomID) => {
   if (!topicID || !gameID || !roomID || roomID === "room5") return;
 
@@ -164,15 +162,15 @@ export const syncCurrentPlayers = async (topicID, gameID, roomID) => {
     );
     const playerCount = await getRoomPlayerCount(topicID, gameID, roomID);
 
-    // Directly set the player count without using a transaction
+    // Set jumlah pemain tanpa menggunakan transaksi
     await set(currentPlayersRef, playerCount);
     return playerCount;
   } catch (error) {
-    console.error("Error syncing players:", error);
+    console.error("Error saat sinkronisasi pemain:", error);
   }
 };
 
-// Manage player leaving the room and update currentPlayers
+// Mengelola pemain yang meninggalkan room dan memperbarui currentPlayers
 export const playerLeaveRoom = async (topicID, gameID, roomID, user) => {
   if (!topicID || !gameID || !roomID || !user?.uid || roomID === "room5") return;
 
@@ -183,17 +181,17 @@ export const playerLeaveRoom = async (topicID, gameID, roomID, user) => {
   try {
     const playerKey = await findPlayerKey(roomPath, user.uid);
     if (playerKey) {
-      // Remove player from room
+      // Hapus pemain dari room
       await remove(ref(database, `${playerPath}/${playerKey}`));
 
-      // Get all remaining players to update positions
+      // Dapatkan semua pemain yang tersisa untuk memperbarui posisi
       const playersSnapshot = await get(ref(database, playerPath));
       const playersData = playersSnapshot.val() || {};
 
-      // Get remaining players and reassign positions
+      // Dapatkan pemain yang tersisa dan atur ulang posisi
       const remainingPlayers = Object.values(playersData);
 
-      // Reassign players to keys
+      // Tetapkan ulang pemain ke key baru
       const updates = {};
       remainingPlayers.forEach((player, index) => {
         const key = `player-${index + 1}`;
@@ -202,18 +200,18 @@ export const playerLeaveRoom = async (topicID, gameID, roomID, user) => {
 
       await set(ref(database, playerPath), updates);
 
-      // Calculate the number of remaining players
+      // Hitung jumlah pemain yang tersisa
       const playerCount = remainingPlayers.length;
 
-      // Directly set the currentPlayers count
+      // Set jumlah currentPlayers secara langsung
       await set(currentPlayersRef, playerCount);
 
-      // Reset room if no players are left
+      // Reset room jika tidak ada pemain yang tersisa
       if (playerCount === 0) {
         await resetRoom(topicID, gameID, roomID);
       }
     }
   } catch (error) {
-    console.error("Error in playerLeaveRoom:", error);
+    console.error("Error dalam playerLeaveRoom:", error);
   }
 };

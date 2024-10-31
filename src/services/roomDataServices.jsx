@@ -177,7 +177,6 @@ export const resetRoom = async (topicID, gameID, roomID) => {
   if (!topicID || !gameID || !roomID || roomID === "room5") return;
 
   try {
-    // Gunakan getRoomPlayerCount  untuk menghitung pemain
     const playerCount = await getRoomPlayerCount(topicID, gameID, roomID);
 
     if (playerCount === 0) {

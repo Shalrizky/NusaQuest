@@ -10,7 +10,7 @@ import song2 from "../../assets/sound/song2.mp3";
 import song3 from "../../assets/sound/song3.mp3";
 import "../../style/components/games/HeaderGame.css";
 
-function HeaderUtangga({ toggleTemp }) {
+function HeaderGame({ toggleTemp }) {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [isSfxPlaying, setIsSfxPlaying] = useState(true);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
@@ -51,38 +51,35 @@ function HeaderUtangga({ toggleTemp }) {
   const handleCloseOffcanvas = () => setShowOffcanvas(false);
 
   return (
-    <>
-      <Row className="align-items-center mt-3">
-        <Col className="d-flex justify-content-start">
-          <Image
-            src={btntemp}
-            alt="btn temp"
-            width={45}
-            className="ms-3"
-            onClick={handleBtnTempClick}
-            style={{ cursor: "pointer" }}
-          />
-        </Col>
-        <Col className="d-flex justify-content-end">
-          <Image
-            src={isSfxPlaying ? iconsfxOff : iconsfx}
-            alt="icon sfx"
-            width={45}
-            className="me-3"
-            onClick={handleSfxClick}
-            style={{ cursor: "pointer" }}
-          />
-          <Image
-            src={isMusicPlaying ? iconmusik : iconmusikOff}
-            alt="icon music"
-            width={45}
-            className="me-3"
-            onClick={handleMusicClick}
-            style={{ cursor: "pointer" }}
-          />
-        </Col>
-      </Row>
-
+    <Row className="align-items-center my-4">
+      <Col className="d-flex justify-content-start">
+        <Image
+          src={btntemp}
+          alt="btn temp"
+          width={45}
+          className="ms-3"
+          onClick={handleBtnTempClick}
+          style={{ cursor: "pointer" }}
+        />
+      </Col>
+      <Col className="d-flex justify-content-end">
+        <Image
+          src={isSfxPlaying ? iconsfxOff : iconsfx}
+          alt="icon sfx"
+          width={45}
+          className="me-3"
+          onClick={handleSfxClick}
+          style={{ cursor: "pointer" }}
+        />
+        <Image
+          src={isMusicPlaying ? iconmusik : iconmusikOff}
+          alt="icon music"
+          width={45}
+          className="me-3"
+          onClick={handleMusicClick}
+          style={{ cursor: "pointer" }}
+        />
+      </Col>
       <audio
         ref={audioRef}
         src={playlist[currentSongIndex]}
@@ -90,7 +87,6 @@ function HeaderUtangga({ toggleTemp }) {
         autoPlay={false}
         loop={false}
       />
-
       <Offcanvas
         show={showOffcanvas}
         onHide={handleCloseOffcanvas}
@@ -114,8 +110,8 @@ function HeaderUtangga({ toggleTemp }) {
           </div>
         </Offcanvas.Body>
       </Offcanvas>
-    </>
+    </Row>
   );
 }
 
-export default HeaderUtangga;
+export default HeaderGame;

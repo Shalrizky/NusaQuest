@@ -1,114 +1,138 @@
-/* Ensure the background image is set correctly */
 .utangga-container {
   background-image: url('../../assets/common/bg-ular.png');
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
-  min-height: 100vh;
+  background-attachment: fixed;
   overflow: hidden;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Ensure proper layout for header and game board */
-.utu-container-left {
-  display: flex;
-  justify-content: flex-start;
-  padding: 20px; 
-  margin-top: 20px;
-}
-
-/* Ensure Konva canvas container is positioned correctly */
-.utu-konva {
-  position: relative;
-  margin-bottom: 20px;
+  min-height: 100vh;
 }
 
 /* Styling for player turn box */
 .player-turn-box {
-  width: 500px;
-  height: 300px;
-  background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
-  color: white;
-  text-align: center;
+  width: 100%;
+  max-width: 500px;
+  min-height: 300px;
   padding: 20px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  color: white;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   border-radius: 10px;
+  box-sizing: border-box;
+  overflow: auto;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;  
   align-items: center;
-  margin: 20px auto;
-}
-
-.player-list {
-  display: flex;
-  flex-wrap: wrap;
   justify-content: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-.player-item {
-  margin: 10px 20px;
-}
-
-.player-item img {
-  border: 5px solid #ffd700; 
-  border-radius: 50%; 
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  width: 60px;
-  height: 60px;
-}
-
-.player-item span {
-  font-size: 18px;
-  font-weight: bold;
-  color: #ffffff;
-  margin-left: 10px;
-}
+/* Styling untuk form answer */
 .form-check {
-  border: 1px solid #B3D9FF;
-  padding: 2px;
-  justify-content: center;
-  margin-bottom: 10px;
   display: flex;
+  justify-content: center;
   align-items: center;
-  transition: background-color 0.3s ease; /* Animasi smooth untuk transisi */
-}
-
-.form-check input[type="radio"] {
-  margin-right: 2px;
-}
-
-.form-check-label {
+  padding: 6px;
+  margin: 10px 0;
+  border-radius: 12px;
+  border: 1.5px solid #B3D9FF;
+  transition: background-color 0.3s ease;
   cursor: pointer;
-  padding: 5px; /* Tambah padding agar lebih nyaman di-hover */
-  width: 100%; /* Supaya seluruh elemen label dapat di-hover */
 }
 
-/* Efek hover untuk label */
+.box-player-name {
+  font-size: 25px;
+}
+
+.question-text {
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 0.8px;
+}
+
+.question-answer-text {
+  cursor: pointer;
+  font-size: 16px;
+}
+
 .form-check:hover {
-  background-color: #FD8200; /* Background berubah menjadi oranye saat di-hover */
+  background-color: #FD8200;
 }
 
-/* Warna hijau untuk jawaban benar */
 .correct-answer {
   background-color: lightgreen !important;
 }
 
-/* Warna merah untuk jawaban salah */
 .wrong-answer {
   background-color: lightcoral !important;
 }
 
-/*Css Overlay VICTORY*/
+/* Style timer untuk player */
+.timer-player {
+  background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
+  border-radius: 12px;
+  padding: 2px 20px;
+  animation: pulse 1.2s infinite alternate;
+  box-shadow: 0px 8px 20px rgba(59, 130, 246, 0.4);
+  transition: background 0.5s ease-in-out;
+}
+
+.timer-count {
+  font-size: 20px;
+  font-weight: bold;
+  color: #e0f2fe;
+  text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+  animation: colorChange 10s linear infinite;
+}
+
+.timer-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffffac;
+}
+
+/* Style Player */
+.player-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 0%;
+  min-width: 100px;
+  max-width: 100%;
+}
+
+.player-list .player-item:only-child {
+  flex-basis: 100%;
+  max-width: 100%;
+}
+
+.player-item img {
+  border: 3px solid #ffd700;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  width: 60px;
+  height: 60px;
+}
+
+.player-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Css Overlay VICTORY */
 .victory-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8); /* Transparan */
+  background-color: rgba(0, 0, 0, 0.8);
   color: white;
   display: flex;
   flex-direction: column;
@@ -120,7 +144,7 @@
 }
 
 .victory-logo {
-  width: 300px; /* Sesuaikan ukuran logo sesuai kebutuhan */
+  width: 300px;
   margin-bottom: 20px;
 }
 
@@ -140,87 +164,50 @@
   flex-wrap: wrap;
 }
 
-.Achievement1-logo {
+.Achievement1-logo,
+.Achievement2-logo {
   margin: 5px 10px;
   width: 100px;
-  height:100px ;
+  height: 100px;
 }
 
-.Achievement2-logo {
-    margin: 5px 10px;
-    width: 100px;
-    height:100px ;
-}
 .potion-logo {
-    margin: 5px 10px;
-    width: 120px;
-    height:100px ;
+  margin: 5px 10px;
+  width: 120px;
+  height: 100px;
+}
 
-  }
+/* Style Timer Untuk Game */
 .game-timer-display {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* background-color: #1e3a8a; */
-    color: #e0f2fe;
-    /* border-radius: 12px;
-    padding: 10px 20px;
-    margin: 15px 0; */
-    font-weight: bold;
-    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
-  }
-  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e0f2fe;
+  font-weight: bold;
+}
+
 .game-time-text {
-    font-size: 24px;
-    margin-right: 8px;
-  }
-  
+  font-size: 24px;
+  margin-right: 8px;
+}
+
 .game-time-label {
-    font-size: 18px;
-    opacity: 0.8;
+  font-size: 18px;
+  opacity: 0.8;
+}
+
+/* Animasi Pulse */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0px 5px 15px rgba(59, 130, 246, 0.2);
   }
-  
-.timer-display {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
-    border-radius: 15px;
-    padding: 1px 10px;
-    box-shadow: 0px 8px 20px rgba(59, 130, 246, 0.4);
-    animation: pulse 1.2s infinite alternate;
-    width: fit-content;
-    margin: 15px auto;
-    transition: background 0.5s ease-in-out;
+
+  100% {
+    transform: scale(1.05);
+    box-shadow: 0px 8px 25px rgba(59, 130, 246, 0.5);
   }
-  
-  .time-text {
-    font-size: 20px;
-    font-weight: bold;
-    color: #e0f2fe;
-    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-    animation: colorChange 10s linear infinite;
-  }
-  
-  .time-label {
-    font-size: 20px;
-    font-weight: 600;
-    color: #dbeafe;
-    opacity: 0.85;
-  }
-  
-  /* Animasi Pulse */
-  @keyframes pulse {
-    0% {
-      transform: scale(1);
-      box-shadow: 0px 5px 15px rgba(59, 130, 246, 0.2);
-    }
-    100% {
-      transform: scale(1.05);
-      box-shadow: 0px 8px 25px rgba(59, 130, 246, 0.5);
-    }
-  }
+}
 
 /* Responsive styles */
 @media (max-width: 768px) {
@@ -229,27 +216,42 @@
   }
 
   .player-turn-box {
-    width: 100%; 
-    height: auto; 
+    width: 100%;
+    height: auto;
     text-align: center;
+    padding: 20px;
+  }
+
+  .form-check {
+    padding: 8px 16px;
+  }
+
+  .box-player-name {
+    font-size: 20px;
+  }
+
+  .question-text {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .question-answer-text {
+    font-size: 14px;
   }
 
   .player-item {
-    justify-content: center;
-    margin-bottom: 15px;
+    width: 60px;
   }
 
   .player-item img {
-    width: 40px; 
-    height: 40px;
+    width: 50px;
+    height: 50px;
   }
 
-  .player-item span {
-    font-size: 16px; 
+  .player-name {
+    font-size: 12px;
+    max-width: 60px;
   }
+
+
 }
-
-
-
-
-

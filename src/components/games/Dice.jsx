@@ -95,19 +95,31 @@ function Dice({ onRollComplete, disabled }) {
     <div className="dice-container">
       <div className="dice" ref={diceRef}>
         {/* Tetapkan angka statis untuk setiap sisi */}
-        <div className="face front">{renderFace(1)}</div> {/* Angka 1 */}
-        <div className="face back">{renderFace(6)}</div> {/* Angka 6 */}
-        <div className="face left">{renderFace(4)}</div> {/* Angka 4 */}
-        <div className="face right">{renderFace(3)}</div> {/* Angka 3 */}
-        <div className="face top">{renderFace(2)}</div> {/* Angka 2 */}
-        <div className="face bottom">{renderFace(5)}</div> {/* Angka 5 */}
+        <div className="face front">
+          {renderFace(1)}
+        </div>
+        <div className="face back">
+         {renderFace(6)}
+        </div>
+        <div className="face left">
+         {renderFace(4)}
+        </div>
+        <div className="face right">
+         {renderFace(3)}
+        </div>
+        <div className="face top">
+         {renderFace(2)}
+        </div>
+        <div className="face bottom">
+         {renderFace(5)}
+        </div>
       </div>
       <button
-        className="roll-button btn btn-primary mt-4"
+        className="roll-button btn btn-primary mt-3"
         onClick={rollDice}
         disabled={disabled || rolling}
       >
-        {rolling ? "Rolling..." : "Roll"}
+        {rolling ? "Berputar..." : "Putar Dadu"}
       </button>
     </div>
   );

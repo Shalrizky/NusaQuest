@@ -10,6 +10,21 @@
    cursor: pointer;
 }
 
+.form-check.disabled {
+   opacity: 0.6;
+   cursor: not-allowed;
+ }
+ 
+ .form-check.disabled:hover {
+   background: none;
+ }
+ 
+ .waiting-text {
+   font-size: 14px;
+   color: #666;
+   font-style: italic;
+ }
+
 .box-player-name {
    font-size: 25px;
 }

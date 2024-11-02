@@ -8,9 +8,7 @@ function PlayerList({ players, currentPlayerIndex }) {
       {players.slice(0, 4).map((player, index) => (
         <div
           key={player.uid}
-          className={`player-item ${
-            currentPlayerIndex === index ? "active-player" : ""
-          }`}
+          className={`player-item ${currentPlayerIndex === index ? "active-player" : ""}`}
         >
           <Image
             src={player.photoURL || "path/to/placeholder.jpg"}

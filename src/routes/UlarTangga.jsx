@@ -1,3 +1,4 @@
+// UlarTangga.js
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Container, Row, Col, Spinner } from "react-bootstrap";
@@ -11,7 +12,12 @@ import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
 import PlayerList from "../components/games/uTangga/PlayerList";
 import {
   fetchGamePlayers,
+  initializeGameState,
+  updateGameState,
+  listenToGameState,
+  updateDiceState,
   setGameStatus,
+  setGameStartStatus,
   cleanupGame,
 } from "../services/gameDataServices";
 import {
@@ -65,6 +71,7 @@ function UlarTangga() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Game state
   const [players, setPlayers] = useState([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [pionPositionIndex, setPionPositionIndex] = useState([]);
@@ -75,27 +82,89 @@ function UlarTangga() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
   const [victory, setVictory] = useState(false);
-  const [allowExtraRoll, setAllowExtraRoll] = useState(false);
   const [winner, setWinner] = useState("");
   const [gameOver, setGameOver] = useState(false);
   const [potionUsable, setPotionUsable] = useState(false);
   const [isPotionUsed, setIsPotionUsed] = useState(false);
+  const [allowExtraRoll, setAllowExtraRoll] = useState(false);
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [diceState, setDiceState] = useState({
+    isRolling: false,
+    currentNumber: 1,
+    lastRoll: null,
+  });
 
-  const [timeLeft, resetPlayerTimer] = usePlayerTimer(30, () => nextPlayer());
+  const [timeLeft, resetPlayerTimer] = usePlayerTimer(30, () =>
+    handleTimeOut()
+  );
   const gameTimeLeft = useGameTimer(1800, () => setGameOver(true));
 
+  // Initialize game
   useEffect(() => {
-    const initializeGame = async () => {
+    const initGame = async () => {
       try {
         await setGameStatus(topicID, gameID, roomID, "playing");
+        if (players.length > 0) {
+          await initializeGameState(topicID, gameID, roomID, players);
+        }
         setIsGameReady(true);
       } catch (error) {
-        console.error("Error setting game status:", error);
+        console.error("Error initializing game:", error);
       }
     };
-    initializeGame();
-  }, [topicID, gameID, roomID]);
 
+    initGame();
+  }, [topicID, gameID, roomID, players, setGameStatus, initializeGameState]);
+
+  // Listen to game state changes
+  useEffect(() => {
+    if (!isGameReady) return;
+
+    const unsubscribe = listenToGameState(
+      topicID,
+      gameID,
+      roomID,
+      (gameState) => {
+        setCurrentPlayerIndex(gameState.currentPlayerIndex);
+        setPionPositionIndex(gameState.pionPositions);
+        setIsPionMoving(gameState.isMoving);
+        setShowQuestion(gameState.showQuestion);
+        setWaitingForAnswer(gameState.waitingForAnswer);
+        setIsCorrect(gameState.isCorrect);
+        setPotionUsable(gameState.potionUsable);
+        setAllowExtraRoll(gameState.allowExtraRoll);
+        setDiceState(
+          gameState.diceState || {
+            isRolling: false,
+            currentNumber: 1,
+            lastRoll: null,
+          }
+        );
+
+        // Check if it's current user's turn
+        const isCurrentPlayerTurn =
+          players[gameState.currentPlayerIndex]?.uid === user?.uid;
+        setIsMyTurn(isCurrentPlayerTurn);
+
+        if (isCurrentPlayerTurn) {
+          resetPlayerTimer();
+        }
+
+        // Check for victory
+        if (gameState.pionPositions?.some((pos) => pos === 99)) {
+          const winnerIndex = gameState.pionPositions.findIndex(
+            (pos) => pos === 99
+          );
+          setVictory(true);
+          setWinner(players[winnerIndex]?.displayName || "Player");
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, [isGameReady, players, user?.uid]);
+
+  // Fetch and update players
   useEffect(() => {
     if (!isGameReady) return;
 
@@ -105,8 +174,6 @@ function UlarTangga() {
       roomID,
       (playersData) => {
         setPlayers(playersData);
-        setPionPositionIndex(new Array(playersData.length).fill(0));
-
         if (playersData.length === 0) {
           cleanupGame(topicID, gameID, roomID, user);
           navigate("/");
@@ -117,194 +184,219 @@ function UlarTangga() {
     return () => unsubscribe();
   }, [isGameReady, topicID, gameID, roomID, user, navigate]);
 
+  // Cleanup effect
   useEffect(() => {
     return () => {
       if (victory || gameOver) {
+        setGameStartStatus(topicID, gameID, roomID, false);
         cleanupGame(topicID, gameID, roomID, user);
       }
     };
   }, [victory, gameOver, topicID, gameID, roomID, user]);
 
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = "";
-      cleanupGame(topicID, gameID, roomID, user);
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [topicID, gameID, roomID, user]);
-
-  useEffect(() => {
-    if (currentPlayerIndex >= players.length) {
-      setCurrentPlayerIndex(0);
-    }
-  }, [currentPlayerIndex, players.length]);
-
-  useEffect(() => {
-    if (gameOver) {
-      alert("Waktu permainan habis! Permainan telah berakhir.");
-      navigate("/");
-    }
-  }, [gameOver, gameTimeLeft, navigate]);
-
-  const nextPlayer = () => {
-    setPotionUsable(false);
-    if (players.length > 0) {
-      setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-      resetPlayerTimer();
+  // Handle timeout
+  const handleTimeOut = async () => {
+    if (isMyTurn) {
+      await updateGameState(topicID, gameID, roomID, {
+        currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+        waitingForAnswer: false,
+        showQuestion: false,
+        isCorrect: null,
+        potionUsable: false,
+        diceState: {
+          isRolling: false,
+          currentNumber: 1,
+          lastRoll: null,
+        },
+      });
     }
   };
 
+  // Handle dice roll
+  const handleDiceRollComplete = async (diceNumber, isInitialRoll) => {
+    if (!isMyTurn || isPionMoving || waitingForAnswer) return;
+
+    if (isInitialRoll) {
+      await updateGameState(topicID, gameID, roomID, {
+        diceState: {
+          isRolling: true,
+          currentNumber: diceNumber,
+          lastRoll: diceNumber,
+        },
+      });
+
+      // Wait for animation
+      setTimeout(async () => {
+        const newPositions = [...pionPositionIndex];
+        newPositions[currentPlayerIndex] = Math.min(
+          pionPositionIndex[currentPlayerIndex] + diceNumber,
+          99
+        );
+
+        await updateGameState(topicID, gameID, roomID, {
+          diceState: {
+            isRolling: false,
+            currentNumber: diceNumber,
+            lastRoll: diceNumber,
+          },
+          pionPositions: newPositions,
+          isMoving: true,
+        });
+
+        // Process move
+        setTimeout(async () => {
+          const newPosition = newPositions[currentPlayerIndex];
+
+          if (newPosition === 99) {
+            if (players[currentPlayerIndex]?.uid === user?.uid) {
+              await awardVictoryPotions(user);
+            }
+            await updateGameState(topicID, gameID, roomID, {
+              gameStatus: "finished",
+              isMoving: false,
+            });
+          } else if (tanggaUp[newPosition]) {
+            await updateGameState(topicID, gameID, roomID, {
+              isMoving: false,
+              showQuestion: true,
+              waitingForAnswer: true,
+              isCorrect: null,
+              allowExtraRoll: false,
+              potionUsable: true,
+            });
+          } else if (snakesDown[newPosition]) {
+            newPositions[currentPlayerIndex] = snakesDown[newPosition];
+            await updateGameState(topicID, gameID, roomID, {
+              pionPositions: newPositions,
+              currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+              isMoving: false,
+            });
+          } else if (diceNumber === 6) {
+            await updateGameState(topicID, gameID, roomID, {
+              isMoving: false,
+              showQuestion: true,
+              waitingForAnswer: true,
+              isCorrect: null,
+              allowExtraRoll: true,
+              potionUsable: true,
+            });
+          } else {
+            await updateGameState(topicID, gameID, roomID, {
+              currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+              isMoving: false,
+            });
+          }
+        }, 2000);
+      }, 1000);
+    }
+  };
+
+  // Handle answer changes
+  const handleAnswerChange = async (isAnswerCorrect) => {
+    if (!isMyTurn) return;
+
+    await updateGameState(topicID, gameID, roomID, {
+      isCorrect: isAnswerCorrect,
+    });
+
+    if (isAnswerCorrect) {
+      if (allowExtraRoll) {
+        await updateGameState(topicID, gameID, roomID, {
+          showQuestion: false,
+          waitingForAnswer: false,
+          potionUsable: false,
+          allowExtraRoll: false,
+        });
+      } else {
+        const newPositions = [...pionPositionIndex];
+        const currentPos = newPositions[currentPlayerIndex];
+
+        if (tanggaUp[currentPos]) {
+          newPositions[currentPlayerIndex] = tanggaUp[currentPos];
+        }
+
+        await updateGameState(topicID, gameID, roomID, {
+          pionPositions: newPositions,
+          currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+          showQuestion: false,
+          waitingForAnswer: false,
+          allowExtraRoll: false,
+        });
+      }
+    } else {
+      await updateGameState(topicID, gameID, roomID, {
+        currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+        showQuestion: false,
+        waitingForAnswer: false,
+        allowExtraRoll: false,
+      });
+    }
+
+    setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
+  };
+
+  // Di UlarTangga.js, update handlePotionUse
+  const handlePotionUse = async () => {
+    if (!isMyTurn || !potionUsable) return;
+
+    const currentPos = pionPositionIndex[currentPlayerIndex];
+    if (tanggaUp[currentPos]) {
+      try {
+        // Set moving state first
+        await updateGameState(topicID, gameID, roomID, {
+          isMoving: true,
+        });
+
+        // Calculate new position
+        const newPositions = [...pionPositionIndex];
+        newPositions[currentPlayerIndex] = tanggaUp[currentPos];
+
+        setIsPotionUsed(true);
+
+        // Update game state with new position and clear question
+        await updateGameState(topicID, gameID, roomID, {
+          pionPositions: newPositions,
+          waitingForAnswer: false,
+          showQuestion: false,
+          isCorrect: true,
+          potionUsable: false,
+          allowExtraRoll: false,
+        });
+
+        // Wait for animation
+        setTimeout(async () => {
+          // Move to next player
+          await updateGameState(topicID, gameID, roomID, {
+            isMoving: false,
+            currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+          });
+
+          setIsPotionUsed(false);
+        }, 1000);
+      } catch (error) {
+        console.error("Error using potion:", error);
+        // Reset states if error occurs
+        setIsPotionUsed(false);
+        await updateGameState(topicID, gameID, roomID, {
+          isMoving: false,
+          potionUsable: true,
+        });
+      }
+    }
+  };
+  // Award victory potions
   const awardVictoryPotions = async (winningPlayer) => {
     try {
       const currentPotionData = await getPotionData(winningPlayer.uid);
-
       if (currentPotionData) {
         await saveNewPotionData(winningPlayer.uid, {
           item_name: currentPotionData.item_name,
-          item_count: currentPotionData.item_count + 1,
+          item_count: currentPotionData.item_count + 2,
           item_img: currentPotionData.item_img,
         });
       }
     } catch (error) {
       console.error("Error awarding victory potions:", error);
-    }
-  };
-
-  const handleDiceRollComplete = (diceNumber) => {
-    if (players.length === 0) return;
-
-    setIsPionMoving(true);
-    setPionPositionIndex((prevPositions) => {
-      const newPositions = [...prevPositions];
-      const playerIndex = currentPlayerIndex % players.length;
-      let newPosition = newPositions[playerIndex] + diceNumber;
-
-      if (!Number.isFinite(newPosition)) {
-        console.error("Invalid newPosition:", newPosition);
-        newPosition = 0;
-      }
-
-      if (newPosition > 99) newPosition = 99;
-      newPositions[playerIndex] = newPosition;
-
-      if (newPosition === 99) {
-        setVictory(true);
-        const winningPlayer = players[playerIndex];
-        setWinner(winningPlayer?.displayName || "Player");
-        // Berikan 2 potion untuk pemenang
-        if (winningPlayer) {
-          awardVictoryPotions(winningPlayer);
-        }
-      }
-
-      return newPositions;
-    });
-
-    setTimeout(() => {
-      setPionPositionIndex((prevPositions) => {
-        const newPositions = [...prevPositions];
-        let newPosition = newPositions[currentPlayerIndex];
-
-        if (victory) return prevPositions;
-
-        if (tanggaUp[newPosition]) {
-          setShowQuestion(true);
-          setWaitingForAnswer(true);
-          setIsCorrect(null);
-          setAllowExtraRoll(false);
-          setPotionUsable(true);
-        } else if (snakesDown[newPosition]) {
-          newPosition = snakesDown[newPosition];
-          newPositions[currentPlayerIndex] = newPosition;
-          nextPlayer();
-        } else if (diceNumber === 6) {
-          setShowQuestion(true);
-          setWaitingForAnswer(true);
-          setIsCorrect(null);
-          setAllowExtraRoll(true);
-          setPotionUsable(true);
-        } else if (allowExtraRoll) {
-          setAllowExtraRoll(false);
-          nextPlayer();
-        } else {
-          nextPlayer();
-        }
-
-        return newPositions;
-      });
-
-      setIsPionMoving(false);
-    }, 2000);
-
-    setIsCorrect(null);
-    resetPlayerTimer();
-  };
-
-  const handleAnswerChange = (isAnswerCorrect) => {
-    setIsCorrect(isAnswerCorrect);
-  
-    if (isAnswerCorrect) {
-      if (allowExtraRoll) {
-        // Reset potionUsable saat pemain akan roll dadu lagi
-        setPotionUsable(false);
-        // Logika untuk lempar dadu tambahan
-      } else {
-        setPionPositionIndex((prevPositions) => {
-          const newPositions = [...prevPositions];
-          const currentPos = newPositions[currentPlayerIndex];
-  
-          if (tanggaUp[currentPos]) {
-            const targetPosition = tanggaUp[currentPos];
-            newPositions[currentPlayerIndex] = targetPosition;
-          }
-  
-          return newPositions;
-        });
-        setAllowExtraRoll(false);
-        nextPlayer();
-      }
-    } else {
-      setAllowExtraRoll(false);
-      nextPlayer();
-    }
-  
-    setTimeout(() => {
-      setShowQuestion(false);
-      setWaitingForAnswer(false);
-      setCurrentQuestionIndex(
-        (prevIndex) => (prevIndex + 1) % questions.length
-      );
-    }, 1800);
-  };
-
-  const skipQuestion = () => {
-    setShowQuestion(false);
-    setWaitingForAnswer(false);
-    setPotionUsable(false);
-    setIsCorrect(true);
-    setIsPotionUsed(true);
-
-    const currentPosition = pionPositionIndex[currentPlayerIndex];
-    if (tanggaUp[currentPosition]) {
-      const targetPosition = tanggaUp[currentPosition];
-      setPionPositionIndex((prevPositions) => {
-        const newPositions = [...prevPositions];
-        newPositions[currentPlayerIndex] = targetPosition;
-        return newPositions;
-      });
-      setIsPionMoving(true);
-
-      setTimeout(() => {
-        setIsPionMoving(false);
-        setIsPotionUsed(false);
-        nextPlayer();
-      }, 1000);
-    } else {
-      setIsPotionUsed(false);
-      nextPlayer();
     }
   };
 
@@ -326,12 +418,10 @@ function UlarTangga() {
         <Col xs={12} md={6} className="utu-konva px-4">
           <Board
             pionPositionIndex={pionPositionIndex}
-            setPionPositionIndex={setPionPositionIndex}
             tanggaUp={tanggaUp}
             snakesDown={snakesDown}
             waitingForAnswer={waitingForAnswer}
             isCorrect={isCorrect || isPotionUsed}
-            setIsCorrect={setIsCorrect}
             currentPlayerIndex={currentPlayerIndex}
           />
         </Col>
@@ -348,6 +438,7 @@ function UlarTangga() {
             waitingForAnswer={waitingForAnswer}
             currentQuestion={questions[currentQuestionIndex]}
             onAnswerChange={handleAnswerChange}
+            isMyTurn={isMyTurn}
           />
 
           <div className="timer-player d-flex justify-content-center align-items-center gap-2 mb-3">
@@ -357,19 +448,40 @@ function UlarTangga() {
 
           <Dice
             onRollComplete={handleDiceRollComplete}
-            disabled={isPionMoving || waitingForAnswer}
+            disabled={!isMyTurn || isPionMoving || waitingForAnswer}
+            diceState={diceState}
+            isMyTurn={isMyTurn}
           />
-          <Potion onUsePotion={skipQuestion} isUsable={potionUsable} />
 
+          <Potion
+            onUsePotion={handlePotionUse}
+            isUsable={
+              isMyTurn &&
+              potionUsable &&
+              !isPotionUsed &&
+              showQuestion &&
+              waitingForAnswer &&
+              tanggaUp[pionPositionIndex[currentPlayerIndex]]
+            }
+          />
           <PlayerList
             players={players}
             currentPlayerIndex={currentPlayerIndex}
+            isMyTurn={isMyTurn}
           />
         </Col>
       </Row>
 
       {victory && (
         <VictoryOverlay winner={winner} onClose={() => navigate("/")} />
+      )}
+
+      {gameOver && (
+        <div className="game-over-overlay">
+          <h2>Game Over</h2>
+          <p>Time's up!</p>
+          <button onClick={() => navigate("/")}>Back to Home</button>
+        </div>
       )}
     </Container>
   );

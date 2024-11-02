@@ -1,12 +1,15 @@
+// QuestionForm.js
 import React, { useState } from "react";
 import { Form } from "react-bootstrap";
 import "../../../style/components/games/uTangga/questionForm.css";
 
-function QuestionForm({ question, onAnswerChange }) {
+function QuestionForm({ question, onAnswerChange, isMyTurn }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
 
   const handleAnswerChange = (e) => {
+    if (!isMyTurn) return; // Hanya pemain yang sedang giliran bisa menjawab
+    
     const answer = e.target.value;
     setSelectedAnswer(answer);
     setIsAnswered(true);
@@ -30,7 +33,7 @@ function QuestionForm({ question, onAnswerChange }) {
                   ? "correct-answer"
                   : "wrong-answer"
                 : ""
-            }`}
+            } ${!isMyTurn ? 'disabled' : ''}`}
           >
             <input
               type="radio"
@@ -39,11 +42,16 @@ function QuestionForm({ question, onAnswerChange }) {
               value={option}
               onChange={handleAnswerChange}
               className="d-none"
-              disabled={isAnswered} // Setelah menjawab, pilihan dikunci
+              disabled={isAnswered || !isMyTurn} // Disable jika sudah dijawab atau bukan giliran
             />
             <span className="question-answer-text">{option}</span>
           </label>
         ))}
+        {!isMyTurn && (
+          <p className="waiting-text text-muted mt-2">
+            Menunggu pemain lain menjawab...
+          </p>
+        )}
       </Form.Group>
     </Form>
   );

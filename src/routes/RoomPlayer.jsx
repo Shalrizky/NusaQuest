@@ -4,7 +4,7 @@ import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
 import useAuth from "../hooks/useAuth";
 import useUserPhoto from "../hooks/useUserPhoto";
 import Header from "../components/Header";
-import CardPlayer from "../components/CardPlayer";
+import CardPlayer from "../components/CardPlayer"; 
 import CardVsAi from "../components/CardVsAi";
 import ChatPlayer from "../components/ChatPlayer";
 import PlayGameIcon from "../assets/common/play-game-icon.svg";
@@ -16,6 +16,10 @@ import {
   playerLeaveRoom,
   getCurrentPlayers,
 } from "../services/PlayerDataServices";
+import {
+  listenToGameStart,
+  setGameStartStatus
+} from "../services/gameDataServices";
 import { getUserAchievements } from "../services/achievementDataServices";
 import "../style/routes/RoomPlayer.css";
 
@@ -33,6 +37,7 @@ function RoomPlayer() {
   const [userAchievements, setUserAchievements] = useState(null);
   const [userBadge, setUserBadge] = useState(null);
   const [lastMessage, setLastMessage] = useState("Chat With Others");
+  const [isFirstPlayer, setIsFirstPlayer] = useState(false);
   const prevPlayers = useRef([]);
   const navigate = useNavigate();
 
@@ -47,6 +52,19 @@ function RoomPlayer() {
         return "playUTangga";
     }
   };
+
+  // Listen to game start status
+  useEffect(() => {
+    if (!isRoomAccessible || roomID === "room5") return;
+
+    const unsubscribe = listenToGameStart(topicID, gameID, roomID, (gameStarted) => {
+      if (gameStarted) {
+        navigate(`/${gameID}/${topicID}/${roomID}/${getGamePath(gameID)}`);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [isRoomAccessible, topicID, gameID, roomID, navigate]);
 
   // Initialize Room and check accessibility
   useEffect(() => {
@@ -105,7 +123,6 @@ function RoomPlayer() {
             );
             await syncCurrentPlayers(topicID, gameID, roomID);
           } else {
-            // Room penuh dan player tidak ada di dalamnya redirect ke halaman sebelumnya
             navigate(-1);
           }
         }
@@ -118,19 +135,16 @@ function RoomPlayer() {
 
     checkRoomAccess();
 
-    // Cleanup function hanya untuk ketika benar-benar meninggalkan room
     return () => {
-      const handleRealLeave = () => {
+      const handleRealLeave = async () => {
         if (user?.uid && roomID !== "room5") {
-          playerLeaveRoom(topicID, gameID, roomID, user);
-          syncCurrentPlayers(topicID, gameID, roomID);
+          await setGameStartStatus(topicID, gameID, roomID, false);
+          await playerLeaveRoom(topicID, gameID, roomID, user);
+          await syncCurrentPlayers(topicID, gameID, roomID);
         }
       };
 
-      // Hanya jalankan cleanup jika benar-benar meninggalkan halaman
-      if (
-        !window.location.pathname.includes(`/${gameID}/${topicID}/${roomID}`)
-      ) {
+      if (!window.location.pathname.includes(`/${gameID}/${topicID}/${roomID}`)) {
         handleRealLeave();
       }
     };
@@ -191,6 +205,14 @@ function RoomPlayer() {
     return () => unsubscribe();
   }, [topicID, gameID, roomID, playerProfiles]);
 
+  // Check if current user is first player
+  useEffect(() => {
+    if (players.length > 0) {
+      const firstPlayer = players[0];
+      setIsFirstPlayer(firstPlayer?.uid === user?.uid);
+    }
+  }, [players, user]);
+
   // Fetch Room Data
   useEffect(() => {
     const fetchRoomData = async () => {
@@ -231,10 +253,15 @@ function RoomPlayer() {
     fetchUserData();
   }, [user, topicID, gameID]);
 
-  // Show loading state
+  const handleStartGame = async () => {
+    if (isFirstPlayer) {
+      await setGameStartStatus(topicID, gameID, roomID, true);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
+      <div className="loading-container d-flex justify-content-center align-items-center vh-100">
         <Spinner animation="border" role="status" variant="dark">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
@@ -242,7 +269,6 @@ function RoomPlayer() {
     );
   }
 
-  // Jika room penuh dan user akses lewat link jangan render room
   if (!isRoomAccessible) {
     return null;
   }
@@ -332,12 +358,11 @@ function RoomPlayer() {
         >
           <button
             className="btn-start-game d-flex align-items-center justify-content-center"
-            onClick={() =>
-              navigate(`/${gameID}/${topicID}/${roomID}/${getGamePath(gameID)}`)
-            }
+            onClick={handleStartGame}
+            disabled={!isFirstPlayer || isSinglePlayer}
           >
             <Image className="icon-start me-2" src={PlayGameIcon} />
-            Start Game
+            {isFirstPlayer ? "Start Game" : "Menunggu Host Memulai Permainan..."}
           </button>
         </Col>
       </Row>

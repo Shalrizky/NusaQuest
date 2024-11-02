@@ -8,66 +8,6 @@
   min-height: 100vh;
 }
 
-/* Styling for player turn box */
-.player-turn-box {
-  width: 100%;
-  max-width: 500px;
-  min-height: 300px;
-  padding: 20px;
-  color: white;
-  background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-  border-radius: 10px;
-  box-sizing: border-box;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-/* Styling untuk form answer */
-.form-check {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 6px;
-  margin: 10px 0;
-  border-radius: 12px;
-  border: 1.5px solid #B3D9FF;
-  transition: background-color 0.3s ease;
-  cursor: pointer;
-}
-
-.box-player-name {
-  font-size: 25px;
-}
-
-.question-text {
-  font-size: 16px;
-  font-weight: bold;
-  letter-spacing: 0.8px;
-}
-
-.question-answer-text {
-  cursor: pointer;
-  font-size: 16px;
-}
-
-.form-check:hover {
-  background-color: #FD8200;
-}
-
-.correct-answer {
-  background-color: lightgreen !important;
-}
-
-.wrong-answer {
-  background-color: lightcoral !important;
-}
-
 /* Style timer untuk player */
 .timer-player {
   background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
@@ -90,91 +30,6 @@
   font-size: 18px;
   font-weight: 600;
   color: #ffffffac;
-}
-
-/* Style Player */
-.player-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1 1 0%;
-  min-width: 100px;
-  max-width: 100%;
-}
-
-.player-list .player-item:only-child {
-  flex-basis: 100%;
-  max-width: 100%;
-}
-
-.player-item img {
-  border: 3px solid #ffd700;
-  border-radius: 50%;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-  width: 60px;
-  height: 60px;
-}
-
-.player-name {
-  font-size: 14px;
-  font-weight: bold;
-  color: #ffffff;
-  text-align: start;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-/* Css Overlay VICTORY */
-.victory-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  text-align: center;
-  padding: 20px;
-}
-
-.victory-logo {
-  width: 300px;
-  margin-bottom: 20px;
-}
-
-.victory-overlay h1 {
-  font-size: 3rem;
-  margin: 10px 0;
-}
-
-.victory-overlay h2 {
-  font-size: 2rem;
-  margin: 10px 0;
-}
-
-.rewards {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.Achievement1-logo,
-.Achievement2-logo {
-  margin: 5px 10px;
-  width: 100px;
-  height: 100px;
-}
-
-.potion-logo {
-  margin: 5px 10px;
-  width: 120px;
-  height: 100px;
 }
 
 /* Style Timer Untuk Game */
@@ -210,48 +65,49 @@
 }
 
 /* Responsive styles */
-@media (max-width: 768px) {
+/* Tablet landscape: 769px hingga 1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .utu-container-board {
+    flex-direction: row;
+    padding: 10px;
+  }
+
+  .timer-player {
+    font-size: 1.5vw;
+  }
+
+}
+
+/* Phone landscape: 481px hingga 768px */
+@media (min-width: 481px) and (max-width: 768px) {
+  .utu-container-board {
+    flex-direction: row;
+    padding: 8px;
+  }
+
   .utu-konva {
-    margin-bottom: 30px;
+    max-width: 100%;
+    padding: 10px;
   }
 
-  .player-turn-box {
+  .timer-player {
+    font-size: 2vw;
+  }
+}
+
+/* Phone portrait: hingga 480px */
+@media (max-width: 480px) {
+  .utu-container-board {
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  .utu-konva {
     width: 100%;
-    height: auto;
-    text-align: center;
-    padding: 20px;
   }
 
-  .form-check {
-    padding: 8px 16px;
+  .timer-player {
+    font-size: 3vw;
   }
-
-  .box-player-name {
-    font-size: 20px;
-  }
-
-  .question-text {
-    font-size: 14px;
-    margin-bottom: 10px;
-  }
-
-  .question-answer-text {
-    font-size: 14px;
-  }
-
-  .player-item {
-    width: 60px;
-  }
-
-  .player-item img {
-    width: 50px;
-    height: 50px;
-  }
-
-  .player-name {
-    font-size: 12px;
-    max-width: 60px;
-  }
-
-
 }

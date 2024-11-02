@@ -1,0 +1,50 @@
+.victory-overlay {
+   position: fixed;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background-color: rgba(0, 0, 0, 0.8);
+   color: white;
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+   z-index: 1000;
+   text-align: center;
+   padding: 20px;
+}
+
+.victory-logo {
+   width: 300px;
+   margin-bottom: 20px;
+}
+
+.victory-overlay h1 {
+   font-size: 3rem;
+   margin: 10px 0;
+}
+
+.victory-overlay h2 {
+   font-size: 2rem;
+   margin: 10px 0;
+}
+
+.rewards {
+   display: flex;
+   justify-content: center;
+   flex-wrap: wrap;
+}
+
+.Achievement1-logo,
+.Achievement2-logo {
+   margin: 5px 10px;
+   width: 100px;
+   height: 100px;
+}
+
+.potion-logo {
+   margin: 5px 10px;
+   width: 120px;
+   height: 100px;
+}

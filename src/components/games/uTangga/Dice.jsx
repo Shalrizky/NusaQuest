@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import gsap from "gsap";
-import "../../style/components/games/Dice.css";
+import "../../../style/components/games/uTangga/Dice.css";
 
 function Dice({ onRollComplete, disabled }) {
   const [rolling, setRolling] = useState(false);

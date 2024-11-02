@@ -1,33 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Image, Form, Spinner } from "react-bootstrap";
-import useAuth from "../hooks/useAuth";
 import { useNavigate, useParams } from "react-router-dom";
+import { Container, Row, Col, Spinner } from "react-bootstrap";
+import useAuth from "../hooks/useAuth";
 import HeaderGame from "../components/games/HeaderGame";
-import Board from "../components/games/React-KonvaUlar";
-import Dice from "../components/games/Dice";
-import Potion from "../components/games/potion";
+import Potion from "../components/games/Potion";
+import VictoryOverlay from "../components/games/VictoryOverlay";
+import Board from "../components/games/uTangga/React-KonvaUlar";
+import Dice from "../components/games/uTangga/Dice";
+import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
+import PlayerList from "../components/games/uTangga/PlayerList";
 import {
   fetchGamePlayers,
   setGameStatus,
   cleanupGame,
 } from "../services/gameDataServices";
-import "../style/routes/UlarTangga.css";
-import victoryImage from "../assets/games/Utangga/victory.png";
-import Achievement from "../assets/games/Utangga/achievement1.png";
-import Achievement2 from "../assets/games/Utangga/achievement2.png";
-import potionImage from "../assets/games/Utangga/potion.png";
-
-// Import timer utilities
+import {
+  getPotionData,
+  saveNewPotionData,
+} from "../services/itemsDataServices";
 import { usePlayerTimer, useGameTimer } from "../utils/timerUtils";
+import "../style/routes/UlarTangga.css";
 
-// Definisi pertanyaan
 const questions = [
   {
     id: 1,
     question:
-      "Makanan paling enak apa di Jawa barat yang tipenya salad dengan bumbu kacang?",
-    options: ["Soto Betawi", "Gudeg", "Batagor", "Rendang"],
-    correctAnswer: "Gudeg",
+      "Makanan paling enak apa di Jawa Barat yang tipenya salad dengan bumbu kacang?",
+    options: ["Soto Betawi", "Gado-gado", "Batagor", "Rendang"],
+    correctAnswer: "Gado-gado",
   },
   {
     id: 2,
@@ -62,14 +62,15 @@ const snakesDown = {
 
 function UlarTangga() {
   const { gameID, topicID, roomID } = useParams();
-  const [players, setPlayers] = useState([]);
   const { user } = useAuth();
-  const [pionPositionIndex, setPionPositionIndex] = useState([]);
+  const navigate = useNavigate();
+
+  const [players, setPlayers] = useState([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [pionPositionIndex, setPionPositionIndex] = useState([]);
   const [isPionMoving, setIsPionMoving] = useState(false);
+  const [isGameReady, setIsGameReady] = useState(false);
   const [showQuestion, setShowQuestion] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
@@ -77,16 +78,12 @@ function UlarTangga() {
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
   const [winner, setWinner] = useState("");
   const [gameOver, setGameOver] = useState(false);
-  const [isGameReady, setIsGameReady] = useState(false);
-  const navigate = useNavigate();
+  const [potionUsable, setPotionUsable] = useState(false);
+  const [isPotionUsed, setIsPotionUsed] = useState(false);
 
-  // Player timer, reset with each player's turn
   const [timeLeft, resetPlayerTimer] = usePlayerTimer(30, () => nextPlayer());
-
-  // Global game timer
   const gameTimeLeft = useGameTimer(1800, () => setGameOver(true));
 
-  // Initialize game
   useEffect(() => {
     const initializeGame = async () => {
       try {
@@ -96,11 +93,9 @@ function UlarTangga() {
         console.error("Error setting game status:", error);
       }
     };
-
     initializeGame();
   }, [topicID, gameID, roomID]);
 
-  // Setup players
   useEffect(() => {
     if (!isGameReady) return;
 
@@ -122,7 +117,6 @@ function UlarTangga() {
     return () => unsubscribe();
   }, [isGameReady, topicID, gameID, roomID, user, navigate]);
 
-  // Cleanup on unmount or game end
   useEffect(() => {
     return () => {
       if (victory || gameOver) {
@@ -131,7 +125,6 @@ function UlarTangga() {
     };
   }, [victory, gameOver, topicID, gameID, roomID, user]);
 
-  // Handle beforeunload
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       e.preventDefault();
@@ -143,25 +136,40 @@ function UlarTangga() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [topicID, gameID, roomID, user]);
 
-  // Ensure currentPlayerIndex is within bounds
   useEffect(() => {
     if (currentPlayerIndex >= players.length) {
       setCurrentPlayerIndex(0);
     }
   }, [currentPlayerIndex, players.length]);
 
-  // Handle game over
   useEffect(() => {
     if (gameOver) {
       alert("Waktu permainan habis! Permainan telah berakhir.");
       navigate("/");
     }
-  }, [gameOver, navigate]);
+  }, [gameOver, gameTimeLeft, navigate]);
 
   const nextPlayer = () => {
+    setPotionUsable(false);
     if (players.length > 0) {
       setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-      resetPlayerTimer(); // Reset timer untuk pemain berikutnya
+      resetPlayerTimer();
+    }
+  };
+
+  const awardVictoryPotions = async (winningPlayer) => {
+    try {
+      const currentPotionData = await getPotionData(winningPlayer.uid);
+
+      if (currentPotionData) {
+        await saveNewPotionData(winningPlayer.uid, {
+          item_name: currentPotionData.item_name,
+          item_count: currentPotionData.item_count + 1,
+          item_img: currentPotionData.item_img,
+        });
+      }
+    } catch (error) {
+      console.error("Error awarding victory potions:", error);
     }
   };
 
@@ -169,11 +177,9 @@ function UlarTangga() {
     if (players.length === 0) return;
 
     setIsPionMoving(true);
-
     setPionPositionIndex((prevPositions) => {
       const newPositions = [...prevPositions];
       const playerIndex = currentPlayerIndex % players.length;
-
       let newPosition = newPositions[playerIndex] + diceNumber;
 
       if (!Number.isFinite(newPosition)) {
@@ -182,12 +188,16 @@ function UlarTangga() {
       }
 
       if (newPosition > 99) newPosition = 99;
-
       newPositions[playerIndex] = newPosition;
 
       if (newPosition === 99) {
         setVictory(true);
-        setWinner(players[playerIndex]?.displayName || "Player");
+        const winningPlayer = players[playerIndex];
+        setWinner(winningPlayer?.displayName || "Player");
+        // Berikan 2 potion untuk pemenang
+        if (winningPlayer) {
+          awardVictoryPotions(winningPlayer);
+        }
       }
 
       return newPositions;
@@ -203,9 +213,9 @@ function UlarTangga() {
         if (tanggaUp[newPosition]) {
           setShowQuestion(true);
           setWaitingForAnswer(true);
-          setSubmitted(false);
           setIsCorrect(null);
           setAllowExtraRoll(false);
+          setPotionUsable(true);
         } else if (snakesDown[newPosition]) {
           newPosition = snakesDown[newPosition];
           newPositions[currentPlayerIndex] = newPosition;
@@ -213,9 +223,9 @@ function UlarTangga() {
         } else if (diceNumber === 6) {
           setShowQuestion(true);
           setWaitingForAnswer(true);
-          setSubmitted(false);
           setIsCorrect(null);
           setAllowExtraRoll(true);
+          setPotionUsable(true);
         } else if (allowExtraRoll) {
           setAllowExtraRoll(false);
           nextPlayer();
@@ -229,33 +239,28 @@ function UlarTangga() {
       setIsPionMoving(false);
     }, 2000);
 
-    setSubmitted(false);
     setIsCorrect(null);
-    resetPlayerTimer(); // Reset timer untuk pemain berikutnya
+    resetPlayerTimer();
   };
 
-  const handleAnswerChange = (e) => {
-    const answer = e.target.value;
-    setSelectedAnswer(answer);
-
-    const correctAnswer = questions[currentQuestionIndex].correctAnswer;
-    const isAnswerCorrect = answer === correctAnswer;
+  const handleAnswerChange = (isAnswerCorrect) => {
     setIsCorrect(isAnswerCorrect);
-    setSubmitted(true);
-
+  
     if (isAnswerCorrect) {
       if (allowExtraRoll) {
-        // Allow extra roll logic
+        // Reset potionUsable saat pemain akan roll dadu lagi
+        setPotionUsable(false);
+        // Logika untuk lempar dadu tambahan
       } else {
         setPionPositionIndex((prevPositions) => {
           const newPositions = [...prevPositions];
           const currentPos = newPositions[currentPlayerIndex];
-
+  
           if (tanggaUp[currentPos]) {
             const targetPosition = tanggaUp[currentPos];
             newPositions[currentPlayerIndex] = targetPosition;
           }
-
+  
           return newPositions;
         });
         setAllowExtraRoll(false);
@@ -265,7 +270,7 @@ function UlarTangga() {
       setAllowExtraRoll(false);
       nextPlayer();
     }
-
+  
     setTimeout(() => {
       setShowQuestion(false);
       setWaitingForAnswer(false);
@@ -275,9 +280,37 @@ function UlarTangga() {
     }, 1800);
   };
 
+  const skipQuestion = () => {
+    setShowQuestion(false);
+    setWaitingForAnswer(false);
+    setPotionUsable(false);
+    setIsCorrect(true);
+    setIsPotionUsed(true);
+
+    const currentPosition = pionPositionIndex[currentPlayerIndex];
+    if (tanggaUp[currentPosition]) {
+      const targetPosition = tanggaUp[currentPosition];
+      setPionPositionIndex((prevPositions) => {
+        const newPositions = [...prevPositions];
+        newPositions[currentPlayerIndex] = targetPosition;
+        return newPositions;
+      });
+      setIsPionMoving(true);
+
+      setTimeout(() => {
+        setIsPionMoving(false);
+        setIsPotionUsed(false);
+        nextPlayer();
+      }, 1000);
+    } else {
+      setIsPotionUsed(false);
+      nextPlayer();
+    }
+  };
+
   if (!isGameReady) {
     return (
-      <div className="loading-container">
+      <div className="loading-container d-flex justify-content-center align-items-center vh-100">
         <Spinner animation="border" role="status">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
@@ -289,15 +322,7 @@ function UlarTangga() {
     <Container fluid className="utangga-container d-flex flex-column">
       <HeaderGame layout="home" />
 
-      {/* Global Game Timer Display (uncomment when debugging) */}
-      {/* <div className="game-timer-display">
-        <span className="game-time-text">{Math.floor(gameTimeLeft / 60)}</span>
-        <span className="game-time-label">Min</span>
-        <span className="game-time-text">{gameTimeLeft % 60}</span>
-        <span className="game-time-label">Sec</span>
-      </div> */}
-
-      <Row className="utu-container-board d-flex justify-content-center ">
+      <Row className="utu-container-board d-flex justify-content-center">
         <Col xs={12} md={6} className="utu-konva px-4">
           <Board
             pionPositionIndex={pionPositionIndex}
@@ -305,7 +330,7 @@ function UlarTangga() {
             tanggaUp={tanggaUp}
             snakesDown={snakesDown}
             waitingForAnswer={waitingForAnswer}
-            isCorrect={isCorrect}
+            isCorrect={isCorrect || isPotionUsed}
             setIsCorrect={setIsCorrect}
             currentPlayerIndex={currentPlayerIndex}
           />
@@ -316,112 +341,35 @@ function UlarTangga() {
           md={6}
           className="d-flex flex-column align-items-center justify-content-center px-4 gap-4"
         >
-          <div className="player-turn-box text-center d-flex flex-column align-items-center justify-content-center">
-            {players.length > 0 && players[currentPlayerIndex] ? (
-              <h4 className="box-player-name">
-                {players[currentPlayerIndex].displayName}'s Turn
-              </h4>
-            ) : (
-              <h4 className="box-player-name">Waiting for player...</h4>
-            )}
-            {showQuestion && waitingForAnswer && (
-              <Form>
-                <Form.Group>
-                  <Form.Label className="question-text">
-                    {questions[currentQuestionIndex].question}
-                  </Form.Label>
-                  {questions[currentQuestionIndex].options.map(
-                    (option, index) => (
-                      <label
-                        key={index}
-                        htmlFor={`foodChoice${index}`}
-                        className={`form-check ${
-                          submitted
-                            ? option ===
-                              questions[currentQuestionIndex].correctAnswer
-                              ? "correct-answer"
-                              : "wrong-answer"
-                            : ""
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="foodChoice"
-                          id={`foodChoice${index}`}
-                          value={option}
-                          onChange={handleAnswerChange}
-                          checked={selectedAnswer === option}
-                          className="d-none"
-                        />
-                        <span className="question-answer-text">{option}</span>
-                      </label>
-                    )
-                  )}
-                </Form.Group>
-              </Form>
-            )}
-          </div>
+          <PlayerTurnBox
+            players={players}
+            currentPlayerIndex={currentPlayerIndex}
+            showQuestion={showQuestion}
+            waitingForAnswer={waitingForAnswer}
+            currentQuestion={questions[currentQuestionIndex]}
+            onAnswerChange={handleAnswerChange}
+          />
 
           <div className="timer-player d-flex justify-content-center align-items-center gap-2 mb-3">
             <span className="timer-count">{timeLeft}</span>
             <span className="timer-text">Sec</span>
           </div>
 
-          {/* Render komponen dice */}
           <Dice
             onRollComplete={handleDiceRollComplete}
             disabled={isPionMoving || waitingForAnswer}
           />
+          <Potion onUsePotion={skipQuestion} isUsable={potionUsable} />
 
-          {/* Render komponen potion */}
-          <Potion />
-
-          {/* Daftar pemain di bagian bawah */}
-          <div className="player-list d-flex justify-content-center align-items-center my-3">
-            {players.slice(0, 4).map((player, index) => (
-              <div
-                key={player.uid}
-                className={`player-item ${
-                  currentPlayerIndex === index ? "active-player" : ""
-                }`}
-              >
-                <Image
-                  src={player.photoURL || "path/to/placeholder.jpg"}
-                  roundedCircle
-                  width={60}
-                  height={60}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "path/to/placeholder.jpg";
-                  }}
-                />
-                <div className="player-name">{player.displayName}</div>
-              </div>
-            ))}
-          </div>
+          <PlayerList
+            players={players}
+            currentPlayerIndex={currentPlayerIndex}
+          />
         </Col>
       </Row>
 
       {victory && (
-        <div className="victory-overlay" onClick={() => navigate("/")}>
-          <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
-          <h2>{winner} Wins!</h2>
-          <p>Kamu mendapatkan:</p>
-          <div className="rewards">
-            <img
-              src={Achievement}
-              alt="achievement"
-              className="Achievement1-logo"
-            />
-            <img
-              src={Achievement2}
-              alt="achievement2"
-              className="Achievement2-logo"
-            />
-            <img src={potionImage} alt="potion" className="potion-logo" />
-          </div>
-          <p>Sentuh dimana saja untuk keluar.</p>
-        </div>
+        <VictoryOverlay winner={winner} onClose={() => navigate("/")} />
       )}
     </Container>
   );

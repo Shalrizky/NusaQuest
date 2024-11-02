@@ -1,5 +1,5 @@
 // gameDataServices.js
-import { database, ref, onValue, set, remove } from "../firebaseConfig";
+import { database, ref, onValue, set } from "../firebaseConfig";
 
 // Fetch games data
 export const fetchGames = (callback) => {

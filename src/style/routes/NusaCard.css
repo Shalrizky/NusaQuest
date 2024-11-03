@@ -244,3 +244,18 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
   text-align: center;
 }
+
+/* NusaCard.css */
+.player-profile {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+.asking-player {
+  border: 7px solid green;
+}
+
+.answering-player {
+  border: 7px solid red;
+}

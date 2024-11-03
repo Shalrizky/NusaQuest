@@ -89,6 +89,21 @@ function NusaCard() {
     return PLAYERS.find((player) => player.position === position);
   };
 
+  // Helper function to determine player classes
+  const getPlayerClass = (position) => {
+    let classes = "player-profile";
+
+    if (position === currentTurn) {
+      classes += " asking-player";
+    }
+
+    if (position === answeringPlayer || (currentTurn && position === getNextPlayer(currentTurn))) {
+      classes += " answering-player";
+    }
+
+    return classes;
+  };
+
   // Timer handlers
   const resetInactivityTimer = () => {
     setInactivityTimeRemaining(INACTIVITY_DURATION);
@@ -161,7 +176,6 @@ function NusaCard() {
     setActiveCard(card);
     setShowPopup(true);
     setLastActiveDeck("bottom");
-    removeCardFromDeck(index);
     setAnsweringPlayer("right");
     setHasAnswered(false); // Reset hasAnswered when a new question is shown
   };
@@ -196,6 +210,7 @@ function NusaCard() {
     setTimeout(() => {
       const nextTurn = getNextTurn();
       setCurrentTurn(nextTurn);
+      setAnsweringPlayer(getNextPlayer(nextTurn));
       handleAnswerTimeout();
     }, 1000);
   };
@@ -268,6 +283,7 @@ function NusaCard() {
     const nextTurn = getNextPlayer(currentTurn);
     setCurrentTurn(nextTurn);
     setLastActiveDeck(currentTurn); // Update lastActiveDeck to currentTurn before moving on
+    setAnsweringPlayer(getNextPlayer(nextTurn));
     triggerShuffleAnimation();
   };
 
@@ -388,43 +404,44 @@ function NusaCard() {
       <HeaderNuca layout="home" />
 
       <Row className="align-items-center justify-content-center">
-  {/* DeckPlayer Column */}
-  <Col xs="auto" className="text-center position-relative ms-5 ps-5">
-    <div
-      onClick={() => handleDeckCardClick("top")}
-      className="d-flex align-items-center"
-    >
-      {currentTurn === "top" && turnTimeRemaining !== null && (
-        <div className="timer-overlay-above">{turnTimeRemaining}</div>
-      )}
-      {showPopup && answeringPlayer === "top" && (
-        <div className="timer-overlay">{timeRemaining}</div>
-      )}
-      <DeckPlayer
-        count={deckCounts.top}
-        isNew={deckCounts.top === 0}
-        position="left"
-      />
-    </div>
-  </Col>
+        {/* DeckPlayer Column */}
+        <Col xs="auto" className="text-center position-relative ms-5 ps-5">
+          <div
+            onClick={() => handleDeckCardClick("top")}
+            className="d-flex align-items-center"
+          >
+            {currentTurn === "top" && turnTimeRemaining !== null && (
+              <div className="timer-overlay-above">{turnTimeRemaining}</div>
+            )}
+            {showPopup && answeringPlayer === "top" && (
+              <div className="timer-overlay">{timeRemaining}</div>
+            )}
+            <DeckPlayer
+              count={deckCounts.top}
+              isNew={deckCounts.top === 0}
+              position="left"
+            />
+          </div>
+        </Col>
 
-  {/* Player Profile Column */}
-  <Col xs="auto" className="d-flex flex-column position-relative ms-5 ps-5">
-    <Image
-      src={getPlayerByPosition("top").photo}
-      alt="Player Profile"
-      style={{
-        width: "80px",
-        height: "80px",
-        borderRadius: "50%",
-      }}
-    />
-    <div className="player-name mt-2">
-      {getPlayerByPosition("top").name}
-    </div>
-    {renderFeedbackIcon("top")}
-  </Col>
-</Row>
+        {/* Player Profile Column */}
+        <Col xs="auto" className="d-flex flex-column position-relative ms-5 ps-5">
+          <Image
+            src={getPlayerByPosition("top").photo}
+            alt="Player Profile"
+            style={{
+              width: "80px",
+              height: "80px",
+              borderRadius: "50%",
+            }}
+            className={getPlayerClass('top')}
+          />
+          <div className="player-name mt-2">
+            {getPlayerByPosition("top").name}
+          </div>
+          {renderFeedbackIcon("top")}
+        </Col>
+      </Row>
 
       {/* Middle Row - Modified to spread decks wider */}
       <Container fluid>
@@ -449,6 +466,7 @@ function NusaCard() {
                   height: "80px",
                   borderRadius: "50%",
                 }}
+                className={getPlayerClass('left')}
               />
               <div className="player-name">
                 {getPlayerByPosition("left").name}
@@ -508,6 +526,7 @@ function NusaCard() {
                   height: "80px",
                   borderRadius: "50%",
                 }}
+                className={getPlayerClass('right')}
               />
               <div className="player-name">
                 {getPlayerByPosition("right").name}
@@ -551,6 +570,7 @@ function NusaCard() {
             src={getPlayerByPosition("bottom").photo}
             alt="Player Bottom"
             style={{ width: "80px", height: "80px", borderRadius: "50%" }}
+            className={getPlayerClass('bottom')}
           />
           <div className="player-name">
             {getPlayerByPosition("bottom").name}

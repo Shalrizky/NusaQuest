@@ -60,11 +60,66 @@ function NusaCard() {
   const [answeringPlayer, setAnsweringPlayer] = useState("right");
 
   // Timers
-  const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
   const [inactivityTimeRemaining, setInactivityTimeRemaining] = useState(INACTIVITY_DURATION);
   const timerRef = useRef(null);
   const inactivityTimerRef = useRef(null);
   const isFirstRender = useRef(true);
+
+  const [timeRemaining, setTimeRemaining] = useState({
+  top: 10,
+  right: 10,
+  left: 10,
+  bottom: 10,
+});
+
+const timerRefs = useRef({
+  top: null,
+  right: null,
+  left: null,
+  bottom: null,
+});
+
+const startTimer = (position) => {
+  setTimeRemaining((prev) => ({ ...prev, [position]: 10 }));
+  timerRefs.current[position] = setInterval(() => {
+    setTimeRemaining((prev) => {
+      if (prev[position] <= 1) {
+        clearInterval(timerRefs.current[position]);
+        handleSkipTurn();
+        return { ...prev, [position]: 0 };
+      }
+      return { ...prev, [position]: prev[position] - 1 };
+    });
+  }, 1000);
+};
+const stopTimer = (position) => {
+  clearInterval(timerRefs.current[position]);
+};
+useEffect(() => {
+  if (!showPopup && !isActionInProgress) {
+    startTimer(currentTurn);
+  } else {
+    stopTimer(currentTurn);
+  }
+  return () => stopTimer(currentTurn);
+}, [currentTurn, showPopup, isActionInProgress]);
+
+const handleSkipTurn = () => {
+  // Define the logic to determine the next player's turn
+  const getNextTurn = (current) => {
+    const order = ["top", "right", "bottom", "left"];
+    const currentIndex = order.indexOf(current);
+    return order[(currentIndex + 1) % order.length];
+  };
+
+  // Stop any ongoing timers or actions
+  stopTimer(currentTurn);
+
+  // Set the next player's turn
+  const nextTurn = getNextTurn(currentTurn);
+  setCurrentTurn(nextTurn);
+  setIsActionInProgress(false);
+};
 
   // Feedback state
   const [answerStatus, setAnswerStatus] = useState({
@@ -335,6 +390,12 @@ function NusaCard() {
                   border: currentTurn === "top" ? "5px solid red" : answeringPlayer === "top" ? "5px solid green" : "none"
                 }}
               />
+              <div style={{ position: "relative" }}>
+  {currentTurn === "top" && !showPopup && (
+    <div className="timer-overlay">{timeRemaining.top}</div>
+  )}
+  <DeckPlayer count={deckCounts.top} isNew={deckCounts.top === 0} position="top" />
+</div>
               {renderFeedbackIcon("top")}
             </div>
           </div>
@@ -369,6 +430,12 @@ function NusaCard() {
                 isNew={deckCounts.left === 0}
                 style={{ transform: "rotate(900deg)" }}
               />
+              <div style={{ position: "relative" }}>
+  {currentTurn === "left" && !showPopup && (
+    <div className="timer-overlay">{timeRemaining.left}</div>
+  )}
+  <DeckPlayer count={deckCounts.left} isNew={deckCounts.left === 0} position="left" />
+</div>
             </div>
           </Col>
 
@@ -424,6 +491,7 @@ function NusaCard() {
                 position="right"
                 className="deck-kanan-rotate"
               />
+              
             </div>
           </Col>
         </Row>
@@ -432,18 +500,18 @@ function NusaCard() {
       {/* Bottom Row */}
       <Row className="align-items-center justify-content-center">
         <Col xs={"auto"} className="text-center ml-5 ms-5 position-relative">
-          <div style={{ position: "relative" }}>
-            {showPopup && answeringPlayer === "bottom" && (
-              <div className="timer-overlay">{timeRemaining}</div>
-            )}
-            <BottomDeckCard
-              cards={cards}
-              onCardClick={handleBottomCardClick}
-              showPopup={showPopup}
-              isExitingPopup={isExitingPopup}
-            />
-            {renderFeedbackIcon("bottom")}
-          </div>
+        <div style={{ position: "relative" }}>
+  {currentTurn === "bottom" && !showPopup && (
+    <div className="timer-overlay">{timeRemaining.bottom}</div>
+  )}
+  <BottomDeckCard
+    cards={cards}
+    onCardClick={handleBottomCardClick}
+    showPopup={showPopup}
+    isExitingPopup={isExitingPopup}
+  />
+  {renderFeedbackIcon("bottom")}
+</div>
         </Col>
         <Col xs="auto" className="d-flex align-items-center p-3">
           <Image

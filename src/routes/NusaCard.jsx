@@ -158,27 +158,30 @@ function NusaCard() {
   };
 
   const handleBottomCardClick = (card, index) => {
-    if (
-      currentTurn !== "bottom" ||
-      showPopup ||
-      isActionInProgress ||
-      isShuffling
-    )
-      return;
+  if (
+    currentTurn !== "bottom" ||
+    showPopup ||
+    isActionInProgress ||
+    isShuffling
+  )
+    return;
 
-    // Stop the turn timer
-    if (turnTimerRef.current) {
-      clearInterval(turnTimerRef.current);
-      setTurnTimeRemaining(null);
-    }
+  // Stop the turn timer
+  if (turnTimerRef.current) {
+    clearInterval(turnTimerRef.current);
+    setTurnTimeRemaining(null);
+  }
 
-    setIsActionInProgress(true);
-    setActiveCard(card);
-    setShowPopup(true);
-    setLastActiveDeck("bottom");
-    setAnsweringPlayer("right");
-    setHasAnswered(false); // Reset hasAnswered when a new question is shown
-  };
+  setIsActionInProgress(true);
+  setActiveCard(card);
+  setShowPopup(true);
+  setLastActiveDeck("bottom");
+  setAnsweringPlayer("right");
+  setHasAnswered(false); // Reset hasAnswered when a new question is shown
+
+  // Remove the clicked card from the deck
+  removeCardFromDeck(index);
+};
 
   const handleAnswerSelect = (isCorrect, wasTimeout = false) => {
     if (hasAnswered) return; // Prevent further actions if already answered

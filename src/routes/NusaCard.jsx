@@ -97,7 +97,10 @@ function NusaCard() {
       classes += " asking-player";
     }
 
-    if (position === answeringPlayer || (currentTurn && position === getNextPlayer(currentTurn))) {
+    if (
+      position === answeringPlayer ||
+      (currentTurn && position === getNextPlayer(currentTurn))
+    ) {
       classes += " answering-player";
     }
 
@@ -158,30 +161,30 @@ function NusaCard() {
   };
 
   const handleBottomCardClick = (card, index) => {
-  if (
-    currentTurn !== "bottom" ||
-    showPopup ||
-    isActionInProgress ||
-    isShuffling
-  )
-    return;
+    if (
+      currentTurn !== "bottom" ||
+      showPopup ||
+      isActionInProgress ||
+      isShuffling
+    )
+      return;
 
-  // Stop the turn timer
-  if (turnTimerRef.current) {
-    clearInterval(turnTimerRef.current);
-    setTurnTimeRemaining(null);
-  }
+    // Stop the turn timer
+    if (turnTimerRef.current) {
+      clearInterval(turnTimerRef.current);
+      setTurnTimeRemaining(null);
+    }
 
-  setIsActionInProgress(true);
-  setActiveCard(card);
-  setShowPopup(true);
-  setLastActiveDeck("bottom");
-  setAnsweringPlayer("right");
-  setHasAnswered(false); // Reset hasAnswered when a new question is shown
+    setIsActionInProgress(true);
+    setActiveCard(card);
+    setShowPopup(true);
+    setLastActiveDeck("bottom");
+    setAnsweringPlayer("right");
+    setHasAnswered(false); // Reset hasAnswered when a new question is shown
 
-  // Remove the clicked card from the deck
-  removeCardFromDeck(index);
-};
+    // Remove the clicked card from the deck
+    removeCardFromDeck(index);
+  };
 
   const handleAnswerSelect = (isCorrect, wasTimeout = false) => {
     if (hasAnswered) return; // Prevent further actions if already answered
@@ -416,7 +419,7 @@ function NusaCard() {
             {currentTurn === "top" && turnTimeRemaining !== null && (
               <div className="timer-overlay-above">{turnTimeRemaining}</div>
             )}
-            {showPopup && answeringPlayer === "top" && (
+            {showPopup && !hasAnswered && answeringPlayer === "top" && (
               <div className="timer-overlay">{timeRemaining}</div>
             )}
             <DeckPlayer
@@ -428,7 +431,10 @@ function NusaCard() {
         </Col>
 
         {/* Player Profile Column */}
-        <Col xs="auto" className="d-flex flex-column position-relative ms-5 ps-5">
+        <Col
+          xs="auto"
+          className="d-flex flex-column position-relative ms-5 ps-5"
+        >
           <Image
             src={getPlayerByPosition("top").photo}
             alt="Player Profile"
@@ -437,7 +443,7 @@ function NusaCard() {
               height: "80px",
               borderRadius: "50%",
             }}
-            className={getPlayerClass('top')}
+            className={getPlayerClass("top")}
           />
           <div className="player-name mt-2">
             {getPlayerByPosition("top").name}
@@ -458,7 +464,7 @@ function NusaCard() {
               {currentTurn === "left" && turnTimeRemaining !== null && (
                 <div className="timer-overlay-above">{turnTimeRemaining}</div>
               )}
-              {showPopup && answeringPlayer === "left" && (
+              {showPopup && !hasAnswered && answeringPlayer === "left" && (
                 <div className="timer-overlay">{timeRemaining}</div>
               )}
               <Image
@@ -469,7 +475,7 @@ function NusaCard() {
                   height: "80px",
                   borderRadius: "50%",
                 }}
-                className={getPlayerClass('left')}
+                className={getPlayerClass("left")}
               />
               <div className="player-name">
                 {getPlayerByPosition("left").name}
@@ -518,7 +524,7 @@ function NusaCard() {
               {currentTurn === "right" && turnTimeRemaining !== null && (
                 <div className="timer-overlay-above">{turnTimeRemaining}</div>
               )}
-              {showPopup && answeringPlayer === "right" && (
+              {showPopup && !hasAnswered && answeringPlayer === "right" && (
                 <div className="timer-overlay">{timeRemaining}</div>
               )}
               <Image
@@ -529,7 +535,7 @@ function NusaCard() {
                   height: "80px",
                   borderRadius: "50%",
                 }}
-                className={getPlayerClass('right')}
+                className={getPlayerClass("right")}
               />
               <div className="player-name">
                 {getPlayerByPosition("right").name}
@@ -550,7 +556,7 @@ function NusaCard() {
       <Row className="align-items-center justify-content-center">
         <Col xs={"auto"} className="text-center ml-5 ms-5 position-relative">
           <div style={{ position: "relative" }}>
-            {showPopup && answeringPlayer === "bottom" && (
+            {showPopup && !hasAnswered && answeringPlayer === "bottom" && (
               <div className="timer-overlay">{timeRemaining}</div>
             )}
             {currentTurn === "bottom" && turnTimeRemaining !== null && (
@@ -573,7 +579,7 @@ function NusaCard() {
             src={getPlayerByPosition("bottom").photo}
             alt="Player Bottom"
             style={{ width: "80px", height: "80px", borderRadius: "50%" }}
-            className={getPlayerClass('bottom')}
+            className={getPlayerClass("bottom")}
           />
           <div className="player-name">
             {getPlayerByPosition("bottom").name}

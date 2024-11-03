@@ -23,6 +23,7 @@ const TIMER_DURATION = 15;
 const INACTIVITY_DURATION = 30000;
 const FEEDBACK_DURATION = 3000;
 const POPUP_TRANSITION_DURATION = 2000;
+const TURN_TIMER_DURATION = 10;
 
 const PLAYERS = [
   { id: 1, name: "Abrar", photo: require("../assets/games/Utangga/narutoa.png") },
@@ -48,7 +49,7 @@ function NusaCard() {
   // Game state
   const [lastActiveDeck, setLastActiveDeck] = useState(null);
   const [currentTurn, setCurrentTurn] = useState("bottom");
-  const [isShuffling, setIsShuffling] = useState(false);
+  const [isShuffling, setIsShuffling] = useState(true); // Start with shuffling animation
   const [showPopup, setShowPopup] = useState(false);
   const [isExitingPopup, setIsExitingPopup] = useState(false);
   const [activeCard, setActiveCard] = useState(null);
@@ -65,6 +66,10 @@ function NusaCard() {
   const timerRef = useRef(null);
   const inactivityTimerRef = useRef(null);
   const isFirstRender = useRef(true);
+
+  // Turn timer
+  const [turnTimeRemaining, setTurnTimeRemaining] = useState(null);
+  const turnTimerRef = useRef(null);
 
   // Feedback state
   const [answerStatus, setAnswerStatus] = useState({
@@ -115,8 +120,14 @@ function NusaCard() {
   // Game logic handlers
   const handleDeckCardClick = (deck) => {
     resetInactivityTimer();
-    if (currentTurn !== deck || showPopup || isActionInProgress) return;
+    if (currentTurn !== deck || showPopup || isActionInProgress || isShuffling) return;
     
+    // Stop the turn timer
+    if (turnTimerRef.current) {
+      clearInterval(turnTimerRef.current);
+      setTurnTimeRemaining(null);
+    }
+
     if (deckCounts[deck] > 0) {
       setIsActionInProgress(true);
       setDeckCounts(prev => ({
@@ -131,8 +142,14 @@ function NusaCard() {
   };
 
   const handleBottomCardClick = (card, index) => {
-    if (currentTurn !== "bottom" || showPopup || isActionInProgress) return;
+    if (currentTurn !== "bottom" || showPopup || isActionInProgress || isShuffling) return;
     
+    // Stop the turn timer
+    if (turnTimerRef.current) {
+      clearInterval(turnTimerRef.current);
+      setTurnTimeRemaining(null);
+    }
+
     setIsActionInProgress(true);
     setActiveCard(card);
     setShowPopup(true);
@@ -143,6 +160,7 @@ function NusaCard() {
 
   const handleAnswerSelect = (isCorrect, wasTimeout = false) => {
     clearInterval(timerRef.current);
+    setTimeRemaining(TIMER_DURATION); // Reset the question timer
     setIsCorrectAnswer(isCorrect);
 
     setFeedbackIcon({
@@ -161,15 +179,11 @@ function NusaCard() {
       addNewCardToDeck();
     }
 
-    const nextTurn = getNextTurn();
-    setCurrentTurn(nextTurn);
-
-    if (deckDepleted && !victory) {
-      setVictory(true);
-      setWinner(deckDepleted);
-    }
-
-    handleAnswerTimeout();
+    setTimeout(() => {
+      const nextTurn = getNextTurn();
+      setCurrentTurn(nextTurn);
+      handleAnswerTimeout();
+    }, 0); // Ensure state updates before moving to next turn
   };
 
   // Helper functions
@@ -226,24 +240,58 @@ function NusaCard() {
         setIsActionInProgress(false);
         setAnsweringPlayer(null);
         setFeedbackIcon({ show: false, isCorrect: null, position: null });
-        setIsShuffling(true);
-        
-        setTimeout(() => {
-          setIsShuffling(false);
-        }, 500);
-
-        setAnswerStatus(prev => ({
-          ...prev,
-          [answeringPlayer]: null
-        }));
+        triggerShuffleAnimation();
       }, POPUP_TRANSITION_DURATION);
     }, FEEDBACK_DURATION);
+  };
+
+  const triggerShuffleAnimation = () => {
+    setIsShuffling(true);
+    setTurnTimeRemaining(null); // Clear turn timer during shuffle
+    setTimeout(() => {
+      setIsShuffling(false);
+      // Start the next player's turn timer after shuffle animation
+      startTurnTimer();
+    }, 500);
+  };
+
+  // Handle turn timeout
+  const handleTurnTimeout = () => {
+    // Skip the current player's turn
+    const nextTurn = getNextPlayer(currentTurn);
+    setCurrentTurn(nextTurn);
+    setLastActiveDeck(currentTurn); // Update lastActiveDeck to currentTurn before moving on
+    triggerShuffleAnimation();
+  };
+
+  const startTurnTimer = () => {
+    if (victory || deckDepleted || showPopup || isActionInProgress) return;
+
+    setTurnTimeRemaining(TURN_TIMER_DURATION);
+    if (turnTimerRef.current) clearInterval(turnTimerRef.current);
+    turnTimerRef.current = setInterval(() => {
+      setTurnTimeRemaining(prev => {
+        if (prev === 1) {
+          clearInterval(turnTimerRef.current);
+          handleTurnTimeout();
+          return null;
+        } else {
+          return prev - 1;
+        }
+      });
+    }, 1000);
   };
 
   // Effects
   useEffect(() => {
     startInactivityTimer();
     window.addEventListener('click', resetInactivityTimer);
+
+    // Start the game with shuffle animation and then start the first turn timer
+    setTimeout(() => {
+      setIsShuffling(false);
+      startTurnTimer();
+    }, 500);
 
     return () => {
       clearInterval(inactivityTimerRef.current);
@@ -266,6 +314,11 @@ function NusaCard() {
     if (cards.length === 0 && !deckDepleted) {
       setDeckDepleted('bottom');
     }
+
+    if (deckDepleted && !victory) {
+      setVictory(true);
+      setWinner(deckDepleted);
+    }
   }, [deckCounts, cards, deckDepleted]);
 
   useEffect(() => {
@@ -286,6 +339,19 @@ function NusaCard() {
     }
   }, [timeRemaining]);
 
+  // Update turn timer when currentTurn changes
+  useEffect(() => {
+    if (!isShuffling && !showPopup && !isActionInProgress) {
+      startTurnTimer();
+    } else {
+      // Clear the turn timer if shuffling or popup is shown
+      if (turnTimerRef.current) {
+        clearInterval(turnTimerRef.current);
+        setTurnTimeRemaining(null);
+      }
+    }
+  }, [currentTurn, isShuffling, showPopup, isActionInProgress]);
+
   // Render helper functions
   const renderFeedbackIcon = (position) => {
     if (!feedbackIcon.show || feedbackIcon.position !== position) return null;
@@ -301,8 +367,6 @@ function NusaCard() {
     );
   };
 
-  
-
   return (
     <Container
       fluid
@@ -311,160 +375,179 @@ function NusaCard() {
       <HeaderNuca layout="home" />
 
       {/* Top Row */}
-{/* Top Row */}
-<Row className="mb-5 justify-content-center align-items-center">
-  <Col
-    md={2}
-    xs={12}
-    className="text-center ms-5 ml-5 d-flex align-items-center position-relative"
-  >
-    <div
-      className="d-flex align-items-center ml-5 ms-5 position-relative"
-    >
-      {showPopup && answeringPlayer === "top" && (
-        <div
-          className={`timer-overlay ${
-            timeRemaining <= 5 ? "shake-animation" : ""
-          }`}
+      <Row className="mb-5 justify-content-center align-items-center">
+        <Col
+          md={2}
+          xs={12}
+          className="text-center ms-5 ml-5 d-flex align-items-center position-relative"
         >
-          {timeRemaining}
-        </div>
-      )}
-      <div
-        onClick={() => handleDeckCardClick("top")}
-        style={{ position: "relative" }}
-      >
-        <DeckPlayer
-          count={deckCounts.top}
-          isNew={deckCounts.top === 0}
-          position="left"
-        />
-      </div>
-      <Image
-        src={getPlayerByPosition("top").photo}
-        alt="Player Profile"
-        style={{
-          width: "80px",
-          height: "80px",
-          borderRadius: "50%",
-          marginLeft: "100px",
-        }}
-      />
-      {renderFeedbackIcon("top")}
-    </div>
-  </Col>
-</Row>
+          <div
+            className="d-flex align-items-center ml-5 ms-5 position-relative"
+          >
+            {currentTurn === 'top' && turnTimeRemaining !== null && (
+              <div className="timer-overlay-above">
+                {turnTimeRemaining}
+              </div>
+            )}
+            {showPopup && answeringPlayer === "top" && (
+              <div
+                className={`timer-overlay ${
+                  timeRemaining <= 5 ? "shake-animation" : ""
+                }`}
+              >
+                {timeRemaining}
+              </div>
+            )}
+            <div
+              onClick={() => handleDeckCardClick("top")}
+              style={{ position: "relative" }}
+            >
+              <DeckPlayer
+                count={deckCounts.top}
+                isNew={deckCounts.top === 0}
+                position="left"
+              />
+            </div>
+            <Image
+              src={getPlayerByPosition("top").photo}
+              alt="Player Profile"
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                marginLeft: "100px",
+              }}
+            />
+            {renderFeedbackIcon("top")}
+          </div>
+        </Col>
+      </Row>
 
-{/* Middle Row - Modified to spread decks wider */}
-<Container fluid>
-  <Row className="mb-5 mt-0">
-    {/* Left Deck */}
-    <Col md={3} className="position-relative deck-position-left">
-      <div
-        className="d-flex flex-column align-items-center position-relative"
-        onClick={() => handleDeckCardClick("left")}
-      >
-        {showPopup && answeringPlayer === "left" && (
-          <div className="timer-overlay">{timeRemaining}</div>
-        )}
-        <Image
-          src={getPlayerByPosition("left").photo}
-          alt="Player Left"
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "50%",
-          }}
-        />
-        {renderFeedbackIcon("left")}
-        <DeckPlayer
-          count={deckCounts.left}
-          isNew={deckCounts.left === 0}
-          style={{ transform: "rotate(900deg)" }}
-        />
-      </div>
-    </Col>
+      {/* Middle Row - Modified to spread decks wider */}
+      <Container fluid>
+        <Row className="mb-5 mt-0">
+          {/* Left Deck */}
+          <Col md={3} className="position-relative deck-position-left">
+            <div
+              className="d-flex flex-column align-items-center position-relative"
+              onClick={() => handleDeckCardClick("left")}
+            >
+              {currentTurn === 'left' && turnTimeRemaining !== null && (
+                <div className="timer-overlay-above">
+                  {turnTimeRemaining}
+                </div>
+              )}
+              {showPopup && answeringPlayer === "left" && (
+                <div className="timer-overlay">{timeRemaining}</div>
+              )}
+              <Image
+                src={getPlayerByPosition("left").photo}
+                alt="Player Left"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                }}
+              />
+              {renderFeedbackIcon("left")}
+              <DeckPlayer
+                count={deckCounts.left}
+                isNew={deckCounts.left === 0}
+                style={{ transform: "rotate(900deg)" }}
+              />
+            </div>
+          </Col>
 
-    {/* Empty space between left deck and center */}
-    <Col md={2} />
+          {/* Empty space between left deck and center */}
+          <Col md={2} />
 
-    {/* Center Deck */}
-    <Col
-      md={2}
-      className="deck-tengah position-relative d-flex justify-content-center align-items-center"
-    >
-      <DeckPlayer count={4} isNew={false} />
-      <div
-        className={`position-absolute d-flex justify-content-center align-items-center ${
-          isShuffling ? "shuffle-rotate" : ""
-        }`}
-        style={{ width: "250px", height: "250px", zIndex: 1 }}
-      >
-        <Image
-          src={shuffleIcon}
-          alt="Shuffle Icon"
-          style={{ width: "100%", height: "100%" }}
-        />
-      </div>
-    </Col>
+          {/* Center Deck */}
+          <Col
+            md={2}
+            className="deck-tengah position-relative d-flex justify-content-center align-items-center"
+          >
+            <DeckPlayer count={4} isNew={false} />
+            <div
+              className={`position-absolute d-flex justify-content-center align-items-center ${
+                isShuffling ? "shuffle-rotate" : ""
+              }`}
+              style={{ width: "250px", height: "250px", zIndex: 1 }}
+            >
+              <Image
+                src={shuffleIcon}
+                alt="Shuffle Icon"
+                style={{ width: "100%", height: "100%" }}
+              />
+            </div>
+          </Col>
 
-    {/* Empty space between center and right deck */}
-    <Col md={3} />
+          {/* Empty space between center and right deck */}
+          <Col md={3} />
 
-    {/* Right Deck */}
-    <Col md={2} className="position-relative deck-position-right">
-      <div
-        className="d-flex flex-column align-items-center position-relative"
-        onClick={() => handleDeckCardClick("right")}
-      >
-        {showPopup && answeringPlayer === "right" && (
-          <div className="timer-overlay">{timeRemaining}</div>
-        )}
-        <Image
-          src={getPlayerByPosition("right").photo}
-          alt="Player Right"
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "50%",
-          }}
-        />
-        {renderFeedbackIcon("right")}
-        <DeckPlayer
-          count={deckCounts.right}
-          isNew={deckCounts.right === 0}
-          position="right"
-          className="deck-kanan-rotate"
-        />
-      </div>
-    </Col>
-  </Row>
-</Container>
+          {/* Right Deck */}
+          <Col md={2} className="position-relative deck-position-right">
+            <div
+              className="d-flex flex-column align-items-center position-relative"
+              onClick={() => handleDeckCardClick("right")}
+            >
+              {currentTurn === 'right' && turnTimeRemaining !== null && (
+                <div className="timer-overlay-above">
+                  {turnTimeRemaining}
+                </div>
+              )}
+              {showPopup && answeringPlayer === "right" && (
+                <div className="timer-overlay">{timeRemaining}</div>
+              )}
+              <Image
+                src={getPlayerByPosition("right").photo}
+                alt="Player Right"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                }}
+              />
+              {renderFeedbackIcon("right")}
+              <DeckPlayer
+                count={deckCounts.right}
+                isNew={deckCounts.right === 0}
+                position="right"
+                className="deck-kanan-rotate"
+              />
+            </div>
+          </Col>
+        </Row>
+      </Container>
 
-{/* Bottom Row */}
-<Row className="align-items-center justify-content-center">
-  <Col xs={"auto"} className="text-center ml-5 ms-5 position-relative">
-    <div style={{ position: "relative" }}>
-      {showPopup && answeringPlayer === "bottom" && (
-        <div className="timer-overlay">{timeRemaining}</div>
-      )}
-      <BottomDeckCard
-        cards={cards}
-        onCardClick={handleBottomCardClick}
-        showPopup={showPopup}
-        isExitingPopup={isExitingPopup}
-      />
-      {renderFeedbackIcon("bottom")}
-    </div>
-  </Col>
-  <Col xs="auto" className="d-flex align-items-center p-3">
-    <Image
-      src={getPlayerByPosition("bottom").photo}
-      alt="Player Bottom"
-      style={{ width: "80px", height: "80px", borderRadius: "50%" }}
-    />
-  </Col>
-</Row>
+      {/* Bottom Row */}
+      <Row className="align-items-center justify-content-center">
+        <Col xs={"auto"} className="text-center ml-5 ms-5 position-relative">
+          <div style={{ position: "relative" }}>
+            {showPopup && answeringPlayer === "bottom" && (
+              <div className="timer-overlay">{timeRemaining}</div>
+            )}
+            {currentTurn === 'bottom' && turnTimeRemaining !== null && (
+              <div className="timer-overlay-above">
+                {turnTimeRemaining}
+              </div>
+            )}
+            <BottomDeckCard
+              cards={cards}
+              onCardClick={handleBottomCardClick}
+              showPopup={showPopup}
+              isExitingPopup={isExitingPopup}
+            />
+            {renderFeedbackIcon("bottom")}
+          </div>
+        </Col>
+        <Col xs="auto" className="d-flex align-items-center p-3 position-relative">
+          <Image
+            src={getPlayerByPosition("bottom").photo}
+            alt="Player Bottom"
+            style={{ width: "80px", height: "80px", borderRadius: "50%" }}
+          />
+        </Col>
+      </Row>
 
       {/* Show the question popup */}
       {showPopup && activeCard && (

@@ -59,6 +59,7 @@ function NusaCard() {
   const [deckDepleted, setDeckDepleted] = useState(null);
   const [isActionInProgress, setIsActionInProgress] = useState(false);
   const [answeringPlayer, setAnsweringPlayer] = useState(null);
+  const [hasAnswered, setHasAnswered] = useState(false); // New state
 
   // Timers
   const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
@@ -138,6 +139,7 @@ function NusaCard() {
       setActiveCard(getRandomQuestion());
       setAnsweringPlayer(getNextPlayer(deck));
       setShowPopup(true);
+      setHasAnswered(false); // Reset hasAnswered when a new question is shown
     }
   };
 
@@ -156,35 +158,40 @@ function NusaCard() {
     setLastActiveDeck("bottom");
     removeCardFromDeck(index);
     setAnsweringPlayer("right");
+    setHasAnswered(false); // Reset hasAnswered when a new question is shown
   };
 
   const handleAnswerSelect = (isCorrect, wasTimeout = false) => {
-    clearInterval(timerRef.current);
-    setTimeRemaining(TIMER_DURATION); // Reset the question timer
-    setIsCorrectAnswer(isCorrect);
+  if (hasAnswered) return; // Prevent further actions if already answered
 
-    setFeedbackIcon({
-      show: true,
-      isCorrect,
-      position: answeringPlayer
-    });
+  clearInterval(timerRef.current);
+  setTimeRemaining(TIMER_DURATION); // Reset the question timer
+  setIsCorrectAnswer(isCorrect);
+  setHasAnswered(true); // Set hasAnswered to true after selecting an answer
 
-    updateAnswerStatus(answeringPlayer, isCorrect);
+  setFeedbackIcon({
+    show: true,
+    isCorrect,
+    position: answeringPlayer
+  });
 
-    if (!isCorrect && !wasTimeout) {
-      incrementDeckCount(answeringPlayer);
-    }
+  updateAnswerStatus(answeringPlayer, isCorrect);
 
-    if (isCorrect && lastActiveDeck === "left" && answeringPlayer !== "bottom") {
-      addNewCardToDeck();
-    }
+  if (!isCorrect && !wasTimeout) {
+    incrementDeckCount(answeringPlayer);
+  }
 
-    setTimeout(() => {
-      const nextTurn = getNextTurn();
-      setCurrentTurn(nextTurn);
-      handleAnswerTimeout();
-    }, 0); // Ensure state updates before moving to next turn
-  };
+  if (isCorrect && lastActiveDeck === "left" && answeringPlayer !== "bottom") {
+    addNewCardToDeck();
+  }
+
+  // Delay the closing of the popup by 2 seconds
+  setTimeout(() => {
+    const nextTurn = getNextTurn();
+    setCurrentTurn(nextTurn);
+    handleAnswerTimeout();
+  }, 1000);
+};
 
   // Helper functions
   const getNextPlayer = (currentDeck) => {
@@ -550,7 +557,7 @@ function NusaCard() {
       </Row>
 
       {/* Show the question popup */}
-      {showPopup && activeCard && (
+      {showPopup && activeCard && !hasAnswered && ( // Prevent showing popup if answered
         <>
           <div style={{ position: "relative", zIndex: "2000" }}>
             <PertanyaanNuca
@@ -561,15 +568,9 @@ function NusaCard() {
               isExiting={isExitingPopup}
             />
           </div>
-          <Potion
-            style={{
-              position: "fixed",
-              bottom: "20px",
-              right: "20px",
-              left: "80%",
-              zIndex: "3000", // Potion berada di atas z-index PertanyaanNuca
-            }}
-          />
+          <div className="potion-icon">
+          <Potion />
+          </div>
         </>
       )}
 

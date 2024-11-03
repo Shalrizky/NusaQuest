@@ -228,3 +228,9 @@
     transition: transform 0.2s ease;
   }
   
+  .potion-icon {
+  position: fixed; /* Use fixed to keep it in the same position even when scrolling */
+  bottom: 20px;    /* Adjust this value to set the distance from the bottom */
+  right: 20px;     /* Adjust this value to set the distance from the right */
+  z-index: 2000;   /* Ensure it's above other elements */
+}

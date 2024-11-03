@@ -230,7 +230,32 @@
   
   .potion-icon {
   position: fixed; /* Use fixed to keep it in the same position even when scrolling */
-  bottom: 20px;    /* Adjust this value to set the distance from the bottom */
+  bottom: 30px;    /* Adjust this value to set the distance from the bottom */
   right: 20px;     /* Adjust this value to set the distance from the right */
   z-index: 2000;   /* Ensure it's above other elements */
+}
+
+.player-name {
+  margin-top: 5px; /* Space between the image and the username */
+  font-weight: bold;
+  font-size: 16px;
+  color: #2c3e50; /* Dark blue color */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  text-align: center;
+}
+
+/* Optional: Add a background or border to the username */
+.player-name {
+  background-color: #ecf0f1; /* Light grey background */
+  padding: 5px 10px;
+  border-radius: 10px;
+  border: 1px solid #bdc3c7; /* Border with light grey color */
+}
+
+/* Add hover effect if desired */
+.player-info:hover .player-name {
+  background-color: #3498db; /* Change background on hover */
+  color: #fff; /* Change text color on hover */
+  border-color: #2980b9;
+  transition: all 0.3s ease;
 }

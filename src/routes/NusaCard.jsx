@@ -5,7 +5,9 @@ import "../style/routes/NusaCard.css";
 import DeckPlayer from "../components/games/DeckPlayer";
 import BottomDeckCard from "../components/games/BottomDeckCard";
 import HeaderNuca from "../components/games/HeaderGame";
-import PertanyaanNuca, { getRandomQuestion } from "../components/games/PertanyaanNuca";
+import PertanyaanNuca, {
+  getRandomQuestion,
+} from "../components/games/PertanyaanNuca";
 import Potion from "../components/games/potion";
 
 // Image imports
@@ -16,6 +18,7 @@ import cross from "../assets/common/cross.png";
 import victoryImage from "../assets/games/Utangga/victory.png";
 import Achievement from "../assets/games/Utangga/achievement1.png";
 import Achievement2 from "../assets/games/Utangga/achievement2.png";
+import defaultPlayerPhoto from "../assets/games/Utangga/narutoa.png";
 
 // Constants
 const INITIAL_DECK_COUNT = 4;
@@ -25,11 +28,12 @@ const FEEDBACK_DURATION = 3000;
 const POPUP_TRANSITION_DURATION = 2000;
 const TURN_TIMER_DURATION = 10;
 
+// Reintroduce the PLAYERS array with usernames and photos
 const PLAYERS = [
-  { id: 1, name: "Abrar", photo: require("../assets/games/Utangga/narutoa.png") },
-  { id: 2, name: "Sahel", photo: require("../assets/games/Utangga/narutoa.png") },
-  { id: 3, name: "Rangga", photo: require("../assets/games/Utangga/narutoa.png") },
-  { id: 4, name: "Natah", photo: require("../assets/games/Utangga/narutoa.png") }
+  { id: 1, name: "Player1", photo: defaultPlayerPhoto, position: "bottom" },
+  { id: 2, name: "Player2", photo: defaultPlayerPhoto, position: "right" },
+  { id: 3, name: "Player3", photo: defaultPlayerPhoto, position: "top" },
+  { id: 4, name: "Player4", photo: defaultPlayerPhoto, position: "left" },
 ];
 
 const DECK_ORDER = ["bottom", "right", "top", "left"];
@@ -39,10 +43,10 @@ function NusaCard() {
   const [deckCounts, setDeckCounts] = useState({
     top: INITIAL_DECK_COUNT,
     left: INITIAL_DECK_COUNT,
-    right: INITIAL_DECK_COUNT
+    right: INITIAL_DECK_COUNT,
   });
 
-  const [cards, setCards] = useState(() => 
+  const [cards, setCards] = useState(() =>
     Array.from({ length: INITIAL_DECK_COUNT }, () => getRandomQuestion())
   );
 
@@ -63,7 +67,8 @@ function NusaCard() {
 
   // Timers
   const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
-  const [inactivityTimeRemaining, setInactivityTimeRemaining] = useState(INACTIVITY_DURATION);
+  const [inactivityTimeRemaining, setInactivityTimeRemaining] =
+    useState(INACTIVITY_DURATION);
   const timerRef = useRef(null);
   const inactivityTimerRef = useRef(null);
   const isFirstRender = useRef(true);
@@ -73,27 +78,15 @@ function NusaCard() {
   const turnTimerRef = useRef(null);
 
   // Feedback state
-  const [answerStatus, setAnswerStatus] = useState({
-    top: null,
-    right: null,
-    bottom: null,
-    left: null
-  });
-  
   const [feedbackIcon, setFeedbackIcon] = useState({
     show: false,
     isCorrect: null,
-    position: null
+    position: null,
   });
 
+  // Reintroduce getPlayerByPosition function
   const getPlayerByPosition = (position) => {
-    const positionMap = {
-      bottom: 0,
-      right: 1,
-      top: 2,
-      left: 3
-    };
-    return PLAYERS[positionMap[position]];
+    return PLAYERS.find((player) => player.position === position);
   };
 
   // Timer handlers
@@ -110,7 +103,7 @@ function NusaCard() {
       setInactivityTimeRemaining((prevTime) => {
         if (prevTime <= 100000) {
           clearInterval(inactivityTimerRef.current);
-          navigate('/');
+          navigate("/");
           return 0;
         }
         return prevTime - 100000;
@@ -121,8 +114,14 @@ function NusaCard() {
   // Game logic handlers
   const handleDeckCardClick = (deck) => {
     resetInactivityTimer();
-    if (currentTurn !== deck || showPopup || isActionInProgress || isShuffling) return;
-    
+    if (
+      currentTurn !== deck ||
+      showPopup ||
+      isActionInProgress ||
+      isShuffling
+    )
+      return;
+
     // Stop the turn timer
     if (turnTimerRef.current) {
       clearInterval(turnTimerRef.current);
@@ -131,9 +130,9 @@ function NusaCard() {
 
     if (deckCounts[deck] > 0) {
       setIsActionInProgress(true);
-      setDeckCounts(prev => ({
+      setDeckCounts((prev) => ({
         ...prev,
-        [deck]: prev[deck] - 1
+        [deck]: prev[deck] - 1,
       }));
       setLastActiveDeck(deck);
       setActiveCard(getRandomQuestion());
@@ -144,8 +143,14 @@ function NusaCard() {
   };
 
   const handleBottomCardClick = (card, index) => {
-    if (currentTurn !== "bottom" || showPopup || isActionInProgress || isShuffling) return;
-    
+    if (
+      currentTurn !== "bottom" ||
+      showPopup ||
+      isActionInProgress ||
+      isShuffling
+    )
+      return;
+
     // Stop the turn timer
     if (turnTimerRef.current) {
       clearInterval(turnTimerRef.current);
@@ -162,36 +167,38 @@ function NusaCard() {
   };
 
   const handleAnswerSelect = (isCorrect, wasTimeout = false) => {
-  if (hasAnswered) return; // Prevent further actions if already answered
+    if (hasAnswered) return; // Prevent further actions if already answered
 
-  clearInterval(timerRef.current);
-  setTimeRemaining(TIMER_DURATION); // Reset the question timer
-  setIsCorrectAnswer(isCorrect);
-  setHasAnswered(true); // Set hasAnswered to true after selecting an answer
+    clearInterval(timerRef.current);
+    setTimeRemaining(TIMER_DURATION); // Reset the question timer
+    setIsCorrectAnswer(isCorrect);
+    setHasAnswered(true); // Set hasAnswered to true after selecting an answer
 
-  setFeedbackIcon({
-    show: true,
-    isCorrect,
-    position: answeringPlayer
-  });
+    setFeedbackIcon({
+      show: true,
+      isCorrect,
+      position: answeringPlayer,
+    });
 
-  updateAnswerStatus(answeringPlayer, isCorrect);
+    if (!isCorrect && !wasTimeout) {
+      incrementDeckCount(answeringPlayer);
+    }
 
-  if (!isCorrect && !wasTimeout) {
-    incrementDeckCount(answeringPlayer);
-  }
+    if (
+      isCorrect &&
+      lastActiveDeck === "left" &&
+      answeringPlayer !== "bottom"
+    ) {
+      addNewCardToDeck();
+    }
 
-  if (isCorrect && lastActiveDeck === "left" && answeringPlayer !== "bottom") {
-    addNewCardToDeck();
-  }
-
-  // Delay the closing of the popup by 2 seconds
-  setTimeout(() => {
-    const nextTurn = getNextTurn();
-    setCurrentTurn(nextTurn);
-    handleAnswerTimeout();
-  }, 1000);
-};
+    // Delay the closing of the popup by 1 second
+    setTimeout(() => {
+      const nextTurn = getNextTurn();
+      setCurrentTurn(nextTurn);
+      handleAnswerTimeout();
+    }, 1000);
+  };
 
   // Helper functions
   const getNextPlayer = (currentDeck) => {
@@ -199,7 +206,7 @@ function NusaCard() {
       bottom: "right",
       right: "top",
       top: "left",
-      left: "bottom"
+      left: "bottom",
     };
     return playerMap[currentDeck];
   };
@@ -210,29 +217,22 @@ function NusaCard() {
   };
 
   const removeCardFromDeck = (index) => {
-    setCards(prev => prev.filter((_, cardIndex) => cardIndex !== index));
+    setCards((prev) => prev.filter((_, cardIndex) => cardIndex !== index));
   };
 
   const addNewCardToDeck = () => {
-    setCards(prev => [...prev, { ...getRandomQuestion(), isNew: true }]);
+    setCards((prev) => [...prev, { ...getRandomQuestion(), isNew: true }]);
   };
 
   const incrementDeckCount = (deck) => {
     if (deck === "bottom") {
       addNewCardToDeck();
     } else {
-      setDeckCounts(prev => ({
+      setDeckCounts((prev) => ({
         ...prev,
-        [deck]: prev[deck] + 1
+        [deck]: prev[deck] + 1,
       }));
     }
-  };
-
-  const updateAnswerStatus = (player, isCorrect) => {
-    setAnswerStatus(prev => ({
-      ...prev,
-      [player]: isCorrect
-    }));
   };
 
   const handleAnswerTimeout = () => {
@@ -277,7 +277,7 @@ function NusaCard() {
     setTurnTimeRemaining(TURN_TIMER_DURATION);
     if (turnTimerRef.current) clearInterval(turnTimerRef.current);
     turnTimerRef.current = setInterval(() => {
-      setTurnTimeRemaining(prev => {
+      setTurnTimeRemaining((prev) => {
         if (prev === 1) {
           clearInterval(turnTimerRef.current);
           handleTurnTimeout();
@@ -292,7 +292,7 @@ function NusaCard() {
   // Effects
   useEffect(() => {
     startInactivityTimer();
-    window.addEventListener('click', resetInactivityTimer);
+    window.addEventListener("click", resetInactivityTimer);
 
     // Start the game with shuffle animation and then start the first turn timer
     setTimeout(() => {
@@ -302,7 +302,7 @@ function NusaCard() {
 
     return () => {
       clearInterval(inactivityTimerRef.current);
-      window.removeEventListener('click', resetInactivityTimer);
+      window.removeEventListener("click", resetInactivityTimer);
     };
   }, []);
 
@@ -319,7 +319,7 @@ function NusaCard() {
     });
 
     if (cards.length === 0 && !deckDepleted) {
-      setDeckDepleted('bottom');
+      setDeckDepleted("bottom");
     }
 
     if (deckDepleted && !victory) {
@@ -332,7 +332,7 @@ function NusaCard() {
     if (showPopup && answeringPlayer) {
       setTimeRemaining(TIMER_DURATION);
       timerRef.current = setInterval(() => {
-        setTimeRemaining(prev => prev - 1);
+        setTimeRemaining((prev) => prev - 1);
       }, 1000);
     } else {
       clearInterval(timerRef.current);
@@ -374,6 +374,12 @@ function NusaCard() {
     );
   };
 
+  // Get winner's username
+  const getWinnerName = () => {
+    const winnerPlayer = getPlayerByPosition(winner);
+    return winnerPlayer ? winnerPlayer.name : "";
+  };
+
   return (
     <Container
       fluid
@@ -388,13 +394,9 @@ function NusaCard() {
           xs={12}
           className="text-center ms-5 ml-5 d-flex align-items-center position-relative"
         >
-          <div
-            className="d-flex align-items-center ml-5 ms-5 position-relative"
-          >
-            {currentTurn === 'top' && turnTimeRemaining !== null && (
-              <div className="timer-overlay-above">
-                {turnTimeRemaining}
-              </div>
+          <div className="d-flex align-items-center ml-5 ms-5 position-relative">
+            {currentTurn === "top" && turnTimeRemaining !== null && (
+              <div className="timer-overlay-above">{turnTimeRemaining}</div>
             )}
             {showPopup && answeringPlayer === "top" && (
               <div
@@ -415,16 +417,21 @@ function NusaCard() {
                 position="left"
               />
             </div>
-            <Image
-              src={getPlayerByPosition("top").photo}
-              alt="Player Profile"
-              style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-                marginLeft: "100px",
-              }}
-            />
+            <div className="player-info">
+              <Image
+                src={getPlayerByPosition("top").photo}
+                alt="Player Profile"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                  marginLeft: "100px",
+                }}
+              />
+              <div className="player-name">
+                {getPlayerByPosition("top").name}
+              </div>
+            </div>
             {renderFeedbackIcon("top")}
           </div>
         </Col>
@@ -439,10 +446,8 @@ function NusaCard() {
               className="d-flex flex-column align-items-center position-relative"
               onClick={() => handleDeckCardClick("left")}
             >
-              {currentTurn === 'left' && turnTimeRemaining !== null && (
-                <div className="timer-overlay-above">
-                  {turnTimeRemaining}
-                </div>
+              {currentTurn === "left" && turnTimeRemaining !== null && (
+                <div className="timer-overlay-above">{turnTimeRemaining}</div>
               )}
               {showPopup && answeringPlayer === "left" && (
                 <div className="timer-overlay">{timeRemaining}</div>
@@ -456,6 +461,9 @@ function NusaCard() {
                   borderRadius: "50%",
                 }}
               />
+              <div className="player-name">
+                {getPlayerByPosition("left").name}
+              </div>
               {renderFeedbackIcon("left")}
               <DeckPlayer
                 count={deckCounts.left}
@@ -497,10 +505,8 @@ function NusaCard() {
               className="d-flex flex-column align-items-center position-relative"
               onClick={() => handleDeckCardClick("right")}
             >
-              {currentTurn === 'right' && turnTimeRemaining !== null && (
-                <div className="timer-overlay-above">
-                  {turnTimeRemaining}
-                </div>
+              {currentTurn === "right" && turnTimeRemaining !== null && (
+                <div className="timer-overlay-above">{turnTimeRemaining}</div>
               )}
               {showPopup && answeringPlayer === "right" && (
                 <div className="timer-overlay">{timeRemaining}</div>
@@ -514,6 +520,9 @@ function NusaCard() {
                   borderRadius: "50%",
                 }}
               />
+              <div className="player-name">
+                {getPlayerByPosition("right").name}
+              </div>
               {renderFeedbackIcon("right")}
               <DeckPlayer
                 count={deckCounts.right}
@@ -533,10 +542,8 @@ function NusaCard() {
             {showPopup && answeringPlayer === "bottom" && (
               <div className="timer-overlay">{timeRemaining}</div>
             )}
-            {currentTurn === 'bottom' && turnTimeRemaining !== null && (
-              <div className="timer-overlay-above">
-                {turnTimeRemaining}
-              </div>
+            {currentTurn === "bottom" && turnTimeRemaining !== null && (
+              <div className="timer-overlay-above">{turnTimeRemaining}</div>
             )}
             <BottomDeckCard
               cards={cards}
@@ -547,17 +554,24 @@ function NusaCard() {
             {renderFeedbackIcon("bottom")}
           </div>
         </Col>
-        <Col xs="auto" className="d-flex align-items-center p-3 position-relative">
+        <Col
+          xs="auto"
+          className="d-flex flex-column align-items-center p-3 position-relative"
+        >
           <Image
             src={getPlayerByPosition("bottom").photo}
             alt="Player Bottom"
             style={{ width: "80px", height: "80px", borderRadius: "50%" }}
           />
+          <div className="player-name">
+            {getPlayerByPosition("bottom").name}
+          </div>
         </Col>
       </Row>
 
       {/* Show the question popup */}
-      {showPopup && activeCard && !hasAnswered && ( // Prevent showing popup if answered
+      {showPopup && activeCard && !hasAnswered && (
+        // Prevent showing popup if answered
         <>
           <div style={{ position: "relative", zIndex: "2000" }}>
             <PertanyaanNuca
@@ -569,7 +583,7 @@ function NusaCard() {
             />
           </div>
           <div className="potion-icon">
-          <Potion />
+            <Potion />
           </div>
         </>
       )}
@@ -582,7 +596,7 @@ function NusaCard() {
             alt="Victory Logo"
             className="victory-logo"
           />
-          {/* Menghapus tampilan nama pemenang */}
+          <p>Pemenang: {getWinnerName()}</p>
           <p>Kamu mendapatkan:</p>
           <div className="rewards">
             <img

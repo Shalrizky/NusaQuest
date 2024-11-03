@@ -387,55 +387,44 @@ function NusaCard() {
     >
       <HeaderNuca layout="home" />
 
-      {/* Top Row */}
-      <Row className="mb-5 justify-content-center align-items-center">
-        <Col
-          md={2}
-          xs={12}
-          className="text-center ms-5 ml-5 d-flex align-items-center position-relative"
-        >
-          <div className="d-flex align-items-center ml-5 ms-5 position-relative">
-            {currentTurn === "top" && turnTimeRemaining !== null && (
-              <div className="timer-overlay-above">{turnTimeRemaining}</div>
-            )}
-            {showPopup && answeringPlayer === "top" && (
-              <div
-                className={`timer-overlay ${
-                  timeRemaining <= 5 ? "shake-animation" : ""
-                }`}
-              >
-                {timeRemaining}
-              </div>
-            )}
-            <div
-              onClick={() => handleDeckCardClick("top")}
-              style={{ position: "relative" }}
-            >
-              <DeckPlayer
-                count={deckCounts.top}
-                isNew={deckCounts.top === 0}
-                position="left"
-              />
-            </div>
-            <div className="player-info">
-              <Image
-                src={getPlayerByPosition("top").photo}
-                alt="Player Profile"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "50%",
-                  marginLeft: "100px",
-                }}
-              />
-              <div className="player-name">
-                {getPlayerByPosition("top").name}
-              </div>
-            </div>
-            {renderFeedbackIcon("top")}
-          </div>
-        </Col>
-      </Row>
+      <Row className="align-items-center justify-content-center">
+  {/* DeckPlayer Column */}
+  <Col xs="auto" className="text-center position-relative ms-5 ps-5">
+    <div
+      onClick={() => handleDeckCardClick("top")}
+      className="d-flex align-items-center"
+    >
+      {currentTurn === "top" && turnTimeRemaining !== null && (
+        <div className="timer-overlay-above">{turnTimeRemaining}</div>
+      )}
+      {showPopup && answeringPlayer === "top" && (
+        <div className="timer-overlay">{timeRemaining}</div>
+      )}
+      <DeckPlayer
+        count={deckCounts.top}
+        isNew={deckCounts.top === 0}
+        position="left"
+      />
+    </div>
+  </Col>
+
+  {/* Player Profile Column */}
+  <Col xs="auto" className="d-flex flex-column position-relative ms-5 ps-5">
+    <Image
+      src={getPlayerByPosition("top").photo}
+      alt="Player Profile"
+      style={{
+        width: "80px",
+        height: "80px",
+        borderRadius: "50%",
+      }}
+    />
+    <div className="player-name mt-2">
+      {getPlayerByPosition("top").name}
+    </div>
+    {renderFeedbackIcon("top")}
+  </Col>
+</Row>
 
       {/* Middle Row - Modified to spread decks wider */}
       <Container fluid>

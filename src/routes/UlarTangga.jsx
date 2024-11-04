@@ -1,5 +1,5 @@
 // UlarTangga.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Container, Row, Col, Spinner } from "react-bootstrap";
 import useAuth from "../hooks/useAuth";
@@ -15,7 +15,6 @@ import {
   initializeGameState,
   updateGameState,
   listenToGameState,
-  updateDiceState,
   setGameStatus,
   setGameStartStatus,
   cleanupGame,
@@ -93,11 +92,10 @@ function UlarTangga() {
     currentNumber: 1,
     lastRoll: null,
   });
+  const [playerTimers, setPlayerTimers] = useState([]);
 
-  const [timeLeft, resetPlayerTimer] = usePlayerTimer(30, () =>
-    handleTimeOut()
-  );
-  const gameTimeLeft = useGameTimer(1800, () => setGameOver(true));
+  // Initialize prevPlayerIndexRef at the top level
+  const prevPlayerIndexRef = useRef(currentPlayerIndex);
 
   // Initialize game
   useEffect(() => {
@@ -114,7 +112,67 @@ function UlarTangga() {
     };
 
     initGame();
-  }, [topicID, gameID, roomID, players, setGameStatus, initializeGameState]);
+  }, [topicID, gameID, roomID, players]);
+
+  // Fetch and update players
+  useEffect(() => {
+    if (!isGameReady) return;
+
+    const unsubscribe = fetchGamePlayers(
+      topicID,
+      gameID,
+      roomID,
+      (playersData) => {
+        setPlayers(playersData);
+        setPionPositionIndex(new Array(playersData.length).fill(0));
+        setPlayerTimers(new Array(playersData.length).fill(10)); // Initialize timers
+        if (playersData.length === 0) {
+          cleanupGame(topicID, gameID, roomID, user);
+          navigate("/");
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, [isGameReady, topicID, gameID, roomID, user, navigate]);
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      if (victory || gameOver) {
+        setGameStartStatus(topicID, gameID, roomID, false);
+        cleanupGame(topicID, gameID, roomID, user);
+      }
+    };
+  }, [victory, gameOver, topicID, gameID, roomID, user]);
+
+  const handleTimeOut = useCallback(async () => {
+    await updateGameState(topicID, gameID, roomID, {
+      currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+      waitingForAnswer: false,
+      showQuestion: false,
+      isCorrect: null,
+      potionUsable: false,
+      diceState: {
+        isRolling: false,
+        currentNumber: 1,
+        lastRoll: null,
+      },
+    });
+  }, [topicID, gameID, roomID, currentPlayerIndex, players.length]);
+
+
+    const [timeLeft, resetPlayerTimer] = usePlayerTimer(10, handleTimeOut, {
+    topicID,
+    gameID,
+    roomID,
+    isMyTurn,
+    currentPlayerIndex,
+    playerTimers,
+    waitingForAnswer,
+  });
+
+  const gameTimeLeft = useGameTimer(1800, () => setGameOver(true));
 
   // Listen to game state changes
   useEffect(() => {
@@ -141,14 +199,15 @@ function UlarTangga() {
           }
         );
 
-        // Check if it's current user's turn
+        // Update playerTimers
+        if (gameState.playerTimers) {
+          setPlayerTimers(gameState.playerTimers);
+        }
+
+        // Update isMyTurn
         const isCurrentPlayerTurn =
           players[gameState.currentPlayerIndex]?.uid === user?.uid;
         setIsMyTurn(isCurrentPlayerTurn);
-
-        if (isCurrentPlayerTurn) {
-          resetPlayerTimer();
-        }
 
         // Check for victory
         if (gameState.pionPositions?.some((pos) => pos === 99)) {
@@ -164,53 +223,13 @@ function UlarTangga() {
     return () => unsubscribe();
   }, [isGameReady, players, user?.uid]);
 
-  // Fetch and update players
+  // Reset timer when currentPlayerIndex changes
   useEffect(() => {
-    if (!isGameReady) return;
-
-    const unsubscribe = fetchGamePlayers(
-      topicID,
-      gameID,
-      roomID,
-      (playersData) => {
-        setPlayers(playersData);
-        if (playersData.length === 0) {
-          cleanupGame(topicID, gameID, roomID, user);
-          navigate("/");
-        }
-      }
-    );
-
-    return () => unsubscribe();
-  }, [isGameReady, topicID, gameID, roomID, user, navigate]);
-
-  // Cleanup effect
-  useEffect(() => {
-    return () => {
-      if (victory || gameOver) {
-        setGameStartStatus(topicID, gameID, roomID, false);
-        cleanupGame(topicID, gameID, roomID, user);
-      }
-    };
-  }, [victory, gameOver, topicID, gameID, roomID, user]);
-
-  // Handle timeout
-  const handleTimeOut = async () => {
-    if (isMyTurn) {
-      await updateGameState(topicID, gameID, roomID, {
-        currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-        waitingForAnswer: false,
-        showQuestion: false,
-        isCorrect: null,
-        potionUsable: false,
-        diceState: {
-          isRolling: false,
-          currentNumber: 1,
-          lastRoll: null,
-        },
-      });
+    if (prevPlayerIndexRef.current !== currentPlayerIndex) {
+      resetPlayerTimer();
     }
-  };
+    prevPlayerIndexRef.current = currentPlayerIndex;
+  }, [currentPlayerIndex, resetPlayerTimer]);
 
   // Handle dice roll
   const handleDiceRollComplete = async (diceNumber, isInitialRoll) => {
@@ -306,6 +325,7 @@ function UlarTangga() {
           waitingForAnswer: false,
           potionUsable: false,
           allowExtraRoll: false,
+          playerTimers: new Array(players.length).fill(10), // Reset timer
         });
       } else {
         const newPositions = [...pionPositionIndex];
@@ -321,6 +341,7 @@ function UlarTangga() {
           showQuestion: false,
           waitingForAnswer: false,
           allowExtraRoll: false,
+          playerTimers: new Array(players.length).fill(10), // Reset timer
         });
       }
     } else {
@@ -329,61 +350,72 @@ function UlarTangga() {
         showQuestion: false,
         waitingForAnswer: false,
         allowExtraRoll: false,
+        playerTimers: new Array(players.length).fill(10), // Reset timer
       });
     }
 
     setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
   };
 
-  // Di UlarTangga.js, update handlePotionUse
+  // Handle potion use
   const handlePotionUse = async () => {
     if (!isMyTurn || !potionUsable) return;
 
     const currentPos = pionPositionIndex[currentPlayerIndex];
-    if (tanggaUp[currentPos]) {
-      try {
-        // Set moving state first
-        await updateGameState(topicID, gameID, roomID, {
-          isMoving: true,
-        });
 
-        // Calculate new position
-        const newPositions = [...pionPositionIndex];
+    try {
+      // Set moving state first
+      await updateGameState(topicID, gameID, roomID, {
+        isMoving: true,
+      });
+
+      const newPositions = [...pionPositionIndex];
+
+      // Handle both cases: ladder and rolling a 6
+      if (tanggaUp[currentPos]) {
+        // Move to the top of the ladder
         newPositions[currentPlayerIndex] = tanggaUp[currentPos];
+      }
 
-        setIsPotionUsed(true);
+      setIsPotionUsed(true);
 
-        // Update game state with new position and clear question
-        await updateGameState(topicID, gameID, roomID, {
-          pionPositions: newPositions,
-          waitingForAnswer: false,
-          showQuestion: false,
-          isCorrect: true,
-          potionUsable: false,
-          allowExtraRoll: false,
-        });
+      // Update game state
+      await updateGameState(topicID, gameID, roomID, {
+        pionPositions: newPositions,
+        waitingForAnswer: false,
+        showQuestion: false,
+        isCorrect: true,
+        potionUsable: false,
+        allowExtraRoll: diceState.lastRoll === 6, // Grant extra roll if dice roll was 6
+      });
 
-        // Wait for animation
-        setTimeout(async () => {
-          // Move to next player
+      // Wait for animation
+      setTimeout(async () => {
+        if (diceState.lastRoll === 6) {
+          // If dice roll was 6, reset question state and let player roll again
+          await updateGameState(topicID, gameID, roomID, {
+            isMoving: false,
+          });
+        } else {
+          // If not, move to the next player
           await updateGameState(topicID, gameID, roomID, {
             isMoving: false,
             currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
           });
+        }
 
-          setIsPotionUsed(false);
-        }, 1000);
-      } catch (error) {
-        console.error("Error using potion:", error);
-        // Reset states if error occurs
         setIsPotionUsed(false);
-        await updateGameState(topicID, gameID, roomID, {
-          isMoving: false,
-          potionUsable: true,
-        });
-      }
+      }, 1000);
+    } catch (error) {
+      console.error("Error using potion:", error);
+      setIsPotionUsed(false);
+      await updateGameState(topicID, gameID, roomID, {
+        isMoving: false,
+        potionUsable: true,
+      });
     }
   };
+
   // Award victory potions
   const awardVictoryPotions = async (winningPlayer) => {
     try {
@@ -391,7 +423,7 @@ function UlarTangga() {
       if (currentPotionData) {
         await saveNewPotionData(winningPlayer.uid, {
           item_name: currentPotionData.item_name,
-          item_count: currentPotionData.item_count + 2,
+          item_count: currentPotionData.item_count + 1,
           item_img: currentPotionData.item_img,
         });
       }
@@ -400,6 +432,7 @@ function UlarTangga() {
     }
   };
 
+  // Render logic
   if (!isGameReady) {
     return (
       <div className="loading-container d-flex justify-content-center align-items-center vh-100">
@@ -442,10 +475,11 @@ function UlarTangga() {
           />
 
           <div className="timer-player d-flex justify-content-center align-items-center gap-2 mb-3">
-            <span className="timer-count">{timeLeft}</span>
+            <span className="timer-count">
+              {isMyTurn ? timeLeft : playerTimers[currentPlayerIndex] || 10}
+            </span>
             <span className="timer-text">Sec</span>
           </div>
-
           <Dice
             onRollComplete={handleDiceRollComplete}
             disabled={!isMyTurn || isPionMoving || waitingForAnswer}
@@ -461,7 +495,8 @@ function UlarTangga() {
               !isPotionUsed &&
               showQuestion &&
               waitingForAnswer &&
-              tanggaUp[pionPositionIndex[currentPlayerIndex]]
+              (tanggaUp[pionPositionIndex[currentPlayerIndex]] ||
+                diceState.lastRoll === 6)
             }
           />
           <PlayerList

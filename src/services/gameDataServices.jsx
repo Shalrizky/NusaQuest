@@ -67,9 +67,12 @@ export const initializeGameState = async (topicID, gameID, roomID, players) => {
   try {
     const snapshot = await get(gameStateRef);
     if (!snapshot.exists()) {
+      // Pastikan players adalah array dan memiliki length
+      const playerCount = Array.isArray(players) ? players.length : 0;
+      
       const initialState = {
         currentPlayerIndex: 0,
-        pionPositions: new Array(players.length).fill(0),
+        pionPositions: Array(playerCount).fill(0), // Buat array sesuai jumlah pemain
         isMoving: false,
         showQuestion: false,
         waitingForAnswer: false,
@@ -84,7 +87,7 @@ export const initializeGameState = async (topicID, gameID, roomID, players) => {
           currentNumber: 1,
           lastRoll: null
         },
-        playerTimers: new Array(players.length).fill(30), // Initialize player timers
+        playerTimers: Array(playerCount).fill(30), // Sesuaikan juga untuk timer
       };
       await set(gameStateRef, initialState);
     }

@@ -313,11 +313,11 @@ function UlarTangga() {
   // Handle answer changes
   const handleAnswerChange = async (isAnswerCorrect) => {
     if (!isMyTurn) return;
-
+  
     await updateGameState(topicID, gameID, roomID, {
       isCorrect: isAnswerCorrect,
     });
-
+  
     if (isAnswerCorrect) {
       if (allowExtraRoll) {
         await updateGameState(topicID, gameID, roomID, {
@@ -325,23 +325,24 @@ function UlarTangga() {
           waitingForAnswer: false,
           potionUsable: false,
           allowExtraRoll: false,
-          playerTimers: new Array(players.length).fill(10), // Reset timer
         });
+        // Reset timer tanpa mengubah giliran
+        resetPlayerTimer();
       } else {
         const newPositions = [...pionPositionIndex];
         const currentPos = newPositions[currentPlayerIndex];
-
+  
         if (tanggaUp[currentPos]) {
           newPositions[currentPlayerIndex] = tanggaUp[currentPos];
         }
-
+  
         await updateGameState(topicID, gameID, roomID, {
           pionPositions: newPositions,
           currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
           showQuestion: false,
           waitingForAnswer: false,
           allowExtraRoll: false,
-          playerTimers: new Array(players.length).fill(10), // Reset timer
+          playerTimers: new Array(players.length).fill(10), // Reset timer pemain berikutnya
         });
       }
     } else {
@@ -350,60 +351,58 @@ function UlarTangga() {
         showQuestion: false,
         waitingForAnswer: false,
         allowExtraRoll: false,
-        playerTimers: new Array(players.length).fill(10), // Reset timer
+        playerTimers: new Array(players.length).fill(10), // Reset timer pemain berikutnya
       });
     }
-
+  
     setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
   };
+  
 
   // Handle potion use
   const handlePotionUse = async () => {
     if (!isMyTurn || !potionUsable) return;
-
+  
     const currentPos = pionPositionIndex[currentPlayerIndex];
-
+  
     try {
-      // Set moving state first
       await updateGameState(topicID, gameID, roomID, {
         isMoving: true,
       });
-
+  
       const newPositions = [...pionPositionIndex];
-
-      // Handle both cases: ladder and rolling a 6
+  
       if (tanggaUp[currentPos]) {
-        // Move to the top of the ladder
         newPositions[currentPlayerIndex] = tanggaUp[currentPos];
       }
-
+  
       setIsPotionUsed(true);
-
-      // Update game state
+  
       await updateGameState(topicID, gameID, roomID, {
         pionPositions: newPositions,
         waitingForAnswer: false,
         showQuestion: false,
         isCorrect: true,
         potionUsable: false,
-        allowExtraRoll: diceState.lastRoll === 6, // Grant extra roll if dice roll was 6
+        allowExtraRoll: diceState.lastRoll === 6,
       });
-
-      // Wait for animation
+  
+      // Reset timer hanya jika dadu terakhir adalah 6
+      if (diceState.lastRoll === 6) {
+        resetPlayerTimer();
+      }
+  
       setTimeout(async () => {
         if (diceState.lastRoll === 6) {
-          // If dice roll was 6, reset question state and let player roll again
           await updateGameState(topicID, gameID, roomID, {
             isMoving: false,
           });
         } else {
-          // If not, move to the next player
           await updateGameState(topicID, gameID, roomID, {
             isMoving: false,
             currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
           });
         }
-
         setIsPotionUsed(false);
       }, 1000);
     } catch (error) {
@@ -415,6 +414,7 @@ function UlarTangga() {
       });
     }
   };
+  
 
   // Award victory potions
   const awardVictoryPotions = async (winningPlayer) => {

@@ -1,27 +1,26 @@
-import { database, ref, onValue } from "../firebaseConfig";
+// questionService.js
+import { database, ref, get } from "../firebaseConfig";
 
-export const fetchQuestions = (setQuestions) => {
-    const questionsRef = ref(database, "questions");
-    onValue(questionsRef, (snapshot) => {
-        const data = snapshot.val();
-        console.log("Raw Firebase Data:", data);  // Debugging untuk lihat data mentah
-        if (data) {
-            // Format dan filter berdasarkan topik
-            const formattedQuestions = Object.keys(data)
-              .map(key => ({
-                  id: key,
-                  ...data[key],
-              }))
-              .filter(question => question.topic === "pariwisata_darat");  // Filter berdasarkan topik
-
-            console.log("Formatted and Filtered Questions (pariwisata_darat):", formattedQuestions);  // Debug setelah pemrosesan
-            setQuestions(formattedQuestions);  // Set state dengan pertanyaan yang sudah difilter
-        } else {
-            console.log("No data found in Firebase");
-            setQuestions([]);  // Tetap set state agar tidak terjadi error
-        }
-    });
-};
-
-
-
+export const fetchQuestions = async () => {
+    try {
+      const questionsRef = ref(database, "questions");
+      const snapshot = await get(questionsRef);
+  
+      if (snapshot.exists()) {
+        const questionsList = [];
+        snapshot.forEach((childSnapshot) => {
+          questionsList.push({
+            id: childSnapshot.key,
+            ...childSnapshot.val(),
+          });
+        });
+        return questionsList;
+      } else {
+        console.log("No questions found in the database.");
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching questions: ", error);
+      return [];
+    }
+  };

@@ -5,12 +5,13 @@ import HeaderUtangga from "../components/games/HeaderGame";
 import Board from "../components/games/React-KonvaUlar";
 import Dice from "../components/games/Dice";
 import Potion from "../components/games/potion";
-// import  {fetchQuestions} from "../services/questionServices";
+import Question from "../components/games/Question";
+import { fetchQuestions } from "../services/questionServices";
 import "../style/routes/UlarTangga.css";
-import victoryImage from "../assets/games/Utangga/victory.png"
-import Achievement from "../assets/games/Utangga/achievement1.png"
-import Achievement2 from "../assets/games/Utangga/achievement2.png"
-import potionImage from "../assets/games/Utangga/potion.png"
+import victoryImage from "../assets/games/Utangga/victory.png";
+import Achievement from "../assets/games/Utangga/achievement1.png";
+import Achievement2 from "../assets/games/Utangga/achievement2.png";
+import potionImage from "../assets/games/Utangga/potion.png";
 import bgUlarTangga from "../assets/common/bg-ular.png";
 
 // Definisi pemain dummy
@@ -34,22 +35,6 @@ const players = [
     id: 4,
     name: "natah",
     photo: require("../assets/games/Utangga/narutoa.png"),
-  },
-];
-
-// Definisi pertanyaan
-const questions = [
-  {
-    id: 1,
-    question: "Makanan paling enak apa di Jawa?",
-    options: ["Soto Betawi", "Gudeg", "Batagor", "Rendang"],
-    correctAnswer: "Gudeg",
-  },
-  {
-    id: 2,
-    question: "Siapa pahlawan nasional dari Jawa Timur?",
-    options: ["Diponegoro", "Sudirman", "Bung Tomo", "Soekarno"],
-    correctAnswer: "Bung Tomo",
   },
 ];
 
@@ -87,6 +72,8 @@ function UlarTangga() {
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(null); //baru
+  const [questions, setQuestions] = useState([]);
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
   const [victory, setVictory] = useState(false);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
@@ -95,26 +82,34 @@ function UlarTangga() {
   const [gameTimeLeft, setGameTimeLeft] = useState(1800);
   const [gameOver, setGameOver] = useState(false);
 
-  // const [questions, setQuestions] = useState([]);
-
-  // useEffect(() => {
-  //   fetchQuestions(setQuestions);  // Panggil tanpa async/await
-  // }, []);
-
-  // useEffect(() => {
-  //   // Debug untuk memastikan questions ter-update
-  //   console.log("Updated Questions State:", questions);
-  // }, [questions]);  // Akan dipanggil setiap kali questions berubah
-
-
   const navigate = useNavigate();
 
-  const logPionPositions = (newPositions) => {
-  };
+  useEffect(() => {
+    const loadQuestions = async () => {
+      const fetchedQuestions = await fetchQuestions();
+      if (fetchedQuestions.length > 0) {
+        setQuestions(fetchedQuestions);
+        setCurrentQuestion(fetchedQuestions[0]); // Now this will work
+        console.log("Fetched questions:", fetchedQuestions);
+      }
+    };
+    loadQuestions();
+  }, []);
+  
+
+  useEffect(() => {
+    console.log("Show Question:", showQuestion);
+    console.log("Current Question:", currentQuestion);
+    console.log("Waiting for Answer:", waitingForAnswer);
+  }, [showQuestion, currentQuestion, waitingForAnswer]);
+  
+  // const currentQuestion = questions.length > 0 ? questions[currentQuestionIndex] : null;
+
+  const logPionPositions = (newPositions) => { };
 
   const nextPlayer = () => {
     setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-    setTimeLeft(30); // Reset waktu ke 3 detik untuk pemain berikutnya
+    setTimeLeft(30);
   };
 
   // Pindah ke pemain berikutnya jika waktu habis
@@ -131,18 +126,13 @@ function UlarTangga() {
   useEffect(() => {
     if (gameTimeLeft > 0) {
       const gameTimer = setInterval(() => {
-        setGameTimeLeft((prevTime) => {
-          const newTime = prevTime - 1;
-          console.log("Sisa waktu permainan:", Math.floor(newTime / 60) + ":" + String(newTime % 60).padStart(2, '0'));
-          return newTime;
-        });
+        setGameTimeLeft((prevTime) => prevTime - 1);
       }, 1000);
       return () => clearInterval(gameTimer);
     } else {
       setGameOver(true);
     }
   }, [gameTimeLeft]);
-
 
   useEffect(() => {
     if (gameOver) {
@@ -151,23 +141,19 @@ function UlarTangga() {
     }
   }, [gameOver, navigate]);
 
-
   useEffect(() => {
-    if (showQuestion) {
-
-      if (timeLeft > 0) {
-        const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-        return () => clearTimeout(timerId);
-      } else {
-
-        nextPlayer();
-        setShowQuestion(false);
-        setWaitingForAnswer(false);
-      }
+    if (showQuestion && timeLeft > 0) {
+      const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timerId);
+    } else if (timeLeft === 0) {
+      nextPlayer();
+      setShowQuestion(false);
+      setWaitingForAnswer(false);
     }
   }, [timeLeft, showQuestion]);
 
-  const handleDiceRollComplete = (diceNumber) => {
+  const handleDiceRollComplete = () => {
+    const diceNumber = 5;
     setIsPionMoving(true);
 
     setPionPositionIndex((prevPositions) => {
@@ -183,7 +169,6 @@ function UlarTangga() {
         setWinner(players[currentPlayerIndex].name);
       }
 
-      logPionPositions(newPositions);
       return newPositions;
     });
 
@@ -194,37 +179,21 @@ function UlarTangga() {
 
         if (victory) return prevPositions;
 
-        // Jika bertemu tangga, tampilkan pertanyaan khusus untuk naik tangga
-        if (tanggaUp[newPosition]) {
+        if (tanggaUp[newPosition] || diceNumber === 6) {
+          const nextQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+          setCurrentQuestionIndex(nextQuestionIndex);
+          setCurrentQuestion(questions[nextQuestionIndex]); // Now this will work
           setShowQuestion(true);
           setWaitingForAnswer(true);
           setSubmitted(false);
           setIsCorrect(null);
-          setAllowExtraRoll(false);
-        }
-        // Jika bertemu ular, turun otomatis dan giliran berpindah
-        else if (snakesDown[newPosition]) {
+          setAllowExtraRoll(diceNumber === 6);
+        } else if (snakesDown[newPosition]) {
           newPosition = snakesDown[newPosition];
           newPositions[currentPlayerIndex] = newPosition;
-          logPionPositions(newPositions);
           setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
-        }
-        // Jika mendapatkan angka 6, berikan pertanyaan untuk giliran ulang
-        else if (diceNumber === 6) {
-          setShowQuestion(true);
-          setWaitingForAnswer(true);
-          setSubmitted(false);
-          setIsCorrect(null);
-          setAllowExtraRoll(true);
-        }
-        // Jika pemain sudah mendapat kesempatan roll ulang sebelumnya
-        else if (allowExtraRoll) {
-          setAllowExtraRoll(false);
-          nextPlayer(); // Pindah ke pemain berikutnya
-        }
-        // Jika bukan angka 6 dan tidak ada roll ulang, pindah ke pemain berikutnya
-        else {
-          nextPlayer(); // Pindah ke pemain berikutnya
+        } else {
+          nextPlayer();
         }
 
         return newPositions;
@@ -233,10 +202,9 @@ function UlarTangga() {
       setIsPionMoving(false);
     }, 2000);
 
-    // Reset state setelah pemain selesai
     setSubmitted(false);
     setIsCorrect(null);
-    setTimeLeft(30); // Reset timer ke 3 detik setelah lemparan selesai
+    setTimeLeft(30);
   };
 
 
@@ -244,50 +212,44 @@ function UlarTangga() {
     const answer = e.target.value;
     setSelectedAnswer(answer);
 
-    const correctAnswer = questions[currentQuestionIndex].correctAnswer;
+    const correctAnswer = currentQuestion?.correctAnswer;
     const isAnswerCorrect = answer === correctAnswer;
     setIsCorrect(isAnswerCorrect);
     setSubmitted(true);
 
     if (isAnswerCorrect) {
-      if (allowExtraRoll) {
-      } else {
+      if (!allowExtraRoll) {
         setPionPositionIndex((prevPositions) => {
           const newPositions = [...prevPositions];
           const currentPos = newPositions[currentPlayerIndex];
 
           if (tanggaUp[currentPos]) {
-            const targetPosition = tanggaUp[currentPos];
-            newPositions[currentPlayerIndex] = targetPosition;
+            newPositions[currentPlayerIndex] = tanggaUp[currentPos];
           }
 
-          logPionPositions(newPositions);
           return newPositions;
         });
-        setAllowExtraRoll(false);
-        setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
       }
-    } else {
-      setAllowExtraRoll(false);
-      setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
     }
 
     setTimeout(() => {
       setShowQuestion(false);
       setWaitingForAnswer(false);
-      setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
+      const nextQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+      setCurrentQuestionIndex(nextQuestionIndex);
+      setCurrentQuestion(questions[nextQuestionIndex]); // Now this will work
+      
+      if (!isAnswerCorrect || !allowExtraRoll) {
+        setCurrentPlayerIndex((prevIndex) => (prevIndex + 1) % players.length);
+      }
+      setAllowExtraRoll(false);
     }, 1800);
   };
 
   return (
 
-    <Container
-      fluid
-      className="utangga-container"
-      style={{ backgroundImage: `url(${bgUlarTangga})` }}
-    >
+    <Container fluid className="utangga-container" style={{ backgroundImage: `url(${bgUlarTangga})` }}>
       <HeaderUtangga layout="home" />
-
       <Row className="utu-container-left">
         <Col xs={12} md={6} className="utu-konva">
           <Board
@@ -302,71 +264,34 @@ function UlarTangga() {
           />
         </Col>
 
-        <Col
-          xs={12}
-          md={6}
-          className="d-flex flex-column align-items-center justify-content-start"
-        >
-          <div className="player-turn-box">
+        <Col xs={12} md={6} className="d-flex flex-column align-items-center justify-content-start">
+        <div className="player-turn-box">
             {players[currentPlayerIndex] ? (
               <h3>{players[currentPlayerIndex].name}'s Turn</h3>
             ) : (
               <h3>Waiting for player...</h3>
             )}
-            {showQuestion && waitingForAnswer && (
-              <Form>
-                <Form.Group>
-                  <Form.Label>
-                    {questions[currentQuestionIndex].question}
-                  </Form.Label>
-                  {questions[currentQuestionIndex].options.map(
-                    (option, index) => (
-                      <div
-                        key={index}
-                        className={`form-check ${submitted
-                          ? option ===
-                            questions[currentQuestionIndex].correctAnswer
-                            ? "correct-answer"
-                            : "wrong-answer"
-                          : ""
-                          }`}
-                      >
-                        <input
-                          type="radio"
-                          name="foodChoice"
-                          id={`foodChoice${index}`}
-                          value={option}
-                          onChange={handleAnswerChange}
-                          checked={selectedAnswer === option}
-                          className="d-none"
-                        />
-                        <label
-                          htmlFor={`foodChoice${index}`}
-                          className="form-check-label"
-                        >
-                          {option}
-                        </label>
-                      </div>
-                    )
-                  )}
-                </Form.Group>
-              </Form>
-            )}
+            {showQuestion && currentQuestion ? (
+              <Question
+                currentQuestion={currentQuestion}
+                selectedAnswer={selectedAnswer}
+                handleAnswerChange={handleAnswerChange}
+                submitted={submitted}
+                isCorrect={isCorrect}
+              />
+            ) : null}
           </div>
 
-          {/*Timer pemain*/}
           <div className="timer-display">
             <span className="time-text">{timeLeft}</span>
             <span className="time-label">Sec</span>
           </div>
 
-          {/*kelas menggabungkan dice sama potion*/}
           <div className="dice-potion-container">
             <Dice onRollComplete={handleDiceRollComplete} disabled={isPionMoving || waitingForAnswer} />
             <Potion />
           </div>
 
-          {/* Daftar pemain */}
           <div className="player-list mt-3">
             {players.map((player, index) => (
               <div
@@ -374,22 +299,15 @@ function UlarTangga() {
                 className={`player-item d-flex align-items-center ${currentPlayerIndex === index ? "active-player" : ""
                   }`}
               >
-                <Image
-                  src={player.photo || "path/to/placeholder.jpg"}
-                  roundedCircle
-                  width={40}
-                  height={40}
-                />
-                {currentPlayerIndex === index && (
-                  <span className="ml-2">{player.name}</span>
-                )}
+                <Image src={player.photo || "path/to/placeholder.jpg"} roundedCircle width={40} height={40} />
+                {currentPlayerIndex === index && <span className="ml-2">{player.name}</span>}
               </div>
             ))}
           </div>
+
         </Col>
       </Row>
 
-      {/* Overlay Victory */}
       {victory && (
         <div className="victory-overlay" onClick={() => navigate("/")}>
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
@@ -408,5 +326,3 @@ function UlarTangga() {
 }
 
 export default UlarTangga;
-
-// ini yang bener + timer

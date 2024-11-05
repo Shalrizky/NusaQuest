@@ -161,7 +161,6 @@ export const clearChatMessages = async (topicID, gameID, roomID) => {
   );
   try {
     await remove(chatRef);
-    console.log("Chat messages cleared successfully");
   } catch (error) {
     console.error("Error clearing chat messages:", error);
   }
@@ -186,9 +185,6 @@ export const resetRoom = async (topicID, gameID, roomID) => {
         [`rooms/${topicID}/${gameID}/${roomID}/chatMessages`]: null,
       };
       await update(ref(database), updates);
-      console.log(
-        "Room reset: game status, chat messages, and current players cleared"
-      );
     }
   } catch (error) {
     console.error("Error resetting game status:", error);

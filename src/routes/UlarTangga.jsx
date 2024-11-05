@@ -78,6 +78,9 @@ function UlarTangga() {
   const topicIDRef = useRef(topicID);
   const roomIDRef = useRef(roomID);
 
+  // Ref untuk menandai apakah cleanup sudah dilakukan karena kemenangan
+  const hasCleanedUpRef = useRef(false);
+
   // State permainan
   const [players, setPlayers] = useState([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
@@ -136,8 +139,8 @@ function UlarTangga() {
       (playersData) => {
         setPlayers(playersData);
         setPionPositionIndex(new Array(playersData.length).fill(0));
-        setPlayerTimers(new Array(playersData.length).fill(10));
-        if (playersData.length === 0) {
+        setPlayerTimers(new Array(playersData.length).fill(30));
+        if (playersData.length === 0 && !hasCleanedUpRef.current) {
           cleanupGame(topicID, gameID, roomID, user);
           navigate("/");
         }
@@ -145,7 +148,7 @@ function UlarTangga() {
     );
 
     return () => unsubscribe();
-  }, [isGameReady, topicID, gameID, roomID, user, navigate]);
+  }, [isGameReady, topicID, gameID, roomID, user, navigate, victory]);
 
   // Cleanup effect
   useEffect(() => {
@@ -153,6 +156,7 @@ function UlarTangga() {
       stopGameTimer(topicID, gameID, roomID);
       setGameStartStatus(topicID, gameID, roomID, false);
       cleanupGame(topicID, gameID, roomID, user);
+      hasCleanedUpRef.current = true; // Tandai bahwa cleanup sudah dilakukan
     }
   }, [victory, gameOver, topicID, gameID, roomID, user]);
 
@@ -272,6 +276,11 @@ function UlarTangga() {
     }
     prevPlayerIndexRef.current = currentPlayerIndex;
   }, [currentPlayerIndex, resetPlayerTimer]);
+
+  const handleVictoryClose = useCallback(() => {
+    cleanupGame(topicID, gameID, roomID, user);
+    navigate("/"); // Navigasi ke halaman utama setelah overlay ditutup
+  }, [topicID, gameID, roomID, user, navigate]);
 
   // Handle dice roll
   const handleDiceRollComplete = async (diceNumber, isInitialRoll) => {
@@ -561,7 +570,7 @@ function UlarTangga() {
       </Row>
 
       {victory && (
-        <VictoryOverlay winner={winner} onClose={() => navigate("/")} />
+        <VictoryOverlay winner={winner} onClose={handleVictoryClose} />
       )}
 
       {gameOver && (

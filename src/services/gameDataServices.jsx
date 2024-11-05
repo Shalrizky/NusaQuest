@@ -281,17 +281,14 @@ export const cleanupGame = async (topicID, gameID, roomID, user) => {
   if (!topicID || !gameID || !roomID || !user?.uid) return;
 
   try {
-    console.log("Cleaning up game state...");
 
     // Reset gameState
     const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
     await set(gameStateRef, null);
-    console.log("gameState has been reset.");
 
     // Reset gameTimer
     const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
     await set(gameTimerRef, null);
-    console.log("Game timer has been reset.");
 
     // Reset game status and start status
     await setGameStatus(topicID, gameID, roomID, null);
@@ -307,7 +304,6 @@ export const cleanupGame = async (topicID, gameID, roomID, user) => {
 
     // Reset keseluruhan room data
     await resetRoom(topicID, gameID, roomID);
-    console.log("Room has been completely reset.");
   } catch (error) {
     console.error("Error cleaning up game:", error);
   }

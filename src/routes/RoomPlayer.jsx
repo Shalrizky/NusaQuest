@@ -79,7 +79,6 @@ function RoomPlayer() {
           return;
         }
 
-        // Check if player already in room
         const currentPlayersData = await getCurrentPlayers(
           topicID,
           gameID,
@@ -89,14 +88,12 @@ function RoomPlayer() {
           (p) => p.uid === user.uid
         );
 
-        // Jika player sudah ada di room, tetap izinkan akses
         if (isPlayerInRoom) {
           setIsRoomAccessible(true);
           setLoading(false);
           return;
         }
 
-        // Jika player belum ada di room, cek kapasitas
         let currentRoomData = null;
         await new Promise((resolve) => {
           fetchRooms(topicID, gameID, (rooms) => {
@@ -287,12 +284,10 @@ function RoomPlayer() {
 
   const playerArray = Array.from({ length: roomCapacity }, () => null);
 
-  // Place players in their positions
   players.forEach((player) => {
     playerArray[player.position] = player;
   });
 
-  // Render player cards
   const playerCards = isSinglePlayer ? (
     <CardVsAi
       key="vs-ai-card"

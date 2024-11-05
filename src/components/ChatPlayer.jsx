@@ -47,15 +47,24 @@ const ChatPlayer = ({
   }, []);
 
   useEffect(() => {
+    // Cek jika listener sudah diaktifkan, untuk mencegah penggandaan
     const unsubscribe = listenToChatMessages(
       topicID,
       gameID,
       roomID,
       (messageData) => {
-        setChat((prevChat) => [...prevChat, messageData]);
+        // Cek apakah pesan sudah ada di chat untuk menghindari duplikasi
+        setChat((prevChat) => {
+          if (prevChat.some((msg) => msg.timestamp === messageData.timestamp)) {
+            return prevChat; // Jika pesan sudah ada, tidak perlu menambahkannya lagi
+          }
+          return [...prevChat, messageData];
+        });
+
+        // Set the last message
         setLastMessage(`${messageData.user}: ${messageData.message}`);
 
-        // Use the ref to get the latest value of isChatOpen
+        // Open chat box if the message is from the current user and chat is closed
         if (messageData.user === user.displayName && !isChatOpenRef.current) {
           openChatBox();
         }
@@ -82,7 +91,7 @@ const ChatPlayer = ({
     if (currentMessage.trim() !== "") {
       const newMessage = {
         user: user.displayName,
-        userPhoto: userPhoto, 
+        userPhoto: userPhoto,
         message: currentMessage,
         timestamp: Date.now(),
       };
@@ -161,12 +170,12 @@ const ChatPlayer = ({
             {chat.map((chatMessage, index) => (
               <div key={index} className="chat-message">
                 <img
-                  src={chatMessage.userPhoto} // Use the userPhoto from each message
+                  src={chatMessage.userPhoto}
                   onError={handlePhotoError}
                   alt={`${chatMessage.user}`}
                   className="img-profile-chat"
                 />
-                : {chatMessage.message}
+                <span>: {chatMessage.message}</span>
               </div>
             ))}
           </div>

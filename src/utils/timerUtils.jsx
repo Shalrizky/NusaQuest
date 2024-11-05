@@ -6,17 +6,14 @@ export const usePlayerTimer = (initialTime, onTimeEnd, gameData) => {
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const timerIdRef = useRef(null);
 
-  // Referensi untuk playerTimers dan players.length untuk menghindari perubahan berulang pada dependensi
   const playerTimersRef = useRef(gameData.playerTimers);
   const playersLengthRef = useRef(gameData.players?.length);
 
-  // Simpan playerTimers dan players.length terbaru di ref setiap kali mereka berubah
   useEffect(() => {
     playerTimersRef.current = gameData.playerTimers;
     playersLengthRef.current = gameData.players?.length;
   }, [gameData.playerTimers, gameData.players?.length]);
 
-  // Stabilkan callback onTimeEnd untuk menghindari perubahan referensi yang tidak diinginkan
   const stableOnTimeEnd = useCallback(onTimeEnd, [onTimeEnd]);
 
   useEffect(() => {
@@ -74,7 +71,6 @@ export const usePlayerTimer = (initialTime, onTimeEnd, gameData) => {
         });
       }, 1000);
 
-      // Bersihkan interval ketika komponen dilepas atau ketika `isMyTurn` berubah
       return () => {
         clearInterval(timerIdRef.current);
         timerIdRef.current = null;
@@ -112,7 +108,7 @@ export const usePlayerTimer = (initialTime, onTimeEnd, gameData) => {
   return [timeLeft, resetTimer];
 };
 
-
+// Timer untuk jalannya game
 export const useGameTimer = (initialTime, onGameEnd, { topicID, gameID, roomID }) => {
   const [gameTimeLeft, setGameTimeLeft] = useState(initialTime);
 
@@ -129,8 +125,7 @@ export const useGameTimer = (initialTime, onGameEnd, { topicID, gameID, roomID }
           stopGameTimer(topicID, gameID, roomID);
           onGameEnd?.();
         } else {
-          clearInterval(interval); // Clear any existing interval
-          // Start local interval countdown
+          clearInterval(interval); 
           interval = setInterval(() => {
             setGameTimeLeft((prev) => {
               if (prev <= 1) {

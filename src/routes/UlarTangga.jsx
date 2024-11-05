@@ -1,10 +1,4 @@
-// UlarTangga.js
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Container, Row, Col, Spinner } from "react-bootstrap";
 import useAuth from "../hooks/useAuth";
@@ -25,7 +19,7 @@ import {
   initializeGameTimer,
   cleanupGame,
   stopGameTimer,
-  listenToGameTimer
+  listenToGameTimer,
 } from "../services/gameDataServices";
 import {
   getPotionData,
@@ -35,12 +29,13 @@ import { usePlayerTimer, useGameTimer } from "../utils/timerUtils";
 import "../style/routes/UlarTangga.css";
 
 const questions = [
+  // Pertanyaan contoh
   {
     id: 1,
     question:
-      "Makanan paling enak apa di Jawa Barat yang tipenya salad dengan bumbu kacang?",
-    options: ["Soto Betawi", "Gado-gado", "Batagor", "Rendang"],
-    correctAnswer: "Gado-gado",
+      "Makanan yang menggunakan bumbu kacang dan sayuran segar makanan apa?",
+    options: ["Docang", "Soto Betawi", "Karedok", "Gado-Gado"],
+    correctAnswer: "Karedok",
   },
   {
     id: 2,
@@ -50,6 +45,7 @@ const questions = [
   },
 ];
 
+// Tangga dan ular
 const tanggaUp = {
   5: 24,
   16: 66,
@@ -61,7 +57,6 @@ const tanggaUp = {
   27: 48,
   49: 69,
 };
-
 const snakesDown = {
   22: 1,
   29: 8,
@@ -78,7 +73,12 @@ function UlarTangga() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Game state
+  // Gunakan useRef untuk menyimpan nilai gameID, roomID, dan topicID
+  const gameIDRef = useRef(gameID);
+  const topicIDRef = useRef(topicID);
+  const roomIDRef = useRef(roomID);
+
+  // State permainan
   const [players, setPlayers] = useState([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [pionPositionIndex, setPionPositionIndex] = useState([]);
@@ -102,13 +102,10 @@ function UlarTangga() {
   });
   const [playerTimers, setPlayerTimers] = useState([]);
 
-  // Initialize prevPlayerIndexRef at the top level
   const prevPlayerIndexRef = useRef(currentPlayerIndex);
 
   useEffect(() => {
-    if (gameOver) {
-      navigate("/");
-    }
+    if (gameOver) navigate("/");
   }, [gameOver, navigate]);
 
   // Initialize game
@@ -118,18 +115,17 @@ function UlarTangga() {
         await setGameStatus(topicID, gameID, roomID, "playing");
         if (players.length > 0) {
           await initializeGameState(topicID, gameID, roomID, players);
-          await initializeGameTimer(topicID, gameID, roomID, 1800); // set waktu game pada firebase
+          await initializeGameTimer(topicID, gameID, roomID, 1800);
         }
         setIsGameReady(true);
       } catch (error) {
         console.error("Error initializing game:", error);
       }
     };
-
     initGame();
   }, [topicID, gameID, roomID, players]);
 
-  // Fetch and update players
+  // Fetch dan update players
   useEffect(() => {
     if (!isGameReady) return;
 
@@ -140,7 +136,7 @@ function UlarTangga() {
       (playersData) => {
         setPlayers(playersData);
         setPionPositionIndex(new Array(playersData.length).fill(0));
-        setPlayerTimers(new Array(playersData.length).fill(10)); // Initialize timers
+        setPlayerTimers(new Array(playersData.length).fill(10));
         if (playersData.length === 0) {
           cleanupGame(topicID, gameID, roomID, user);
           navigate("/");
@@ -161,47 +157,39 @@ function UlarTangga() {
   }, [victory, gameOver, topicID, gameID, roomID, user]);
 
   const handleTimeOut = useCallback(async () => {
-    // Cek apakah pion sedang bergerak; jika ya, hentikan fungsi
-    if (isPionMoving) return; 
-    
-    await updateGameState(topicID, gameID, roomID, {
-      currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-      waitingForAnswer: false,
-      showQuestion: false,
-      isCorrect: null,
-      potionUsable: false,
-      diceState: {
-        isRolling: false,
-        currentNumber: 1,
-        lastRoll: null,
-      },
-    });
-  }, [topicID, gameID, roomID, currentPlayerIndex, players.length, isPionMoving]);
-  
+    if (isPionMoving) return;
+    await updateGameState(
+      topicIDRef.current,
+      gameIDRef.current,
+      roomIDRef.current,
+      {
+        currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+        waitingForAnswer: false,
+        showQuestion: false,
+        isCorrect: null,
+        potionUsable: false,
+        diceState: { isRolling: false, currentNumber: 1, lastRoll: null },
+      }
+    );
+  }, [currentPlayerIndex, players.length, isPionMoving]);
 
   const [timeLeft, resetPlayerTimer] = usePlayerTimer(30, handleTimeOut, {
-    topicID,
-    gameID,
-    roomID,
+    topicID: topicIDRef.current,
+    gameID: gameIDRef.current,
+    roomID: roomIDRef.current,
     isMyTurn,
     currentPlayerIndex,
     playerTimers,
     waitingForAnswer,
     players,
   });
-  
+
   // Handle game over
   const handleGameOver = useCallback(async () => {
     try {
-        setGameOver(true);
-  
-      // Panggil cleanupGame langsung tanpa kondisi
+      setGameOver(true);
       await cleanupGame(topicID, gameID, roomID, user);
-  
-      // Navigasi ke home dengan sedikit jeda
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+      setTimeout(() => navigate("/"), 1000);
     } catch (error) {
       console.error("Error handling game over:", error);
       navigate("/");
@@ -210,29 +198,26 @@ function UlarTangga() {
 
   useEffect(() => {
     if (!topicID || !gameID || !roomID) return;
-  
+
     const unsubscribe = listenToGameTimer(
       topicID,
       gameID,
       roomID,
       (remainingTime) => {
-        console.log("Game time left:", remainingTime); // Log untuk debug
-  
-        // Trigger game end jika waktu habis
         if (remainingTime <= 0) {
           stopGameTimer(topicID, gameID, roomID);
-          handleGameOver(); // Trigger cleanup
+          handleGameOver();
         }
       }
     );
-  
+
     return () => unsubscribe();
   }, [topicID, gameID, roomID, handleGameOver]);
-  
+
   const gameTimeLeft = useGameTimer(1800, handleGameOver, {
-    topicID,
-    gameID,
-    roomID,
+    topicID: topicIDRef.current,
+    gameID: gameIDRef.current,
+    roomID: roomIDRef.current,
     user,
   });
 
@@ -261,17 +246,12 @@ function UlarTangga() {
           }
         );
 
-        // Update playerTimers
-        if (gameState.playerTimers) {
-          setPlayerTimers(gameState.playerTimers);
-        }
+        if (gameState.playerTimers) setPlayerTimers(gameState.playerTimers);
 
-        // Update isMyTurn
         const isCurrentPlayerTurn =
           players[gameState.currentPlayerIndex]?.uid === user?.uid;
         setIsMyTurn(isCurrentPlayerTurn);
 
-        // Check for victory
         if (gameState.pionPositions?.some((pos) => pos === 99)) {
           const winnerIndex = gameState.pionPositions.findIndex(
             (pos) => pos === 99
@@ -283,7 +263,7 @@ function UlarTangga() {
     );
 
     return () => unsubscribe();
-  }, [isGameReady, players, user?.uid]);
+  }, [isGameReady, players, topicID, gameID, roomID, user?.uid]);
 
   // Reset timer when currentPlayerIndex changes
   useEffect(() => {

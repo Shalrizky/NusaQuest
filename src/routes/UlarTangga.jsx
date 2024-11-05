@@ -2,7 +2,6 @@
 import React, {
   useState,
   useEffect,
-  useMemo,
   useCallback,
   useRef,
 } from "react";
@@ -26,6 +25,7 @@ import {
   initializeGameTimer,
   cleanupGame,
   stopGameTimer,
+  listenToGameTimer
 } from "../services/gameDataServices";
 import {
   getPotionData,
@@ -118,7 +118,7 @@ function UlarTangga() {
         await setGameStatus(topicID, gameID, roomID, "playing");
         if (players.length > 0) {
           await initializeGameState(topicID, gameID, roomID, players);
-          await initializeGameTimer(topicID, gameID, roomID, 50); // 10 minutes in seconds
+          await initializeGameTimer(topicID, gameID, roomID, 1800); // set waktu game pada firebase
         }
         setIsGameReady(true);
       } catch (error) {
@@ -161,6 +161,9 @@ function UlarTangga() {
   }, [victory, gameOver, topicID, gameID, roomID, user]);
 
   const handleTimeOut = useCallback(async () => {
+    // Cek apakah pion sedang bergerak; jika ya, hentikan fungsi
+    if (isPionMoving) return; 
+    
     await updateGameState(topicID, gameID, roomID, {
       currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
       waitingForAnswer: false,
@@ -173,9 +176,10 @@ function UlarTangga() {
         lastRoll: null,
       },
     });
-  }, [topicID, gameID, roomID, currentPlayerIndex, players.length]);
+  }, [topicID, gameID, roomID, currentPlayerIndex, players.length, isPionMoving]);
+  
 
-  const [timeLeft, resetPlayerTimer] = usePlayerTimer(10, handleTimeOut, {
+  const [timeLeft, resetPlayerTimer] = usePlayerTimer(30, handleTimeOut, {
     topicID,
     gameID,
     roomID,
@@ -185,24 +189,47 @@ function UlarTangga() {
     waitingForAnswer,
     players,
   });
-
+  
   // Handle game over
-  const handleGameOver = async () => {
+  const handleGameOver = useCallback(async () => {
     try {
-      setGameOver(true);
-      // Panggil cleanupGame setelah game over
+        setGameOver(true);
+  
+      // Panggil cleanupGame langsung tanpa kondisi
       await cleanupGame(topicID, gameID, roomID, user);
-      console.log("Game cleanup complete. Navigating home...");
+  
+      // Navigasi ke home dengan sedikit jeda
       setTimeout(() => {
         navigate("/");
       }, 1000);
     } catch (error) {
       console.error("Error handling game over:", error);
-      navigate("/"); // Force navigate jika terjadi error
+      navigate("/");
     }
-  };
+  }, [topicID, gameID, roomID, user, navigate]);
 
-  const gameTimeLeft = useGameTimer(100, handleGameOver, {
+  useEffect(() => {
+    if (!topicID || !gameID || !roomID) return;
+  
+    const unsubscribe = listenToGameTimer(
+      topicID,
+      gameID,
+      roomID,
+      (remainingTime) => {
+        console.log("Game time left:", remainingTime); // Log untuk debug
+  
+        // Trigger game end jika waktu habis
+        if (remainingTime <= 0) {
+          stopGameTimer(topicID, gameID, roomID);
+          handleGameOver(); // Trigger cleanup
+        }
+      }
+    );
+  
+    return () => unsubscribe();
+  }, [topicID, gameID, roomID, handleGameOver]);
+  
+  const gameTimeLeft = useGameTimer(1800, handleGameOver, {
     topicID,
     gameID,
     roomID,
@@ -522,7 +549,7 @@ function UlarTangga() {
 
           <div className="timer-player d-flex justify-content-center align-items-center gap-2 mb-3">
             <span className="timer-count">
-              {isMyTurn ? timeLeft : playerTimers[currentPlayerIndex] || 10}
+              {isMyTurn ? timeLeft : playerTimers[currentPlayerIndex] || 30}
             </span>
             <span className="timer-text">Sec</span>
           </div>

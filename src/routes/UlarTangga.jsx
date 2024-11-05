@@ -1,5 +1,11 @@
 // UlarTangga.js
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Container, Row, Col, Spinner } from "react-bootstrap";
 import useAuth from "../hooks/useAuth";
@@ -17,7 +23,9 @@ import {
   listenToGameState,
   setGameStatus,
   setGameStartStatus,
+  initializeGameTimer,
   cleanupGame,
+  stopGameTimer,
 } from "../services/gameDataServices";
 import {
   getPotionData,
@@ -97,6 +105,12 @@ function UlarTangga() {
   // Initialize prevPlayerIndexRef at the top level
   const prevPlayerIndexRef = useRef(currentPlayerIndex);
 
+  useEffect(() => {
+    if (gameOver) {
+      navigate("/");
+    }
+  }, [gameOver, navigate]);
+
   // Initialize game
   useEffect(() => {
     const initGame = async () => {
@@ -104,6 +118,7 @@ function UlarTangga() {
         await setGameStatus(topicID, gameID, roomID, "playing");
         if (players.length > 0) {
           await initializeGameState(topicID, gameID, roomID, players);
+          await initializeGameTimer(topicID, gameID, roomID, 50); // 10 minutes in seconds
         }
         setIsGameReady(true);
       } catch (error) {
@@ -138,12 +153,11 @@ function UlarTangga() {
 
   // Cleanup effect
   useEffect(() => {
-    return () => {
-      if (victory || gameOver) {
-        setGameStartStatus(topicID, gameID, roomID, false);
-        cleanupGame(topicID, gameID, roomID, user);
-      }
-    };
+    if (victory || gameOver) {
+      stopGameTimer(topicID, gameID, roomID);
+      setGameStartStatus(topicID, gameID, roomID, false);
+      cleanupGame(topicID, gameID, roomID, user);
+    }
   }, [victory, gameOver, topicID, gameID, roomID, user]);
 
   const handleTimeOut = useCallback(async () => {
@@ -161,8 +175,7 @@ function UlarTangga() {
     });
   }, [topicID, gameID, roomID, currentPlayerIndex, players.length]);
 
-
-    const [timeLeft, resetPlayerTimer] = usePlayerTimer(10, handleTimeOut, {
+  const [timeLeft, resetPlayerTimer] = usePlayerTimer(10, handleTimeOut, {
     topicID,
     gameID,
     roomID,
@@ -170,9 +183,31 @@ function UlarTangga() {
     currentPlayerIndex,
     playerTimers,
     waitingForAnswer,
+    players,
   });
 
-  const gameTimeLeft = useGameTimer(1800, () => setGameOver(true));
+  // Handle game over
+  const handleGameOver = async () => {
+    try {
+      setGameOver(true);
+      // Panggil cleanupGame setelah game over
+      await cleanupGame(topicID, gameID, roomID, user);
+      console.log("Game cleanup complete. Navigating home...");
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
+    } catch (error) {
+      console.error("Error handling game over:", error);
+      navigate("/"); // Force navigate jika terjadi error
+    }
+  };
+
+  const gameTimeLeft = useGameTimer(100, handleGameOver, {
+    topicID,
+    gameID,
+    roomID,
+    user,
+  });
 
   // Listen to game state changes
   useEffect(() => {
@@ -244,11 +279,14 @@ function UlarTangga() {
         },
       });
 
-      // Wait for animation
       setTimeout(async () => {
-        const newPositions = [...pionPositionIndex];
+        // Pastikan array valid
+        const newPositions = Array.isArray(pionPositionIndex)
+          ? [...pionPositionIndex]
+          : new Array(players.length).fill(0);
+
         newPositions[currentPlayerIndex] = Math.min(
-          pionPositionIndex[currentPlayerIndex] + diceNumber,
+          (newPositions[currentPlayerIndex] || 0) + diceNumber,
           99
         );
 
@@ -313,11 +351,11 @@ function UlarTangga() {
   // Handle answer changes
   const handleAnswerChange = async (isAnswerCorrect) => {
     if (!isMyTurn) return;
-  
+
     await updateGameState(topicID, gameID, roomID, {
       isCorrect: isAnswerCorrect,
     });
-  
+
     if (isAnswerCorrect) {
       if (allowExtraRoll) {
         await updateGameState(topicID, gameID, roomID, {
@@ -331,11 +369,11 @@ function UlarTangga() {
       } else {
         const newPositions = [...pionPositionIndex];
         const currentPos = newPositions[currentPlayerIndex];
-  
+
         if (tanggaUp[currentPos]) {
           newPositions[currentPlayerIndex] = tanggaUp[currentPos];
         }
-  
+
         await updateGameState(topicID, gameID, roomID, {
           pionPositions: newPositions,
           currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
@@ -354,30 +392,29 @@ function UlarTangga() {
         playerTimers: new Array(players.length).fill(10), // Reset timer pemain berikutnya
       });
     }
-  
+
     setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
   };
-  
 
   // Handle potion use
   const handlePotionUse = async () => {
     if (!isMyTurn || !potionUsable) return;
-  
+
     const currentPos = pionPositionIndex[currentPlayerIndex];
-  
+
     try {
       await updateGameState(topicID, gameID, roomID, {
         isMoving: true,
       });
-  
+
       const newPositions = [...pionPositionIndex];
-  
+
       if (tanggaUp[currentPos]) {
         newPositions[currentPlayerIndex] = tanggaUp[currentPos];
       }
-  
+
       setIsPotionUsed(true);
-  
+
       await updateGameState(topicID, gameID, roomID, {
         pionPositions: newPositions,
         waitingForAnswer: false,
@@ -386,12 +423,12 @@ function UlarTangga() {
         potionUsable: false,
         allowExtraRoll: diceState.lastRoll === 6,
       });
-  
+
       // Reset timer hanya jika dadu terakhir adalah 6
       if (diceState.lastRoll === 6) {
         resetPlayerTimer();
       }
-  
+
       setTimeout(async () => {
         if (diceState.lastRoll === 6) {
           await updateGameState(topicID, gameID, roomID, {
@@ -414,7 +451,6 @@ function UlarTangga() {
       });
     }
   };
-  
 
   // Award victory potions
   const awardVictoryPotions = async (winningPlayer) => {
@@ -446,6 +482,16 @@ function UlarTangga() {
   return (
     <Container fluid className="utangga-container d-flex flex-column">
       <HeaderGame layout="home" />
+
+      <div className="global-timer-container d-flex justify-content-center align-items-center mb-3">
+        <div className="global-timer-box px-4 py-2 bg-primary text-white rounded-pill">
+          <span className="fw-bold">Game Time: </span>
+          <span className="timer-count">
+            {Math.floor(gameTimeLeft / 60)}:
+            {String(gameTimeLeft % 60).padStart(2, "0")}
+          </span>
+        </div>
+      </div>
 
       <Row className="utu-container-board d-flex justify-content-center">
         <Col xs={12} md={6} className="utu-konva px-4">

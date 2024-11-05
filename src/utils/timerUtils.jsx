@@ -1,117 +1,126 @@
 import { useEffect, useState, useRef } from "react";
-import { updateGameState } from "../services/gameDataServices";
+import { updateGameState, listenToGameTimer, stopGameTimer } from "../services/gameDataServices";
 
+// Timer untuk player
 export const usePlayerTimer = (initialTime, onTimeEnd, gameData) => {
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const timerIdRef = useRef(null);
 
   useEffect(() => {
-    if (!gameData?.isMyTurn || gameData.waitingForAnswer) return;
+    // Reset timer saat berganti player
+    if (gameData?.isMyTurn) {
+      setTimeLeft(initialTime);
 
-    // Bersihkan timer sebelumnya jika ada
-    if (timerIdRef.current) {
-      clearInterval(timerIdRef.current);
-    }
-
-    timerIdRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        const newTime = prev - 1;
-
-        // Update hanya timer pemain yang sedang giliran
-        if (gameData.topicID && gameData.gameID && gameData.roomID) {
-          const newTimers = [...(gameData.playerTimers || [])];
-          newTimers[gameData.currentPlayerIndex] = newTime;
-
-          updateGameState(
-            gameData.topicID,
-            gameData.gameID,
-            gameData.roomID,
-            {
-              playerTimers: newTimers,
-            }
-          );
-        }
-
-        if (newTime <= 0) {
-          onTimeEnd?.();
-          clearInterval(timerIdRef.current);
-          timerIdRef.current = null;
-        }
-
-        return newTime;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerIdRef.current) {
-        clearInterval(timerIdRef.current);
-        timerIdRef.current = null;
+      // Update timer di Firebase dengan validasi
+      if (gameData?.topicID && gameData?.gameID && gameData?.roomID) {
+        const newTimers = Array.isArray(gameData.playerTimers) 
+          ? [...gameData.playerTimers]
+          : new Array(gameData.players?.length || 1).fill(initialTime);
+        
+        newTimers[gameData.currentPlayerIndex] = initialTime;
+        
+        updateGameState(
+          gameData.topicID,
+          gameData.gameID,
+          gameData.roomID,
+          {
+            playerTimers: newTimers
+          }
+        ).catch(console.error);
       }
-    };
-  }, [
-    gameData.isMyTurn,
-    gameData.waitingForAnswer,
-    gameData.topicID,
-    gameData.gameID,
-    gameData.roomID,
-    gameData.currentPlayerIndex,
-    gameData.playerTimers,
-    onTimeEnd,
-  ]);
-
-  // Efek untuk menghentikan timer ketika waitingForAnswer berubah
-  useEffect(() => {
-    if (gameData.waitingForAnswer && timerIdRef.current) {
-      // Hentikan timer
-      clearInterval(timerIdRef.current);
-      timerIdRef.current = null;
-    } else if (!gameData.waitingForAnswer && gameData.isMyTurn) {
-      // Lanjutkan timer
-      setTimeLeft((prevTime) => {
-        // Jika timer sudah habis, reset
-        return prevTime > 0 ? prevTime : initialTime;
-      });
     }
-  }, [gameData.waitingForAnswer, gameData.isMyTurn, initialTime]);
+  }, [gameData?.currentPlayerIndex, gameData?.isMyTurn, initialTime]);
+
+  useEffect(() => {
+    // Hanya jalankan timer jika sedang giliran player
+    if (gameData?.isMyTurn && !gameData?.waitingForAnswer) {
+      timerIdRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          const newTime = Math.max(0, prev - 1);
+
+          // Update timer di Firebase dengan validasi
+          if (gameData?.topicID && gameData?.gameID && gameData?.roomID) {
+            const newTimers = Array.isArray(gameData.playerTimers)
+              ? [...gameData.playerTimers]
+              : new Array(gameData.players?.length || 1).fill(initialTime);
+            
+            newTimers[gameData.currentPlayerIndex] = newTime;
+            
+            updateGameState(
+              gameData.topicID,
+              gameData.gameID,
+              gameData.roomID,
+              {
+                playerTimers: newTimers
+              }
+            ).catch(console.error);
+          }
+
+          if (newTime <= 0) {
+            clearInterval(timerIdRef.current);
+            onTimeEnd?.();
+            return 0;
+          }
+
+          return newTime;
+        });
+      }, 1000);
+
+      return () => {
+        if (timerIdRef.current) {
+          clearInterval(timerIdRef.current);
+        }
+      };
+    }
+  }, [gameData?.isMyTurn, gameData?.waitingForAnswer]);
 
   const resetTimer = () => {
-    if (timerIdRef.current) {
-      clearInterval(timerIdRef.current);
-      timerIdRef.current = null;
-    }
-
     setTimeLeft(initialTime);
-
-    // Reset hanya timer pemain yang sedang giliran
+    
     if (gameData?.topicID && gameData?.gameID && gameData?.roomID) {
-      const newTimers = [...(gameData.playerTimers || [])];
+      const newTimers = Array.isArray(gameData.playerTimers)
+        ? [...gameData.playerTimers]
+        : new Array(gameData.players?.length || 1).fill(initialTime);
+      
       newTimers[gameData.currentPlayerIndex] = initialTime;
-
-      updateGameState(gameData.topicID, gameData.gameID, gameData.roomID, {
-        playerTimers: newTimers,
-      });
+      
+      updateGameState(
+        gameData.topicID,
+        gameData.gameID,
+        gameData.roomID,
+        {
+          playerTimers: newTimers
+        }
+      ).catch(console.error);
     }
   };
 
   return [timeLeft, resetTimer];
 };
 
-
-
-// Game timer tidak perlu diubah
-export const useGameTimer = (initialTime, onGameEnd) => {
+// Timer untuk game
+export const useGameTimer = (initialTime, onGameEnd, { topicID, gameID, roomID }) => {
   const [gameTimeLeft, setGameTimeLeft] = useState(initialTime);
 
   useEffect(() => {
-    if (gameTimeLeft > 0) {
-      const gameTimer = setInterval(() => {
-        setGameTimeLeft((prevTime) => prevTime - 1);
-      }, 1000);
-      return () => clearInterval(gameTimer);
-    } else {
-      onGameEnd?.();
-    }
-  }, [gameTimeLeft, onGameEnd]);
+    if (!topicID || !gameID || !roomID) return;
+
+    const unsubscribe = listenToGameTimer(
+      topicID, 
+      gameID, 
+      roomID, 
+      (remainingTime) => {
+        setGameTimeLeft(Math.max(0, remainingTime));
+        
+        if (remainingTime <= 0) {
+          stopGameTimer(topicID, gameID, roomID);
+          onGameEnd?.();
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, [topicID, gameID, roomID, onGameEnd]);
 
   return gameTimeLeft;
 };

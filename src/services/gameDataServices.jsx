@@ -1,5 +1,6 @@
 // gameDataServices.js
 import { database, ref, onValue, set, get } from "../firebaseConfig";
+import { resetRoom } from "./roomDataServices"; 
 
 // Fetch games data
 export const fetchGames = (callback) => {
@@ -61,18 +62,19 @@ export const listenToGameStart = (topicID, gameID, roomID, callback) => {
 };
 
 // Initialize game state
+// Initialize game state dengan validasi data
 export const initializeGameState = async (topicID, gameID, roomID, players) => {
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
   
   try {
     const snapshot = await get(gameStateRef);
     if (!snapshot.exists()) {
-      // Pastikan players adalah array dan memiliki length
+      // Pastikan players adalah array valid
       const playerCount = Array.isArray(players) ? players.length : 0;
       
       const initialState = {
         currentPlayerIndex: 0,
-        pionPositions: Array(playerCount).fill(0), // Buat array sesuai jumlah pemain
+        pionPositions: new Array(playerCount).fill(0),
         isMoving: false,
         showQuestion: false,
         waitingForAnswer: false,
@@ -87,39 +89,93 @@ export const initializeGameState = async (topicID, gameID, roomID, players) => {
           currentNumber: 1,
           lastRoll: null
         },
-        playerTimers: Array(playerCount).fill(30), // Sesuaikan juga untuk timer
+        playerTimers: new Array(playerCount).fill(10)
       };
+      
       await set(gameStateRef, initialState);
     }
   } catch (error) {
     console.error("Error initializing game state:", error);
+    throw error;
   }
 };
 
-// Update game state
+// Update game state dengan validasi data
 export const updateGameState = async (topicID, gameID, roomID, updates) => {
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+  
   try {
+    // Ambil current state dulu
     const snapshot = await get(gameStateRef);
     const currentState = snapshot.val() || {};
     
-    // Deep merge untuk nested objects
-    const newState = {
-      ...currentState,
+    // Validasi dan sanitasi data sebelum update
+    const sanitizedUpdates = {
       ...updates,
-      pionPositions: updates.pionPositions || currentState.pionPositions,
-      diceState: {
-        ...(currentState.diceState || {}),
-        ...(updates.diceState || {})
-      }
+      // Pastikan pionPositions selalu array valid
+      pionPositions: Array.isArray(updates.pionPositions) 
+        ? updates.pionPositions 
+        : currentState.pionPositions || [],
+        
+      // Pastikan diceState selalu object valid
+      diceState: updates.diceState 
+        ? {
+            isRolling: Boolean(updates.diceState.isRolling),
+            currentNumber: Number(updates.diceState.currentNumber) || 1,
+            lastRoll: Number(updates.diceState.lastRoll) || null
+          }
+        : currentState.diceState || {
+            isRolling: false,
+            currentNumber: 1,
+            lastRoll: null
+          },
+          
+      // Pastikan playerTimers selalu array valid
+      playerTimers: Array.isArray(updates.playerTimers)
+        ? updates.playerTimers.map(time => Number(time) || 0)
+        : currentState.playerTimers || [],
+        
+      // Validasi properti lainnya
+      currentPlayerIndex: typeof updates.currentPlayerIndex === 'number' 
+        ? updates.currentPlayerIndex 
+        : currentState.currentPlayerIndex || 0,
+      
+      isMoving: typeof updates.isMoving === 'boolean' 
+        ? updates.isMoving 
+        : currentState.isMoving || false,
+      
+      showQuestion: typeof updates.showQuestion === 'boolean'
+        ? updates.showQuestion
+        : currentState.showQuestion || false,
+        
+      waitingForAnswer: typeof updates.waitingForAnswer === 'boolean'
+        ? updates.waitingForAnswer 
+        : currentState.waitingForAnswer || false,
+        
+      isCorrect: updates.isCorrect !== undefined 
+        ? updates.isCorrect 
+        : currentState.isCorrect,
+        
+      allowExtraRoll: typeof updates.allowExtraRoll === 'boolean'
+        ? updates.allowExtraRoll 
+        : currentState.allowExtraRoll || false,
+        
+      potionUsable: typeof updates.potionUsable === 'boolean'
+        ? updates.potionUsable 
+        : currentState.potionUsable || false
     };
 
-    // Update player timers if provided
-    if (updates.playerTimers) {
-      newState.playerTimers = updates.playerTimers;
-    }
+    // Filter out undefined values
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(sanitizedUpdates).filter(([_, value]) => value !== undefined)
+    );
+
+    // Update ke Firebase dengan data yang sudah divalidasi
+    await set(gameStateRef, {
+      ...currentState,
+      ...cleanUpdates
+    });
     
-    await set(gameStateRef, newState);
   } catch (error) {
     console.error("Error updating game state:", error);
     throw error;
@@ -161,22 +217,102 @@ export const getGameState = async (topicID, gameID, roomID) => {
   }
 };
 
-// Cleanup game
+// Inisialisasi timer game dengan durasi
+export const initializeGameTimer = async (topicID, gameID, roomID, duration) => {
+  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+  try {
+    const snapshot = await get(gameTimerRef);
+    if (!snapshot.exists()) {
+      await set(gameTimerRef, {
+        startTime: Date.now(),
+        duration: duration,
+        isActive: true
+      });
+    }
+  } catch (error) {
+    console.error("Error initializing game timer:", error);
+  }
+};
+
+
+// Update game timer
+export const updateGameTimer = async (topicID, gameID, roomID, timeLeft) => {
+  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+  try {
+    await set(gameTimerRef, {
+      startTime: Date.now(),
+      duration: timeLeft,
+      isActive: true
+    });
+  } catch (error) {
+    console.error("Error updating game timer:", error);
+  }
+};
+
+// Stop game timer
+export const stopGameTimer = async (topicID, gameID, roomID) => {
+  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+  try {
+    await set(gameTimerRef, {
+      isActive: false
+    });
+  } catch (error) {
+    console.error("Error stopping game timer:", error);
+  }
+};
+
+export const listenToGameTimer = (topicID, gameID, roomID, callback) => {
+  if (!topicID || !gameID || !roomID) return () => {};
+  
+  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+  return onValue(gameTimerRef, (snapshot) => {
+    const timerData = snapshot.val();
+    if (timerData && timerData.isActive) {
+      const elapsedTime = Math.floor((Date.now() - timerData.startTime) / 1000);
+      const remainingTime = Math.max(0, timerData.duration - elapsedTime);
+      callback(remainingTime);
+    }
+  });
+};
+
+
+// Update cleanup game to include timer cleanup
 export const cleanupGame = async (topicID, gameID, roomID, user) => {
   if (!topicID || !gameID || !roomID || !user?.uid) return;
 
   try {
-    // Reset game state
+    console.log("Cleaning up game state...");
+
+    // Reset gameState
     const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
     await set(gameStateRef, null);
-    
-    // Reset game status
+    console.log("gameState has been reset.");
+
+    // Reset gameTimer
+    const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+    await set(gameTimerRef, null);
+    console.log("Game timer has been reset.");
+
+    // Reset game status and start status
     await setGameStatus(topicID, gameID, roomID, null);
     await setGameStartStatus(topicID, gameID, roomID, false);
+
+    // Hapus semua pesan chat dalam room
+    const chatRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/chatMessages`);
+    await set(chatRef, null);
+
+    // Reset player data dalam room
+    const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
+    await set(playersRef, null);
+
+    // Reset keseluruhan room data
+    await resetRoom(topicID, gameID, roomID);
+    console.log("Room has been completely reset.");
   } catch (error) {
     console.error("Error cleaning up game:", error);
   }
 };
+
 
 // Reset game state
 export const resetGameState = async (topicID, gameID, roomID) => {

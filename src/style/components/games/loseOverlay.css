@@ -1,0 +1,37 @@
+.lose-overlay {
+   position: fixed;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background-color: rgba(0, 0, 0, 0.8);
+   color: white;
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+   z-index: 1000;
+   text-align: center;
+   padding: 20px;
+}
+
+.lose-content {
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+   text-align: center;
+   flex-wrap: wrap;
+}
+
+
+.lose-logo {
+   width: 300px;
+   margin-bottom: 20px;
+}
+
+.lose-overlay h2 {
+   font-size: 1.8rem;
+   font-weight: bold;
+   margin: 10px 0;
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { Col, Container, Row, Image } from "react-bootstrap";
+import { useNavigate, useParams } from "react-router-dom";
+import { Col, Container, Row, Image, Spinner } from "react-bootstrap";
 import "../style/routes/NusaCard.css";
 import DeckPlayer from "../components/games/DeckPlayer";
 import BottomDeckCard from "../components/games/BottomDeckCard";
@@ -30,16 +30,17 @@ const TURN_TIMER_DURATION = 10;
 
 // Reintroduce the PLAYERS array with usernames and photos
 const PLAYERS = [
-  { id: 1, name: "Player1", photo: defaultPlayerPhoto, position: "bottom" },
-  { id: 2, name: "Player2", photo: defaultPlayerPhoto, position: "right" },
-  { id: 3, name: "Player3", photo: defaultPlayerPhoto, position: "top" },
-  { id: 4, name: "Player4", photo: defaultPlayerPhoto, position: "left" },
+  { id: 1, name: "Xang Abe", photo: defaultPlayerPhoto, position: "bottom" },
+  { id: 2, name: "Xahel", photo: defaultPlayerPhoto, position: "right" },
+  { id: 3, name: "Reiki", photo: defaultPlayerPhoto, position: "top" },
+  { id: 4, name: "Nxtxh", photo: defaultPlayerPhoto, position: "left" },
 ];
 
 const DECK_ORDER = ["bottom", "right", "top", "left"];
 
 function NusaCard() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [deckCounts, setDeckCounts] = useState({
     top: INITIAL_DECK_COUNT,
     left: INITIAL_DECK_COUNT,
@@ -218,7 +219,7 @@ function NusaCard() {
       setCurrentTurn(nextTurn);
       setAnsweringPlayer(getNextPlayer(nextTurn));
       handleAnswerTimeout();
-    }, 1000);
+    }, 3000);
   };
 
   // Helper functions
@@ -402,6 +403,24 @@ function NusaCard() {
     return winnerPlayer ? winnerPlayer.name : "";
   };
 
+  useEffect(() => {
+    const loadingTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(loadingTimeout);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <Spinner animation="border" role="status" variant="dark">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
+
   return (
     <Container
       fluid
@@ -506,7 +525,6 @@ function NusaCard() {
             >
               <Image
                 src={shuffleIcon}
-                alt="Shuffle Icon"
                 style={{ width: "100%", height: "100%" }}
               />
             </div>

@@ -5,9 +5,14 @@ import '../../style/components/games/BottomDeckCard.css';
 const BottomDeckCard = ({ cards, onCardClick, showPopup, isExitingPopup }) => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [isCardExiting, setIsCardExiting] = useState(false);
-  
+  const [isInteractionDisabled, setIsInteractionDisabled] = useState(false);
+
   const handleCardClick = (card, index) => {
+    if (isInteractionDisabled) return; // Prevent clicks if interactions are disabled
+    
     setSelectedCard({ ...card, index });
+    setIsInteractionDisabled(true); // Disable interactions after a card is selected
+    
     setTimeout(() => {
       onCardClick(card, index);
     }, 100);
@@ -20,17 +25,21 @@ const BottomDeckCard = ({ cards, onCardClick, showPopup, isExitingPopup }) => {
       setTimeout(() => {
         setSelectedCard(null);
         setIsCardExiting(false);
+        setIsInteractionDisabled(false); // Re-enable interactions after animation completes
       }, 2000); // Match the popup exit duration
     }
   }, [isExitingPopup]);
 
   return (
-    <div className="stackable-cards">
+    <div className={`stackable-cards ${isInteractionDisabled ? 'interaction-disabled' : ''}`}>
       {cards.map((card, index) => (
         <Card
           key={index}
-          className={`bg-orange text-white card-custom ${card.isNew ? 'new-card' : ''}`}
+          className={`bg-orange text-white card-custom ${card.isNew ? 'new-card' : ''} ${
+            isInteractionDisabled ? 'disabled' : ''
+          }`}
           onClick={() => handleCardClick(card, index)}
+          style={{ pointerEvents: isInteractionDisabled ? 'none' : 'auto' }}
         >
           <Card.Body>
             <Card.Text className="card-text-custom">

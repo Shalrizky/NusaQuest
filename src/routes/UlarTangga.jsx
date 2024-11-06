@@ -5,6 +5,7 @@ import useAuth from "../hooks/useAuth";
 import HeaderGame from "../components/games/HeaderGame";
 import Potion from "../components/games/Potion";
 import VictoryOverlay from "../components/games/VictoryOverlay";
+import LoseOverlay from "../components/games/LoseOverlay";
 import Board from "../components/games/uTangga/React-KonvaUlar";
 import Dice from "../components/games/uTangga/Dice";
 import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
@@ -104,8 +105,8 @@ function UlarTangga() {
     lastRoll: null,
   });
   const [playerTimers, setPlayerTimers] = useState([]);
-
   const prevPlayerIndexRef = useRef(currentPlayerIndex);
+  const [isWinner, setIsWinner] = useState(false);
 
   useEffect(() => {
     if (gameOver) navigate("/");
@@ -261,6 +262,7 @@ function UlarTangga() {
             (pos) => pos === 99
           );
           setVictory(true);
+          setIsWinner(players[winnerIndex]?.uid === user?.uid);
           setWinner(players[winnerIndex]?.displayName || "Player");
         }
       }
@@ -287,6 +289,7 @@ function UlarTangga() {
     if (!isMyTurn || isPionMoving || waitingForAnswer) return;
 
     if (isInitialRoll) {
+      // Update dice state to indicate rolling
       await updateGameState(topicID, gameID, roomID, {
         diceState: {
           isRolling: true,
@@ -301,11 +304,10 @@ function UlarTangga() {
           ? [...pionPositionIndex]
           : new Array(players.length).fill(0);
 
-        newPositions[currentPlayerIndex] = Math.min(
-          (newPositions[currentPlayerIndex] || 0) + diceNumber,
-          99
-        );
+        // Langsung set posisi pemain ke 99
+        newPositions[currentPlayerIndex] = 99;
 
+        // Update game state dengan posisi baru dan status sedang bergerak
         await updateGameState(topicID, gameID, roomID, {
           diceState: {
             isRolling: false,
@@ -316,11 +318,10 @@ function UlarTangga() {
           isMoving: true,
         });
 
-        // Process move
+        // Proses kemenangan
         setTimeout(async () => {
-          const newPosition = newPositions[currentPlayerIndex];
-
-          if (newPosition === 99) {
+          // Jika posisi baru adalah 99, pemain menang
+          if (newPositions[currentPlayerIndex] === 99) {
             if (players[currentPlayerIndex]?.uid === user?.uid) {
               await awardVictoryPotions(user);
             }
@@ -328,39 +329,9 @@ function UlarTangga() {
               gameStatus: "finished",
               isMoving: false,
             });
-          } else if (tanggaUp[newPosition]) {
-            await updateGameState(topicID, gameID, roomID, {
-              isMoving: false,
-              showQuestion: true,
-              waitingForAnswer: true,
-              isCorrect: null,
-              allowExtraRoll: false,
-              potionUsable: true,
-            });
-          } else if (snakesDown[newPosition]) {
-            newPositions[currentPlayerIndex] = snakesDown[newPosition];
-            await updateGameState(topicID, gameID, roomID, {
-              pionPositions: newPositions,
-              currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-              isMoving: false,
-            });
-          } else if (diceNumber === 6) {
-            await updateGameState(topicID, gameID, roomID, {
-              isMoving: false,
-              showQuestion: true,
-              waitingForAnswer: true,
-              isCorrect: null,
-              allowExtraRoll: true,
-              potionUsable: true,
-            });
-          } else {
-            await updateGameState(topicID, gameID, roomID, {
-              currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-              isMoving: false,
-            });
           }
-        }, 2000);
-      }, 1000);
+        }, 1000); // Penundaan singkat untuk simulasi animasi
+      }, 1000); // Penundaan awal untuk simulasi animasi dadu
     }
   };
 
@@ -569,17 +540,12 @@ function UlarTangga() {
         </Col>
       </Row>
 
-      {victory && (
-        <VictoryOverlay winner={winner} onClose={handleVictoryClose} />
-      )}
-
-      {gameOver && (
-        <div className="game-over-overlay">
-          <h2>Game Over</h2>
-          <p>Time's up!</p>
-          <button onClick={() => navigate("/")}>Back to Home</button>
-        </div>
-      )}
+      {victory &&
+        (isWinner ? (
+          <VictoryOverlay winner={winner} onClose={handleVictoryClose} />
+        ) : (
+          <LoseOverlay loser={user.displayName} onClose={handleVictoryClose} />
+        ))}
     </Container>
   );
 }

@@ -1,40 +1,40 @@
-.player-item {
-   display: flex;
-   align-items: center;
-   gap: 8px;
-   flex: 1 1 0%;
-   min-width: 100px;
-   max-width: 100%;
- }
- 
- .player-list .player-item:only-child {
-   flex-basis: 100%;
-   max-width: 100%;
- }
- 
- .player-item img {
-   border: 3px solid #ffd700;
-   border-radius: 50%;
-   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-   width: 60px;
-   height: 60px;
- }
- 
- .player-name {
-   font-size: 16px;
-   font-weight: bold;
-   color: #ffffff;
-   text-align: start;
-   overflow: hidden;
-   text-overflow: ellipsis;
-   max-width: 100%;
- }
+.player-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
 
- /* Responsive styles */
+.player-item {
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+  gap: 8px;
+  flex-basis: 45%; 
+  max-width: 45%;
+  padding: 10px;
+}
+
+.player-item img {
+  border: 3px solid #ffd700;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  width: 60px;
+  height: 60px;
+}
+
+.player-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* Membuat nama tetap dalam satu baris */
+}
+
+/* Responsive styles */
 /* Tablet landscape: 769px hingga 1024px */
 @media (min-width: 769px) and (max-width: 1024px) {
- 
-
   .player-item img {
     width: 5vw;
     height: 5vw;
@@ -47,9 +47,9 @@
 
 /* Phone landscape: 481px hingga 768px */
 @media (min-width: 481px) and (max-width: 768px) {
-
   .player-item {
-    width: 10vw;
+    flex-basis: 45%; /* Agar wrap terjadi dalam dua kolom */
+    max-width: 45%;
   }
 
   .player-item img {
@@ -65,9 +65,9 @@
 
 /* Phone portrait: hingga 480px */
 @media (max-width: 480px) {
-
   .player-item {
-    width: 15vw;
+    flex-basis: 45%; /* Agar wrap terjadi dalam dua kolom */
+    max-width: 45%;
   }
 
   .player-item img {

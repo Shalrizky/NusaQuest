@@ -9,7 +9,7 @@ function VictoryOverlay({ winner, onClose }) {
   // Tutup overlay secara otomatis setelah 10 detik
   useEffect(() => {
     const timer = setTimeout(() => {
-      onClose(); 
+      onClose();
     }, 10000);
 
     return () => clearTimeout(timer);
@@ -17,22 +17,31 @@ function VictoryOverlay({ winner, onClose }) {
 
   return (
     <div className="victory-overlay" onClick={onClose}>
-      <div
-        className="victory-content"
-        onClick={(e) => e.stopPropagation()} 
-      >
+      <div className="victory-content" onClick={(e) => e.stopPropagation()}>
         <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
         <h2>{winner} Wins!</h2>
         <p>Kamu mendapatkan:</p>
-        <div className="rewards">
-          <img src={Achievement} alt="achievement" className="Achievement1-logo" />
-          <img src={Achievement2} alt="achievement2" className="Achievement2-logo" />
+        <div className="rewards mb-3">
+          <img
+            src={Achievement}
+            alt="achievement"
+            className="Achievement1-logo"
+          />
+          <img
+            src={Achievement2}
+            alt="achievement2"
+            className="Achievement2-logo"
+          />
           <div className="potion-reward">
             <img src={potionImage} alt="potion" className="potion-logo" />
           </div>
         </div>
-        <p>Sentuh dimana saja untuk keluar.</p>
-        <p className="auto-redirect-info">Anda akan diarahkan keluar dalam waktu 10 detik...</p>
+        <p>
+          Sentuh dimana saja untuk keluar <br /> /{" "}
+          <span className="auto-redirect-info">
+            Anda akan diarahkan keluar dalam waktu 10 detik...
+          </span>
+        </p>
       </div>
     </div>
   );

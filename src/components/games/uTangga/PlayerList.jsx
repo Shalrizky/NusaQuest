@@ -4,11 +4,13 @@ import "../../../style/components/games/uTangga/playerList.css";
 
 function PlayerList({ players, currentPlayerIndex }) {
   return (
-    <div className="player-list d-flex flex-wrap justify-content-center align-items-center my-3">
+    <div className="player-list d-flex justify-content-center align-items-center my-3">
       {players.slice(0, 4).map((player, index) => (
         <div
           key={player.uid}
-          className={`player-item ${currentPlayerIndex === index ? "active-player" : ""}`}
+          className={`player-item ${
+            currentPlayerIndex === index ? "active-player" : ""
+          }`}
         >
           <Image
             src={player.photoURL || "path/to/placeholder.jpg"}

@@ -26,6 +26,7 @@ import {
   getPotionData,
   saveNewPotionData,
 } from "../services/itemsDataServices";
+import { updateWinningAchievement } from "../services/achievementDataServices";
 import { usePlayerTimer, useGameTimer } from "../utils/timerUtils";
 import "../style/routes/UlarTangga.css";
 
@@ -107,6 +108,8 @@ function UlarTangga() {
   const [playerTimers, setPlayerTimers] = useState([]);
   const prevPlayerIndexRef = useRef(currentPlayerIndex);
   const [isWinner, setIsWinner] = useState(false);
+  const [hasLost, setHasLost] = useState(false);
+  const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
 
   useEffect(() => {
     if (gameOver) navigate("/");
@@ -257,13 +260,21 @@ function UlarTangga() {
           players[gameState.currentPlayerIndex]?.uid === user?.uid;
         setIsMyTurn(isCurrentPlayerTurn);
 
+        // Check if any player has won
         if (gameState.pionPositions?.some((pos) => pos === 99)) {
           const winnerIndex = gameState.pionPositions.findIndex(
             (pos) => pos === 99
           );
+
+          // Set victory for winner and lose for others
           setVictory(true);
           setIsWinner(players[winnerIndex]?.uid === user?.uid);
           setWinner(players[winnerIndex]?.displayName || "Player");
+
+          // Set hasLost for other players
+          if (players[winnerIndex]?.uid !== user?.uid) {
+            setHasLost(true); // Set hasLost to true for players who did not win
+          }
         }
       }
     );
@@ -279,17 +290,25 @@ function UlarTangga() {
     prevPlayerIndexRef.current = currentPlayerIndex;
   }, [currentPlayerIndex, resetPlayerTimer]);
 
-  const handleVictoryClose = useCallback(() => {
-    cleanupGame(topicID, gameID, roomID, user);
-    navigate("/"); // Navigasi ke halaman utama setelah overlay ditutup
-  }, [topicID, gameID, roomID, user, navigate]);
+  useEffect(() => {
+    if (victory) {
+      setShowVictoryOverlay(true);
+    }
+  }, [victory]);
+  
 
+  const handleVictoryClose = useCallback(() => {
+    setVictory(false);
+    setHasLost(false); // Tambahkan ini untuk memastikan `hasLost` di-reset
+    cleanupGame(topicID, gameID, roomID, user);
+    navigate("/");
+  }, [topicID, gameID, roomID, user, navigate]);
+  
   // Handle dice roll
   const handleDiceRollComplete = async (diceNumber, isInitialRoll) => {
     if (!isMyTurn || isPionMoving || waitingForAnswer) return;
-
+  
     if (isInitialRoll) {
-      // Update dice state to indicate rolling
       await updateGameState(topicID, gameID, roomID, {
         diceState: {
           isRolling: true,
@@ -297,17 +316,19 @@ function UlarTangga() {
           lastRoll: diceNumber,
         },
       });
-
+  
       setTimeout(async () => {
         // Pastikan array valid
         const newPositions = Array.isArray(pionPositionIndex)
           ? [...pionPositionIndex]
           : new Array(players.length).fill(0);
-
-        // Langsung set posisi pemain ke 99
-        newPositions[currentPlayerIndex] = 99;
-
-        // Update game state dengan posisi baru dan status sedang bergerak
+  
+        // Update posisi pion pemain saat ini, tidak boleh lebih dari 99 (kondisi kemenangan)
+        newPositions[currentPlayerIndex] = Math.min(
+          (newPositions[currentPlayerIndex] || 0) + diceNumber,
+          99
+        );
+  
         await updateGameState(topicID, gameID, roomID, {
           diceState: {
             isRolling: false,
@@ -317,23 +338,80 @@ function UlarTangga() {
           pionPositions: newPositions,
           isMoving: true,
         });
-
-        // Proses kemenangan
+  
+        // Process move dengan delay agar animasi pergerakan tampak natural
         setTimeout(async () => {
-          // Jika posisi baru adalah 99, pemain menang
-          if (newPositions[currentPlayerIndex] === 99) {
+          const newPosition = newPositions[currentPlayerIndex];
+  
+          // Kondisi Kemenangan: jika posisi mencapai 99
+          if (newPosition === 99) {
             if (players[currentPlayerIndex]?.uid === user?.uid) {
-              await awardVictoryPotions(user);
+              try {
+                // Update achievement untuk pemenang
+                const isAchievementUpdated = await updateWinningAchievement(
+                  user.uid,
+                  "game1",
+                  topicID
+                );
+  
+                if (isAchievementUpdated) {
+                  await awardVictoryPotions(user); // Menambahkan potion setelah menang
+                  setVictory(true);
+                  setShowVictoryOverlay(true); // Overlay muncul setelah update database selesai
+                }
+              } catch (error) {
+                console.error("Error updating achievements:", error);
+              }
             }
+  
             await updateGameState(topicID, gameID, roomID, {
               gameStatus: "finished",
               isMoving: false,
             });
+          } 
+          // Kondisi Tangga: jika ada tangga di posisi baru
+          else if (tanggaUp[newPosition]) {
+            await updateGameState(topicID, gameID, roomID, {
+              isMoving: false,
+              showQuestion: true,
+              waitingForAnswer: true,
+              isCorrect: null,
+              allowExtraRoll: false,
+              potionUsable: true,
+            });
+          } 
+          // Kondisi Ular: jika ada ular di posisi baru
+          else if (snakesDown[newPosition]) {
+            newPositions[currentPlayerIndex] = snakesDown[newPosition];
+            await updateGameState(topicID, gameID, roomID, {
+              pionPositions: newPositions,
+              currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+              isMoving: false,
+            });
+          } 
+          // Kondisi Angka 6: pemain mendapat kesempatan roll lagi
+          else if (diceNumber === 6) {
+            await updateGameState(topicID, gameID, roomID, {
+              isMoving: false,
+              showQuestion: true,
+              waitingForAnswer: true,
+              isCorrect: null,
+              allowExtraRoll: true,
+              potionUsable: true,
+            });
+          } 
+          // Kondisi Default: giliran beralih ke pemain berikutnya
+          else {
+            await updateGameState(topicID, gameID, roomID, {
+              currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+              isMoving: false,
+            });
           }
-        }, 1000); // Penundaan singkat untuk simulasi animasi
-      }, 1000); // Penundaan awal untuk simulasi animasi dadu
+        }, 2000);
+      }, 1000);
     }
   };
+  
 
   // Handle answer changes
   const handleAnswerChange = async (isAnswerCorrect) => {
@@ -367,7 +445,7 @@ function UlarTangga() {
           showQuestion: false,
           waitingForAnswer: false,
           allowExtraRoll: false,
-          playerTimers: new Array(players.length).fill(10), // Reset timer pemain berikutnya
+          playerTimers: new Array(players.length).fill(30), // Reset timer pemain berikutnya
         });
       }
     } else {
@@ -376,7 +454,7 @@ function UlarTangga() {
         showQuestion: false,
         waitingForAnswer: false,
         allowExtraRoll: false,
-        playerTimers: new Array(players.length).fill(10), // Reset timer pemain berikutnya
+        playerTimers: new Array(players.length).fill(30), // Reset timer pemain berikutnya
       });
     }
 
@@ -465,7 +543,6 @@ function UlarTangga() {
       </div>
     );
   }
-
   return (
     <Container fluid className="utangga-container d-flex flex-column">
       <HeaderGame layout="home" />
@@ -541,11 +618,12 @@ function UlarTangga() {
       </Row>
 
       {victory &&
+        showVictoryOverlay &&
         (isWinner ? (
           <VictoryOverlay winner={winner} onClose={handleVictoryClose} />
-        ) : (
+        ) : hasLost ? (
           <LoseOverlay loser={user.displayName} onClose={handleVictoryClose} />
-        ))}
+        ) : null)}
     </Container>
   );
 }

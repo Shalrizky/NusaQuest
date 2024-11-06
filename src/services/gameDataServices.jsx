@@ -1,4 +1,3 @@
-// gameDataServices.js
 import { database, ref, onValue, set, get } from "../firebaseConfig";
 import { resetRoom } from "./roomDataServices"; 
 
@@ -62,7 +61,6 @@ export const listenToGameStart = (topicID, gameID, roomID, callback) => {
 };
 
 // Initialize game state
-// Initialize game state dengan validasi data
 export const initializeGameState = async (topicID, gameID, roomID, players) => {
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
   
@@ -89,7 +87,7 @@ export const initializeGameState = async (topicID, gameID, roomID, players) => {
           currentNumber: 1,
           lastRoll: null
         },
-        playerTimers: new Array(playerCount).fill(10)
+        playerTimers: new Array(playerCount).fill(30)
       };
       
       await set(gameStateRef, initialState);

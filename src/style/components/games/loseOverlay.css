@@ -4,7 +4,7 @@
    left: 0;
    right: 0;
    bottom: 0;
-   background-color: rgba(0, 0, 0, 0.8);
+   background-color: rgba(0, 0, 0, 0.85);
    color: white;
    display: flex;
    flex-direction: column;
@@ -13,8 +13,14 @@
    z-index: 1000;
    text-align: center;
    padding: 20px;
+   animation: fadeIn 1s ease-in-out;
 }
-
+ 
+@keyframes fadeIn {
+   from { opacity: 0; }
+   to { opacity: 1; }
+}
+ 
 .lose-content {
    display: flex;
    flex-direction: column;
@@ -23,15 +29,39 @@
    text-align: center;
    flex-wrap: wrap;
 }
-
-
+ 
 .lose-logo {
-   width: 300px;
+   width: 200px;
    margin-bottom: 20px;
+   animation: shake 1.5s ease-in infinite;
 }
-
+ 
+@keyframes shake {
+   0%, 100% { transform: translateX(0); }
+   15%, 45%, 75% { transform: translateX(-6px); }
+   30%, 60% { transform: translateX(6px); }
+}
+ 
 .lose-overlay h2 {
-   font-size: 1.8rem;
+   font-size: 2.2rem;
    font-weight: bold;
    margin: 10px 0;
+   background: linear-gradient(to right, #ff4d4d, #ff6666, #ff4d4d); 
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent; 
+   background-clip: text;
+   color: transparent;
+   animation: textFadeIn 2s ease-in-out forwards; 
+}
+
+ 
+.lose-overlay p {
+   font-size: 1.2em;
+   margin: 8px 0;
+}
+ 
+.auto-redirect-info {
+   font-size: 0.9rem;
+   color: #cccccc;
+   font-style: italic;
 }

@@ -15,6 +15,12 @@
   padding: 10px;
 }
 
+/* Saat hanya ada satu player-item, biarkan elemen mengambil ruang penuh */
+.player-list .player-item:only-child {
+  flex-basis: 100%;
+  max-width: 100%;
+}
+
 .player-item img {
   border: 3px solid #ffd700;
   border-radius: 50%;
@@ -29,7 +35,7 @@
   color: #ffffff;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap; /* Membuat nama tetap dalam satu baris */
+  white-space: nowrap;
 }
 
 /* Responsive styles */
@@ -48,7 +54,7 @@
 /* Phone landscape: 481px hingga 768px */
 @media (min-width: 481px) and (max-width: 768px) {
   .player-item {
-    flex-basis: 45%; /* Agar wrap terjadi dalam dua kolom */
+    flex-basis: 45%;
     max-width: 45%;
   }
 
@@ -66,7 +72,7 @@
 /* Phone portrait: hingga 480px */
 @media (max-width: 480px) {
   .player-item {
-    flex-basis: 45%; /* Agar wrap terjadi dalam dua kolom */
+    flex-basis: 45%;
     max-width: 45%;
   }
 

@@ -18,11 +18,9 @@ function LoseOverlay({ loser, onClose }) {
         <img src={defeatImage} alt="Defeat Logo" className="lose-logo" />
         <h2>{loser} Defeat!</h2>
         <p>Semangat, semoga beruntug di lain waktu</p>
-        <p>
-          Sentuh dimana saja untuk keluar <br /> /{" "}
-          <span className="auto-redirect-info">
-            Anda akan diarahkan keluar dalam waktu 10 detik...
-          </span>
+        <p>Sentuh di mana saja untuk keluar /</p>
+        <p className="auto-redirect-info">
+          Anda akan diarahkan keluar dalam waktu 10 detik...
         </p>
       </div>
     </div>

@@ -530,7 +530,6 @@ function NusaCard() {
             </div>
           </Col>
 
-          {/* Empty space between center and right deck */}
           <Col md={3} />
 
           {/* Right Deck */}

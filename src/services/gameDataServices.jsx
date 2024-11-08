@@ -61,15 +61,17 @@ export const listenToGameStart = (topicID, gameID, roomID, callback) => {
 };
 
 // Initialize game state
-export const initializeGameState = async (topicID, gameID, roomID, players) => {
+export const initializeGameState = async (topicID, gameID, roomID, players, questions) => {
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
   
   try {
     const snapshot = await get(gameStateRef);
     if (!snapshot.exists()) {
-      // Pastikan players adalah array valid
       const playerCount = Array.isArray(players) ? players.length : 0;
-      
+
+      // Ambil pertanyaan acak pertama untuk disimpan di `gameState`
+      const initialQuestion = questions[0]; 
+
       const initialState = {
         currentPlayerIndex: 0,
         pionPositions: new Array(playerCount).fill(0),
@@ -79,7 +81,7 @@ export const initializeGameState = async (topicID, gameID, roomID, players) => {
         isCorrect: null,
         allowExtraRoll: false,
         potionUsable: false,
-        currentQuestion: null,
+        currentQuestion: initialQuestion,  // Menyimpan pertanyaan di gameState
         currentQuestionIndex: 0,
         gameStatus: 'playing',
         diceState: {
@@ -97,6 +99,7 @@ export const initializeGameState = async (topicID, gameID, roomID, players) => {
     throw error;
   }
 };
+
 
 // Update game state dengan validasi data
 export const updateGameState = async (topicID, gameID, roomID, updates) => {

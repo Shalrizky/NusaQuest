@@ -28,24 +28,11 @@ import {
 } from "../services/itemsDataServices";
 import { updateWinningAchievement } from "../services/achievementDataServices";
 import { usePlayerTimer, useGameTimer } from "../utils/timerUtils";
+import { getQuestions } from "../services/questionDataServices";
+
 import "../style/routes/UlarTangga.css";
 
-const questions = [
-  // Pertanyaan contoh
-  {
-    id: 1,
-    question:
-      "Makanan yang menggunakan bumbu kacang dan sayuran segar makanan apa?",
-    options: ["Docang", "Soto Betawi", "Karedok", "Gado-Gado"],
-    correctAnswer: "Karedok",
-  },
-  {
-    id: 2,
-    question: "Siapa pahlawan nasional dari Jawa Timur?",
-    options: ["Diponegoro", "Sudirman", "Bung Tomo", "Soekarno"],
-    correctAnswer: "Bung Tomo",
-  },
-];
+
 
 // Tangga dan ular
 const tanggaUp = {
@@ -110,27 +97,37 @@ function UlarTangga() {
   const [isWinner, setIsWinner] = useState(false);
   const [hasLost, setHasLost] = useState(false);
   const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
+  const [questions, setQuestions] = useState([]);
+
 
   useEffect(() => {
     if (gameOver) navigate("/");
   }, [gameOver, navigate]);
 
-  // Initialize game
-  useEffect(() => {
-    const initGame = async () => {
-      try {
-        await setGameStatus(topicID, gameID, roomID, "playing");
-        if (players.length > 0) {
-          await initializeGameState(topicID, gameID, roomID, players);
-          await initializeGameTimer(topicID, gameID, roomID, 1800);
-        }
-        setIsGameReady(true);
-      } catch (error) {
-        console.error("Error initializing game:", error);
+useEffect(() => {
+  const initGame = async () => {
+    try {
+      await setGameStatus(topicID, gameID, roomID, "playing");
+      if (players.length > 0) {
+        // Ambil pertanyaan dari database berdasarkan `topicID`
+        const fetchedQuestions = await getQuestions(topicID);
+        console.log("Fetched questions:", fetchedQuestions); // Debugging line
+
+        // Set pertanyaan ke state
+        setQuestions(fetchedQuestions);
+
+        // Inisialisasi game state dengan pertanyaan
+        await initializeGameState(topicID, gameID, roomID, players, fetchedQuestions);
+        await initializeGameTimer(topicID, gameID, roomID, 1800);
       }
-    };
-    initGame();
-  }, [topicID, gameID, roomID, players]);
+      setIsGameReady(true);
+    } catch (error) {
+      console.error("Error initializing game:", error);
+    }
+  };
+  initGame();
+}, [topicID, gameID, roomID, players]);
+
 
   // Fetch dan update players
   useEffect(() => {
@@ -305,112 +302,112 @@ function UlarTangga() {
   }, [topicID, gameID, roomID, user, navigate]);
   
   // Handle dice roll
-  const handleDiceRollComplete = async (diceNumber, isInitialRoll) => {
-    if (!isMyTurn || isPionMoving || waitingForAnswer) return;
-  
-    if (isInitialRoll) {
-      await updateGameState(topicID, gameID, roomID, {
-        diceState: {
-          isRolling: true,
-          currentNumber: diceNumber,
-          lastRoll: diceNumber,
-        },
-      });
-  
-      setTimeout(async () => {
-        // Pastikan array valid
-        const newPositions = Array.isArray(pionPositionIndex)
-          ? [...pionPositionIndex]
-          : new Array(players.length).fill(0);
-  
-        // Update posisi pion pemain saat ini, tidak boleh lebih dari 99 (kondisi kemenangan)
-        newPositions[currentPlayerIndex] = Math.min(
-          (newPositions[currentPlayerIndex] || 0) + diceNumber,
-          99
-        );
-  
+    const handleDiceRollComplete = async (diceNumber, isInitialRoll) => {
+      if (!isMyTurn || isPionMoving || waitingForAnswer) return;
+    
+      if (isInitialRoll) {
         await updateGameState(topicID, gameID, roomID, {
           diceState: {
-            isRolling: false,
+            isRolling: true,
             currentNumber: diceNumber,
             lastRoll: diceNumber,
           },
-          pionPositions: newPositions,
-          isMoving: true,
         });
-  
-        // Process move dengan delay agar animasi pergerakan tampak natural
+    
         setTimeout(async () => {
-          const newPosition = newPositions[currentPlayerIndex];
-  
-          // Kondisi Kemenangan: jika posisi mencapai 99
-          if (newPosition === 99) {
-            if (players[currentPlayerIndex]?.uid === user?.uid) {
-              try {
-                // Update achievement untuk pemenang
-                const isAchievementUpdated = await updateWinningAchievement(
-                  user.uid,
-                  "game1",
-                  topicID
-                );
-  
-                if (isAchievementUpdated) {
-                  await awardVictoryPotions(user); // Menambahkan potion setelah menang
-                  setVictory(true);
-                  setShowVictoryOverlay(true); // Overlay muncul setelah update database selesai
+          // Pastikan array valid
+          const newPositions = Array.isArray(pionPositionIndex)
+            ? [...pionPositionIndex]
+            : new Array(players.length).fill(0);
+    
+          // Update posisi pion pemain saat ini, tidak boleh lebih dari 99 (kondisi kemenangan)
+          newPositions[currentPlayerIndex] = Math.min(
+            (newPositions[currentPlayerIndex] || 0) + diceNumber,
+            99
+          );
+    
+          await updateGameState(topicID, gameID, roomID, {
+            diceState: {
+              isRolling: false,
+              currentNumber: diceNumber,
+              lastRoll: diceNumber,
+            },
+            pionPositions: newPositions,
+            isMoving: true,
+          });
+    
+          // Process move dengan delay agar animasi pergerakan tampak natural
+          setTimeout(async () => {
+            const newPosition = newPositions[currentPlayerIndex];
+    
+            // Kondisi Kemenangan: jika posisi mencapai 99
+            if (newPosition === 99) {
+              if (players[currentPlayerIndex]?.uid === user?.uid) {
+                try {
+                  // Update achievement untuk pemenang
+                  const isAchievementUpdated = await updateWinningAchievement(
+                    user.uid,
+                    "game1",
+                    topicID
+                  );
+    
+                  if (isAchievementUpdated) {
+                    await awardVictoryPotions(user); // Menambahkan potion setelah menang
+                    setVictory(true);
+                    setShowVictoryOverlay(true); // Overlay muncul setelah update database selesai
+                  }
+                } catch (error) {
+                  console.error("Error updating achievements:", error);
                 }
-              } catch (error) {
-                console.error("Error updating achievements:", error);
               }
+    
+              await updateGameState(topicID, gameID, roomID, {
+                gameStatus: "finished",
+                isMoving: false,
+              });
+            } 
+            // Kondisi Tangga: jika ada tangga di posisi baru
+            else if (tanggaUp[newPosition]) {
+              await updateGameState(topicID, gameID, roomID, {
+                isMoving: false,
+                showQuestion: true,
+                waitingForAnswer: true,
+                isCorrect: null,
+                allowExtraRoll: false,
+                potionUsable: true,
+              });
+            } 
+            // Kondisi Ular: jika ada ular di posisi baru
+            else if (snakesDown[newPosition]) {
+              newPositions[currentPlayerIndex] = snakesDown[newPosition];
+              await updateGameState(topicID, gameID, roomID, {
+                pionPositions: newPositions,
+                currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+                isMoving: false,
+              });
+            } 
+            // Kondisi Angka 6: pemain mendapat kesempatan roll lagi
+            else if (diceNumber === 6) {
+              await updateGameState(topicID, gameID, roomID, {
+                isMoving: false,
+                showQuestion: true,
+                waitingForAnswer: true,
+                isCorrect: null,
+                allowExtraRoll: true,
+                potionUsable: true,
+              });
+            } 
+            // Kondisi Default: giliran beralih ke pemain berikutnya
+            else {
+              await updateGameState(topicID, gameID, roomID, {
+                currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+                isMoving: false,
+              });
             }
-  
-            await updateGameState(topicID, gameID, roomID, {
-              gameStatus: "finished",
-              isMoving: false,
-            });
-          } 
-          // Kondisi Tangga: jika ada tangga di posisi baru
-          else if (tanggaUp[newPosition]) {
-            await updateGameState(topicID, gameID, roomID, {
-              isMoving: false,
-              showQuestion: true,
-              waitingForAnswer: true,
-              isCorrect: null,
-              allowExtraRoll: false,
-              potionUsable: true,
-            });
-          } 
-          // Kondisi Ular: jika ada ular di posisi baru
-          else if (snakesDown[newPosition]) {
-            newPositions[currentPlayerIndex] = snakesDown[newPosition];
-            await updateGameState(topicID, gameID, roomID, {
-              pionPositions: newPositions,
-              currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-              isMoving: false,
-            });
-          } 
-          // Kondisi Angka 6: pemain mendapat kesempatan roll lagi
-          else if (diceNumber === 6) {
-            await updateGameState(topicID, gameID, roomID, {
-              isMoving: false,
-              showQuestion: true,
-              waitingForAnswer: true,
-              isCorrect: null,
-              allowExtraRoll: true,
-              potionUsable: true,
-            });
-          } 
-          // Kondisi Default: giliran beralih ke pemain berikutnya
-          else {
-            await updateGameState(topicID, gameID, roomID, {
-              currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-              isMoving: false,
-            });
-          }
-        }, 2000);
-      }, 1000);
-    }
-  };
+          }, 2000);
+        }, 1000);
+      }
+    };
   
 
   // Handle answer changes

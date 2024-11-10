@@ -108,7 +108,7 @@ function UlarTangga() {
           if (!existingGameState || !existingGameState.questions) {
             // Ambil pertanyaan dari database berdasarkan `topicID`
             const fetchedQuestions = await getQuestions(topicID);
-            console.log("Fetched questions:", fetchedQuestions); // Debugging line
+            // console.log("Fetched questions:", fetchedQuestions);
 
             // Acak pertanyaan
             const shuffledQuestions = shuffle(fetchedQuestions);
@@ -424,58 +424,60 @@ function UlarTangga() {
   // Handle answer changes
   const handleAnswerChange = async (isAnswerCorrect) => {
     if (!isMyTurn) return;
-
+  
     await updateGameState(topicID, gameID, roomID, {
       isCorrect: isAnswerCorrect,
     });
-
+  
     setTimeout(async () => {
-      // Hitung indeks pertanyaan berikutnya
+      // First, set showQuestion and waitingForAnswer to false
+      await updateGameState(topicID, gameID, roomID, {
+        showQuestion: false,
+        waitingForAnswer: false,
+      });
+  
+      // Then, calculate nextQuestionIndex
       const nextQuestionIndex = (currentQuestionIndex + 1) % questions.length;
-
-      // Perbarui `currentQuestionIndex` di Firebase
+  
+      // Update `currentQuestionIndex` in Firebase
       await updateGameState(topicID, gameID, roomID, {
         currentQuestionIndex: nextQuestionIndex,
       });
-
+  
+      // Proceed with other updates based on whether the answer was correct
       if (isAnswerCorrect) {
         if (allowExtraRoll) {
           await updateGameState(topicID, gameID, roomID, {
-            showQuestion: false,
-            waitingForAnswer: false,
             potionUsable: false,
             allowExtraRoll: false,
           });
-          // Reset timer tanpa mengubah giliran
+          // Reset timer without changing the turn
           resetPlayerTimer();
         } else {
           const newPositions = [...pionPositionIndex];
           const currentPos = newPositions[currentPlayerIndex];
-
+  
           if (tanggaUp[currentPos]) {
             newPositions[currentPlayerIndex] = tanggaUp[currentPos];
           }
-
+  
           await updateGameState(topicID, gameID, roomID, {
             pionPositions: newPositions,
             currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-            showQuestion: false,
-            waitingForAnswer: false,
             allowExtraRoll: false,
-            playerTimers: new Array(players.length).fill(30), // Reset timer pemain berikutnya
+            playerTimers: new Array(players.length).fill(30), // Reset timer for the next player
           });
         }
       } else {
         await updateGameState(topicID, gameID, roomID, {
           currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-          showQuestion: false,
-          waitingForAnswer: false,
           allowExtraRoll: false,
-          playerTimers: new Array(players.length).fill(30), // Reset timer pemain berikutnya
+          playerTimers: new Array(players.length).fill(30), // Reset timer for the next player
         });
       }
-    }, 2000); // Penundaan 2 detik untuk menampilkan umpan balik
+    }, 2000); // Delay of 2 seconds to display feedback
   };
+  
 
   // Handle potion use
   const handlePotionUse = async () => {

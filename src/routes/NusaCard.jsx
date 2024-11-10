@@ -157,7 +157,7 @@ function NusaCard() {
       setActiveCard(getRandomQuestion());
       setAnsweringPlayer(getNextPlayer(deck));
       setShowPopup(true);
-      setHasAnswered(false); // Reset hasAnswered when a new question is shown
+      setHasAnswered(false); 
     }
   };
 

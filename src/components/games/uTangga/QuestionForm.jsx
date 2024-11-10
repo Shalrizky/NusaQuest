@@ -14,22 +14,25 @@ function QuestionForm({ question, onAnswerChange, isMyTurn }) {
     ? question.multiple_choices
     : Object.values(question.multiple_choices);
 
-  const handleAnswerChange = (e) => {
-    if (!isMyTurn || isAnswered) return; // Nonaktifkan jawaban jika bukan giliran pemain
+    const handleAnswerChange = (e) => {
+    if (!isMyTurn || isAnswered) return;
 
     const answer = e.target.value;
     setSelectedAnswer(answer);
     setIsAnswered(true);
 
-    const selectedOption = options.find(opt => opt.answer_text === answer);
+    const selectedOption = options.find((opt) => opt.answer_text === answer);
     const isCorrect = selectedOption && selectedOption.is_correct;
-    onAnswerChange(isCorrect);
+    const hint = !isCorrect ? question.hint : null;
+    onAnswerChange({ isCorrect, hint });
   };
 
   return (
     <Form>
       <Form.Group>
-        <Form.Label className="question-text">{question.question_text}</Form.Label>
+        <Form.Label className="question-text">
+          {question.question_text}
+        </Form.Label>
         {options.map((option, index) => (
           <label
             key={index}
@@ -49,7 +52,7 @@ function QuestionForm({ question, onAnswerChange, isMyTurn }) {
               value={option.answer_text}
               onChange={handleAnswerChange}
               className="d-none"
-              disabled={!isMyTurn || isAnswered} 
+              disabled={!isMyTurn || isAnswered}
             />
             <span className="question-answer-text">{option.answer_text}</span>
           </label>

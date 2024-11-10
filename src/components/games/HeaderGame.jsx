@@ -10,10 +10,15 @@ import song2 from "../../assets/sound/song2.mp3";
 import song3 from "../../assets/sound/song3.mp3";
 import "../../style/components/games/HeaderGame.css";
 
-function HeaderGame({ toggleTemp }) {
+function HeaderGame({
+  toggleTemp,
+  hints,
+  showOffcanvas,
+  setShowOffcanvas,
+  onCloseOffcanvas,
+}) {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [isSfxPlaying, setIsSfxPlaying] = useState(true);
-  const [showOffcanvas, setShowOffcanvas] = useState(false);
+  const [isSfxPlaying, setIsSfxPlaying] = useState(false); // Changed to false
   const audioRef = useRef(null);
   const playlist = [song1, song2, song3];
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
@@ -48,7 +53,13 @@ function HeaderGame({ toggleTemp }) {
     if (toggleTemp) toggleTemp();
   };
 
-  const handleCloseOffcanvas = () => setShowOffcanvas(false);
+  const handleCloseOffcanvas = () => {
+    if (onCloseOffcanvas) {
+      onCloseOffcanvas();
+    } else {
+      setShowOffcanvas(false);
+    }
+  };
 
   return (
     <Row className="align-items-center my-4">
@@ -64,7 +75,7 @@ function HeaderGame({ toggleTemp }) {
       </Col>
       <Col className="d-flex justify-content-end">
         <Image
-          src={isSfxPlaying ? iconsfxOff : iconsfx}
+          src={isSfxPlaying ? iconsfx : iconsfxOff}
           alt="icon sfx"
           width={45}
           className="me-3"
@@ -97,17 +108,18 @@ function HeaderGame({ toggleTemp }) {
           <Offcanvas.Title>Kumpulan Jawaban</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
-          <h5>Makanan</h5>
-          <div className="answer-section">
-            <p>
-              1. Makanan yang berasal dari Jawa Barat adalah{" "}
-              <strong>Gudeg</strong>.
-            </p>
-            <p>
-              2. Makanan pedas yang berasal dari Jawa Barat adalah{" "}
-              <strong>Seblak</strong>.
-            </p>
-          </div>
+          {hints && hints.length > 0 && (
+            <div className="hint-section">
+              <h5>Hints</h5>
+              <ul className="answer-section">
+                {hints.map((hint, index) => (
+                  <li key={index}>
+                    <strong>{index + 1}.</strong> {hint}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </Offcanvas.Body>
       </Offcanvas>
     </Row>

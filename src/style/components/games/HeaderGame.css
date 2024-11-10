@@ -1,24 +1,35 @@
 .custom-offcanvas {
-    background-color: rgba(0, 0, 0, 0.5); 
-    width: 500px !important; 
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 500px !important;
 }
 
 .custom-offcanvas p,
 .custom-offcanvas h5,
+.custom-offcanvas ul li,
 .custom-offcanvas .offcanvas-title {
     color: #ffffff;
 }
 
+.answer-section {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.answer-section li {
+    margin-bottom: 8px;
+}
+
+
 .custom-offcanvas .btn-close {
     background-color: transparent;
-    border: none; 
-    color: #ffffff; 
+    border: none;
+    color: #ffffff !important;
 }
 
 .custom-offcanvas .btn-close:hover {
-    background-color: rgba(255, 255, 255, 0.244); 
+    background-color: rgba(255, 255, 255, 0.244);
 }
 
 .custom-offcanvas .btn-close:focus {
-    box-shadow: none; 
+    box-shadow: none;
 }

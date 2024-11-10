@@ -21,7 +21,7 @@ import {
   cleanupGame,
   stopGameTimer,
   listenToGameTimer,
-  getGameState, 
+  getGameState,
 } from "../services/gameDataServices";
 import {
   getPotionData,
@@ -29,7 +29,7 @@ import {
 } from "../services/itemsDataServices";
 import { updateWinningAchievement } from "../services/achievementDataServices";
 import { usePlayerTimer, useGameTimer } from "../utils/timerUtils";
-import { getQuestions, shuffle } from "../services/questionDataServices"; 
+import { getQuestions, shuffle } from "../services/questionDataServices";
 import "../style/routes/UlarTangga.css";
 
 // Tangga dan ular
@@ -93,6 +93,8 @@ function UlarTangga() {
   const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [hints, setHints] = useState([]);
+  const [showOffcanvas, setShowOffcanvas] = useState(false);
 
   useEffect(() => {
     if (gameOver) navigate("/");
@@ -117,7 +119,13 @@ function UlarTangga() {
             setQuestions(shuffledQuestions);
 
             // Inisialisasi game state dengan pertanyaan yang diacak
-            await initializeGameState(topicID, gameID, roomID, players, shuffledQuestions);
+            await initializeGameState(
+              topicID,
+              gameID,
+              roomID,
+              players,
+              shuffledQuestions
+            );
             await initializeGameTimer(topicID, gameID, roomID, 1800);
           } else {
             // Jika pertanyaan sudah ada di gameState, gunakan itu
@@ -266,7 +274,7 @@ function UlarTangga() {
           setQuestions(gameState.questions);
         }
 
-        if (typeof gameState.currentQuestionIndex === 'number') {
+        if (typeof gameState.currentQuestionIndex === "number") {
           setCurrentQuestionIndex(gameState.currentQuestionIndex);
         }
 
@@ -422,28 +430,33 @@ function UlarTangga() {
   };
 
   // Handle answer changes
-  const handleAnswerChange = async (isAnswerCorrect) => {
+  const handleAnswerChange = async ({ isCorrect: isAnswerCorrect, hint }) => {
     if (!isMyTurn) return;
-  
+
     await updateGameState(topicID, gameID, roomID, {
       isCorrect: isAnswerCorrect,
     });
-  
+
+    if (!isAnswerCorrect && hint) {
+      setHints((prevHints) => [...prevHints, hint]);
+      setShowOffcanvas(true);
+    }
+
     setTimeout(async () => {
       // First, set showQuestion and waitingForAnswer to false
       await updateGameState(topicID, gameID, roomID, {
         showQuestion: false,
         waitingForAnswer: false,
       });
-  
+
       // Then, calculate nextQuestionIndex
       const nextQuestionIndex = (currentQuestionIndex + 1) % questions.length;
-  
+
       // Update `currentQuestionIndex` in Firebase
       await updateGameState(topicID, gameID, roomID, {
         currentQuestionIndex: nextQuestionIndex,
       });
-  
+
       // Proceed with other updates based on whether the answer was correct
       if (isAnswerCorrect) {
         if (allowExtraRoll) {
@@ -451,34 +464,31 @@ function UlarTangga() {
             potionUsable: false,
             allowExtraRoll: false,
           });
-          // Reset timer without changing the turn
           resetPlayerTimer();
         } else {
           const newPositions = [...pionPositionIndex];
           const currentPos = newPositions[currentPlayerIndex];
-  
+
           if (tanggaUp[currentPos]) {
             newPositions[currentPlayerIndex] = tanggaUp[currentPos];
           }
-  
+
           await updateGameState(topicID, gameID, roomID, {
             pionPositions: newPositions,
             currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
             allowExtraRoll: false,
-            playerTimers: new Array(players.length).fill(30), // Reset timer for the next player
+            playerTimers: new Array(players.length).fill(30),
           });
         }
       } else {
         await updateGameState(topicID, gameID, roomID, {
           currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
           allowExtraRoll: false,
-          playerTimers: new Array(players.length).fill(30), // Reset timer for the next player
+          playerTimers: new Array(players.length).fill(30),
         });
       }
-    }, 2000); // Delay of 2 seconds to display feedback
+    }, 2000);
   };
-  
-
   // Handle potion use
   const handlePotionUse = async () => {
     if (!isMyTurn || !potionUsable) return;
@@ -563,8 +573,16 @@ function UlarTangga() {
   }
   return (
     <Container fluid className="utangga-container d-flex flex-column">
-      <HeaderGame layout="home" />
-
+      <HeaderGame
+        layout="home"
+        hints={hints}
+        showOffcanvas={showOffcanvas}
+        setShowOffcanvas={setShowOffcanvas}
+        onCloseOffcanvas={() => {
+          setShowOffcanvas(false);
+          // Do not clear hints here
+        }}
+      />
       <div className="global-timer-container d-flex justify-content-center align-items-center mb-3">
         <div className="global-timer-box px-4 py-2 bg-primary text-white rounded-pill">
           <span className="fw-bold">Game Time: </span>

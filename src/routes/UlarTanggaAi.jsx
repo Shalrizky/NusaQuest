@@ -234,7 +234,7 @@ function UlarTanggaAi() {
             });
     
             setIsPionMoving(false);
-            
+            setIsBotRolling(false);
     
             // Lanjutkan ke pemain berikutnya jika angka dadu bukan 6
             if (diceNumber !== 6) {

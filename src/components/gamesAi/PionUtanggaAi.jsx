@@ -2,10 +2,21 @@ import React, { useEffect, useRef, useState } from "react";
 import { Image as KonvaImage } from "react-konva";
 import gsap from "gsap";
 
-function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationComplete, tanggaUp, snakesDown, isCorrect }) {
+function Pion({
+  desiredIndex,
+  cellSize,
+  getPosition,
+  image,
+  index,
+  onAnimationComplete,
+  tanggaUp,
+  snakesDown,
+  isCorrect,
+  isBot,
+}) {
   const imageRef = useRef(null);
   const [positionIndex, setPositionIndex] = useState(desiredIndex);
-  const isAnimating = useRef(false); // Track animation status for this specific pion
+  const isAnimating = useRef(false);
 
   useEffect(() => {
     if (!imageRef.current) return;
@@ -14,14 +25,11 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
 
     if (positionIndex === desiredIndex || isAnimating.current) return;
 
-
     gsap.killTweensOf(node);
     isAnimating.current = true;
 
-
     const moveToIndex = (targetIndex) => {
       const targetPos = getPosition(targetIndex);
-
 
       gsap.to(node, {
         x: targetPos.x,
@@ -32,7 +40,6 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
           setPositionIndex(targetIndex);
           isAnimating.current = false;
 
-
           if (onAnimationComplete) {
             onAnimationComplete(index, targetIndex);
           }
@@ -40,17 +47,22 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
       });
     };
 
+    // Logika khusus untuk bot
+    if (isBot) {
+      const diceRoll = Math.floor(Math.random() * 6) + 1; // Roll dadu acak untuk bot
+      let newPosition = positionIndex + diceRoll;
 
-    if (tanggaUp[positionIndex] && isCorrect) {
-
-      const targetIndex = tanggaUp[positionIndex];
-      moveToIndex(targetIndex);
-    } else if (snakesDown[positionIndex]) {
-      const targetIndex = snakesDown[positionIndex];
-      setTimeout(() => {
-        moveToIndex(targetIndex);
-      });
+      if (newPosition >= 99) {
+        moveToIndex(99); // Jika bot mencapai atau melewati posisi 99
+      } else if (tanggaUp[newPosition]) {
+        moveToIndex(tanggaUp[newPosition]); // Jika mendarat di tangga
+      } else if (snakesDown[newPosition]) {
+        moveToIndex(snakesDown[newPosition]); // Jika mendarat di ular
+      } else {
+        moveToIndex(newPosition); // Bergerak sesuai hasil roll dadu
+      }
     } else {
+      // Logika untuk pemain manusia
       const steps = Math.abs(desiredIndex - positionIndex);
       const direction = desiredIndex > positionIndex ? 1 : -1;
 
@@ -58,7 +70,6 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
         if (step > steps) {
           setPositionIndex(desiredIndex);
           isAnimating.current = false;
-
 
           if (onAnimationComplete) {
             onAnimationComplete(index, desiredIndex);
@@ -69,9 +80,9 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
         const intermediateIndex = positionIndex + step * direction;
         const targetPos = getPosition(intermediateIndex);
 
-        // Intermediate step animation for walking effect
+        // Efek animasi berjalan dengan lompatan kecil
         gsap.to(node, {
-          y: targetPos.y - 20, // Jump effect
+          y: targetPos.y - 20, // Efek lompatan
           duration: 0.2,
           onComplete: () => {
             gsap.to(node, {
@@ -90,13 +101,13 @@ function Pion({ desiredIndex, cellSize, getPosition, image, index, onAnimationCo
 
       animateStep(1);
     }
-  }, [desiredIndex, getPosition, index, onAnimationComplete, positionIndex, tanggaUp, isCorrect, snakesDown]);
+  }, [desiredIndex, getPosition, index, onAnimationComplete, positionIndex, tanggaUp, isCorrect, snakesDown, isBot]);
 
   return (
     <KonvaImage
       ref={imageRef}
-      x={getPosition(positionIndex).x} // Set position using current index
-      y={getPosition(positionIndex).y} // Set position using current index
+      x={getPosition(positionIndex).x}
+      y={getPosition(positionIndex).y}
       width={cellSize - 10}
       height={cellSize - 10}
       image={image}

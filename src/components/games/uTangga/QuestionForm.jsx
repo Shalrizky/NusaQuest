@@ -1,4 +1,3 @@
-// QuestionForm.js
 import React, { useState } from "react";
 import { Form } from "react-bootstrap";
 import "../../../style/components/games/uTangga/questionForm.css";
@@ -50,7 +49,7 @@ function QuestionForm({ question, onAnswerChange, isMyTurn }) {
               value={option.answer_text}
               onChange={handleAnswerChange}
               className="d-none"
-              disabled={!isMyTurn || isAnswered} // Disable jika bukan giliran pemain atau sudah dijawab
+              disabled={!isMyTurn || isAnswered} 
             />
             <span className="question-answer-text">{option.answer_text}</span>
           </label>
@@ -64,6 +63,5 @@ function QuestionForm({ question, onAnswerChange, isMyTurn }) {
     </Form>
   );
 }
-
 
 export default QuestionForm;

@@ -21,7 +21,7 @@ function PlayerTurnBox({
         <h4 className="box-player-name">Waiting for player...</h4>
       )}
 
-      {showQuestion && waitingForAnswer && (
+      {showQuestion && waitingForAnswer && currentQuestion && (
         <QuestionForm
           question={currentQuestion}
           onAnswerChange={onAnswerChange}
@@ -31,6 +31,5 @@ function PlayerTurnBox({
     </div>
   );
 }
-
 
 export default PlayerTurnBox;

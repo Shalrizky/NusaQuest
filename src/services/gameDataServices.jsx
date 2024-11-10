@@ -69,9 +69,6 @@ export const initializeGameState = async (topicID, gameID, roomID, players, ques
     if (!snapshot.exists()) {
       const playerCount = Array.isArray(players) ? players.length : 0;
 
-      // Ambil pertanyaan acak pertama untuk disimpan di `gameState`
-      const initialQuestion = questions[0]; 
-
       const initialState = {
         currentPlayerIndex: 0,
         pionPositions: new Array(playerCount).fill(0),
@@ -81,8 +78,8 @@ export const initializeGameState = async (topicID, gameID, roomID, players, ques
         isCorrect: null,
         allowExtraRoll: false,
         potionUsable: false,
-        currentQuestion: initialQuestion,  // Menyimpan pertanyaan di gameState
-        currentQuestionIndex: 0,
+        currentQuestionIndex: 0, // Tambahkan ini
+        questions: questions,    // Simpan daftar pertanyaan yang diacak
         gameStatus: 'playing',
         diceState: {
           isRolling: false,
@@ -91,7 +88,7 @@ export const initializeGameState = async (topicID, gameID, roomID, players, ques
         },
         playerTimers: new Array(playerCount).fill(30)
       };
-      
+
       await set(gameStateRef, initialState);
     }
   } catch (error) {

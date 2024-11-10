@@ -21,6 +21,7 @@ import {
   cleanupGame,
   stopGameTimer,
   listenToGameTimer,
+  getGameState, 
 } from "../services/gameDataServices";
 import {
   getPotionData,
@@ -28,11 +29,8 @@ import {
 } from "../services/itemsDataServices";
 import { updateWinningAchievement } from "../services/achievementDataServices";
 import { usePlayerTimer, useGameTimer } from "../utils/timerUtils";
-import { getQuestions } from "../services/questionDataServices";
-
+import { getQuestions, shuffle } from "../services/questionDataServices"; 
 import "../style/routes/UlarTangga.css";
-
-
 
 // Tangga dan ular
 const tanggaUp = {
@@ -62,15 +60,12 @@ function UlarTangga() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Gunakan useRef untuk menyimpan nilai gameID, roomID, dan topicID
   const gameIDRef = useRef(gameID);
   const topicIDRef = useRef(topicID);
   const roomIDRef = useRef(roomID);
 
-  // Ref untuk menandai apakah cleanup sudah dilakukan karena kemenangan
   const hasCleanedUpRef = useRef(false);
 
-  // State permainan
   const [players, setPlayers] = useState([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [pionPositionIndex, setPionPositionIndex] = useState([]);
@@ -78,7 +73,6 @@ function UlarTangga() {
   const [isGameReady, setIsGameReady] = useState(false);
   const [showQuestion, setShowQuestion] = useState(false);
   const [isCorrect, setIsCorrect] = useState(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
   const [victory, setVictory] = useState(false);
   const [winner, setWinner] = useState("");
@@ -98,36 +92,46 @@ function UlarTangga() {
   const [hasLost, setHasLost] = useState(false);
   const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
   const [questions, setQuestions] = useState([]);
-
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   useEffect(() => {
     if (gameOver) navigate("/");
   }, [gameOver, navigate]);
 
-useEffect(() => {
-  const initGame = async () => {
-    try {
-      await setGameStatus(topicID, gameID, roomID, "playing");
-      if (players.length > 0) {
-        // Ambil pertanyaan dari database berdasarkan `topicID`
-        const fetchedQuestions = await getQuestions(topicID);
-        console.log("Fetched questions:", fetchedQuestions); // Debugging line
+  useEffect(() => {
+    const initGame = async () => {
+      try {
+        await setGameStatus(topicID, gameID, roomID, "playing");
+        if (players.length > 0) {
+          // Cek apakah gameState sudah ada
+          const existingGameState = await getGameState(topicID, gameID, roomID);
+          if (!existingGameState || !existingGameState.questions) {
+            // Ambil pertanyaan dari database berdasarkan `topicID`
+            const fetchedQuestions = await getQuestions(topicID);
+            console.log("Fetched questions:", fetchedQuestions); // Debugging line
 
-        // Set pertanyaan ke state
-        setQuestions(fetchedQuestions);
+            // Acak pertanyaan
+            const shuffledQuestions = shuffle(fetchedQuestions);
 
-        // Inisialisasi game state dengan pertanyaan
-        await initializeGameState(topicID, gameID, roomID, players, fetchedQuestions);
-        await initializeGameTimer(topicID, gameID, roomID, 1800);
+            // Set pertanyaan ke state
+            setQuestions(shuffledQuestions);
+
+            // Inisialisasi game state dengan pertanyaan yang diacak
+            await initializeGameState(topicID, gameID, roomID, players, shuffledQuestions);
+            await initializeGameTimer(topicID, gameID, roomID, 1800);
+          } else {
+            // Jika pertanyaan sudah ada di gameState, gunakan itu
+            setQuestions(existingGameState.questions);
+            setIsGameReady(true);
+          }
+        }
+        setIsGameReady(true);
+      } catch (error) {
+        console.error("Error initializing game:", error);
       }
-      setIsGameReady(true);
-    } catch (error) {
-      console.error("Error initializing game:", error);
-    }
-  };
-  initGame();
-}, [topicID, gameID, roomID, players]);
-
+    };
+    initGame();
+  }, [topicID, gameID, roomID, players]);
 
   // Fetch dan update players
   useEffect(() => {
@@ -157,7 +161,7 @@ useEffect(() => {
       stopGameTimer(topicID, gameID, roomID);
       setGameStartStatus(topicID, gameID, roomID, false);
       cleanupGame(topicID, gameID, roomID, user);
-      hasCleanedUpRef.current = true; // Tandai bahwa cleanup sudah dilakukan
+      hasCleanedUpRef.current = true;
     }
   }, [victory, gameOver, topicID, gameID, roomID, user]);
 
@@ -257,6 +261,15 @@ useEffect(() => {
           players[gameState.currentPlayerIndex]?.uid === user?.uid;
         setIsMyTurn(isCurrentPlayerTurn);
 
+        // Tambahkan ini
+        if (gameState.questions) {
+          setQuestions(gameState.questions);
+        }
+
+        if (typeof gameState.currentQuestionIndex === 'number') {
+          setCurrentQuestionIndex(gameState.currentQuestionIndex);
+        }
+
         // Check if any player has won
         if (gameState.pionPositions?.some((pos) => pos === 99)) {
           const winnerIndex = gameState.pionPositions.findIndex(
@@ -270,7 +283,7 @@ useEffect(() => {
 
           // Set hasLost for other players
           if (players[winnerIndex]?.uid !== user?.uid) {
-            setHasLost(true); // Set hasLost to true for players who did not win
+            setHasLost(true);
           }
         }
       }
@@ -292,123 +305,121 @@ useEffect(() => {
       setShowVictoryOverlay(true);
     }
   }, [victory]);
-  
 
   const handleVictoryClose = useCallback(() => {
     setVictory(false);
-    setHasLost(false); // Tambahkan ini untuk memastikan `hasLost` di-reset
+    setHasLost(false);
     cleanupGame(topicID, gameID, roomID, user);
     navigate("/");
   }, [topicID, gameID, roomID, user, navigate]);
-  
+
   // Handle dice roll
-    const handleDiceRollComplete = async (diceNumber, isInitialRoll) => {
-      if (!isMyTurn || isPionMoving || waitingForAnswer) return;
-    
-      if (isInitialRoll) {
+  const handleDiceRollComplete = async (diceNumber, isInitialRoll) => {
+    if (!isMyTurn || isPionMoving || waitingForAnswer) return;
+
+    if (isInitialRoll) {
+      await updateGameState(topicID, gameID, roomID, {
+        diceState: {
+          isRolling: true,
+          currentNumber: diceNumber,
+          lastRoll: diceNumber,
+        },
+      });
+
+      setTimeout(async () => {
+        // Pastikan array valid
+        const newPositions = Array.isArray(pionPositionIndex)
+          ? [...pionPositionIndex]
+          : new Array(players.length).fill(0);
+
+        // Update posisi pion pemain saat ini, tidak boleh lebih dari 99 (kondisi kemenangan)
+        newPositions[currentPlayerIndex] = Math.min(
+          (newPositions[currentPlayerIndex] || 0) + diceNumber,
+          99
+        );
+
         await updateGameState(topicID, gameID, roomID, {
           diceState: {
-            isRolling: true,
+            isRolling: false,
             currentNumber: diceNumber,
             lastRoll: diceNumber,
           },
+          pionPositions: newPositions,
+          isMoving: true,
         });
-    
+
+        // Process move dengan delay agar animasi pergerakan tampak natural
         setTimeout(async () => {
-          // Pastikan array valid
-          const newPositions = Array.isArray(pionPositionIndex)
-            ? [...pionPositionIndex]
-            : new Array(players.length).fill(0);
-    
-          // Update posisi pion pemain saat ini, tidak boleh lebih dari 99 (kondisi kemenangan)
-          newPositions[currentPlayerIndex] = Math.min(
-            (newPositions[currentPlayerIndex] || 0) + diceNumber,
-            99
-          );
-    
-          await updateGameState(topicID, gameID, roomID, {
-            diceState: {
-              isRolling: false,
-              currentNumber: diceNumber,
-              lastRoll: diceNumber,
-            },
-            pionPositions: newPositions,
-            isMoving: true,
-          });
-    
-          // Process move dengan delay agar animasi pergerakan tampak natural
-          setTimeout(async () => {
-            const newPosition = newPositions[currentPlayerIndex];
-    
-            // Kondisi Kemenangan: jika posisi mencapai 99
-            if (newPosition === 99) {
-              if (players[currentPlayerIndex]?.uid === user?.uid) {
-                try {
-                  // Update achievement untuk pemenang
-                  const isAchievementUpdated = await updateWinningAchievement(
-                    user.uid,
-                    "game1",
-                    topicID
-                  );
-    
-                  if (isAchievementUpdated) {
-                    await awardVictoryPotions(user); // Menambahkan potion setelah menang
-                    setVictory(true);
-                    setShowVictoryOverlay(true); // Overlay muncul setelah update database selesai
-                  }
-                } catch (error) {
-                  console.error("Error updating achievements:", error);
+          const newPosition = newPositions[currentPlayerIndex];
+
+          // Kondisi Kemenangan: jika posisi mencapai 99
+          if (newPosition === 99) {
+            if (players[currentPlayerIndex]?.uid === user?.uid) {
+              try {
+                // Update achievement untuk pemenang
+                const isAchievementUpdated = await updateWinningAchievement(
+                  user.uid,
+                  "game1",
+                  topicID
+                );
+
+                if (isAchievementUpdated) {
+                  await awardVictoryPotions(user); // Menambahkan potion setelah menang
+                  setVictory(true);
+                  setShowVictoryOverlay(true); // Overlay muncul setelah update database selesai
                 }
+              } catch (error) {
+                console.error("Error updating achievements:", error);
               }
-    
-              await updateGameState(topicID, gameID, roomID, {
-                gameStatus: "finished",
-                isMoving: false,
-              });
-            } 
-            // Kondisi Tangga: jika ada tangga di posisi baru
-            else if (tanggaUp[newPosition]) {
-              await updateGameState(topicID, gameID, roomID, {
-                isMoving: false,
-                showQuestion: true,
-                waitingForAnswer: true,
-                isCorrect: null,
-                allowExtraRoll: false,
-                potionUsable: true,
-              });
-            } 
-            // Kondisi Ular: jika ada ular di posisi baru
-            else if (snakesDown[newPosition]) {
-              newPositions[currentPlayerIndex] = snakesDown[newPosition];
-              await updateGameState(topicID, gameID, roomID, {
-                pionPositions: newPositions,
-                currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-                isMoving: false,
-              });
-            } 
-            // Kondisi Angka 6: pemain mendapat kesempatan roll lagi
-            else if (diceNumber === 6) {
-              await updateGameState(topicID, gameID, roomID, {
-                isMoving: false,
-                showQuestion: true,
-                waitingForAnswer: true,
-                isCorrect: null,
-                allowExtraRoll: true,
-                potionUsable: true,
-              });
-            } 
-            // Kondisi Default: giliran beralih ke pemain berikutnya
-            else {
-              await updateGameState(topicID, gameID, roomID, {
-                currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-                isMoving: false,
-              });
             }
-          }, 2000);
-        }, 1000);
-      }
-    };
-  
+
+            await updateGameState(topicID, gameID, roomID, {
+              gameStatus: "finished",
+              isMoving: false,
+            });
+          }
+          // Kondisi Tangga: jika ada tangga di posisi baru
+          else if (tanggaUp[newPosition]) {
+            await updateGameState(topicID, gameID, roomID, {
+              isMoving: false,
+              showQuestion: true,
+              waitingForAnswer: true,
+              isCorrect: null,
+              allowExtraRoll: false,
+              potionUsable: true,
+            });
+          }
+          // Kondisi Ular: jika ada ular di posisi baru
+          else if (snakesDown[newPosition]) {
+            newPositions[currentPlayerIndex] = snakesDown[newPosition];
+            await updateGameState(topicID, gameID, roomID, {
+              pionPositions: newPositions,
+              currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+              isMoving: false,
+            });
+          }
+          // Kondisi Angka 6: pemain mendapat kesempatan roll lagi
+          else if (diceNumber === 6) {
+            await updateGameState(topicID, gameID, roomID, {
+              isMoving: false,
+              showQuestion: true,
+              waitingForAnswer: true,
+              isCorrect: null,
+              allowExtraRoll: true,
+              potionUsable: true,
+            });
+          }
+          // Kondisi Default: giliran beralih ke pemain berikutnya
+          else {
+            await updateGameState(topicID, gameID, roomID, {
+              currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+              isMoving: false,
+            });
+          }
+        }, 2000);
+      }, 1000);
+    }
+  };
 
   // Handle answer changes
   const handleAnswerChange = async (isAnswerCorrect) => {
@@ -418,26 +429,44 @@ useEffect(() => {
       isCorrect: isAnswerCorrect,
     });
 
-    if (isAnswerCorrect) {
-      if (allowExtraRoll) {
-        await updateGameState(topicID, gameID, roomID, {
-          showQuestion: false,
-          waitingForAnswer: false,
-          potionUsable: false,
-          allowExtraRoll: false,
-        });
-        // Reset timer tanpa mengubah giliran
-        resetPlayerTimer();
-      } else {
-        const newPositions = [...pionPositionIndex];
-        const currentPos = newPositions[currentPlayerIndex];
+    setTimeout(async () => {
+      // Hitung indeks pertanyaan berikutnya
+      const nextQuestionIndex = (currentQuestionIndex + 1) % questions.length;
 
-        if (tanggaUp[currentPos]) {
-          newPositions[currentPlayerIndex] = tanggaUp[currentPos];
+      // Perbarui `currentQuestionIndex` di Firebase
+      await updateGameState(topicID, gameID, roomID, {
+        currentQuestionIndex: nextQuestionIndex,
+      });
+
+      if (isAnswerCorrect) {
+        if (allowExtraRoll) {
+          await updateGameState(topicID, gameID, roomID, {
+            showQuestion: false,
+            waitingForAnswer: false,
+            potionUsable: false,
+            allowExtraRoll: false,
+          });
+          // Reset timer tanpa mengubah giliran
+          resetPlayerTimer();
+        } else {
+          const newPositions = [...pionPositionIndex];
+          const currentPos = newPositions[currentPlayerIndex];
+
+          if (tanggaUp[currentPos]) {
+            newPositions[currentPlayerIndex] = tanggaUp[currentPos];
+          }
+
+          await updateGameState(topicID, gameID, roomID, {
+            pionPositions: newPositions,
+            currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+            showQuestion: false,
+            waitingForAnswer: false,
+            allowExtraRoll: false,
+            playerTimers: new Array(players.length).fill(30), // Reset timer pemain berikutnya
+          });
         }
-
+      } else {
         await updateGameState(topicID, gameID, roomID, {
-          pionPositions: newPositions,
           currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
           showQuestion: false,
           waitingForAnswer: false,
@@ -445,17 +474,7 @@ useEffect(() => {
           playerTimers: new Array(players.length).fill(30), // Reset timer pemain berikutnya
         });
       }
-    } else {
-      await updateGameState(topicID, gameID, roomID, {
-        currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-        showQuestion: false,
-        waitingForAnswer: false,
-        allowExtraRoll: false,
-        playerTimers: new Array(players.length).fill(30), // Reset timer pemain berikutnya
-      });
-    }
-
-    setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
+    }, 2000); // Penundaan 2 detik untuk menampilkan umpan balik
   };
 
   // Handle potion use

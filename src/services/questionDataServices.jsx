@@ -15,10 +15,7 @@ export const getQuestions = async (topicID) => {
         .filter((question) => question.topic === topicID);
       console.log("Filtered questions:", formattedQuestions); // Debugging line
 
-      // Shuffle the questions
-      const shuffledQuestions = shuffle(formattedQuestions);
-
-      return shuffledQuestions;
+      return formattedQuestions;
     } else {
       console.log("No data found in Firebase");
       return [];
@@ -41,4 +38,4 @@ export const shuffle = (array) => {
     ];
   }
   return array;
-}
+};

@@ -14,6 +14,7 @@ import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
 import RoomPlayer from './routes/RoomPlayer';
 import UlarTangga from './routes/UlarTangga';
+import UlarTanggaAi from './routes/UlarTanggaAi';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const withLoader = (Component) => {
@@ -75,6 +76,13 @@ const App = () => {
           path: '/UlarTangga', element: (
             <ProtectedRoute>
               {withLoader(UlarTangga)()}
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/UlarTanggaAi', element: (
+            <ProtectedRoute>
+              {withLoader(UlarTanggaAi)()}
             </ProtectedRoute>
           )
         },

@@ -238,6 +238,10 @@ function UlarTangga() {
     user,
   });
 
+  useEffect(() => {
+    // console.log("Game time left:", gameTimeLeft);
+  }, [gameTimeLeft]);
+
   // Listen to game state changes
   useEffect(() => {
     if (!isGameReady) return;
@@ -560,7 +564,7 @@ function UlarTangga() {
       console.error("Error awarding victory potions:", error);
     }
   };
-
+  
   // Render logic
   if (!isGameReady) {
     return (

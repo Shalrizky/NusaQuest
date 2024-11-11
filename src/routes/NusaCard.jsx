@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Col, Container, Row, Image, Spinner } from "react-bootstrap";
-import "../style/routes/NusaCard.css";
-import DeckPlayer from "../components/games/DeckPlayer";
-import BottomDeckCard from "../components/games/BottomDeckCard";
+import DeckPlayer from "../components/games/nuca/DeckPlayer";
+import BottomDeckCard from "../components/games/nuca/BottomDeckCard";
 import HeaderNuca from "../components/games/HeaderGame";
 import PertanyaanNuca, {
   getRandomQuestion,
-} from "../components/games/PertanyaanNuca";
+} from "../components/games/nuca/PertanyaanNuca";
 import Potion from "../components/games/potion";
+import "../style/routes/NusaCard.css";
 
 // Image imports
-import potionImage from "../assets/games/Utangga/potion.png";
-import shuffleIcon from "../assets/common/shuffle.png";
-import checklist from "../assets/common/checklist.png";
-import cross from "../assets/common/cross.png";
-import victoryImage from "../assets/games/Utangga/victory.png";
-import Achievement from "../assets/games/Utangga/achievement1.png";
-import Achievement2 from "../assets/games/Utangga/achievement2.png";
-import defaultPlayerPhoto from "../assets/games/Utangga/narutoa.png";
+import potionImage from "../assets/games/potion.png";
+import shuffleIcon from "../assets/games/nuca/shuffle.png";
+import checklist from "../assets/games/nuca/checklist.png";
+import cross from "../assets/games/nuca/cross.png";
+import victoryImage from "../assets/games/victory.png";
+import Achievement from "../assets/games/achievement1.png";
+import Achievement2 from "../assets/games/achievement2.png";
+import defaultPlayerPhoto from "../assets/games/uTangga/narutoa.png";
 
 // Constants
 const INITIAL_DECK_COUNT = 4;

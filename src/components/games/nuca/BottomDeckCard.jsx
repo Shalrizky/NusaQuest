@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card } from 'react-bootstrap';
-import '../../style/components/games/BottomDeckCard.css';
+import '../../../style/components/games/nuca/BottomDeckCard.css';
 
 const BottomDeckCard = ({ cards, onCardClick, showPopup, isExitingPopup }) => {
   const [selectedCard, setSelectedCard] = useState(null);

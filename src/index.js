@@ -1,5 +1,3 @@
-// src/App.js
-
 import ReactDOM from 'react-dom/client';
 import React, { useState, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
@@ -87,13 +85,6 @@ const App = () => {
         {
           path: '/:gameID/:topicID/:roomID/playNuca',
           element: (
-            <ProtectedRoute>
-              {withLoader(UlarTangga)()}
-            </ProtectedRoute>
-          )
-        },
-        {
-          path: '/NusaCard', element: (
             <ProtectedRoute>
               {withLoader(NusaCard)()}
             </ProtectedRoute>

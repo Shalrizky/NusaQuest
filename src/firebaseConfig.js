@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { getDatabase, ref, set, get, onValue, runTransaction, remove, update, onChildAdded, push} from 'firebase/database';
+import { getDatabase, ref, set, get, onValue, runTransaction, remove, update, onChildAdded, push } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 const firebaseConfig = {

@@ -11,6 +11,22 @@
   z-index: 1000;
 }
 
+.room-box.disabled {
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.room-status {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(255, 0, 0, 0.8);
+  color: white;
+  padding: 5px;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
 .room-container {
   background: transparent;
   padding: 20px;

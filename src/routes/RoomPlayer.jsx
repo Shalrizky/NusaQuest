@@ -1,5 +1,3 @@
-// RoomPlayer.js
-
 import React, { useState, useEffect, useRef } from "react";
 import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -49,7 +47,20 @@ function RoomPlayer() {
   const navigate = useNavigate();
 
   // Route Url Untuk game agar dinamis
-  const getGamePath = (gameID) => {
+  const getGamePath = (gameID, roomID, isSinglePlayer) => {
+    // Check if it's room5 or VS AI mode
+    if (roomID === "room5" || isSinglePlayer) {
+      switch (gameID) {
+        case "game1":
+          return "playUtanggaVsAi";  
+        case "game2":
+          return "playNucaVsAi";  
+        default:
+          return "playUtanggaVsAi";
+      }
+    }
+  
+    // Regular multiplayer routes
     switch (gameID) {
       case "game1":
         return "playUTangga";
@@ -70,13 +81,18 @@ function RoomPlayer() {
       roomID,
       (gameStarted) => {
         if (gameStarted) {
-          navigate(`/${gameID}/${topicID}/${roomID}/${getGamePath(gameID)}`);
+          const gamePath = getGamePath(
+            gameID,
+            roomID,
+            roomData?.isSinglePlayer
+          );
+          navigate(`/${gameID}/${topicID}/${roomID}/${gamePath}`);
         }
       }
     );
 
     return () => unsubscribe();
-  }, [isRoomAccessible, topicID, gameID, roomID, navigate]);
+  }, [isRoomAccessible, topicID, gameID, roomID, navigate, roomData]);
 
   // Initialize Room and check accessibility
   useEffect(() => {
@@ -134,14 +150,7 @@ function RoomPlayer() {
           }
 
           setIsRoomAccessible(true);
-          await playerJoinRoom(
-            topicID,
-            gameID,
-            roomID,
-            user,
-            true,
-            userPhoto
-          );
+          await playerJoinRoom(topicID, gameID, roomID, user, true, userPhoto);
           await syncCurrentPlayers(topicID, gameID, roomID);
         } else {
           navigate(-1);
@@ -283,11 +292,14 @@ function RoomPlayer() {
 
   // Handle Start Game Button Click
   const handleStartGame = async () => {
-    if (
-      (isFirstPlayer || isSinglePlayer) &&
-      (aiCardsCount > 0 || !isSinglePlayer)
-    ) {
-      await setGameStartStatus(topicID, gameID, roomID, true);
+    if ((isFirstPlayer || isSinglePlayer) && (aiCardsCount > 0 || !isSinglePlayer)) {
+      if (roomID === "room5") {
+        // Untuk room5, langsung navigasi ke halaman VS AI
+        navigate(`/${gameID}/${topicID}/${roomID}/playUtanggaVsAi`);
+      } else {
+        // Room normal tetap pakai database
+        await setGameStartStatus(topicID, gameID, roomID, true);
+      }
     }
   };
 
@@ -373,12 +385,12 @@ function RoomPlayer() {
       <Header
         showLogoIcon={false}
         showIcons={true}
-        showTextHeader={roomData.title}
+        showTextHeader={roomData?.title}
         showBackIcon={true}
       />
       <Row className="d-flex flex-column justify-content-center align-items-center text-center">
         <Col md={12} className="desc-title">
-          <p>{roomData.description}</p>
+          <p>{roomData?.description}</p>
         </Col>
         <Col
           md={12}
@@ -396,7 +408,7 @@ function RoomPlayer() {
             disabled={
               (!isFirstPlayer && !isSinglePlayer) ||
               (isSinglePlayer && aiCardsCount === 0) ||
-              (!isSinglePlayer && players.length <= 1) // Added condition
+              (!isSinglePlayer && players.length <= 1)
             }
           >
             <Image className="icon-start me-2" src={PlayGameIcon} />

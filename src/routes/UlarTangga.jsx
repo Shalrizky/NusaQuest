@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Container, Row, Col, Spinner } from "react-bootstrap";
 import useAuth from "../hooks/useAuth";
 import HeaderGame from "../components/games/HeaderGame";
-import Potion from "../components/games/Potion";
+import Potion from "../components/games/potion";
 import VictoryOverlay from "../components/games/VictoryOverlay";
 import LoseOverlay from "../components/games/LoseOverlay";
 import Board from "../components/games/uTangga/React-KonvaUlar";

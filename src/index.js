@@ -7,7 +7,6 @@ import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import Loader from './utils/Loader';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
-
 import Login from './routes/Login';
 import Home from './routes/Home';
 import Profile from './routes/Profile';
@@ -16,7 +15,9 @@ import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
 import RoomPlayer from './routes/RoomPlayer';
 import UlarTangga from './routes/UlarTangga';
+import NusaCard from './routes/NusaCard';
 import ProtectedRoute from './components/ProtectedRoute';
+
 
 const withLoader = (Component) => {
   return (props) => {
@@ -88,6 +89,13 @@ const App = () => {
           element: (
             <ProtectedRoute>
               {withLoader(UlarTangga)()}
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/NusaCard', element: (
+            <ProtectedRoute>
+              {withLoader(NusaCard)()}
             </ProtectedRoute>
           )
         },

@@ -1,0 +1,261 @@
+.nuca-container {
+  background-image: url('../../assets/common/background.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  height: 100vh;
+  overflow:visible;
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 80px); /* Kurangi tinggi overlay */
+  pointer-events: none;
+
+}
+.popup-content {
+  /* ... */
+  pointer-events: auto; /* Mengizinkan klik pada konten popup */
+}
+
+.shuffle-rotate {
+  animation: rotate 0.5s linear forwards; /* Ensure you have the 'forwards' property */
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg); /* Starting position */
+  }
+  100% {
+    transform: rotate(-90deg); /* Full reverse rotation */
+  }
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.new-card {
+  animation: slideIn 0.5s ease-in-out forwards;
+}
+
+.bottom-deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.deck-card {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 5px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.deck-card:hover {
+  transform: scale(1.05);
+}
+
+.deck-position-left {
+  margin-left: -50px; /* Sesuaikan nilai untuk mendekatkan ke tepi kiri layar */
+}
+
+.deck-position-right {
+  margin-right: -50px; /* Sesuaikan nilai untuk mendekatkan ke tepi kanan layar */
+}
+
+
+
+/* CSS Animasi */
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.new-card {
+  animation: slideIn 0.5s ease-in-out forwards; /* Animasi untuk kartu baru */
+}
+
+/* Styling untuk semua deck */
+.deck-card {
+  transition: transform 0.3s; /* Efek transisi untuk interaksi */
+}
+
+.deck-card:hover {
+  transform: scale(1.05); /* Efek hover */
+}
+
+/* Timer Overlay dengan Desain Lebih Menarik */
+.timer-overlay {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  color: #fff;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  transition: transform 0.2s ease;
+}
+
+.position-absolute {
+  z-index: 10;
+}
+
+.feedback-icon-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.feedback-icon-profile {
+  width: 100px;
+  height: 100px;
+  animation: feedbackProfileAnimation 0.5s ease-in-out;
+}
+
+@keyframes feedbackProfileAnimation {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+
+/*Css Overlay VICTORY*/
+.victory-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8); /* Transparan */
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  text-align: center;
+  padding: 20px;
+}
+
+.victory-logo {
+  width: 300px; /* Sesuaikan ukuran logo sesuai kebutuhan */
+  margin-bottom: 20px;
+}
+
+.victory-overlay h1 {
+  font-size: 3rem;
+  margin: 10px 0;
+}
+
+.victory-overlay h2 {
+  font-size: 2rem;
+  margin: 10px 0;
+}
+
+.rewards {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.Achievement1-logo {
+  margin: 5px 10px;
+  width: 100px;
+  height:100px ;
+}
+
+.Achievement2-logo {
+    margin: 5px 10px;
+    width: 100px;
+    height:100px ;
+}
+.potion-logo {
+    margin: 5px 10px;
+    width: 120px;
+    height:100px ;
+
+  }
+
+  .timer-overlay-above {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #fcff41, #fbff2b);
+    color: #000000;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    transition: transform 0.2s ease;
+  }
+  
+  .potion-icon {
+  position: fixed; /* Use fixed to keep it in the same position even when scrolling */
+  bottom: 30px;    /* Adjust this value to set the distance from the bottom */
+  right: 20px;     /* Adjust this value to set the distance from the right */
+  z-index: 2000;   /* Ensure it's above other elements */
+}
+
+.player-name {
+  font-size: 20px;
+  margin-top: 5px; /* Space between the image and the username */
+  font-weight: bold;
+  font-size: 16px;
+  color: #ffffff; /* Dark blue color */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  text-align: center;
+}
+
+/* NusaCard.css */
+.player-profile {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+.asking-player {
+  border: 7px solid green;
+}
+
+.answering-player {
+  border: 7px solid red;
+}

@@ -13,13 +13,9 @@ import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
 import RoomPlayer from './routes/RoomPlayer';
 import UlarTangga from './routes/UlarTangga';
-<<<<<<< HEAD
-import UlarTanggaAi from './routes/UlarTanggaAi';
-=======
 import UtanggaVsAi from './routes/UtanggaVsAi';
 import NusaCard from './routes/NusaCard';
 import NucaVsAi from './routes/NucaVsAi';
->>>>>>> main
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -89,11 +85,6 @@ const App = () => {
           )
         },
         {
-<<<<<<< HEAD
-          path: '/UlarTanggaAi', element: (
-            <ProtectedRoute>
-              {withLoader(UlarTanggaAi)()}
-=======
           path: '/:gameID/:topicID/:roomID/playUtanggaVsAi',
           element: (
             <ProtectedRoute>
@@ -114,7 +105,6 @@ const App = () => {
           element: (
             <ProtectedRoute>
               {withLoader(NucaVsAi)()}
->>>>>>> main
             </ProtectedRoute>
           )
         },

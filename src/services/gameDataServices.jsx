@@ -279,13 +279,18 @@ export const cleanupGame = async (topicID, gameID, roomID, user) => {
   if (!topicID || !gameID || !roomID || !user?.uid) return;
 
   try {
-
     // Reset gameState
-    const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+    const gameStateRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/gameState`
+    );
     await set(gameStateRef, null);
 
     // Reset gameTimer
-    const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+    const gameTimerRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/gameTimer`
+    );
     await set(gameTimerRef, null);
 
     // Reset game status and start status
@@ -293,11 +298,17 @@ export const cleanupGame = async (topicID, gameID, roomID, user) => {
     await setGameStartStatus(topicID, gameID, roomID, false);
 
     // Hapus semua pesan chat dalam room
-    const chatRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/chatMessages`);
+    const chatRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/chatMessages`
+    );
     await set(chatRef, null);
 
     // Reset player data dalam room
-    const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
+    const playersRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/players`
+    );
     await set(playersRef, null);
 
     // Reset keseluruhan room data

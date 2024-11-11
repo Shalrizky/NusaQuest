@@ -183,10 +183,11 @@ export const resetRoom = async (topicID, gameID, roomID) => {
         [`rooms/${topicID}/${gameID}/${roomID}/gameStatus`]: null,
         [`rooms/${topicID}/${gameID}/${roomID}/currentPlayers`]: 0,
         [`rooms/${topicID}/${gameID}/${roomID}/chatMessages`]: null,
+        [`rooms/${topicID}/${gameID}/${roomID}/gameStarted`]: false,
       };
       await update(ref(database), updates);
     }
   } catch (error) {
-    console.error("Error resetting game status:", error);
+    console.error("Error resetting room:", error);
   }
 };

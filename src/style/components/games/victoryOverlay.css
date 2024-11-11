@@ -1,0 +1,92 @@
+.victory-overlay {
+   position: fixed;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background-color: rgba(0, 0, 0, 0.85);
+   color: white;
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+   z-index: 1000;
+   text-align: center;
+   padding: 20px;
+   animation: fadeIn 0.5s ease-in-out;
+ }
+ 
+ @keyframes fadeIn {
+   from { opacity: 0; }
+   to { opacity: 1; }
+ }
+ 
+ .victory-logo {
+   width: 200px;
+   margin-bottom: 20px;
+   animation: bounce 1s infinite;
+ }
+ 
+ @keyframes bounce {
+   0%, 100% { transform: translateY(0); }
+   50% { transform: translateY(-10px); }
+ }
+ 
+ .victory-overlay h2 {
+   font-size: 2.2rem;
+   font-weight: bold;
+   margin: 10px 0;
+   color: transparent; 
+   background-image: linear-gradient(90deg, #fdc85b, #ff8e00); 
+   background-clip: text; 
+   -webkit-background-clip: text; 
+ }
+ 
+ .victory-overlay p {
+   font-size: 1.2rem;
+   margin: 8px 0;
+ }
+ 
+ .rewards {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   gap: 20px;
+   margin-top: 20px;
+ }
+ 
+ .reward-item {
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+   text-align: center;
+   padding: 8px;
+   border: 2px solid #fdc85b;
+   border-radius: 10px;
+   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+   background: rgba(255, 255, 255, 0.1);
+   width: 245px; 
+   height: 120px; 
+ }
+ 
+ .reward-item img {
+   width: 60px; 
+   height: auto;
+ }
+ 
+ 
+ .reward-item p {
+   font-size: 1rem;
+   font-weight: bold;
+   word-wrap: break-word;
+   text-align: center;
+ }
+ 
+ .auto-redirect-info {
+   font-size: 0.9rem;
+   color: #cccccc;
+   margin-top: 20px;
+   font-style: italic;
+ }
+ 

@@ -1,29 +1,29 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Rect, Text, Image as KonvaImage } from "react-konva";
-import Pion from "./PionUTangga"; // Pastikan path impor benar
+import Pion from "./PionUTangga";
 
 // Import semua gambar yang diperlukan
-import pionImageSrc from "../../assets/games/Utangga/Pions 1.png";
-import pion2ImageSrc from "../../assets/games/Utangga/Pions 2.png";
-import pion3ImageSrc from "../../assets/games/Utangga/Pions 3.png";
-import pion4ImageSrc from "../../assets/games/Utangga/Pions 4.png";
-import snakeImageSrc from "../../assets/games/Utangga/Uler-tangga1.png";
-import snake2ImageSrc from "../../assets/games/Utangga/uler-tangga2.png";
-import snake3ImageSrc from "../../assets/games/Utangga/uler-tangga3.png";
-import snake4ImageSrc from "../../assets/games/Utangga/uler-tangga4.png";
-import snake5ImageSrc from "../../assets/games/Utangga/uler-tangga5.png";
-import snake6ImageSrc from "../../assets/games/Utangga/uler-tangga6.png";
-import snake7ImageSrc from "../../assets/games/Utangga/uler-tangga7.png";
-import snake8ImageSrc from "../../assets/games/Utangga/uler-tangga8.png";
-import tanggaImageSrc from "../../assets/games/Utangga/tangga1.png";
-import tangga2ImageSrc from "../../assets/games/Utangga/tangga2.png";
-import tangga3ImageSrc from "../../assets/games/Utangga/tangga3.png";
-import tangga4ImageSrc from "../../assets/games/Utangga/tangga4.png";
-import tangga5ImageSrc from "../../assets/games/Utangga/tangga5.png";
-import tangga6ImageSrc from "../../assets/games/Utangga/tangga6.png";
-import tangga7ImageSrc from "../../assets/games/Utangga/tangga7.png";
-import tangga8ImageSrc from "../../assets/games/Utangga/tangga8.png";
-import tangga9ImageSrc from "../../assets/games/Utangga/tangga9.png";
+import pionImageSrc from "../../../assets/games/Utangga/Pions 1.png";
+import pion2ImageSrc from "../../../assets/games/Utangga/Pions 2.png";
+import pion3ImageSrc from "../../../assets/games/Utangga/Pions 3.png";
+import pion4ImageSrc from "../../../assets/games/Utangga/Pions 4.png";
+import snakeImageSrc from "../../../assets/games/Utangga/Uler-tangga1.png";
+import snake2ImageSrc from "../../../assets/games/Utangga/uler-tangga2.png";
+import snake3ImageSrc from "../../../assets/games/Utangga/uler-tangga3.png";
+import snake4ImageSrc from "../../../assets/games/Utangga/uler-tangga4.png";
+import snake5ImageSrc from "../../../assets/games/Utangga/uler-tangga5.png";
+import snake6ImageSrc from "../../../assets/games/Utangga/uler-tangga6.png";
+import snake7ImageSrc from "../../../assets/games/Utangga/uler-tangga7.png";
+import snake8ImageSrc from "../../../assets/games/Utangga/uler-tangga8.png";
+import tanggaImageSrc from "../../../assets/games/Utangga/tangga1.png";
+import tangga2ImageSrc from "../../../assets/games/Utangga/tangga2.png";
+import tangga3ImageSrc from "../../../assets/games/Utangga/tangga3.png";
+import tangga4ImageSrc from "../../../assets/games/Utangga/tangga4.png";
+import tangga5ImageSrc from "../../../assets/games/Utangga/tangga5.png";
+import tangga6ImageSrc from "../../../assets/games/Utangga/tangga6.png";
+import tangga7ImageSrc from "../../../assets/games/Utangga/tangga7.png";
+import tangga8ImageSrc from "../../../assets/games/Utangga/tangga8.png";
+import tangga9ImageSrc from "../../../assets/games/Utangga/tangga9.png";
 
 function Board({
   pionPositionIndex = [0, 0, 0, 0],

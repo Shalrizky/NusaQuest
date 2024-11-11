@@ -1,21 +1,22 @@
-.dice-potion-container {
+.potion-icon {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  z-index: 999;
+  background: none;
+  cursor: pointer;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  /* position: relative; */
-  margin-left: 225px;
-  margin-top: 20px; 
+  align-items: flex-end;
 }
 
-.potion-icon {
-  position: sticky;
-  bottom: 20px; 
-  right: 0; 
-  z-index: 10;
-  background: none; 
-  margin-left: 150px; 
-  cursor: pointer;
+.potion-text {
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.413);
+  margin-right: -12px;
+  margin-bottom: 2px;
+  font-size: 18px;
 }
+<<<<<<< HEAD
   .potion-text {
     font-weight: bold; 
     color: white;     
@@ -65,3 +66,50 @@
   } 
   
   
+=======
+
+/* Styling untuk modal */
+.modal-use-potion {
+  background: #162b4d8a;
+  color: white;
+  border-radius: 15px;
+  padding: 50px 0;
+}
+
+.modal-text {
+  font-size: 18px;
+}
+
+.highlight {
+  color: #facc15;
+  font-weight: bold;
+}
+
+.modal-use-potion-button {
+  font-size: 16px;
+  padding: 5px 50px;
+  border-radius: 12px;
+}
+
+.modal-use-potion-button.yes {
+  background-color: transparent;
+  border: 1px solid #fff;
+}
+
+.modal-use-potion-button.no {
+  background-color: transparent;
+  border: 1px solid #fff;
+}
+
+.modal-use-potion-button.yes:hover {
+  background-color: #006923;
+  border: 1px solid #006923;
+  opacity: 0.9;
+}
+
+.modal-use-potion-button.no:hover {
+  background-color: #690000;
+  border: 1px solid #690000;
+  opacity: 0.9;
+}
+>>>>>>> main

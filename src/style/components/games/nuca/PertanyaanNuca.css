@@ -1,0 +1,81 @@
+/* Pop-up Styles */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: background-color 0.5s ease;
+}
+
+/* Background untuk jawaban benar dan salah */
+.correct-bg {
+  background-color: rgba(144, 238, 144, 0.8); /* Hijau */
+}
+
+.incorrect-bg {
+  background-color: rgba(255, 127, 127, 0.8); /* Merah */
+}
+
+.popup-content {
+  background-color: #313cd1;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  width: 600px; /* Lebar kontainer diperbesar */
+  max-width: 95%; /* Sesuaikan agar responsif */
+  color: white;
+  transition: opacity 0.3s ease;
+}
+
+/* Mengatur ukuran teks pertanyaan lebih kecil */
+.popup-content h2 {
+  font-size: 20px; /* Ukuran font dikurangi */
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+/* Animasi keluar */
+.exit-popup {
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.answer-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.answer-button {
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border: 0.1px solid white;
+  border-radius: 5px;
+  background-color: transparent;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  color: white;
+}
+
+.answer-button:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.correct-answer {
+  background-color: green;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.incorrect-answer {
+  background-color: red;
+  color: white;
+  transition: background-color 0.3s ease;
+}

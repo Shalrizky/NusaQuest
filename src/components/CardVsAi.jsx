@@ -12,6 +12,7 @@ const CardVsAi = ({
   achievements,
   badge,
   handlePhotoError,
+  onAiCardsChange, // Accept the callback prop
 }) => {
   const [aiCards, setAiCards] = useState([false, false, false]);
   const cardRefs = useRef([]);
@@ -41,7 +42,15 @@ const CardVsAi = ({
     }
   }, [hasAnimated]);
 
-  // Handle Click untuk animasi kartu AI  saat di klik
+  // Notify parent component when AI cards change
+  useEffect(() => {
+    const aiCount = aiCards.filter((isAi) => isAi).length;
+    if (onAiCardsChange) {
+      onAiCardsChange(aiCount);
+    }
+  }, [aiCards, onAiCardsChange]);
+
+  // Handle Click untuk animasi kartu AI saat di klik
   const handleAddAiClick = (index) => {
     const newAiCards = [...aiCards];
     newAiCards[index] = true;

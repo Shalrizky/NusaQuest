@@ -5,7 +5,6 @@ import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import Loader from './utils/Loader';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
-
 import Login from './routes/Login';
 import Home from './routes/Home';
 import Profile from './routes/Profile';
@@ -14,8 +13,15 @@ import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
 import RoomPlayer from './routes/RoomPlayer';
 import UlarTangga from './routes/UlarTangga';
+<<<<<<< HEAD
 import UlarTanggaAi from './routes/UlarTanggaAi';
+=======
+import UtanggaVsAi from './routes/UtanggaVsAi';
+import NusaCard from './routes/NusaCard';
+import NucaVsAi from './routes/NucaVsAi';
+>>>>>>> main
 import ProtectedRoute from './components/ProtectedRoute';
+
 
 const withLoader = (Component) => {
   return (props) => {
@@ -59,30 +65,56 @@ const App = () => {
         { path: '/information', element: withLoader(Information)() },
         { path: '/destination/:id', element: withLoader(DestinationDetail)() },
         {
-          path: '/lobby/:topicID/:gameID', element: (
+          path: '/lobby/:topicID/:gameID',
+          element: (
             <ProtectedRoute>
               {withLoader(LobbyGame)()}
             </ProtectedRoute>
           )
         },
         {
-          path: '/:gameID/:topicID/:roomID', element: (
+          path: '/:gameID/:topicID/:roomID',
+          element: (
             <ProtectedRoute>
               {withLoader(RoomPlayer)()}
             </ProtectedRoute>
           )
         },
         {
-          path: '/UlarTangga', element: (
+          path: '/:gameID/:topicID/:roomID/playUTangga',
+          element: (
             <ProtectedRoute>
               {withLoader(UlarTangga)()}
             </ProtectedRoute>
           )
         },
         {
+<<<<<<< HEAD
           path: '/UlarTanggaAi', element: (
             <ProtectedRoute>
               {withLoader(UlarTanggaAi)()}
+=======
+          path: '/:gameID/:topicID/:roomID/playUtanggaVsAi',
+          element: (
+            <ProtectedRoute>
+              {withLoader(UtanggaVsAi)()}
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/:gameID/:topicID/:roomID/playNuca',
+          element: (
+            <ProtectedRoute>
+              {withLoader(NusaCard)()}
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/:gameID/:topicID/:roomID/playNucaVsAi',
+          element: (
+            <ProtectedRoute>
+              {withLoader(NucaVsAi)()}
+>>>>>>> main
             </ProtectedRoute>
           )
         },

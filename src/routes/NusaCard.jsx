@@ -11,13 +11,13 @@ import PertanyaanNuca, {
 import Potion from "../components/games/potion";
 
 // Image imports
-import potionImage from "../assets/games/Utangga/potion.png";
+import potionImage from "../assets/games/potion.png";
 import shuffleIcon from "../assets/common/shuffle.png";
 import checklist from "../assets/common/checklist.png";
 import cross from "../assets/common/cross.png";
-import victoryImage from "../assets/games/Utangga/victory.png";
-import Achievement from "../assets/games/Utangga/achievement1.png";
-import Achievement2 from "../assets/games/Utangga/achievement2.png";
+import victoryImage from "../assets/games/victory.png";
+import Achievement from "../assets/games/achievement1.png";
+import Achievement2 from "../assets/games/achievement2.png";
 import defaultPlayerPhoto from "../assets/games/Utangga/narutoa.png";
 
 // Constants

@@ -12,13 +12,13 @@ import "../style/routes/NusaCard.css";
 
 // Image imports
 import potionImage from "../assets/games/potion.png";
-import shuffleIcon from "../assets/games/nuca/shuffle.png";
-import checklist from "../assets/games/nuca/checklist.png";
-import cross from "../assets/games/nuca/cross.png";
+import shuffleIcon from "../assets/games/Nuca/shuffle.png";
+import checklist from "../assets/games/Nuca/checklist.png";
+import cross from "../assets/games/Nuca/cross.png";
 import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
-import defaultPlayerPhoto from "../assets/games/uTangga/narutoa.png";
+import defaultPlayerPhoto from "../assets/games/Utangga/narutoa.png";
 
 // Constants
 const INITIAL_DECK_COUNT = 4;

@@ -5,7 +5,7 @@ export const getQuestions = async (topicID) => {
   try {
     const snapshot = await get(questionsRef);
     const data = snapshot.val();
-    console.log("Fetched data:", data); // Debugging line
+    // console.log("Fetched data:", data); 
     if (data) {
       const formattedQuestions = Object.keys(data)
         .map((key) => ({
@@ -13,7 +13,7 @@ export const getQuestions = async (topicID) => {
           ...data[key],
         }))
         .filter((question) => question.topic === topicID);
-      console.log("Filtered questions:", formattedQuestions); // Debugging line
+      // console.log("Filtered questions:", formattedQuestions);
 
       return formattedQuestions;
     } else {

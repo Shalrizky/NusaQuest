@@ -1,5 +1,3 @@
-// src/App.js
-
 import ReactDOM from 'react-dom/client';
 import React, { useState, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
@@ -15,7 +13,9 @@ import Information from './routes/InformationDestination';
 import DestinationDetail from './routes/DestinationDetail';
 import RoomPlayer from './routes/RoomPlayer';
 import UlarTangga from './routes/UlarTangga';
+import UtanggaVsAi from './routes/UtanggaVsAi';
 import NusaCard from './routes/NusaCard';
+import NucaVsAi from './routes/NucaVsAi';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -85,17 +85,26 @@ const App = () => {
           )
         },
         {
-          path: '/:gameID/:topicID/:roomID/playNuca',
+          path: '/:gameID/:topicID/:roomID/playUtanggaVsAi',
           element: (
             <ProtectedRoute>
-              {withLoader(UlarTangga)()}
+              {withLoader(UtanggaVsAi)()}
             </ProtectedRoute>
           )
         },
         {
-          path: '/NusaCard', element: (
+          path: '/:gameID/:topicID/:roomID/playNuca',
+          element: (
             <ProtectedRoute>
               {withLoader(NusaCard)()}
+            </ProtectedRoute>
+          )
+        },
+        {
+          path: '/:gameID/:topicID/:roomID/playNucaVsAi',
+          element: (
+            <ProtectedRoute>
+              {withLoader(NucaVsAi)()}
             </ProtectedRoute>
           )
         },

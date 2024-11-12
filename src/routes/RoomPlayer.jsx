@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { Container, Row, Col, Image, Spinner } from "react-bootstrap";
+import { useParams, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import useUserPhoto from "../hooks/useUserPhoto";
 import Header from "../components/Header";
-import CardPlayer from "../components/CardPlayer"; 
+import CardPlayer from "../components/CardPlayer";
 import CardVsAi from "../components/CardVsAi";
 import ChatPlayer from "../components/ChatPlayer";
 import PlayGameIcon from "../assets/common/play-game-icon.svg";
-import { fetchRooms, checkRoomType } from "../services/roomDataServices";
+import {
+  fetchRooms,
+  checkRoomType,
+  resetRoom,
+} from "../services/roomDataServices";
 import {
   fetchPlayer,
   playerJoinRoom,
@@ -18,7 +22,7 @@ import {
 } from "../services/PlayerDataServices";
 import {
   listenToGameStart,
-  setGameStartStatus
+  setGameStartStatus,
 } from "../services/gameDataServices";
 import { getUserAchievements } from "../services/achievementDataServices";
 import "../style/routes/RoomPlayer.css";
@@ -38,11 +42,25 @@ function RoomPlayer() {
   const [userBadge, setUserBadge] = useState(null);
   const [lastMessage, setLastMessage] = useState("Chat With Others");
   const [isFirstPlayer, setIsFirstPlayer] = useState(false);
+  const [aiCardsCount, setAiCardsCount] = useState(0); // Added state for AI cards
   const prevPlayers = useRef([]);
   const navigate = useNavigate();
 
   // Route Url Untuk game agar dinamis
-  const getGamePath = (gameID) => {
+  const getGamePath = (gameID, roomID, isSinglePlayer) => {
+    // Check if it's room5 or VS AI mode
+    if (roomID === "room5" || isSinglePlayer) {
+      switch (gameID) {
+        case "game1":
+          return "playUtanggaVsAi";  
+        case "game2":
+          return "playNucaVsAi";  
+        default:
+          return "playUtanggaVsAi";
+      }
+    }
+  
+    // Regular multiplayer routes
     switch (gameID) {
       case "game1":
         return "playUTangga";
@@ -55,16 +73,26 @@ function RoomPlayer() {
 
   // Listen to game start status
   useEffect(() => {
-    if (!isRoomAccessible || roomID === "room5") return;
+    if (!isRoomAccessible) return;
 
-    const unsubscribe = listenToGameStart(topicID, gameID, roomID, (gameStarted) => {
-      if (gameStarted) {
-        navigate(`/${gameID}/${topicID}/${roomID}/${getGamePath(gameID)}`);
+    const unsubscribe = listenToGameStart(
+      topicID,
+      gameID,
+      roomID,
+      (gameStarted) => {
+        if (gameStarted) {
+          const gamePath = getGamePath(
+            gameID,
+            roomID,
+            roomData?.isSinglePlayer
+          );
+          navigate(`/${gameID}/${topicID}/${roomID}/${gamePath}`);
+        }
       }
-    });
+    );
 
     return () => unsubscribe();
-  }, [isRoomAccessible, topicID, gameID, roomID, navigate]);
+  }, [isRoomAccessible, topicID, gameID, roomID, navigate, roomData]);
 
   // Initialize Room and check accessibility
   useEffect(() => {
@@ -107,21 +135,25 @@ function RoomPlayer() {
         if (currentRoomData) {
           const currentPlayers = currentRoomData.currentPlayers || 0;
           const capacity = currentRoomData.capacity || 4;
+          const gameStatus = currentRoomData.gameStatus || "waiting";
 
-          if (currentPlayers < capacity) {
-            setIsRoomAccessible(true);
-            await playerJoinRoom(
-              topicID,
-              gameID,
-              roomID,
-              user,
-              true,
-              userPhoto
-            );
-            await syncCurrentPlayers(topicID, gameID, roomID);
-          } else {
+          if (gameStatus === "playing") {
+            alert("Room ini sedang bermain. Silakan pilih room lain.");
             navigate(-1);
+            return;
           }
+
+          if (currentPlayers >= capacity) {
+            alert("Room ini penuh. Silakan pilih room lain.");
+            navigate(-1);
+            return;
+          }
+
+          setIsRoomAccessible(true);
+          await playerJoinRoom(topicID, gameID, roomID, user, true, userPhoto);
+          await syncCurrentPlayers(topicID, gameID, roomID);
+        } else {
+          navigate(-1);
         }
         setLoading(false);
       } catch (error) {
@@ -138,10 +170,13 @@ function RoomPlayer() {
           await setGameStartStatus(topicID, gameID, roomID, false);
           await playerLeaveRoom(topicID, gameID, roomID, user);
           await syncCurrentPlayers(topicID, gameID, roomID);
+          await resetRoom(topicID, gameID, roomID);
         }
       };
 
-      if (!window.location.pathname.includes(`/${gameID}/${topicID}/${roomID}`)) {
+      if (
+        !window.location.pathname.includes(`/${gameID}/${topicID}/${roomID}`)
+      ) {
         handleRealLeave();
       }
     };
@@ -149,8 +184,6 @@ function RoomPlayer() {
 
   // Fetch and Update Players
   useEffect(() => {
-    if (roomID === "room5") return;
-
     const handlePlayersUpdate = async (playersData) => {
       try {
         const playerPromises = playersData.map(async (player) => {
@@ -207,6 +240,8 @@ function RoomPlayer() {
     if (players.length > 0) {
       const firstPlayer = players[0];
       setIsFirstPlayer(firstPlayer?.uid === user?.uid);
+    } else {
+      setIsFirstPlayer(true); // In VS AI mode, set first player to true
     }
   }, [players, user]);
 
@@ -250,12 +285,25 @@ function RoomPlayer() {
     fetchUserData();
   }, [user, topicID, gameID]);
 
+  // Callback to receive AI cards count from CardVsAi component
+  const handleAiCardsChange = (newCount) => {
+    setAiCardsCount(newCount);
+  };
+
+  // Handle Start Game Button Click
   const handleStartGame = async () => {
-    if (isFirstPlayer) {
-      await setGameStartStatus(topicID, gameID, roomID, true);
+    if ((isFirstPlayer || isSinglePlayer) && (aiCardsCount > 0 || !isSinglePlayer)) {
+      if (roomID === "room5") {
+        // Untuk room5, langsung navigasi ke halaman VS AI
+        navigate(`/${gameID}/${topicID}/${roomID}/playUtanggaVsAi`);
+      } else {
+        // Room normal tetap pakai database
+        await setGameStartStatus(topicID, gameID, roomID, true);
+      }
     }
   };
 
+  // Render Loading State
   if (loading) {
     return (
       <div className="loading-container d-flex justify-content-center align-items-center vh-100">
@@ -266,10 +314,12 @@ function RoomPlayer() {
     );
   }
 
+  // If Room is not accessible
   if (!isRoomAccessible) {
     return null;
   }
 
+  // If Room Data is not available
   if (!roomData) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
@@ -297,6 +347,7 @@ function RoomPlayer() {
       badge={userBadge}
       achievements={userAchievements}
       isAvailable={true}
+      onAiCardsChange={handleAiCardsChange} // Pass the callback
     />
   ) : (
     playerArray.map((player, index) => {
@@ -334,12 +385,12 @@ function RoomPlayer() {
       <Header
         showLogoIcon={false}
         showIcons={true}
-        showTextHeader={roomData.title}
+        showTextHeader={roomData?.title}
         showBackIcon={true}
       />
       <Row className="d-flex flex-column justify-content-center align-items-center text-center">
         <Col md={12} className="desc-title">
-          <p>{roomData.description}</p>
+          <p>{roomData?.description}</p>
         </Col>
         <Col
           md={12}
@@ -354,10 +405,16 @@ function RoomPlayer() {
           <button
             className="btn-start-game d-flex align-items-center justify-content-center"
             onClick={handleStartGame}
-            disabled={!isFirstPlayer || isSinglePlayer}
+            disabled={
+              (!isFirstPlayer && !isSinglePlayer) ||
+              (isSinglePlayer && aiCardsCount === 0) ||
+              (!isSinglePlayer && players.length <= 1)
+            }
           >
             <Image className="icon-start me-2" src={PlayGameIcon} />
-            {isFirstPlayer ? "Start Game" : "Menunggu Host Memulai Permainan..."}
+            {isFirstPlayer || isSinglePlayer
+              ? "Start Game"
+              : "Menunggu Host Memulai Permainan..."}
           </button>
         </Col>
       </Row>

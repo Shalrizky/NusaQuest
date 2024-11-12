@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../../style/components/games/PertanyaanNuca.css';
+import '../../../style/components/games/nuca/PertanyaanNuca.css';
 
 // List of questions with categories
 export const ListPertanyaanNuca = [

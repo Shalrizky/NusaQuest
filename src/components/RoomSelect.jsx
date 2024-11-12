@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Row } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchRooms } from "../services/roomDataServices"; 
+import { fetchRooms } from "../services/roomDataServices";
 import Room1 from "../assets/common/room-select-1.png";
 import Room2 from "../assets/common/room-select-2.png";
 import Room3 from "../assets/common/room-select-3.png";
@@ -48,14 +48,21 @@ function RoomSelect({ closeRoomSelect }) {
       return;
     }
 
-    // Untuk room multiplayer, check kapasitas
+    // Untuk room multiplayer, check kapasitas dan status game
     const roomData = roomsData[`room${roomNumber}`];
     if (roomData) {
       const currentPlayers = roomData.currentPlayers || 0;
       const capacity = roomData.capacity || 4;
+      const gameStatus = roomData.gameStatus || "waiting"; // default ke 'waiting' jika undefined
+
+      // Cek apakah game sedang berlangsung
+      if (gameStatus === "playing") {
+        alert("Room ini sedang bermain. Silakan pilih room lain.");
+        return;
+      }
 
       if (currentPlayers >= capacity) {
-        alert("This room is full. Please choose another room.");
+        alert("Room ini penuh. Silakan pilih room lain.");
         return;
       }
     }
@@ -79,34 +86,40 @@ function RoomSelect({ closeRoomSelect }) {
         ref={roomSelectRef}
       >
         <div className="room-wrapper">
-          {[1, 2, 3, 4, 5].map((roomNumber) => (
-            <div
-              key={roomNumber}
-              className="room-box"
-              onMouseEnter={() => setHoveredRoom(roomNumber)}
-              onMouseLeave={() => setHoveredRoom(null)}
-              onClick={() => handleRoomClick(roomNumber)}
-            >
-              <div className="room-content">
-                {/* Hanya tampilkan player counter untuk room 1-4 */}
-                {roomNumber !== 5 && (
-                  <div className="player-counter">
-                    {roomsData[`room${roomNumber}`]?.currentPlayers || 0} /{" "}
-                    {roomsData[`room${roomNumber}`]?.capacity || 4}
-                  </div>
-                )}
-                <img
-                  src={
-                    hoveredRoom === roomNumber
-                      ? roomImages[roomNumber].active
-                      : roomImages[roomNumber].normal
-                  }
-                  alt={`Room ${roomNumber}`}
-                  className="room-img"
-                />
+          {[1, 2, 3, 4, 5].map((roomNumber) => {
+            const roomData = roomsData[`room${roomNumber}`];
+            const isRoomPlaying = roomData?.gameStatus === "playing";
+            return (
+              <div
+                key={roomNumber}
+                className={`room-box ${isRoomPlaying ? "disabled" : ""}`}
+                onMouseEnter={() => setHoveredRoom(roomNumber)}
+                onMouseLeave={() => setHoveredRoom(null)}
+                onClick={() => !isRoomPlaying && handleRoomClick(roomNumber)}
+              >
+                <div className="room-content">
+                  {/* Hanya tampilkan player counter untuk room 1-4 */}
+                  {roomNumber !== 5 && (
+                    <div className="player-counter">
+                      {roomData?.currentPlayers || 0} / {roomData?.capacity || 4}
+                    </div>
+                  )}
+                  {isRoomPlaying && (
+                    <div className="room-status">Playing</div>
+                  )}
+                  <img
+                    src={
+                      hoveredRoom === roomNumber
+                        ? roomImages[roomNumber].active
+                        : roomImages[roomNumber].normal
+                    }
+                    alt={`Room ${roomNumber}`}
+                    className="room-img"
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Row>
     </div>

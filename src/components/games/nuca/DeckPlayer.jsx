@@ -1,6 +1,6 @@
 import React from 'react';
 import { Image } from 'react-bootstrap';
-import backCard from '../../../assets/games/Nuca/backCard.png';
+import backCard from "../../../assets/games/nuca/backCard.png";
 import '../../../style/components/games/nuca/DeckPlayer.css';
 
 const DeckPlayer = ({ count, isNew }) => {

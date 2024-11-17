@@ -21,7 +21,7 @@ import cross from "../assets/games/nuca/cross.png";
 import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
-import defaultPlayerPhoto from "../assets/games/uTangga/narutoa.png";
+import defaultPlayerPhoto from "../assets/games/Utangga/narutoa.png";
 
 // Constants
 const INITIAL_DECK_COUNT = 4;
@@ -30,8 +30,6 @@ const INACTIVITY_DURATION = 600000;
 const FEEDBACK_DURATION = 3000;
 const POPUP_TRANSITION_DURATION = 2000;
 const TURN_TIMER_DURATION = 10;
-
-const DECK_ORDER = ["bottom", "right", "top", "left"];
 
 function NusaCard() {
   const { gameID, topicID, roomID } = useParams(); // Gunakan useParams untuk mendapatkan ID
@@ -46,11 +44,8 @@ function NusaCard() {
   const topicIDRef = useRef(topicID);
   const roomIDRef = useRef(roomID);
 
-  const [deckCounts, setDeckCounts] = useState({
-    top: 4,
-    left: 4,
-    right: 4,
-  });
+  const [deckCounts, setDeckCounts] = useState({});
+  const [DECK_ORDER, setDECK_ORDER] = useState([]);
 
   // Fetch players saat komponen dimuat
   useEffect(() => {
@@ -79,13 +74,6 @@ function NusaCard() {
 
     initGame();
   }, [topicID, gameID, roomID]);
-
-
-  // Fungsi untuk mendapatkan posisi pemain
-  const getPlayerPosition = (index) => {
-    const positions = ["bottom", "right", "top", "left"];
-    return positions[index] || "bottom";
-  };
 
   const [cards, setCards] = useState(() =>
     Array.from({ length: INITIAL_DECK_COUNT }, () => getRandomQuestion())
@@ -126,17 +114,58 @@ function NusaCard() {
     position: null,
   });
 
+  // Get number of players
+  const numPlayers = players.length;
+
+  // Initialize deckCounts and DECK_ORDER when players change
+  useEffect(() => {
+    if (players.length > 0) {
+      let initialDeckCounts = {};
+      let deckOrder = ["bottom"]; // bottom is always included
+
+      if (numPlayers === 2) {
+        initialDeckCounts = { top: INITIAL_DECK_COUNT };
+        deckOrder.push("top");
+      } else if (numPlayers === 3) {
+        initialDeckCounts = { left: INITIAL_DECK_COUNT, right: INITIAL_DECK_COUNT };
+        deckOrder.push("right", "left");
+      } else if (numPlayers === 4) {
+        initialDeckCounts = { top: INITIAL_DECK_COUNT, left: INITIAL_DECK_COUNT, right: INITIAL_DECK_COUNT };
+        deckOrder.push("right", "top", "left");
+      }
+
+      setDeckCounts(initialDeckCounts);
+      setDECK_ORDER(deckOrder);
+    }
+  }, [players]);
+
   // Reintroduce getPlayerByPosition function
-const getPlayerByPosition = (position) => {
-  const positionMap = {
-    bottom: 0,
-    right: 1,
-    top: 2,
-    left: 3,
+  const getPlayerByPosition = (position) => {
+    let playerIndex;
+    if (numPlayers === 2) {
+      const positionMap = {
+        bottom: 0,
+        top: 1,
+      };
+      playerIndex = positionMap[position];
+    } else if (numPlayers === 3) {
+      const positionMap = {
+        bottom: 0,
+        right: 1,
+        left: 2,
+      };
+      playerIndex = positionMap[position];
+    } else if (numPlayers === 4) {
+      const positionMap = {
+        bottom: 0,
+        right: 1,
+        top: 2,
+        left: 3,
+      };
+      playerIndex = positionMap[position];
+    }
+    return players[playerIndex] || null;
   };
-  const playerIndex = positionMap[position];
-  return players[playerIndex] || null;
-};
 
   // Helper function to determine player classes
   const getPlayerClass = (position) => {
@@ -177,7 +206,6 @@ const getPlayerByPosition = (position) => {
       });
     }, 1000);
   };
-  
 
   // Game logic handlers
   const handleDeckCardClick = (deck) => {
@@ -229,7 +257,7 @@ const getPlayerByPosition = (position) => {
     setActiveCard(card);
     setShowPopup(true);
     setLastActiveDeck("bottom");
-    setAnsweringPlayer("right");
+    setAnsweringPlayer(getNextPlayer("bottom"));
     setHasAnswered(false); // Reset hasAnswered when a new question is shown
 
     // Remove the clicked card from the deck
@@ -256,7 +284,7 @@ const getPlayerByPosition = (position) => {
 
     if (
       isCorrect &&
-      lastActiveDeck === "left" &&
+      lastActiveDeck !== "bottom" && // Adjusted for dynamic decks
       answeringPlayer !== "bottom"
     ) {
       addNewCardToDeck();
@@ -273,18 +301,15 @@ const getPlayerByPosition = (position) => {
 
   // Helper functions
   const getNextPlayer = (currentDeck) => {
-    const playerMap = {
-      bottom: "right",
-      right: "top",
-      top: "left",
-      left: "bottom",
-    };
-    return playerMap[currentDeck];
+    const currentIndex = DECK_ORDER.indexOf(currentDeck);
+    const nextIndex = (currentIndex + 1) % DECK_ORDER.length;
+    return DECK_ORDER[nextIndex];
   };
 
   const getNextTurn = () => {
     const currentIndex = DECK_ORDER.indexOf(lastActiveDeck);
-    return DECK_ORDER[(currentIndex + 1) % DECK_ORDER.length];
+    const nextIndex = (currentIndex + 1) % DECK_ORDER.length;
+    return DECK_ORDER[nextIndex];
   };
 
   const removeCardFromDeck = (index) => {
@@ -362,20 +387,20 @@ const getPlayerByPosition = (position) => {
   };
 
   // Effects
-useEffect(() => {
-  startInactivityTimer();
-  const resetTimerOnActivity = () => resetInactivityTimer();
+  useEffect(() => {
+    startInactivityTimer();
+    const resetTimerOnActivity = () => resetInactivityTimer();
 
-  // Add event listeners for user activity
-  window.addEventListener("click", resetTimerOnActivity);
-  window.addEventListener("keydown", resetTimerOnActivity);
+    // Add event listeners for user activity
+    window.addEventListener("click", resetTimerOnActivity);
+    window.addEventListener("keydown", resetTimerOnActivity);
 
-  return () => {
-    clearInterval(inactivityTimerRef.current);
-    window.removeEventListener("click", resetTimerOnActivity);
-    window.removeEventListener("keydown", resetTimerOnActivity);
-  };
-}, []);
+    return () => {
+      clearInterval(inactivityTimerRef.current);
+      window.removeEventListener("click", resetTimerOnActivity);
+      window.removeEventListener("keydown", resetTimerOnActivity);
+    };
+  }, []);
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -448,7 +473,7 @@ useEffect(() => {
   // Get winner's username
   const getWinnerName = () => {
     const winnerPlayer = getPlayerByPosition(winner);
-    return winnerPlayer ? winnerPlayer.name : "";
+    return winnerPlayer ? winnerPlayer.displayName : "";
   };
 
   useEffect(() => {
@@ -458,7 +483,6 @@ useEffect(() => {
 
     return () => clearTimeout(loadingTimeout);
   }, []);
-
 
    // Render loading
    if (loading) {
@@ -480,6 +504,7 @@ useEffect(() => {
       <HeaderNuca layout="home" />
 
       {/* Top Player */}
+      { (numPlayers === 2 || numPlayers === 4) && (
       <Row className="align-items-center justify-content-center">
         <Col xs="auto" className="text-center position-relative ms-5 ps-5">
           <div
@@ -505,7 +530,7 @@ useEffect(() => {
           className="d-flex flex-column position-relative ms-5 ps-5"
         >
           <Image
-            src={players[2]?.photoURL || defaultPlayerPhoto}
+            src={getPlayerByPosition("top")?.photoURL || defaultPlayerPhoto}
             alt="Player Profile"
             style={{
               width: "80px",
@@ -515,16 +540,18 @@ useEffect(() => {
             className={getPlayerClass("top")}
           />
           <div className="player-name mt-2">
-            {players[2]?.displayName || "Top Player"}
+            {getPlayerByPosition("top")?.displayName || "Top Player"}
           </div>
           {renderFeedbackIcon("top")}
         </Col>
       </Row>
+      )}
 
       {/* Middle Row */}
       <Container fluid>
         <Row className="mb-5 mt-0">
           {/* Left Deck */}
+          { (numPlayers >= 3) && (
           <Col md={3} className="position-relative deck-position-left">
             <div
               className="d-flex flex-column align-items-center position-relative"
@@ -537,7 +564,7 @@ useEffect(() => {
                 <div className="timer-overlay">{timeRemaining}</div>
               )}
               <Image
-                src={players[3]?.photoURL || defaultPlayerPhoto}
+                src={getPlayerByPosition("left")?.photoURL || defaultPlayerPhoto}
                 alt="Player Left"
                 style={{
                   width: "80px",
@@ -547,7 +574,7 @@ useEffect(() => {
                 className={getPlayerClass("left")}
               />
               <div className="player-name">
-                {players[3]?.displayName || "Left Player"}
+                {getPlayerByPosition("left")?.displayName || "Left Player"}
               </div>
               {renderFeedbackIcon("left")}
               <DeckPlayer
@@ -557,6 +584,7 @@ useEffect(() => {
               />
             </div>
           </Col>
+          )}
 
           {/* Center Deck */}
           <Col
@@ -578,6 +606,7 @@ useEffect(() => {
           </Col>
 
           {/* Right Deck */}
+          { (numPlayers >= 3) && (
           <Col md={2} className="position-relative deck-position-right">
             <div
               className="d-flex flex-column align-items-center position-relative"
@@ -590,7 +619,7 @@ useEffect(() => {
                 <div className="timer-overlay">{timeRemaining}</div>
               )}
               <Image
-                src={players[1]?.photoURL || defaultPlayerPhoto}
+                src={getPlayerByPosition("right")?.photoURL || defaultPlayerPhoto}
                 alt="Player Right"
                 style={{
                   width: "80px",
@@ -600,7 +629,7 @@ useEffect(() => {
                 className={getPlayerClass("right")}
               />
               <div className="player-name">
-                {players[1]?.displayName || "Right Player"}
+                {getPlayerByPosition("right")?.displayName || "Right Player"}
               </div>
               {renderFeedbackIcon("right")}
               <DeckPlayer
@@ -611,6 +640,7 @@ useEffect(() => {
               />
             </div>
           </Col>
+          )}
         </Row>
       </Container>
 
@@ -638,13 +668,13 @@ useEffect(() => {
           className="d-flex flex-column align-items-center p-3 position-relative"
         >
           <Image
-            src={players[0]?.photoURL || defaultPlayerPhoto}
+            src={getPlayerByPosition("bottom")?.photoURL || defaultPlayerPhoto}
             alt="Player Bottom"
             style={{ width: "80px", height: "80px", borderRadius: "50%" }}
             className={getPlayerClass("bottom")}
           />
           <div className="player-name">
-            {players[0]?.displayName || "Bottom Player"}
+            {getPlayerByPosition("bottom")?.displayName || "Bottom Player"}
           </div>
         </Col>
       </Row>

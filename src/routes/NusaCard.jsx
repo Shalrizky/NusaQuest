@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Col, Container, Row, Image, Spinner } from "react-bootstrap";
+import useAuth from "../hooks/useAuth"; 
 import DeckPlayer from "../components/games/nuca/DeckPlayer";
 import BottomDeckCard from "../components/games/nuca/BottomDeckCard";
 import HeaderNuca from "../components/games/HeaderGame";
-import PertanyaanNuca, {
-  getRandomQuestion,
-} from "../components/games/nuca/PertanyaanNuca";
+import PertanyaanNuca, { getRandomQuestion } from "../components/games/nuca/PertanyaanNuca";
 import Potion from "../components/games/potion";
+import { 
+  fetchNusaCardPlayers, 
+  setNusaCardGameStatus 
+} from "../services/gameDataServicesNuca";
 import "../style/routes/NusaCard.css";
 
 // Image imports
@@ -23,38 +26,76 @@ import defaultPlayerPhoto from "../assets/games/uTangga/narutoa.png";
 // Constants
 const INITIAL_DECK_COUNT = 4;
 const TIMER_DURATION = 15;
-const INACTIVITY_DURATION = 30000;
+const INACTIVITY_DURATION = 600000;
 const FEEDBACK_DURATION = 3000;
 const POPUP_TRANSITION_DURATION = 2000;
 const TURN_TIMER_DURATION = 10;
 
-// Reintroduce the PLAYERS array with usernames and photos
-const PLAYERS = [
-  { id: 1, name: "Xang Abe", photo: defaultPlayerPhoto, position: "bottom" },
-  { id: 2, name: "Xahel", photo: defaultPlayerPhoto, position: "right" },
-  { id: 3, name: "Reiki", photo: defaultPlayerPhoto, position: "top" },
-  { id: 4, name: "Nxtxh", photo: defaultPlayerPhoto, position: "left" },
-];
-
 const DECK_ORDER = ["bottom", "right", "top", "left"];
 
 function NusaCard() {
+  const { gameID, topicID, roomID } = useParams(); // Gunakan useParams untuk mendapatkan ID
+  const { user } = useAuth(); // Dapatkan data user yang login
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
+  const [players, setPlayers] = useState([]); // State untuk menyimpan data pemain
+
+  // Gunakan useRef untuk menyimpan referensi ID
+  const gameIDRef = useRef(gameID);
+  const topicIDRef = useRef(topicID);
+  const roomIDRef = useRef(roomID);
+
   const [deckCounts, setDeckCounts] = useState({
-    top: INITIAL_DECK_COUNT,
-    left: INITIAL_DECK_COUNT,
-    right: INITIAL_DECK_COUNT,
+    top: 4,
+    left: 4,
+    right: 4,
   });
+
+  // Fetch players saat komponen dimuat
+  useEffect(() => {
+    const initGame = async () => {
+      try {
+        // Set status game
+        await setNusaCardGameStatus(topicID, gameID, roomID, "playing");
+
+        // Fetch players
+        const unsubscribe = fetchNusaCardPlayers(
+          topicID, 
+          gameID, 
+          roomID, 
+          (playersData) => {
+            setPlayers(playersData);
+            setLoading(false);
+          }
+        );
+
+        return () => unsubscribe();
+      } catch (error) {
+        console.error("Error initializing game:", error);
+        setLoading(false);
+      }
+    };
+
+    initGame();
+  }, [topicID, gameID, roomID]);
+
+
+  // Fungsi untuk mendapatkan posisi pemain
+  const getPlayerPosition = (index) => {
+    const positions = ["bottom", "right", "top", "left"];
+    return positions[index] || "bottom";
+  };
 
   const [cards, setCards] = useState(() =>
     Array.from({ length: INITIAL_DECK_COUNT }, () => getRandomQuestion())
   );
 
   // Game state
+  const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [lastActiveDeck, setLastActiveDeck] = useState(null);
   const [currentTurn, setCurrentTurn] = useState("bottom");
-  const [isShuffling, setIsShuffling] = useState(true); // Start with shuffling animation
+  const [isShuffling, setIsShuffling] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
   const [isExitingPopup, setIsExitingPopup] = useState(false);
   const [activeCard, setActiveCard] = useState(null);
@@ -64,7 +105,7 @@ function NusaCard() {
   const [deckDepleted, setDeckDepleted] = useState(null);
   const [isActionInProgress, setIsActionInProgress] = useState(false);
   const [answeringPlayer, setAnsweringPlayer] = useState(null);
-  const [hasAnswered, setHasAnswered] = useState(false); // New state
+  const [hasAnswered, setHasAnswered] = useState(false);
 
   // Timers
   const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
@@ -86,9 +127,16 @@ function NusaCard() {
   });
 
   // Reintroduce getPlayerByPosition function
-  const getPlayerByPosition = (position) => {
-    return PLAYERS.find((player) => player.position === position);
+const getPlayerByPosition = (position) => {
+  const positionMap = {
+    bottom: 0,
+    right: 1,
+    top: 2,
+    left: 3,
   };
+  const playerIndex = positionMap[position];
+  return players[playerIndex] || null;
+};
 
   // Helper function to determine player classes
   const getPlayerClass = (position) => {
@@ -120,15 +168,16 @@ function NusaCard() {
   const startInactivityTimer = () => {
     inactivityTimerRef.current = setInterval(() => {
       setInactivityTimeRemaining((prevTime) => {
-        if (prevTime <= 100000) {
+        if (prevTime <= 1000) { // Check closer to timeout for inactivity
           clearInterval(inactivityTimerRef.current);
           navigate("/");
           return 0;
         }
-        return prevTime - 100000;
+        return prevTime - 1000; // Reduce time in smaller intervals (1 second)
       });
-    }, 100000);
+    }, 1000);
   };
+  
 
   // Game logic handlers
   const handleDeckCardClick = (deck) => {
@@ -313,21 +362,20 @@ function NusaCard() {
   };
 
   // Effects
-  useEffect(() => {
-    startInactivityTimer();
-    window.addEventListener("click", resetInactivityTimer);
+useEffect(() => {
+  startInactivityTimer();
+  const resetTimerOnActivity = () => resetInactivityTimer();
 
-    // Start the game with shuffle animation and then start the first turn timer
-    setTimeout(() => {
-      setIsShuffling(false);
-      startTurnTimer();
-    }, 500);
+  // Add event listeners for user activity
+  window.addEventListener("click", resetTimerOnActivity);
+  window.addEventListener("keydown", resetTimerOnActivity);
 
-    return () => {
-      clearInterval(inactivityTimerRef.current);
-      window.removeEventListener("click", resetInactivityTimer);
-    };
-  }, []);
+  return () => {
+    clearInterval(inactivityTimerRef.current);
+    window.removeEventListener("click", resetTimerOnActivity);
+    window.removeEventListener("keydown", resetTimerOnActivity);
+  };
+}, []);
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -411,7 +459,9 @@ function NusaCard() {
     return () => clearTimeout(loadingTimeout);
   }, []);
 
-  if (loading) {
+
+   // Render loading
+   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
         <Spinner animation="border" role="status" variant="dark">
@@ -419,6 +469,7 @@ function NusaCard() {
         </Spinner>
       </div>
     );
+
   }
 
   return (
@@ -428,8 +479,8 @@ function NusaCard() {
     >
       <HeaderNuca layout="home" />
 
+      {/* Top Player */}
       <Row className="align-items-center justify-content-center">
-        {/* DeckPlayer Column */}
         <Col xs="auto" className="text-center position-relative ms-5 ps-5">
           <div
             onClick={() => handleDeckCardClick("top")}
@@ -449,13 +500,12 @@ function NusaCard() {
           </div>
         </Col>
 
-        {/* Player Profile Column */}
         <Col
           xs="auto"
           className="d-flex flex-column position-relative ms-5 ps-5"
         >
           <Image
-            src={getPlayerByPosition("top").photo}
+            src={players[2]?.photoURL || defaultPlayerPhoto}
             alt="Player Profile"
             style={{
               width: "80px",
@@ -465,13 +515,13 @@ function NusaCard() {
             className={getPlayerClass("top")}
           />
           <div className="player-name mt-2">
-            {getPlayerByPosition("top").name}
+            {players[2]?.displayName || "Top Player"}
           </div>
           {renderFeedbackIcon("top")}
         </Col>
       </Row>
 
-      {/* Middle Row - Modified to spread decks wider */}
+      {/* Middle Row */}
       <Container fluid>
         <Row className="mb-5 mt-0">
           {/* Left Deck */}
@@ -487,7 +537,7 @@ function NusaCard() {
                 <div className="timer-overlay">{timeRemaining}</div>
               )}
               <Image
-                src={getPlayerByPosition("left").photo}
+                src={players[3]?.photoURL || defaultPlayerPhoto}
                 alt="Player Left"
                 style={{
                   width: "80px",
@@ -497,7 +547,7 @@ function NusaCard() {
                 className={getPlayerClass("left")}
               />
               <div className="player-name">
-                {getPlayerByPosition("left").name}
+                {players[3]?.displayName || "Left Player"}
               </div>
               {renderFeedbackIcon("left")}
               <DeckPlayer
@@ -507,9 +557,6 @@ function NusaCard() {
               />
             </div>
           </Col>
-
-          {/* Empty space between left deck and center */}
-          <Col md={2} />
 
           {/* Center Deck */}
           <Col
@@ -530,8 +577,6 @@ function NusaCard() {
             </div>
           </Col>
 
-          <Col md={3} />
-
           {/* Right Deck */}
           <Col md={2} className="position-relative deck-position-right">
             <div
@@ -545,7 +590,7 @@ function NusaCard() {
                 <div className="timer-overlay">{timeRemaining}</div>
               )}
               <Image
-                src={getPlayerByPosition("right").photo}
+                src={players[1]?.photoURL || defaultPlayerPhoto}
                 alt="Player Right"
                 style={{
                   width: "80px",
@@ -555,7 +600,7 @@ function NusaCard() {
                 className={getPlayerClass("right")}
               />
               <div className="player-name">
-                {getPlayerByPosition("right").name}
+                {players[1]?.displayName || "Right Player"}
               </div>
               {renderFeedbackIcon("right")}
               <DeckPlayer
@@ -593,20 +638,19 @@ function NusaCard() {
           className="d-flex flex-column align-items-center p-3 position-relative"
         >
           <Image
-            src={getPlayerByPosition("bottom").photo}
+            src={players[0]?.photoURL || defaultPlayerPhoto}
             alt="Player Bottom"
             style={{ width: "80px", height: "80px", borderRadius: "50%" }}
             className={getPlayerClass("bottom")}
           />
           <div className="player-name">
-            {getPlayerByPosition("bottom").name}
+            {players[0]?.displayName || "Bottom Player"}
           </div>
         </Col>
       </Row>
 
       {/* Show the question popup */}
       {showPopup && activeCard && !hasAnswered && (
-        // Prevent showing popup if answered
         <>
           <div style={{ position: "relative", zIndex: "2000" }}>
             <PertanyaanNuca
@@ -626,11 +670,7 @@ function NusaCard() {
       {/* Show Overlay Victory */}
       {victory && (
         <div className="victory-overlay" onClick={() => navigate("/")}>
-          <img
-            src={victoryImage}
-            alt="Victory Logo"
-            className="victory-logo"
-          />
+          <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
           <p>Pemenang: {getWinnerName()}</p>
           <p>Kamu mendapatkan:</p>
           <div className="rewards">

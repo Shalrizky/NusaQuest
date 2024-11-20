@@ -20,88 +20,77 @@ function Pion({
 
   useEffect(() => {
     if (!imageRef.current) return;
-
+  
     const node = imageRef.current;
-
+  
     if (positionIndex === desiredIndex || isAnimating.current) return;
-
-    gsap.killTweensOf(node);
+  
+    gsap.killTweensOf(node); // Pastikan animasi sebelumnya dihentikan
     isAnimating.current = true;
-
+  
+    // Fungsi untuk memindahkan pion ke indeks target
     const moveToIndex = (targetIndex) => {
       const targetPos = getPosition(targetIndex);
-
+  
       gsap.to(node, {
         x: targetPos.x,
         y: targetPos.y,
-        duration: 0.3,
+        duration: 0.3, // Durasi setiap langkah animasi
         ease: "power2.inOut",
         onComplete: () => {
           setPositionIndex(targetIndex);
           isAnimating.current = false;
-
+  
           if (onAnimationComplete) {
             onAnimationComplete(index, targetIndex);
           }
         },
       });
     };
-
-    // Logika khusus untuk bot
-    if (isBot) {
-      const diceRoll = Math.floor(Math.random() * 6) + 1; // Roll dadu acak untuk bot
-      let newPosition = positionIndex + diceRoll;
-
-      if (newPosition >= 99) {
-        moveToIndex(99); // Jika bot mencapai atau melewati posisi 99
-      } else if (tanggaUp[newPosition]) {
-        moveToIndex(tanggaUp[newPosition]); // Jika mendarat di tangga
-      } else if (snakesDown[newPosition]) {
-        moveToIndex(snakesDown[newPosition]); // Jika mendarat di ular
-      } else {
-        moveToIndex(newPosition); // Bergerak sesuai hasil roll dadu
-      }
-    } else {
-      // Logika untuk pemain manusia
-      const steps = Math.abs(desiredIndex - positionIndex);
-      const direction = desiredIndex > positionIndex ? 1 : -1;
-
-      const animateStep = (step) => {
-        if (step > steps) {
-          setPositionIndex(desiredIndex);
-          isAnimating.current = false;
-
-          if (onAnimationComplete) {
-            onAnimationComplete(index, desiredIndex);
-          }
-          return;
+  
+    // Animasi langkah demi langkah
+    const steps = Math.abs(desiredIndex - positionIndex);
+    const direction = desiredIndex > positionIndex ? 1 : -1;
+  
+    const animateStep = (step) => {
+      if (step > steps) {
+        // Jika semua langkah selesai
+        setPositionIndex(desiredIndex);
+        isAnimating.current = false;
+  
+        if (onAnimationComplete) {
+          onAnimationComplete(index, desiredIndex);
         }
-
-        const intermediateIndex = positionIndex + step * direction;
-        const targetPos = getPosition(intermediateIndex);
-
-        // Efek animasi berjalan dengan lompatan kecil
-        gsap.to(node, {
-          y: targetPos.y - 20, // Efek lompatan
-          duration: 0.2,
-          onComplete: () => {
-            gsap.to(node, {
-              x: targetPos.x,
-              y: targetPos.y,
-              duration: 0.2,
-              ease: "power2.out",
-              onComplete: () => {
-                setPositionIndex(intermediateIndex);
-                animateStep(step + 1);
-              },
-            });
-          },
-        });
-      };
-
-      animateStep(1);
-    }
-  }, [desiredIndex, getPosition, index, onAnimationComplete, positionIndex, tanggaUp, isCorrect, snakesDown, isBot]);
+        return;
+      }
+  
+      const intermediateIndex = positionIndex + step * direction; // Tentukan indeks sementara
+      const targetPos = getPosition(intermediateIndex);
+  
+      // Efek animasi lompatan kecil
+      gsap.to(node, {
+        y: targetPos.y - 20, // Lompatan ke atas
+        duration: 0.2,
+        ease: "power1.in",
+        onComplete: () => {
+          gsap.to(node, {
+            x: targetPos.x,
+            y: targetPos.y, // Kembali ke posisi target
+            duration: 0.2,
+            ease: "power1.out",
+            onComplete: () => {
+              setPositionIndex(intermediateIndex); // Perbarui posisi setelah setiap langkah
+              animateStep(step + 1); // Panggil langkah berikutnya
+            },
+          });
+        },
+      });
+    };
+  
+    // Mulai animasi langkah pertama
+    animateStep(1);
+  }, [desiredIndex, getPosition, index, onAnimationComplete, positionIndex]);
+  
 
   return (
     <KonvaImage

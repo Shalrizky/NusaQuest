@@ -26,7 +26,7 @@ import tangga8ImageSrc from "../../assets/games/Utangga/tangga8.png";
 import tangga9ImageSrc from "../../assets/games/Utangga/tangga9.png";
 
 function Board({
-    pionPositionIndex = [0, 0, 0, 0],
+    pionPositionIndex = [],
     setPionPositionIndex,
     snakesAndLadders,
     waitingForAnswer,
@@ -35,7 +35,7 @@ function Board({
     snakesDown,
     isCorrect,
     setIsCorrect,
-    players,
+    players=[],
 }) {
     const numRowsCols = 10;
     const [stageSize, setStageSize] = useState({ width: 900, height: 900 });

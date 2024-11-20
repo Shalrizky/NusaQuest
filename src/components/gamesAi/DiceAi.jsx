@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import gsap from "gsap";
 import "../../style/components/games/uTangga/Dice.css";
 
-function Dice({ onRollComplete, disabled }) {
+function Dice({ onRollComplete, disabled,autoRoll }) {
     const [rolling, setRolling] = useState(false);
     const diceRef = useRef(null);
 
@@ -45,6 +45,12 @@ function Dice({ onRollComplete, disabled }) {
             },
         });
     };
+
+    React.useEffect(() => {
+        if (autoRoll && !rolling && !disabled) {
+            rollDice();
+        }
+    }, [autoRoll, rolling, disabled]);
 
     // Render dots for each dice face
     const renderFace = (num) => {

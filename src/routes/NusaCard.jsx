@@ -21,7 +21,7 @@ import cross from "../assets/games/nuca/cross.png";
 import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
-import defaultPlayerPhoto from "../assets/games/Utangga/narutoa.png";
+import defaultPlayerPhoto from "../assets/games/uTangga/narutoa.png";
 
 // Constants
 const INITIAL_DECK_COUNT = 4;
@@ -81,6 +81,7 @@ function NusaCard() {
 
   // Game state
   const [showOffcanvas, setShowOffcanvas] = useState(false);
+  const [hints, setHints] = useState([]);
   const [lastActiveDeck, setLastActiveDeck] = useState(null);
   const [currentTurn, setCurrentTurn] = useState("bottom");
   const [isShuffling, setIsShuffling] = useState(true);
@@ -501,7 +502,15 @@ function NusaCard() {
       fluid
       className="nuca-container d-flex justify-content-around flex-column"
     >
-      <HeaderNuca layout="home" />
+      <HeaderNuca
+        layout="home"
+        hints={hints}
+        showOffcanvas={showOffcanvas}
+        setShowOffcanvas={setShowOffcanvas}
+        onCloseOffcanvas={() => {
+          setShowOffcanvas(false);
+        }}
+      />
 
       {/* Top Player */}
       { (numPlayers === 2 || numPlayers === 4) && (
@@ -588,7 +597,7 @@ function NusaCard() {
 
           {/* Center Deck */}
           <Col
-            md={2}
+            md={12}
             className="deck-tengah position-relative d-flex justify-content-center align-items-center"
           >
             <DeckPlayer count={4} isNew={false} />

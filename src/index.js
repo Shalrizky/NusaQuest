@@ -7,6 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 import Login from './routes/Login';
 import Home from './routes/Home';
+import Credit from './routes/Credit';
 import Profile from './routes/Profile';
 import LobbyGame from './routes/LobbyGame';
 import Information from './routes/InformationDestination';
@@ -59,6 +60,7 @@ const App = () => {
           )
         },
         { path: '/information', element: withLoader(Information)() },
+        { path: '/credit', element: withLoader(Credit)() },
         { path: '/destination/:id', element: withLoader(DestinationDetail)() },
         {
           path: '/lobby/:topicID/:gameID',

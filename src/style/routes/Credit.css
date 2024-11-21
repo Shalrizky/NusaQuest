@@ -1,0 +1,9 @@
+#credit-container {
+   background-image: url('../../assets/common/maps-bg.png');
+   background-repeat: no-repeat;
+   background-position: center;
+   background-size: cover;
+   background-attachment: fixed;
+   overflow: hidden;
+   min-height: 100vh;
+}

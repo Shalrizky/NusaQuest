@@ -1,68 +1,49 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Container, Row, Col, Card } from "react-bootstrap";
 import "../style/routes/Credit.css";
+import gsap from "gsap";
+import Header from "../components/Header";
 import LeaderImage from "../assets/common/pakjo-pict.png";
 
 function Credit() {  
-  const creditRef = useRef(null);  // Mengacu pada kontainer scrollable
-  const contentRef = useRef(null);  // Mengacu pada konten yang di-scroll
-  const [isAutoScrolling, setIsAutoScrolling] = useState(true); // Menyimpan status apakah auto-scroll aktif atau tidak
+  const creditCardRef = useRef(null); // Menggunakan creditCardRef yang benar
 
   useEffect(() => {
-    const creditContainer = creditRef.current;
-    const contentContainer = contentRef.current;
-    if (!creditContainer || !contentContainer) return;
+    const creditContainer = creditCardRef.current; // Menggunakan creditCardRef di sini
 
-    let lastScrollTop = 0; // Menyimpan posisi scroll terakhir
-    const totalHeight = contentContainer.scrollHeight - creditContainer.clientHeight;
-    let scrollSpeed = 0.5; // Kecepatan scroll otomatis
+    if (!creditContainer) {
+      console.log("creditContainer not found"); // Log jika elemen tidak ditemukan
+      return;
+    }
 
-    // Fungsi untuk animasi scroll otomatis
-    const autoScroll = () => {
-      if (!isAutoScrolling) return; // Jangan jalankan auto-scroll jika pengguna sedang scroll manual
+    console.log("creditContainer found", creditContainer); // Log jika elemen ditemukan
 
-      lastScrollTop += scrollSpeed;
+    // Menggunakan animasi y untuk scroll vertikal
+    const scrollAnimation = gsap.to(creditContainer, {
+      y: -creditContainer.scrollHeight + creditContainer.clientHeight, // Gerakan scroll vertikal
+      duration: 20,
+      ease: "linear",
+      repeat: -1,
+      yoyo: true,
+    });
 
-      // Reset ke posisi atas jika sudah mencapai akhir
-      if (lastScrollTop >= totalHeight) {
-        lastScrollTop = 0;
-      }
+    const handleMouseEnter = () => scrollAnimation.pause(); // Pause animasi saat mouse masuk
+    const handleMouseLeave = () => scrollAnimation.play(); // Play animasi saat mouse keluar
 
-      // Mengupdate posisi scroll secara otomatis
-      creditContainer.scrollTop = lastScrollTop;
+    creditContainer.addEventListener("mouseenter", handleMouseEnter); // Event listener untuk mouse enter
+    creditContainer.addEventListener("mouseleave", handleMouseLeave); // Event listener untuk mouse leave
 
-      // Menjalankan auto-scroll menggunakan requestAnimationFrame untuk animasi mulus
-      requestAnimationFrame(autoScroll);
-    };
-
-    // Fungsi untuk mengaktifkan kembali auto-scroll setelah tidak ada interaksi
-    const restartAutoScroll = () => {
-      setTimeout(() => {
-        setIsAutoScrolling(true); // Aktifkan kembali auto-scroll
-      }, 5000);
-    };
-
-    // Event listener untuk mendeteksi scroll manual
-    const handleManualScroll = () => {
-      setIsAutoScrolling(false); // Hentikan auto-scroll jika pengguna scroll manual
-    };
-
-    // Memulai animasi autoscroll
-    requestAnimationFrame(autoScroll);
-
-    // Menambahkan event listener untuk scroll manual
-    creditContainer.addEventListener('scroll', handleManualScroll);
-    creditContainer.addEventListener('scroll', restartAutoScroll);
-
-    // Cleanup saat komponen unmount
     return () => {
-      creditContainer.removeEventListener('scroll', handleManualScroll);
-      creditContainer.removeEventListener('scroll', restartAutoScroll);
+      // Bersihkan event listeners dan animasi saat komponen dibersihkan
+      creditContainer.removeEventListener("mouseenter", handleMouseEnter);
+      creditContainer.removeEventListener("mouseleave", handleMouseLeave);
+      scrollAnimation.kill();
     };
-  }, [isAutoScrolling]);  // Menambahkan isAutoScrolling ke dalam dependency
+  }, []); // Efek hanya dijalankan sekali saat komponen di-mount
 
   return (
     <Container fluid id="credit-container">
+      <Header showLogoIcon={false} showIcons={false} showBackIcon={true} />
       <Row className="d-flex align-items-center justify-content-center">
         <Col md="12" className="d-flex align-items-center justify-content-center">
           <Card className="credit-card">
@@ -190,10 +171,10 @@ function Credit() {
                   </div>
                 </div>
 
-                <div className="credit-section">
+                <div className="credit-section ">
                   <h2 className="section-title">Back End Developer</h2>
-                  <div className="profile-image-container">                    
-                    <div className="profile-item">                                              
+                  <div className="profile-image-container ">                    
+                    <div className="profile-item mb-5">                                              
                         <img 
                           src={LeaderImage} 
                           alt="UI/UX Designer 1"

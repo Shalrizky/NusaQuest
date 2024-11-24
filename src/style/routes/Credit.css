@@ -5,8 +5,7 @@
    background-size: 100% 100%;
    background-attachment: fixed; 
    display: flex;
-   align-items: center;
-   justify-content: center;
+   flex-direction: column;  
    min-height: 100vh;
    padding: 0;
    position: relative;
@@ -29,19 +28,18 @@ body {
 .credit-card {
    background: rgba(27, 36, 85, 0.534) !important;  
    background-position: center;
-   height: auto;
+   /* height: auto; */
    max-height: 85vh;
-   width: 100%;
+   width: 83%;
    /* min-width: 1200px; */
-   max-width: 2200px !important; 
+   /* max-width: 2200px !important;  */
    border-radius: 30px;   
    border: solid #00AEEF 1.5px;
-   overflow-y: scroll;
+   overflow-y: auto;
    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);   
    scrollbar-width: thin;
    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;  
-   margin: 0 auto;
-   position: relative;
+  
 }
 
 .credit-card::-webkit-scrollbar {
@@ -57,9 +55,15 @@ body {
    border-radius: 3px;
  }
 
+ #credit-container {
+  height: 500px; /* Atur sesuai kebutuhan */
+  overflow-y: hidden; /* Penting untuk scrolling */
+}
+
 .credit-content { 
+  height: 1000px;
   padding: 2rem;
-  animation: scroll-up 150s linear infinite;
+  /* animation: scroll-up 5s linear infinite; */
 }
 
 .credit-title {
@@ -146,14 +150,14 @@ body {
   margin: -1rem auto 2rem;
 }
 
-@keyframes scroll-up {
+/* @keyframes scroll-up {
   0% {
       transform: translateY(0%);
   }
   100% {
       transform: translateY(-100%);
   }
-}
+} */
 
 @media (max-width: 768px) {
   #credit-container {

@@ -1,9 +1,195 @@
 #credit-container {
-   background-image: url('../../assets/common/maps-bg.png');
+   background-image: url('../../assets/common/credit-bg.png');
    background-repeat: no-repeat;
-   background-position: center;
-   background-size: cover;
-   background-attachment: fixed;
-   overflow: hidden;
+   background-position: center;   
+   background-size: 100% 100%;
+   background-attachment: fixed; 
+   display: flex;
+   flex-direction: column;  
    min-height: 100vh;
+   padding: 0;
+   position: relative;
+   margin: 0;
+   overflow-x: hidden;
+}
+
+.container-fluid {
+   padding: 0;
+   margin: 0;
+   max-width: 100vw;
+}
+
+body {
+   margin: 0;
+   padding: 0;
+   overflow: hidden;
+} 
+
+.credit-card {
+   background: rgba(27, 36, 85, 0.534) !important;  
+   background-position: center;
+   /* height: auto; */
+   max-height: 85vh;
+   width: 83%;
+   /* min-width: 1200px; */
+   /* max-width: 2200px !important;  */
+   border-radius: 30px;   
+   border: solid #00AEEF 1.5px;
+   overflow-y: auto;
+   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);   
+   scrollbar-width: thin;
+   scrollbar-color: rgba(255, 255, 255, 0.3) transparent;  
+  
+}
+
+.credit-card::-webkit-scrollbar {
+   width: 6px;
+ }
+ 
+ .credit-card::-webkit-scrollbar-track {
+   background: transparent;
+ }
+ 
+ .credit-card::-webkit-scrollbar-thumb {
+   background-color: rgba(255, 255, 255, 0.3);
+   border-radius: 3px;
+ }
+
+ #credit-container {
+  height: 500px;
+  overflow-y: hidden;
+}
+
+.credit-content { 
+  height: 1000px;
+  padding: 2rem;
+  /* animation: scroll-up 5s linear infinite; */
+}
+
+.credit-title {
+  color: white;
+  text-align: center;
+  font-size: 1.8rem;
+  margin-top: -1rem;
+  margin-bottom: 3rem;
+  font-weight: bold;
+}
+
+.title-line {
+   border: none;
+   height: 0.8px;
+   background-color: #ffffff;
+   opacity: 1;
+   margin: -1.5rem auto 2rem;    
+   width: 100%;   
+}
+
+.section-title {
+  color: white;
+  text-align: center;
+  font-size: 1.25rem;
+  margin-bottom: 2.7rem;
+  font-weight: bold;
+}
+
+.profile-item {
+  flex: 1;
+  max-width: 25%;
+  text-align: center;
+  margin: 0 2.5rem;
+  padding: 0;
+  box-sizing: border-box;    
+}
+
+.profile-image-container {
+   display: flex;
+   justify-content: center;
+   gap: 1.5rem;
+   margin-bottom: 5.5rem; 
+   /* background-color: blue;    */
+   padding-bottom: 0;
+   flex-wrap: wrap;
+}
+
+.profile-image {    
+  width: 235px;  
+  display: block;
+   margin: 0 auto;
+}
+
+.profile-name {
+  color: white;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  font-weight: bold;  
+  padding: 0 32px;
+  transform: translateY(-15px);
+}
+
+.profile-role {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+}
+
+.team-grid {
+  justify-content: center;
+}
+
+.team-member {
+  margin-bottom: 2rem;
+}
+
+.title-line {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  margin: -1rem auto 2rem;
+}
+
+/* @keyframes scroll-up {
+  0% {
+      transform: translateY(0%);
+  }
+  100% {
+      transform: translateY(-100%);
+  }
+} */
+
+@media (max-width: 768px) {
+  #credit-container {
+    background-size: cover;
+  }
+
+  .credit-card {
+     height: auto;
+     border-radius: 15px;
+     padding: 1rem;
+  }
+
+  .profile-image {
+     width: 150px;
+  }
+
+  .profile-item-group {
+     flex-direction: column;
+     gap: 2rem;
+  }
+
+  .profile-item {
+     margin: 0;
+     max-width: 100%;
+  }
+
+  .profile-image-container {
+     margin-bottom: 2rem;
+  }
+
+  .section-title {
+     font-size: 1rem;
+     margin-bottom: 1.5rem;
+  }
 }

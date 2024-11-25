@@ -7,6 +7,8 @@ import BottomDeckCard from "../components/games/nuca/BottomDeckCard";
 import HeaderNuca from "../components/games/HeaderGame";
 import PertanyaanNuca, { getRandomQuestion } from "../components/games/nuca/PertanyaanNuca";
 import Potion from "../components/games/potion";
+import PlayerProfile from "../components/games/nuca/PlayerProfile";
+
 import { 
   fetchNusaCardPlayers, 
   setNusaCardGameStatus 
@@ -46,6 +48,9 @@ function NusaCard() {
 
   const [deckCounts, setDeckCounts] = useState({});
   const [DECK_ORDER, setDECK_ORDER] = useState([]);
+
+  const [positionsMap, setPositionsMap] = useState({});
+
 
   // Fetch players saat komponen dimuat
   useEffect(() => {
@@ -118,73 +123,58 @@ function NusaCard() {
   // Get number of players
   const numPlayers = players.length;
 
-  // Initialize deckCounts and DECK_ORDER when players change
+  // **Initialize positionsMap, deckCounts, and DECK_ORDER when players change**
   useEffect(() => {
     if (players.length > 0) {
-      let initialDeckCounts = {};
-      let deckOrder = ["bottom"]; // bottom is always included
-
-      if (numPlayers === 2) {
-        initialDeckCounts = { top: INITIAL_DECK_COUNT };
-        deckOrder.push("top");
-      } else if (numPlayers === 3) {
-        initialDeckCounts = { left: INITIAL_DECK_COUNT, right: INITIAL_DECK_COUNT };
-        deckOrder.push("right", "left");
-      } else if (numPlayers === 4) {
-        initialDeckCounts = { top: INITIAL_DECK_COUNT, left: INITIAL_DECK_COUNT, right: INITIAL_DECK_COUNT };
-        deckOrder.push("right", "top", "left");
+      // Find the index of the current user
+      const currentUserIndex = players.findIndex(p => p.uid === user.uid);
+      if (currentUserIndex === -1) {
+        console.error('Current user not found in players array');
+        return;
       }
 
+      // The current user is at 'bottom'
+      const positionsMap = { 'bottom': players[currentUserIndex] };
+
+      // Create an array of opponents
+      const opponents = players.filter((p, index) => index !== currentUserIndex);
+
+      // Depending on the number of opponents, assign positions
+      const opponentPositions = [];
+      if (opponents.length === 1) {
+        opponentPositions.push('top');
+      } else if (opponents.length === 2) {
+        opponentPositions.push('right', 'left');
+      } else if (opponents.length === 3) {
+        opponentPositions.push('right', 'top', 'left');
+      }
+
+      // Create the mapping
+      opponentPositions.forEach((position, index) => {
+        positionsMap[position] = opponents[index];
+      });
+
+      setPositionsMap(positionsMap);
+
+      // Initialize deckCounts for opponents
+      let initialDeckCounts = {};
+      opponentPositions.forEach(position => {
+        initialDeckCounts[position] = INITIAL_DECK_COUNT;
+      });
+
       setDeckCounts(initialDeckCounts);
-      setDECK_ORDER(deckOrder);
+
+      // Set DECK_ORDER
+      setDECK_ORDER(['bottom', ...opponentPositions]);
     }
   }, [players]);
 
-  // Reintroduce getPlayerByPosition function
+  // **Adjust getPlayerByPosition to use positionsMap**
   const getPlayerByPosition = (position) => {
-    let playerIndex;
-    if (numPlayers === 2) {
-      const positionMap = {
-        bottom: 0,
-        top: 1,
-      };
-      playerIndex = positionMap[position];
-    } else if (numPlayers === 3) {
-      const positionMap = {
-        bottom: 0,
-        right: 1,
-        left: 2,
-      };
-      playerIndex = positionMap[position];
-    } else if (numPlayers === 4) {
-      const positionMap = {
-        bottom: 0,
-        right: 1,
-        top: 2,
-        left: 3,
-      };
-      playerIndex = positionMap[position];
-    }
-    return players[playerIndex] || null;
+    return positionsMap[position] || null;
   };
-
-  // Helper function to determine player classes
-  const getPlayerClass = (position) => {
-    let classes = "player-profile";
-
-    if (position === currentTurn) {
-      classes += " asking-player";
-    }
-
-    if (
-      position === answeringPlayer ||
-      (currentTurn && position === getNextPlayer(currentTurn))
-    ) {
-      classes += " answering-player";
-    }
-
-    return classes;
-  };
+  
+  
 
   // Timer handlers
   const resetInactivityTimer = () => {
@@ -247,20 +237,20 @@ function NusaCard() {
       isShuffling
     )
       return;
-
+  
     // Stop the turn timer
     if (turnTimerRef.current) {
       clearInterval(turnTimerRef.current);
       setTurnTimeRemaining(null);
     }
-
+  
     setIsActionInProgress(true);
     setActiveCard(card);
     setShowPopup(true);
     setLastActiveDeck("bottom");
     setAnsweringPlayer(getNextPlayer("bottom"));
     setHasAnswered(false); // Reset hasAnswered when a new question is shown
-
+  
     // Remove the clicked card from the deck
     removeCardFromDeck(index);
   };
@@ -300,12 +290,11 @@ function NusaCard() {
     }, 3000);
   };
 
-  // Helper functions
   const getNextPlayer = (currentDeck) => {
     const currentIndex = DECK_ORDER.indexOf(currentDeck);
     const nextIndex = (currentIndex + 1) % DECK_ORDER.length;
     return DECK_ORDER[nextIndex];
-  };
+  };  
 
   const getNextTurn = () => {
     const currentIndex = DECK_ORDER.indexOf(lastActiveDeck);
@@ -337,17 +326,19 @@ function NusaCard() {
       setIsCorrectAnswer(null);
       setActiveCard(null);
       setIsExitingPopup(true);
-
+  
       setTimeout(() => {
         setShowPopup(false);
         setIsExitingPopup(false);
-        setIsActionInProgress(false);
         setAnsweringPlayer(null);
         setFeedbackIcon({ show: false, isCorrect: null, position: null });
         triggerShuffleAnimation();
+        // Move setIsActionInProgress(false) here
+        setIsActionInProgress(false);
       }, POPUP_TRANSITION_DURATION);
     }, FEEDBACK_DURATION);
   };
+  
 
   const triggerShuffleAnimation = () => {
     setIsShuffling(true);
@@ -456,20 +447,6 @@ function NusaCard() {
     }
   }, [currentTurn, isShuffling, showPopup, isActionInProgress]);
 
-  // Render helper functions
-  const renderFeedbackIcon = (position) => {
-    if (!feedbackIcon.show || feedbackIcon.position !== position) return null;
-
-    return (
-      <div className="feedback-icon-container">
-        <img
-          src={feedbackIcon.isCorrect ? checklist : cross}
-          alt={feedbackIcon.isCorrect ? "Correct" : "Incorrect"}
-          className="feedback-icon-profile"
-        />
-      </div>
-    );
-  };
 
   // Get winner's username
   const getWinnerName = () => {
@@ -513,180 +490,155 @@ function NusaCard() {
       />
 
       {/* Top Player */}
-      { (numPlayers === 2 || numPlayers === 4) && (
-      <Row className="align-items-center justify-content-center">
-        <Col xs="auto" className="text-center position-relative ms-5 ps-5">
-          <div
-            onClick={() => handleDeckCardClick("top")}
-            className="d-flex align-items-center"
-          >
-            {currentTurn === "top" && turnTimeRemaining !== null && (
-              <div className="timer-overlay-above">{turnTimeRemaining}</div>
-            )}
-            {showPopup && !hasAnswered && answeringPlayer === "top" && (
-              <div className="timer-overlay">{timeRemaining}</div>
-            )}
-            <DeckPlayer
-              count={deckCounts.top}
-              isNew={deckCounts.top === 0}
-              position="left"
-            />
-          </div>
-        </Col>
+{positionsMap['top'] && (
+   <Row className="align-items-center justify-content-center mt-0">
+     <Col xs="auto" className="text-center position-relative ms-5 ps-5">
+       <div
+         onClick={() => handleDeckCardClick("top")}
+         className="d-flex align-items-center"
+       >
+         {currentTurn === "top" && turnTimeRemaining !== null && (
+           <div className="timer-overlay-above">{turnTimeRemaining}</div>
+         )}
+         {showPopup && !hasAnswered && answeringPlayer === "top" && (
+           <div className="timer-overlay">{timeRemaining}</div>
+         )}
+         <DeckPlayer
+           count={deckCounts.top}
+           isNew={deckCounts.top === 0}
+           position="left"
+         />
+       </div>
+     </Col>
 
-        <Col
-          xs="auto"
-          className="d-flex flex-column position-relative ms-5 ps-5"
-        >
-          <Image
-            src={getPlayerByPosition("top")?.photoURL || defaultPlayerPhoto}
-            alt="Player Profile"
-            style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "50%",
-            }}
-            className={getPlayerClass("top")}
-          />
-          <div className="player-name mt-2">
-            {getPlayerByPosition("top")?.displayName || "Top Player"}
-          </div>
-          {renderFeedbackIcon("top")}
-        </Col>
-      </Row>
+     <Col xs="auto" className="d-flex flex-column position-relative ms-5 ps-5">
+       <PlayerProfile
+         photoURL={getPlayerByPosition("top")?.photoURL}
+         displayName={getPlayerByPosition("top")?.displayName || "Top Player"}
+         position="top"
+         currentTurn={currentTurn}
+         answeringPlayer={answeringPlayer}
+         turnTimeRemaining={turnTimeRemaining}
+         timeRemaining={timeRemaining}
+         feedbackIcon={feedbackIcon}
+         onDeckCardClick={handleDeckCardClick}
+         deckOrder={DECK_ORDER}
+       />
+     </Col>
+   </Row>
+)}
+
+{/* Middle Row */}
+<Container fluid>
+  <Row className="mb-5 mt-n3 align-items-center">
+    {/* Left Deck */}
+    {positionsMap['left'] && (
+      <Col md={3} className="position-relative deck-position-left">
+        <PlayerProfile
+          photoURL={getPlayerByPosition("left")?.photoURL}
+          displayName={getPlayerByPosition("left")?.displayName || "Left Player"}
+          position="left"
+          currentTurn={currentTurn}
+          answeringPlayer={answeringPlayer}
+          turnTimeRemaining={turnTimeRemaining}
+          timeRemaining={timeRemaining}
+          feedbackIcon={feedbackIcon}
+          onDeckCardClick={handleDeckCardClick}
+          deckOrder={DECK_ORDER}
+        />
+
+        <DeckPlayer
+          count={deckCounts.left}
+          isNew={deckCounts.left === 0}
+          style={{ transform: "rotate(90deg)" }}
+        />
+      </Col>
+    )}
+
+    {/* Center Deck */}
+    <Col
+      md={11}
+      className="deck-tengah position-relative d-flex justify-content-center align-items-center mt-0"
+    >
+      <DeckPlayer count={4} isNew={false} />
+      <div
+        className={`position-absolute d-flex justify-content-center align-items-center ${
+          isShuffling ? "shuffle-rotate" : ""
+        }`}
+        style={{ width: "250px", height: "250px", zIndex: 1 }}
+      >
+        <Image src={shuffleIcon} style={{ width: "100%", height: "100%" }} />
+      </div>
+    </Col>
+
+    {/* Right Deck */}
+    {positionsMap['right'] && (
+      <Col md={3} className="position-relative deck-position-right">
+        <PlayerProfile
+          photoURL={getPlayerByPosition("right")?.photoURL}
+          displayName={getPlayerByPosition("right")?.displayName || "Right Player"}
+          position="right"
+          currentTurn={currentTurn}
+          answeringPlayer={answeringPlayer}
+          turnTimeRemaining={turnTimeRemaining}
+          timeRemaining={timeRemaining}
+          feedbackIcon={feedbackIcon}
+          onDeckCardClick={handleDeckCardClick}
+          deckOrder={DECK_ORDER}
+        />
+        <DeckPlayer
+          count={deckCounts.right}
+          isNew={deckCounts.right === 0}
+          position="right"
+          style={{ transform: "rotate(-90deg)" }}
+        />
+      </Col>
+    )}
+  </Row>
+</Container>
+
+
+  {/* Bottom Deck */}
+      <Row className="align-items-center justify-content-center">
+  <Col xs="auto" className="text-center ml-5 ms-5 position-relative">
+    <div style={{ position: "relative" }}>
+      {showPopup && !hasAnswered && answeringPlayer === "bottom" && (
+        <div className="timer-overlay">{timeRemaining}</div>
       )}
+      {currentTurn === "bottom" && turnTimeRemaining !== null && (
+        <div className="timer-overlay-above">{turnTimeRemaining}</div>
+      )}
+      <BottomDeckCard
+        cards={cards}
+        onCardClick={handleBottomCardClick}
+        showPopup={showPopup}
+        isExitingPopup={isExitingPopup}
+      />
+    </div>
+  </Col>
 
-      {/* Middle Row */}
-      <Container fluid>
-        <Row className="mb-5 mt-0">
-          {/* Left Deck */}
-          { (numPlayers >= 3) && (
-          <Col md={3} className="position-relative deck-position-left">
-            <div
-              className="d-flex flex-column align-items-center position-relative"
-              onClick={() => handleDeckCardClick("left")}
-            >
-              {currentTurn === "left" && turnTimeRemaining !== null && (
-                <div className="timer-overlay-above">{turnTimeRemaining}</div>
-              )}
-              {showPopup && !hasAnswered && answeringPlayer === "left" && (
-                <div className="timer-overlay">{timeRemaining}</div>
-              )}
-              <Image
-                src={getPlayerByPosition("left")?.photoURL || defaultPlayerPhoto}
-                alt="Player Left"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "50%",
-                }}
-                className={getPlayerClass("left")}
-              />
-              <div className="player-name">
-                {getPlayerByPosition("left")?.displayName || "Left Player"}
-              </div>
-              {renderFeedbackIcon("left")}
-              <DeckPlayer
-                count={deckCounts.left}
-                isNew={deckCounts.left === 0}
-                style={{ transform: "rotate(900deg)" }}
-              />
-            </div>
-          </Col>
-          )}
+  {/* Player Profile */}
+  <Col
+    xs="auto"
+    className="d-flex align-items-center justify-content-start ps-3"
+  >
+    <PlayerProfile
+      photoURL={getPlayerByPosition("bottom")?.photoURL}
+      displayName={
+        getPlayerByPosition("bottom")?.displayName || "Bottom Player"
+      }
+      position="bottom"
+      currentTurn={currentTurn}
+      answeringPlayer={answeringPlayer}
+      turnTimeRemaining={turnTimeRemaining}
+      timeRemaining={timeRemaining}
+      feedbackIcon={feedbackIcon}
+      onDeckCardClick={handleDeckCardClick}
+      deckOrder={DECK_ORDER}
+    />
+  </Col>
+</Row>
 
-          {/* Center Deck */}
-          <Col
-            md={12}
-            className="deck-tengah position-relative d-flex justify-content-center align-items-center"
-          >
-            <DeckPlayer count={4} isNew={false} />
-            <div
-              className={`position-absolute d-flex justify-content-center align-items-center ${
-                isShuffling ? "shuffle-rotate" : ""
-              }`}
-              style={{ width: "250px", height: "250px", zIndex: 1 }}
-            >
-              <Image
-                src={shuffleIcon}
-                style={{ width: "100%", height: "100%" }}
-              />
-            </div>
-          </Col>
-
-          {/* Right Deck */}
-          { (numPlayers >= 3) && (
-          <Col md={2} className="position-relative deck-position-right">
-            <div
-              className="d-flex flex-column align-items-center position-relative"
-              onClick={() => handleDeckCardClick("right")}
-            >
-              {currentTurn === "right" && turnTimeRemaining !== null && (
-                <div className="timer-overlay-above">{turnTimeRemaining}</div>
-              )}
-              {showPopup && !hasAnswered && answeringPlayer === "right" && (
-                <div className="timer-overlay">{timeRemaining}</div>
-              )}
-              <Image
-                src={getPlayerByPosition("right")?.photoURL || defaultPlayerPhoto}
-                alt="Player Right"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "50%",
-                }}
-                className={getPlayerClass("right")}
-              />
-              <div className="player-name">
-                {getPlayerByPosition("right")?.displayName || "Right Player"}
-              </div>
-              {renderFeedbackIcon("right")}
-              <DeckPlayer
-                count={deckCounts.right}
-                isNew={deckCounts.right === 0}
-                position="right"
-                className="deck-kanan-rotate"
-              />
-            </div>
-          </Col>
-          )}
-        </Row>
-      </Container>
-
-      {/* Bottom Row */}
-      <Row className="align-items-center justify-content-center">
-        <Col xs={"auto"} className="text-center ml-5 ms-5 position-relative">
-          <div style={{ position: "relative" }}>
-            {showPopup && !hasAnswered && answeringPlayer === "bottom" && (
-              <div className="timer-overlay">{timeRemaining}</div>
-            )}
-            {currentTurn === "bottom" && turnTimeRemaining !== null && (
-              <div className="timer-overlay-above">{turnTimeRemaining}</div>
-            )}
-            <BottomDeckCard
-              cards={cards}
-              onCardClick={handleBottomCardClick}
-              showPopup={showPopup}
-              isExitingPopup={isExitingPopup}
-            />
-            {renderFeedbackIcon("bottom")}
-          </div>
-        </Col>
-        <Col
-          xs="auto"
-          className="d-flex flex-column align-items-center p-3 position-relative"
-        >
-          <Image
-            src={getPlayerByPosition("bottom")?.photoURL || defaultPlayerPhoto}
-            alt="Player Bottom"
-            style={{ width: "80px", height: "80px", borderRadius: "50%" }}
-            className={getPlayerClass("bottom")}
-          />
-          <div className="player-name">
-            {getPlayerByPosition("bottom")?.displayName || "Bottom Player"}
-          </div>
-        </Col>
-      </Row>
 
       {/* Show the question popup */}
       {showPopup && activeCard && !hasAnswered && (

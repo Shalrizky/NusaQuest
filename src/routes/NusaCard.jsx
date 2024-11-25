@@ -23,7 +23,6 @@ import cross from "../assets/games/nuca/cross.png";
 import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
-import defaultPlayerPhoto from "../assets/games/Utangga/narutoa.png";
 
 // Constants
 const INITIAL_DECK_COUNT = 4;

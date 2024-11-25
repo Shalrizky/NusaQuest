@@ -492,10 +492,10 @@ function NusaCard() {
       {/* Top Player */}
 {positionsMap['top'] && (
    <Row className="align-items-center justify-content-center mt-0">
-     <Col xs="auto" className="text-center position-relative ms-5 ps-5">
+     <Col xs={12} md="auto" className="text-center position-relative ms-5 ps-5">
        <div
          onClick={() => handleDeckCardClick("top")}
-         className="d-flex align-items-center"
+         className="d-flex align-items-center justify-content-center"
        >
          {currentTurn === "top" && turnTimeRemaining !== null && (
            <div className="timer-overlay-above">{turnTimeRemaining}</div>
@@ -511,7 +511,7 @@ function NusaCard() {
        </div>
      </Col>
 
-     <Col xs="auto" className="d-flex flex-column position-relative ms-5 ps-5">
+     <Col xs={12} md="auto" className="d-flex flex-column align-items-center position-relative ms-5 ps-5 mt-3 mt-md-0">
        <PlayerProfile
          photoURL={getPlayerByPosition("top")?.photoURL}
          displayName={getPlayerByPosition("top")?.displayName || "Top Player"}
@@ -533,39 +533,42 @@ function NusaCard() {
   <Row className="mb-5 mt-n3 align-items-center">
     {/* Left Deck */}
     {positionsMap['left'] && (
-      <Col md={3} className="position-relative deck-position-left">
-        <PlayerProfile
-          photoURL={getPlayerByPosition("left")?.photoURL}
-          displayName={getPlayerByPosition("left")?.displayName || "Left Player"}
-          position="left"
-          currentTurn={currentTurn}
-          answeringPlayer={answeringPlayer}
-          turnTimeRemaining={turnTimeRemaining}
-          timeRemaining={timeRemaining}
-          feedbackIcon={feedbackIcon}
-          onDeckCardClick={handleDeckCardClick}
-          deckOrder={DECK_ORDER}
-        />
+      <Col xs={12} md={3} className="position-relative deck-position-left mb-4 mb-md-0">
+        <div className="d-flex flex-column align-items-center">
+          <PlayerProfile
+            photoURL={getPlayerByPosition("left")?.photoURL}
+            displayName={getPlayerByPosition("left")?.displayName || "Left Player"}
+            position="left"
+            currentTurn={currentTurn}
+            answeringPlayer={answeringPlayer}
+            turnTimeRemaining={turnTimeRemaining}
+            timeRemaining={timeRemaining}
+            feedbackIcon={feedbackIcon}
+            onDeckCardClick={handleDeckCardClick}
+            deckOrder={DECK_ORDER}
+          />
 
-        <DeckPlayer
-          count={deckCounts.left}
-          isNew={deckCounts.left === 0}
-          style={{ transform: "rotate(90deg)" }}
-        />
+          <DeckPlayer
+            count={deckCounts.left}
+            isNew={deckCounts.left === 0}
+            style={{ transform: "rotate(90deg)" }}
+          />
+        </div>
       </Col>
     )}
 
     {/* Center Deck */}
     <Col
+      xs={12}
       md={11}
-      className="deck-tengah position-relative d-flex justify-content-center align-items-center mt-0"
+      className="deck-tengah position-relative d-flex justify-content-center align-items-center mt-3 mt-md-0"
     >
       <DeckPlayer count={4} isNew={false} />
       <div
         className={`position-absolute d-flex justify-content-center align-items-center ${
           isShuffling ? "shuffle-rotate" : ""
         }`}
-        style={{ width: "250px", height: "250px", zIndex: 1 }}
+        style={{ width: "250px" }}
       >
         <Image src={shuffleIcon} style={{ width: "100%", height: "100%" }} />
       </div>
@@ -573,34 +576,36 @@ function NusaCard() {
 
     {/* Right Deck */}
     {positionsMap['right'] && (
-      <Col md={3} className="position-relative deck-position-right">
-        <PlayerProfile
-          photoURL={getPlayerByPosition("right")?.photoURL}
-          displayName={getPlayerByPosition("right")?.displayName || "Right Player"}
-          position="right"
-          currentTurn={currentTurn}
-          answeringPlayer={answeringPlayer}
-          turnTimeRemaining={turnTimeRemaining}
-          timeRemaining={timeRemaining}
-          feedbackIcon={feedbackIcon}
-          onDeckCardClick={handleDeckCardClick}
-          deckOrder={DECK_ORDER}
-        />
-        <DeckPlayer
-          count={deckCounts.right}
-          isNew={deckCounts.right === 0}
-          position="right"
-          style={{ transform: "rotate(-90deg)" }}
-        />
+      <Col xs={12} md={3} className="position-relative deck-position-right mb-4 mb-md-0">
+        <div className="d-flex flex-column align-items-center">
+          <PlayerProfile
+            photoURL={getPlayerByPosition("right")?.photoURL}
+            displayName={getPlayerByPosition("right")?.displayName || "Right Player"}
+            position="right"
+            currentTurn={currentTurn}
+            answeringPlayer={answeringPlayer}
+            turnTimeRemaining={turnTimeRemaining}
+            timeRemaining={timeRemaining}
+            feedbackIcon={feedbackIcon}
+            onDeckCardClick={handleDeckCardClick}
+            deckOrder={DECK_ORDER}
+          />
+          <DeckPlayer
+            count={deckCounts.right}
+            isNew={deckCounts.right === 0}
+            position="right"
+            style={{ transform: "rotate(-90deg)" }}
+          />
+        </div>
       </Col>
     )}
   </Row>
 </Container>
 
 
-  {/* Bottom Deck */}
-      <Row className="align-items-center justify-content-center">
-  <Col xs="auto" className="text-center ml-5 ms-5 position-relative">
+ {/* Bottom Deck */}
+<Row className="align-items-center justify-content-center mt-3">
+  <Col xs={12} md="auto" className="text-center position-relative mb-3 mb-md-0">
     <div style={{ position: "relative" }}>
       {showPopup && !hasAnswered && answeringPlayer === "bottom" && (
         <div className="timer-overlay">{timeRemaining}</div>
@@ -618,15 +623,10 @@ function NusaCard() {
   </Col>
 
   {/* Player Profile */}
-  <Col
-    xs="auto"
-    className="d-flex align-items-center justify-content-start ps-3"
-  >
+  <Col xs={12} md="auto" className="d-flex align-items-center justify-content-start ps-3">
     <PlayerProfile
       photoURL={getPlayerByPosition("bottom")?.photoURL}
-      displayName={
-        getPlayerByPosition("bottom")?.displayName || "Bottom Player"
-      }
+      displayName={getPlayerByPosition("bottom")?.displayName || "Bottom Player"}
       position="bottom"
       currentTurn={currentTurn}
       answeringPlayer={answeringPlayer}

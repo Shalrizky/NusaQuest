@@ -56,8 +56,8 @@ body {
  }
 
  #credit-container {
-  height: 500px; /* Atur sesuai kebutuhan */
-  overflow-y: hidden; /* Penting untuk scrolling */
+  height: 500px;
+  overflow-y: hidden;
 }
 
 .credit-content { 
@@ -161,7 +161,7 @@ body {
 
 @media (max-width: 768px) {
   #credit-container {
-    background-size: cover;  /* Gambar terpotong, tetapi menjaga proporsi */
+    background-size: cover;
   }
 
   .credit-card {
@@ -171,11 +171,11 @@ body {
   }
 
   .profile-image {
-     width: 150px;  /* Ukuran gambar lebih kecil */
+     width: 150px;
   }
 
   .profile-item-group {
-     flex-direction: column;  /* Susun vertikal */
+     flex-direction: column;
      gap: 2rem;
   }
 

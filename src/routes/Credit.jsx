@@ -1,46 +1,19 @@
-import React, { useEffect, useRef } from 'react';
 import { Container, Row, Col, Card } from "react-bootstrap";
 import "../style/routes/Credit.css";
-import gsap from "gsap";
 import Header from "../components/Header";
 import LeaderImage from "../assets/common/pakjo-pict.png";
+import ManagerImage from "../assets/common/pakgury-pict.png";
+import SahelImage from "../assets/common/sahel-pict.png";
+import JojoImage from "../assets/common/jojo-pict.png";
+import CarloImage from "../assets/common/carlo-pict.png";
+import NezaImage from "../assets/common/neza-pict.png";
+import ReykiImage from "../assets/common/reyki-pict.png";
+import RanggaImage from "../assets/common/rangga-pict.png";
+import NatahImage from "../assets/common/natah-pict.png";
+import AbeImage from "../assets/common/abe-pict.png";
+import RowenImage from "../assets/common/rowen-pict.png";
 
 function Credit() {  
-  const creditCardRef = useRef(null); // Menggunakan creditCardRef yang benar
-
-  useEffect(() => {
-    const creditContainer = creditCardRef.current; // Menggunakan creditCardRef di sini
-
-    if (!creditContainer) {
-      console.log("creditContainer not found"); // Log jika elemen tidak ditemukan
-      return;
-    }
-
-    console.log("creditContainer found", creditContainer); // Log jika elemen ditemukan
-
-    // Menggunakan animasi y untuk scroll vertikal
-    const scrollAnimation = gsap.to(creditContainer, {
-      y: -creditContainer.scrollHeight + creditContainer.clientHeight, // Gerakan scroll vertikal
-      duration: 20,
-      ease: "linear",
-      repeat: -1,
-      yoyo: true,
-    });
-
-    const handleMouseEnter = () => scrollAnimation.pause(); // Pause animasi saat mouse masuk
-    const handleMouseLeave = () => scrollAnimation.play(); // Play animasi saat mouse keluar
-
-    creditContainer.addEventListener("mouseenter", handleMouseEnter); // Event listener untuk mouse enter
-    creditContainer.addEventListener("mouseleave", handleMouseLeave); // Event listener untuk mouse leave
-
-    return () => {
-      // Bersihkan event listeners dan animasi saat komponen dibersihkan
-      creditContainer.removeEventListener("mouseenter", handleMouseEnter);
-      creditContainer.removeEventListener("mouseleave", handleMouseLeave);
-      scrollAnimation.kill();
-    };
-  }, []); // Efek hanya dijalankan sekali saat komponen di-mount
-
   return (
     <Container fluid id="credit-container">
       <Header showLogoIcon={false} showIcons={false} showBackIcon={true} />
@@ -64,7 +37,7 @@ function Credit() {
                 <h2 className="section-title">Project Manager</h2>           
                 <div className="profile-image-container">
                   <img 
-                    src={LeaderImage}
+                    src={ManagerImage}
                     alt="Project Leader"
                     className="profile-image"
                   />
@@ -73,7 +46,7 @@ function Credit() {
                 <h2 className="section-title">Ketua Developer</h2>           
                 <div className="profile-image-container">
                   <img 
-                    src={LeaderImage}
+                    src={SahelImage}
                     alt="Project Leader"
                     className="profile-image"
                   />
@@ -84,7 +57,7 @@ function Credit() {
                   <div className="profile-image-container">                    
                     <div className="profile-item">                                              
                         <img 
-                          src={LeaderImage} 
+                          src={JojoImage} 
                           alt="UI/UX Designer 1"
                           className="profile-image"
                         />                                      
@@ -92,7 +65,7 @@ function Credit() {
                     
                     <div className="profile-item">                                              
                         <img 
-                          src={LeaderImage} 
+                          src={CarloImage} 
                           alt="UI/UX Designer 2"
                           className="profile-image"
                         />                                          
@@ -100,7 +73,7 @@ function Credit() {
                     
                     <div className="profile-item">                                              
                         <img 
-                          src={LeaderImage} 
+                          src={NezaImage} 
                           alt="UI/UX Designer 3"
                           className="profile-image"
                         />                                                       
@@ -113,7 +86,7 @@ function Credit() {
                   <div className="profile-image-container">                    
                     <div className="profile-item">                      
                         <img 
-                          src={LeaderImage} 
+                          src={CarloImage} 
                           alt="UI/UX Designer 1"
                           className="profile-image"
                         />
@@ -121,7 +94,7 @@ function Credit() {
                     
                     <div className="profile-item">                                              
                         <img 
-                          src={LeaderImage} 
+                          src={NezaImage} 
                           alt="UI/UX Designer 2"
                           className="profile-image"
                         />                                                              
@@ -134,7 +107,7 @@ function Credit() {
                   <div className="profile-image-container">                    
                     <div className="profile-item">                                              
                         <img 
-                          src={LeaderImage} 
+                          src={SahelImage} 
                           alt="UI/UX Designer 1"
                           className="profile-image"
                         />                                             
@@ -142,7 +115,7 @@ function Credit() {
                     
                     <div className="profile-item">                                      
                         <img 
-                          src={LeaderImage} 
+                          src={ReykiImage} 
                           alt="UI/UX Designer 2"
                           className="profile-image"
                         />                                                                
@@ -155,7 +128,7 @@ function Credit() {
                   <div className="profile-image-container">                    
                     <div className="profile-item">                                              
                         <img 
-                          src={LeaderImage} 
+                          src={RanggaImage} 
                           alt="UI/UX Designer 1"
                           className="profile-image"
                         />                                    
@@ -163,7 +136,7 @@ function Credit() {
                     
                     <div className="profile-item">                                              
                         <img 
-                          src={LeaderImage} 
+                          src={NatahImage} 
                           alt="UI/UX Designer 2"
                           className="profile-image"
                         />                                                                
@@ -176,7 +149,7 @@ function Credit() {
                   <div className="profile-image-container ">                    
                     <div className="profile-item mb-5">                                              
                         <img 
-                          src={LeaderImage} 
+                          src={AbeImage} 
                           alt="UI/UX Designer 1"
                           className="profile-image"
                         />                                    
@@ -184,7 +157,7 @@ function Credit() {
                     
                     <div className="profile-item">                                              
                         <img 
-                          src={LeaderImage} 
+                          src={RowenImage} 
                           alt="UI/UX Designer 2"
                           className="profile-image"
                         />                                                  

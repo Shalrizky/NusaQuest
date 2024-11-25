@@ -96,6 +96,7 @@ function UlarTangga() {
   const [hints, setHints] = useState([]);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
 
+  // Pindah ke pemain berikutnya jika waktu habis
   useEffect(() => {
     if (gameOver) navigate("/");
   }, [gameOver, navigate]);

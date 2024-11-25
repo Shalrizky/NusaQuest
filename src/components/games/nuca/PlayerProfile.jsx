@@ -13,7 +13,7 @@ const PlayerProfile = ({
   timeRemaining,
   feedbackIcon,
   onDeckCardClick,
-  deckOrder, // Pass DECK_ORDER as a prop
+  deckOrder,
 }) => {
   // Helper function to determine player classes
   const determinePlayerClass = () => {

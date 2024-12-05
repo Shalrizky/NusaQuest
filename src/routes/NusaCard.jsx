@@ -14,11 +14,12 @@ import {
   setNusaCardGameStatus,
   initializeNusaCardGameState,
   getNusaCardGameState,
-  
+  listenToNusaCardGameState,
 } from "../services/gameDataServicesNuca";
+
 import "../style/routes/NusaCard.css";
 
-// Image imports
+// Import gambar yang diperlukan
 import potionImage from "../assets/games/potion.png";
 import shuffleIcon from "../assets/games/nuca/shuffle.png";
 import checklist from "../assets/games/nuca/checklist.png";
@@ -27,7 +28,7 @@ import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
 
-// Constants
+// Konstanta
 const INITIAL_DECK_COUNT = 4;
 const TIMER_DURATION = 15;
 const INACTIVITY_DURATION = 600000;
@@ -36,67 +37,79 @@ const POPUP_TRANSITION_DURATION = 2000;
 const TURN_TIMER_DURATION = 10;
 
 function NusaCard() {
-  const { gameID, topicID, roomID } = useParams(); // Gunakan useParams untuk mendapatkan ID
-  const { user } = useAuth(); // Dapatkan data user yang login
+  // Ambil parameter dari URL (topicID, gameID, roomID)
+  const { gameID, topicID, roomID } = useParams();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
+  // State untuk loading awal
   const [loading, setLoading] = useState(true);
-  const [players, setPlayers] = useState([]); // State untuk menyimpan data pemain
+  // State untuk menyimpan data pemain
+  const [players, setPlayers] = useState([]);
 
   // Gunakan useRef untuk menyimpan referensi ID
   const gameIDRef = useRef(gameID);
   const topicIDRef = useRef(topicID);
   const roomIDRef = useRef(roomID);
 
+  // State terkait deck dan urutan
   const [deckCounts, setDeckCounts] = useState({});
   const [DECK_ORDER, setDECK_ORDER] = useState([]);
 
+  // Pemetaan posisi pemain
   const [positionsMap, setPositionsMap] = useState({});
-    // Game state
-    const [showOffcanvas, setShowOffcanvas] = useState(false);
-    const [hints, setHints] = useState([]);
-    const [lastActiveDeck, setLastActiveDeck] = useState(null);
-    const [currentTurn, setCurrentTurn] = useState("bottom");
-    const [isShuffling, setIsShuffling] = useState(true);
-    const [showPopup, setShowPopup] = useState(false);
-    const [isExitingPopup, setIsExitingPopup] = useState(false);
-    const [activeCard, setActiveCard] = useState(null);
-    const [isCorrectAnswer, setIsCorrectAnswer] = useState(null);
-    const [victory, setVictory] = useState(false);
-    const [winner, setWinner] = useState("");
-    const [deckDepleted, setDeckDepleted] = useState(null);
-    const [isActionInProgress, setIsActionInProgress] = useState(false);
-    const [answeringPlayer, setAnsweringPlayer] = useState(null);
-    const [hasAnswered, setHasAnswered] = useState(false);
-  
-    // Timers
-    const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
-    const [inactivityTimeRemaining, setInactivityTimeRemaining] =
-      useState(INACTIVITY_DURATION);
-    const timerRef = useRef(null);
-    const inactivityTimerRef = useRef(null);
-    const isFirstRender = useRef(true);
-  
-    // Turn timer
-    const [turnTimeRemaining, setTurnTimeRemaining] = useState(null);
-    const turnTimerRef = useRef(null);
-  
-    // Feedback state
-    const [feedbackIcon, setFeedbackIcon] = useState({
-      show: false,
-      isCorrect: null,
-      position: null,
-    });
 
+  // State game
+  const [showOffcanvas, setShowOffcanvas] = useState(false);
+  const [hints, setHints] = useState([]);
+  const [lastActiveDeck, setLastActiveDeck] = useState(null);
+  const [currentTurn, setCurrentTurn] = useState("bottom");
+  const [isShuffling, setIsShuffling] = useState(true);
+  const [showPopup, setShowPopup] = useState(false);
+  const [isExitingPopup, setIsExitingPopup] = useState(false);
+  const [activeCard, setActiveCard] = useState(null);
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState(null);
+  const [victory, setVictory] = useState(false);
+  const [winner, setWinner] = useState("");
+  const [deckDepleted, setDeckDepleted] = useState(null);
+  const [isActionInProgress, setIsActionInProgress] = useState(false);
+  const [answeringPlayer, setAnsweringPlayer] = useState(null);
+  const [hasAnswered, setHasAnswered] = useState(false);
 
-  // Fetch players saat komponen dimuat
+  // Timer terkait pertanyaan & inaktivitas
+  const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
+  const [inactivityTimeRemaining, setInactivityTimeRemaining] = useState(INACTIVITY_DURATION);
+  const timerRef = useRef(null);
+  const inactivityTimerRef = useRef(null);
+  const isFirstRender = useRef(true);
+
+  // Timer giliran bermain
+  const [turnTimeRemaining, setTurnTimeRemaining] = useState(null);
+  const turnTimerRef = useRef(null);
+
+  // Feedback state (ikon benar/salah)
+  const [feedbackIcon, setFeedbackIcon] = useState({
+    show: false,
+    isCorrect: null,
+    position: null,
+  });
+
+  // State untuk menyimpan status game (playing/finished) dari gameState
+  const [gameStatus, setGameStatus] = useState(''); 
+
+  // Inisialisasi kartu awal di deck pemain bottom
+  const [cards, setCards] = useState(() =>
+    Array.from({ length: INITIAL_DECK_COUNT }, () => getRandomQuestion())
+  );
+
+  // useEffect untuk fetch pemain saat komponen dimuat
   useEffect(() => {
     const initGame = async () => {
       try {
-        // Set status game
+        // Set status game menjadi "playing"
         await setNusaCardGameStatus(topicID, gameID, roomID, "playing");
 
-        // Fetch players
+        // Dengarkan data pemain
         const unsubscribePlayers = fetchNusaCardPlayers(
           topicID, 
           gameID, 
@@ -105,7 +118,7 @@ function NusaCard() {
             setPlayers(playersData);
             setLoading(false);
 
-            // Inisialisasi game state jika belum ada
+            // Cek apakah gameState sudah ada, jika belum inisialisasi
             const currentGameState = await getNusaCardGameState(topicID, gameID, roomID);
             if (!currentGameState) {
               await initializeNusaCardGameState(topicID, gameID, roomID, playersData);
@@ -114,12 +127,12 @@ function NusaCard() {
           }
         );
 
-        // Mendengarkan perubahan pada gameState
+        // Dengarkan perubahan pada gameState
         const unsubscribeGameState = listenToNusaCardGameState(topicID, gameID, roomID, (state) => {
           if (state) {
             setDeckCounts(state.deckCounts || {});
             setDECK_ORDER(state.DECK_ORDER || []);
-            // Set state lainnya jika diperlukan
+            setGameStatus(state.gameStatus || 'playing');
           }
         });
 
@@ -136,32 +149,18 @@ function NusaCard() {
     initGame();
   }, [topicID, gameID, roomID, user.uid]);
 
-  const [cards, setCards] = useState(() =>
-    Array.from({ length: INITIAL_DECK_COUNT }, () => getRandomQuestion())
-  );
-
-
-
-  // Get number of players
-  const numPlayers = players.length;
-
-  // **Initialize positionsMap, deckCounts, and DECK_ORDER when players change**
+  // Ketika data pemain berubah, kita atur posisi pemain (bottom, top, left, right) dan deck mereka
   useEffect(() => {
     if (players.length > 0) {
-      // Temukan indeks pengguna saat ini
       const currentUserIndex = players.findIndex(p => p.uid === user.uid);
       if (currentUserIndex === -1) {
         console.error('Current user not found in players array');
         return;
       }
-  
-      // Pemetaan posisi pemain
+
       const positionsMap = { 'bottom': players[currentUserIndex] };
-  
-      // Membuat array lawan
       const opponents = players.filter((p, index) => index !== currentUserIndex);
-  
-      // Mengatur posisi lawan berdasarkan jumlah pemain
+
       const opponentPositions = [];
       if (opponents.length === 1) {
         opponentPositions.push('top');
@@ -170,38 +169,33 @@ function NusaCard() {
       } else if (opponents.length === 3) {
         opponentPositions.push('right', 'top', 'left');
       }
-  
-      // Membuat pemetaan posisi
+
       opponentPositions.forEach((position, index) => {
         positionsMap[position] = opponents[index];
       });
-  
+
       setPositionsMap(positionsMap);
-  
-      // Inisialisasi deckCounts termasuk 'bottom'
+
+      // Inisialisasi deckCounts sesuai jumlah pemain
       let initialDeckCounts = {
-        bottom: INITIAL_DECK_COUNT, // Menambahkan 'bottom' dengan jumlah awal
+        bottom: INITIAL_DECK_COUNT,
       };
       opponentPositions.forEach(position => {
         initialDeckCounts[position] = INITIAL_DECK_COUNT;
       });
-  
+
       setDeckCounts(initialDeckCounts);
-  
-      // Menetapkan DECK_ORDER
+
       setDECK_ORDER(['bottom', ...opponentPositions]);
     }
   }, [players, user.uid]);
-  
 
-  // **Adjust getPlayerByPosition to use positionsMap**
+  // Fungsi untuk mendapatkan player berdasarkan posisi (bottom/top/left/right)
   const getPlayerByPosition = (position) => {
     return positionsMap[position] || null;
   };
-  
-  
 
-  // Timer handlers
+  // Fungsi reset timer inaktivitas
   const resetInactivityTimer = () => {
     setInactivityTimeRemaining(INACTIVITY_DURATION);
     if (inactivityTimerRef.current) {
@@ -210,31 +204,30 @@ function NusaCard() {
     startInactivityTimer();
   };
 
+  // Fungsi mulai timer inaktivitas
   const startInactivityTimer = () => {
     inactivityTimerRef.current = setInterval(() => {
       setInactivityTimeRemaining((prevTime) => {
-        if (prevTime <= 1000) { // Check closer to timeout for inactivity
+        if (prevTime <= 1000) {
+          // Jika tidak ada aktivitas terlalu lama, kembali ke halaman utama
           clearInterval(inactivityTimerRef.current);
           navigate("/");
           return 0;
         }
-        return prevTime - 1000; // Reduce time in smaller intervals (1 second)
+        return prevTime - 1000;
       });
     }, 1000);
   };
 
-  // Game logic handlers
+  // Event handler ketika deck ditekan (deck lawan atau bottom deck)
   const handleDeckCardClick = (deck) => {
     resetInactivityTimer();
-    if (
-      currentTurn !== deck ||
-      showPopup ||
-      isActionInProgress ||
-      isShuffling
-    )
+
+    // Cek kondisi: harus turn deck tersebut, tidak boleh sedang popup terbuka, dll.
+    if (currentTurn !== deck || showPopup || isActionInProgress || isShuffling)
       return;
 
-    // Stop the turn timer
+    // Stop turn timer saat klik deck
     if (turnTimerRef.current) {
       clearInterval(turnTimerRef.current);
       setTurnTimeRemaining(null);
@@ -250,43 +243,39 @@ function NusaCard() {
       setActiveCard(getRandomQuestion());
       setAnsweringPlayer(getNextPlayer(deck));
       setShowPopup(true);
-      setHasAnswered(false); 
+      setHasAnswered(false);
     }
   };
 
+  // Event handler ketika kartu di bottom deck ditekan
   const handleBottomCardClick = (card, index) => {
-    if (
-      currentTurn !== "bottom" ||
-      showPopup ||
-      isActionInProgress ||
-      isShuffling
-    )
+    if (currentTurn !== "bottom" || showPopup || isActionInProgress || isShuffling)
       return;
-  
-    // Stop the turn timer
+
     if (turnTimerRef.current) {
       clearInterval(turnTimerRef.current);
       setTurnTimeRemaining(null);
     }
-  
+
     setIsActionInProgress(true);
     setActiveCard(card);
     setShowPopup(true);
     setLastActiveDeck("bottom");
     setAnsweringPlayer(getNextPlayer("bottom"));
-    setHasAnswered(false); // Reset hasAnswered when a new question is shown
-  
-    // Remove the clicked card from the deck
+    setHasAnswered(false);
+
+    // Hapus kartu yang dipilih dari deck bottom
     removeCardFromDeck(index);
   };
 
+  // Fungsi ketika jawaban dipilih (benar/salah)
   const handleAnswerSelect = (isCorrect, wasTimeout = false) => {
-    if (hasAnswered) return; // Prevent further actions if already answered
+    if (hasAnswered) return; // Jangan double submit jawaban
 
     clearInterval(timerRef.current);
-    setTimeRemaining(TIMER_DURATION); // Reset the question timer
+    setTimeRemaining(TIMER_DURATION);
     setIsCorrectAnswer(isCorrect);
-    setHasAnswered(true); // Set hasAnswered to true after selecting an answer
+    setHasAnswered(true);
 
     setFeedbackIcon({
       show: true,
@@ -294,19 +283,17 @@ function NusaCard() {
       position: answeringPlayer,
     });
 
+    // Jika jawaban salah dan bukan karena timeout, lawan tambah kartu
     if (!isCorrect && !wasTimeout) {
       incrementDeckCount(answeringPlayer);
     }
 
-    if (
-      isCorrect &&
-      lastActiveDeck !== "bottom" && // Adjusted for dynamic decks
-      answeringPlayer !== "bottom"
-    ) {
+    // Jika jawaban benar dan berasal dari deck lawan, berikan kartu baru ke deck bottom
+    if (isCorrect && lastActiveDeck !== "bottom" && answeringPlayer !== "bottom") {
       addNewCardToDeck();
     }
 
-    // Delay the closing of the popup by 1 second
+    // Setelah 3 detik, tutup popup dan lanjut ke turn berikutnya
     setTimeout(() => {
       const nextTurn = getNextTurn();
       setCurrentTurn(nextTurn);
@@ -315,26 +302,31 @@ function NusaCard() {
     }, 3000);
   };
 
+  // Dapatkan pemain berikutnya berdasarkan deck saat ini
   const getNextPlayer = (currentDeck) => {
     const currentIndex = DECK_ORDER.indexOf(currentDeck);
     const nextIndex = (currentIndex + 1) % DECK_ORDER.length;
     return DECK_ORDER[nextIndex];
-  };  
+  };
 
+  // Dapatkan turn berikutnya setelah turn aktif saat ini
   const getNextTurn = () => {
     const currentIndex = DECK_ORDER.indexOf(lastActiveDeck);
     const nextIndex = (currentIndex + 1) % DECK_ORDER.length;
     return DECK_ORDER[nextIndex];
   };
 
+  // Hapus kartu tertentu dari deck bottom
   const removeCardFromDeck = (index) => {
     setCards((prev) => prev.filter((_, cardIndex) => cardIndex !== index));
   };
 
+  // Tambah kartu baru ke deck bottom jika diperlukan
   const addNewCardToDeck = () => {
     setCards((prev) => [...prev, { ...getRandomQuestion(), isNew: true }]);
   };
 
+  // Increment deck count jika jawaban salah
   const incrementDeckCount = (deck) => {
     if (deck === "bottom") {
       addNewCardToDeck();
@@ -346,46 +338,48 @@ function NusaCard() {
     }
   };
 
+  // Handler ketika waktu untuk menjawab habis atau jawaban sudah dipilih
   const handleAnswerTimeout = () => {
     setTimeout(() => {
       setIsCorrectAnswer(null);
       setActiveCard(null);
       setIsExitingPopup(true);
-  
+
       setTimeout(() => {
         setShowPopup(false);
         setIsExitingPopup(false);
         setAnsweringPlayer(null);
         setFeedbackIcon({ show: false, isCorrect: null, position: null });
         triggerShuffleAnimation();
-        // Move setIsActionInProgress(false) here
+        // Selesai aksi
         setIsActionInProgress(false);
       }, POPUP_TRANSITION_DURATION);
     }, FEEDBACK_DURATION);
   };
-  
 
+  // Memicu animasi shuffle sebelum beralih turn
   const triggerShuffleAnimation = () => {
     setIsShuffling(true);
-    setTurnTimeRemaining(null); // Clear turn timer during shuffle
+    setTurnTimeRemaining(null);
     setTimeout(() => {
       setIsShuffling(false);
-      // Start the next player's turn timer after shuffle animation
+      // Mulai timer turn pemain berikutnya
       startTurnTimer();
     }, 500);
   };
 
-  // Handle turn timeout
+  // Jika waktu turn habis, lewati giliran pemain saat ini
   const handleTurnTimeout = () => {
-    // Skip the current player's turn
     const nextTurn = getNextPlayer(currentTurn);
     setCurrentTurn(nextTurn);
-    setLastActiveDeck(currentTurn); // Update lastActiveDeck to currentTurn before moving on
+    setLastActiveDeck(currentTurn);
     setAnsweringPlayer(getNextPlayer(nextTurn));
     triggerShuffleAnimation();
   };
 
+  // Mulai timer turn
   const startTurnTimer = () => {
+    // Jangan mulai timer jika sudah victory atau deck habis atau popup muncul
     if (victory || deckDepleted || showPopup || isActionInProgress) return;
 
     setTurnTimeRemaining(TURN_TIMER_DURATION);
@@ -403,12 +397,11 @@ function NusaCard() {
     }, 1000);
   };
 
-  // Effects
+  // Inisialisasi timer inaktivitas saat komponen pertama kali dimuat
   useEffect(() => {
     startInactivityTimer();
     const resetTimerOnActivity = () => resetInactivityTimer();
 
-    // Add event listeners for user activity
     window.addEventListener("click", resetTimerOnActivity);
     window.addEventListener("keydown", resetTimerOnActivity);
 
@@ -419,28 +412,37 @@ function NusaCard() {
     };
   }, []);
 
+  // Efek untuk mengecek kondisi deck dan kartu setelah inisialisasi
   useEffect(() => {
+    // Hindari pengecekan pertama kali (saat pertama render)
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
 
+    // Pastikan game status "playing" sebelum cek victory
+    if (gameStatus !== 'playing') return;
+
+    // Cek apakah ada deck yang habis (count=0)
     Object.entries(deckCounts).forEach(([deck, count]) => {
       if (count === 0 && !deckDepleted) {
         setDeckDepleted(deck);
       }
     });
 
+    // Jika kartu bottom habis (cards.length=0), tandai deckDepleted bottom
     if (cards.length === 0 && !deckDepleted) {
       setDeckDepleted("bottom");
     }
 
+    // Jika deckDepleted terdeteksi dan belum victory, set victory
     if (deckDepleted && !victory) {
       setVictory(true);
       setWinner(deckDepleted);
     }
-  }, [deckCounts, cards, deckDepleted]);
+  }, [deckCounts, cards, deckDepleted, victory, gameStatus]);
 
+  // Efek untuk timer pertanyaan (jika popup muncul dan player harus menjawab)
   useEffect(() => {
     if (showPopup && answeringPlayer) {
       setTimeRemaining(TIMER_DURATION);
@@ -453,18 +455,18 @@ function NusaCard() {
     return () => clearInterval(timerRef.current);
   }, [showPopup, answeringPlayer]);
 
+  // Jika waktu menjawab habis (timeRemaining = 0), anggap jawaban salah
   useEffect(() => {
     if (timeRemaining === 0) {
       handleAnswerSelect(false, true);
     }
   }, [timeRemaining]);
 
-  // Update turn timer when currentTurn changes
+  // Update turn timer ketika currentTurn berubah
   useEffect(() => {
     if (!isShuffling && !showPopup && !isActionInProgress) {
       startTurnTimer();
     } else {
-      // Clear the turn timer if shuffling or popup is shown
       if (turnTimerRef.current) {
         clearInterval(turnTimerRef.current);
         setTurnTimeRemaining(null);
@@ -472,13 +474,13 @@ function NusaCard() {
     }
   }, [currentTurn, isShuffling, showPopup, isActionInProgress]);
 
-
-  // Get winner's username
+  // Fungsi untuk mendapatkan nama pemenang berdasarkan posisi
   const getWinnerName = () => {
     const winnerPlayer = getPlayerByPosition(winner);
     return winnerPlayer ? winnerPlayer.displayName : "";
   };
 
+  // Menghilangkan loading setelah 1 detik jika data sudah didapatkan
   useEffect(() => {
     const loadingTimeout = setTimeout(() => {
       setLoading(false);
@@ -487,8 +489,8 @@ function NusaCard() {
     return () => clearTimeout(loadingTimeout);
   }, []);
 
-   // Render loading
-   if (loading) {
+  // Render loading saat data belum siap
+  if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
         <Spinner animation="border" role="status" variant="dark">
@@ -496,7 +498,6 @@ function NusaCard() {
         </Spinner>
       </div>
     );
-
   }
 
   return (
@@ -514,56 +515,142 @@ function NusaCard() {
         }}
       />
 
-      {/* Top Player */}
-{positionsMap['top'] && (
-   <Row className="align-items-center justify-content-center mt-0">
-     <Col xs={12} md="auto" className="text-center position-relative ms-5 ps-5">
-       <div
-         onClick={() => handleDeckCardClick("top")}
-         className="d-flex align-items-center justify-content-center"
-       >
-         {currentTurn === "top" && turnTimeRemaining !== null && (
-           <div className="timer-overlay-above">{turnTimeRemaining}</div>
-         )}
-         {showPopup && !hasAnswered && answeringPlayer === "top" && (
-           <div className="timer-overlay">{timeRemaining}</div>
-         )}
-         <DeckPlayer
-           count={deckCounts.top}
-           isNew={deckCounts.top === 0}
-           position="left"
-         />
-       </div>
-     </Col>
+      {/* Top Player (hanya muncul jika memang ada player di posisi top) */}
+      {positionsMap['top'] && (
+        <Row className="align-items-center justify-content-center mt-0">
+          <Col xs={12} md="auto" className="text-center position-relative ms-5 ps-5">
+            <div
+              onClick={() => handleDeckCardClick("top")}
+              className="d-flex align-items-center justify-content-center"
+            >
+              {currentTurn === "top" && turnTimeRemaining !== null && (
+                <div className="timer-overlay-above">{turnTimeRemaining}</div>
+              )}
+              {showPopup && !hasAnswered && answeringPlayer === "top" && (
+                <div className="timer-overlay">{timeRemaining}</div>
+              )}
+              <DeckPlayer
+                count={deckCounts.top}
+                isNew={deckCounts.top === 0}
+                position="left"
+              />
+            </div>
+          </Col>
 
-     <Col xs={12} md="auto" className="d-flex flex-column align-items-center position-relative ms-5 ps-5 mt-3 mt-md-0">
-       <PlayerProfile
-         photoURL={getPlayerByPosition("top")?.photoURL}
-         displayName={getPlayerByPosition("top")?.displayName || "Top Player"}
-         position="top"
-         currentTurn={currentTurn}
-         answeringPlayer={answeringPlayer}
-         turnTimeRemaining={turnTimeRemaining}
-         timeRemaining={timeRemaining}
-         feedbackIcon={feedbackIcon}
-         onDeckCardClick={handleDeckCardClick}
-         deckOrder={DECK_ORDER}
-       />
-     </Col>
-   </Row>
-)}
+          <Col xs={12} md="auto" className="d-flex flex-column align-items-center position-relative ms-5 ps-5 mt-3 mt-md-0">
+            <PlayerProfile
+              photoURL={getPlayerByPosition("top")?.photoURL}
+              displayName={getPlayerByPosition("top")?.displayName || "Top Player"}
+              position="top"
+              currentTurn={currentTurn}
+              answeringPlayer={answeringPlayer}
+              turnTimeRemaining={turnTimeRemaining}
+              timeRemaining={timeRemaining}
+              feedbackIcon={feedbackIcon}
+              onDeckCardClick={handleDeckCardClick}
+              deckOrder={DECK_ORDER}
+            />
+          </Col>
+        </Row>
+      )}
 
-{/* Middle Row */}
-<Container fluid>
-  <Row className="mb-5 mt-n3 align-items-center">
-    {/* Left Deck */}
-    {positionsMap['left'] && (
-      <Col xs={12} md={3} className="position-relative deck-position-left mb-4 mb-md-0">
-        <div className="d-flex flex-column align-items-center">
+      {/* Middle Row (deck tengah, left, right) */}
+      <Container fluid>
+        <Row className="mb-5 mt-n3 align-items-center">
+          {/* Left Player (jika ada) */}
+          {positionsMap['left'] && (
+            <Col xs={12} md={3} className="position-relative deck-position-left mb-4 mb-md-0">
+              <div className="d-flex flex-column align-items-center">
+                <PlayerProfile
+                  photoURL={getPlayerByPosition("left")?.photoURL}
+                  displayName={getPlayerByPosition("left")?.displayName || "Left Player"}
+                  position="left"
+                  currentTurn={currentTurn}
+                  answeringPlayer={answeringPlayer}
+                  turnTimeRemaining={turnTimeRemaining}
+                  timeRemaining={timeRemaining}
+                  feedbackIcon={feedbackIcon}
+                  onDeckCardClick={handleDeckCardClick}
+                  deckOrder={DECK_ORDER}
+                />
+                <DeckPlayer
+                  count={deckCounts.left}
+                  isNew={deckCounts.left === 0}
+                  style={{ transform: "rotate(90deg)" }}
+                />
+              </div>
+            </Col>
+          )}
+
+          {/* Deck Tengah */}
+          <Col
+            xs={12}
+            md={11}
+            className="deck-tengah position-relative d-flex justify-content-center align-items-center mt-3 mt-md-0"
+          >
+            <DeckPlayer count={4} isNew={false} />
+            <div
+              className={`position-absolute d-flex justify-content-center align-items-center ${
+                isShuffling ? "shuffle-rotate" : ""
+              }`}
+              style={{ width: "250px" }}
+            >
+              <Image src={shuffleIcon} style={{ width: "100%", height: "100%" }} />
+            </div>
+          </Col>
+
+          {/* Right Player (jika ada) */}
+          {positionsMap['right'] && (
+            <Col xs={12} md={3} className="position-relative deck-position-right mb-4 mb-md-0">
+              <div className="d-flex flex-column align-items-center">
+                <PlayerProfile
+                  photoURL={getPlayerByPosition("right")?.photoURL}
+                  displayName={getPlayerByPosition("right")?.displayName || "Right Player"}
+                  position="right"
+                  currentTurn={currentTurn}
+                  answeringPlayer={answeringPlayer}
+                  turnTimeRemaining={turnTimeRemaining}
+                  timeRemaining={timeRemaining}
+                  feedbackIcon={feedbackIcon}
+                  onDeckCardClick={handleDeckCardClick}
+                  deckOrder={DECK_ORDER}
+                />
+                <DeckPlayer
+                  count={deckCounts.right}
+                  isNew={deckCounts.right === 0}
+                  position="right"
+                  style={{ transform: "rotate(-90deg)" }}
+                />
+              </div>
+            </Col>
+          )}
+        </Row>
+      </Container>
+
+      {/* Bottom Deck (player utama) */}
+      <Row className="align-items-center justify-content-center mt-3">
+        <Col xs={12} md="auto" className="text-center position-relative mb-3 mb-md-0">
+          <div style={{ position: "relative" }}>
+            {showPopup && !hasAnswered && answeringPlayer === "bottom" && (
+              <div className="timer-overlay">{timeRemaining}</div>
+            )}
+            {currentTurn === "bottom" && turnTimeRemaining !== null && (
+              <div className="timer-overlay-above">{turnTimeRemaining}</div>
+            )}
+            <BottomDeckCard
+              cards={cards}
+              onCardClick={handleBottomCardClick}
+              showPopup={showPopup}
+              isExitingPopup={isExitingPopup}
+            />
+          </div>
+        </Col>
+
+        <Col xs={12} md="auto" className="d-flex align-items-center justify-content-start ps-3">
           <PlayerProfile
-            photoURL={getPlayerByPosition("left")?.photoURL}
-            displayName={getPlayerByPosition("left")?.displayName || "Left Player"}
-            position="left"
+            photoURL={getPlayerByPosition("bottom")?.photoURL}
+            displayName={getPlayerByPosition("bottom")?.displayName || "Bottom Player"}
+            position="bottom"
             currentTurn={currentTurn}
             answeringPlayer={answeringPlayer}
             turnTimeRemaining={turnTimeRemaining}
@@ -572,100 +659,10 @@ function NusaCard() {
             onDeckCardClick={handleDeckCardClick}
             deckOrder={DECK_ORDER}
           />
+        </Col>
+      </Row>
 
-          <DeckPlayer
-            count={deckCounts.left}
-            isNew={deckCounts.left === 0}
-            style={{ transform: "rotate(90deg)" }}
-          />
-        </div>
-      </Col>
-    )}
-
-    {/* Center Deck */}
-    <Col
-      xs={12}
-      md={11}
-      className="deck-tengah position-relative d-flex justify-content-center align-items-center mt-3 mt-md-0"
-    >
-      <DeckPlayer count={4} isNew={false} />
-      <div
-        className={`position-absolute d-flex justify-content-center align-items-center ${
-          isShuffling ? "shuffle-rotate" : ""
-        }`}
-        style={{ width: "250px" }}
-      >
-        <Image src={shuffleIcon} style={{ width: "100%", height: "100%" }} />
-      </div>
-    </Col>
-
-    {/* Right Deck */}
-    {positionsMap['right'] && (
-      <Col xs={12} md={3} className="position-relative deck-position-right mb-4 mb-md-0">
-        <div className="d-flex flex-column align-items-center">
-          <PlayerProfile
-            photoURL={getPlayerByPosition("right")?.photoURL}
-            displayName={getPlayerByPosition("right")?.displayName || "Right Player"}
-            position="right"
-            currentTurn={currentTurn}
-            answeringPlayer={answeringPlayer}
-            turnTimeRemaining={turnTimeRemaining}
-            timeRemaining={timeRemaining}
-            feedbackIcon={feedbackIcon}
-            onDeckCardClick={handleDeckCardClick}
-            deckOrder={DECK_ORDER}
-          />
-          <DeckPlayer
-            count={deckCounts.right}
-            isNew={deckCounts.right === 0}
-            position="right"
-            style={{ transform: "rotate(-90deg)" }}
-          />
-        </div>
-      </Col>
-    )}
-  </Row>
-</Container>
-
-
- {/* Bottom Deck */}
-<Row className="align-items-center justify-content-center mt-3">
-  <Col xs={12} md="auto" className="text-center position-relative mb-3 mb-md-0">
-    <div style={{ position: "relative" }}>
-      {showPopup && !hasAnswered && answeringPlayer === "bottom" && (
-        <div className="timer-overlay">{timeRemaining}</div>
-      )}
-      {currentTurn === "bottom" && turnTimeRemaining !== null && (
-        <div className="timer-overlay-above">{turnTimeRemaining}</div>
-      )}
-      <BottomDeckCard
-        cards={cards}
-        onCardClick={handleBottomCardClick}
-        showPopup={showPopup}
-        isExitingPopup={isExitingPopup}
-      />
-    </div>
-  </Col>
-
-  {/* Player Profile */}
-  <Col xs={12} md="auto" className="d-flex align-items-center justify-content-start ps-3">
-    <PlayerProfile
-      photoURL={getPlayerByPosition("bottom")?.photoURL}
-      displayName={getPlayerByPosition("bottom")?.displayName || "Bottom Player"}
-      position="bottom"
-      currentTurn={currentTurn}
-      answeringPlayer={answeringPlayer}
-      turnTimeRemaining={turnTimeRemaining}
-      timeRemaining={timeRemaining}
-      feedbackIcon={feedbackIcon}
-      onDeckCardClick={handleDeckCardClick}
-      deckOrder={DECK_ORDER}
-    />
-  </Col>
-</Row>
-
-
-      {/* Show the question popup */}
+      {/* Popup Pertanyaan Muncul saat showPopup = true dan belum answered */}
       {showPopup && activeCard && !hasAnswered && (
         <>
           <div style={{ position: "relative", zIndex: "2000" }}>
@@ -683,7 +680,7 @@ function NusaCard() {
         </>
       )}
 
-      {/* Show Overlay Victory */}
+      {/* Victory Overlay muncul jika victory = true */}
       {victory && (
         <div className="victory-overlay" onClick={() => navigate("/")}>
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />

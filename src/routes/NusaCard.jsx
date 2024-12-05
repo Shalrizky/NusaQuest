@@ -11,7 +11,10 @@ import PlayerProfile from "../components/games/nuca/PlayerProfile";
 
 import { 
   fetchNusaCardPlayers, 
-  setNusaCardGameStatus 
+  setNusaCardGameStatus,
+  initializeNusaCardGameState,
+  getNusaCardGameState,
+  
 } from "../services/gameDataServicesNuca";
 import "../style/routes/NusaCard.css";
 
@@ -49,6 +52,41 @@ function NusaCard() {
   const [DECK_ORDER, setDECK_ORDER] = useState([]);
 
   const [positionsMap, setPositionsMap] = useState({});
+    // Game state
+    const [showOffcanvas, setShowOffcanvas] = useState(false);
+    const [hints, setHints] = useState([]);
+    const [lastActiveDeck, setLastActiveDeck] = useState(null);
+    const [currentTurn, setCurrentTurn] = useState("bottom");
+    const [isShuffling, setIsShuffling] = useState(true);
+    const [showPopup, setShowPopup] = useState(false);
+    const [isExitingPopup, setIsExitingPopup] = useState(false);
+    const [activeCard, setActiveCard] = useState(null);
+    const [isCorrectAnswer, setIsCorrectAnswer] = useState(null);
+    const [victory, setVictory] = useState(false);
+    const [winner, setWinner] = useState("");
+    const [deckDepleted, setDeckDepleted] = useState(null);
+    const [isActionInProgress, setIsActionInProgress] = useState(false);
+    const [answeringPlayer, setAnsweringPlayer] = useState(null);
+    const [hasAnswered, setHasAnswered] = useState(false);
+  
+    // Timers
+    const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
+    const [inactivityTimeRemaining, setInactivityTimeRemaining] =
+      useState(INACTIVITY_DURATION);
+    const timerRef = useRef(null);
+    const inactivityTimerRef = useRef(null);
+    const isFirstRender = useRef(true);
+  
+    // Turn timer
+    const [turnTimeRemaining, setTurnTimeRemaining] = useState(null);
+    const turnTimerRef = useRef(null);
+  
+    // Feedback state
+    const [feedbackIcon, setFeedbackIcon] = useState({
+      show: false,
+      isCorrect: null,
+      position: null,
+    });
 
 
   // Fetch players saat komponen dimuat
@@ -59,17 +97,36 @@ function NusaCard() {
         await setNusaCardGameStatus(topicID, gameID, roomID, "playing");
 
         // Fetch players
-        const unsubscribe = fetchNusaCardPlayers(
+        const unsubscribePlayers = fetchNusaCardPlayers(
           topicID, 
           gameID, 
           roomID, 
-          (playersData) => {
+          async (playersData) => {
             setPlayers(playersData);
             setLoading(false);
+
+            // Inisialisasi game state jika belum ada
+            const currentGameState = await getNusaCardGameState(topicID, gameID, roomID);
+            if (!currentGameState) {
+              await initializeNusaCardGameState(topicID, gameID, roomID, playersData);
+              console.log("Game state berhasil diinisialisasi.");
+            }
           }
         );
 
-        return () => unsubscribe();
+        // Mendengarkan perubahan pada gameState
+        const unsubscribeGameState = listenToNusaCardGameState(topicID, gameID, roomID, (state) => {
+          if (state) {
+            setDeckCounts(state.deckCounts || {});
+            setDECK_ORDER(state.DECK_ORDER || []);
+            // Set state lainnya jika diperlukan
+          }
+        });
+
+        return () => {
+          unsubscribePlayers();
+          unsubscribeGameState();
+        };
       } catch (error) {
         console.error("Error initializing game:", error);
         setLoading(false);
@@ -77,47 +134,13 @@ function NusaCard() {
     };
 
     initGame();
-  }, [topicID, gameID, roomID]);
+  }, [topicID, gameID, roomID, user.uid]);
 
   const [cards, setCards] = useState(() =>
     Array.from({ length: INITIAL_DECK_COUNT }, () => getRandomQuestion())
   );
 
-  // Game state
-  const [showOffcanvas, setShowOffcanvas] = useState(false);
-  const [hints, setHints] = useState([]);
-  const [lastActiveDeck, setLastActiveDeck] = useState(null);
-  const [currentTurn, setCurrentTurn] = useState("bottom");
-  const [isShuffling, setIsShuffling] = useState(true);
-  const [showPopup, setShowPopup] = useState(false);
-  const [isExitingPopup, setIsExitingPopup] = useState(false);
-  const [activeCard, setActiveCard] = useState(null);
-  const [isCorrectAnswer, setIsCorrectAnswer] = useState(null);
-  const [victory, setVictory] = useState(false);
-  const [winner, setWinner] = useState("");
-  const [deckDepleted, setDeckDepleted] = useState(null);
-  const [isActionInProgress, setIsActionInProgress] = useState(false);
-  const [answeringPlayer, setAnsweringPlayer] = useState(null);
-  const [hasAnswered, setHasAnswered] = useState(false);
 
-  // Timers
-  const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
-  const [inactivityTimeRemaining, setInactivityTimeRemaining] =
-    useState(INACTIVITY_DURATION);
-  const timerRef = useRef(null);
-  const inactivityTimerRef = useRef(null);
-  const isFirstRender = useRef(true);
-
-  // Turn timer
-  const [turnTimeRemaining, setTurnTimeRemaining] = useState(null);
-  const turnTimerRef = useRef(null);
-
-  // Feedback state
-  const [feedbackIcon, setFeedbackIcon] = useState({
-    show: false,
-    isCorrect: null,
-    position: null,
-  });
 
   // Get number of players
   const numPlayers = players.length;
@@ -125,20 +148,20 @@ function NusaCard() {
   // **Initialize positionsMap, deckCounts, and DECK_ORDER when players change**
   useEffect(() => {
     if (players.length > 0) {
-      // Find the index of the current user
+      // Temukan indeks pengguna saat ini
       const currentUserIndex = players.findIndex(p => p.uid === user.uid);
       if (currentUserIndex === -1) {
         console.error('Current user not found in players array');
         return;
       }
-
-      // The current user is at 'bottom'
+  
+      // Pemetaan posisi pemain
       const positionsMap = { 'bottom': players[currentUserIndex] };
-
-      // Create an array of opponents
+  
+      // Membuat array lawan
       const opponents = players.filter((p, index) => index !== currentUserIndex);
-
-      // Depending on the number of opponents, assign positions
+  
+      // Mengatur posisi lawan berdasarkan jumlah pemain
       const opponentPositions = [];
       if (opponents.length === 1) {
         opponentPositions.push('top');
@@ -147,26 +170,29 @@ function NusaCard() {
       } else if (opponents.length === 3) {
         opponentPositions.push('right', 'top', 'left');
       }
-
-      // Create the mapping
+  
+      // Membuat pemetaan posisi
       opponentPositions.forEach((position, index) => {
         positionsMap[position] = opponents[index];
       });
-
+  
       setPositionsMap(positionsMap);
-
-      // Initialize deckCounts for opponents
-      let initialDeckCounts = {};
+  
+      // Inisialisasi deckCounts termasuk 'bottom'
+      let initialDeckCounts = {
+        bottom: INITIAL_DECK_COUNT, // Menambahkan 'bottom' dengan jumlah awal
+      };
       opponentPositions.forEach(position => {
         initialDeckCounts[position] = INITIAL_DECK_COUNT;
       });
-
+  
       setDeckCounts(initialDeckCounts);
-
-      // Set DECK_ORDER
+  
+      // Menetapkan DECK_ORDER
       setDECK_ORDER(['bottom', ...opponentPositions]);
     }
-  }, [players]);
+  }, [players, user.uid]);
+  
 
   // **Adjust getPlayerByPosition to use positionsMap**
   const getPlayerByPosition = (position) => {

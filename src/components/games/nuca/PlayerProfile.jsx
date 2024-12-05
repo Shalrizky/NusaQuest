@@ -1,6 +1,6 @@
 import React from "react";
 import { Image } from "react-bootstrap";
-import defaultPlayerPhoto from "../../../assets/games/Utangga/narutoa.png"; // Default profile photo
+import defaultPlayerPhoto from "../../../assets/games/uTangga/narutoa.png"; // Default profile photo
 
 // PlayerProfile Component
 const PlayerProfile = ({

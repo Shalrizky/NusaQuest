@@ -333,15 +333,10 @@ function Profile() {
                   <div className="potion-container d-flex flex-wrap align-items-center justify-content-between">
                     <div className="potion-item">
                       <div className="potion-item d-flex justify-content-center align-items-center gap-2">
-                        <Image
-                          src={potionData.item_img}
-                          alt={potionData.item_name}
-                          className="potion-image-profile"
-                          width={60}
-                        />
-                        <div className="text-white fs-6">
-                          x{potionData.item_count} {potionData.item_name}
-                        </div>
+                        <Image src={potionData.item_img} alt={potionData.item_name} className="potion-image-profile" width={60} />
+                          <div className="text-white fs-6"> 
+                            x{potionData.item_count} {potionData.item_name}
+                          </div>
                       </div>
                     </div>
                   </div>

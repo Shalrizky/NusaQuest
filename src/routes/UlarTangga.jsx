@@ -96,6 +96,7 @@ function UlarTangga() {
   const [hints, setHints] = useState([]);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
 
+  // Pindah ke pemain berikutnya jika waktu habis
   useEffect(() => {
     if (gameOver) navigate("/");
   }, [gameOver, navigate]);
@@ -108,11 +109,8 @@ function UlarTangga() {
           // Cek apakah gameState sudah ada
           const existingGameState = await getGameState(topicID, gameID, roomID);
           if (!existingGameState || !existingGameState.questions) {
-            // Ambil pertanyaan dari database berdasarkan `topicID`
             const fetchedQuestions = await getQuestions(topicID);
             // console.log("Fetched questions:", fetchedQuestions);
-
-            // Acak pertanyaan
             const shuffledQuestions = shuffle(fetchedQuestions);
 
             // Set pertanyaan ke state

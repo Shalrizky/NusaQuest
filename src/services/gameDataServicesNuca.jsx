@@ -1,32 +1,21 @@
-// Import fungsi-fungsi dari firebaseConfig untuk interaksi dengan Realtime Database
 import { database, ref, onValue, set, get, update, remove } from "../firebaseConfig";
-import { resetRoom } from "./roomDataServices";
+import { resetRoom } from "./roomDataServices"; 
 
-/**
- * Fungsi untuk mengambil data pemain yang berada di dalam suatu room
- * Berdasarkan topicID, gameID, dan roomID, kemudian mengembalikan array pemain.
- */
 export const fetchNusaCardPlayers = (topicID, gameID, roomID, callback) => {
-  // Pastikan parameter lengkap
   if (!topicID || !gameID || !roomID) {
     console.error("Missing required parameters for fetchNusaCardPlayers");
     return () => {};
   }
 
-  // Referensi lokasi pemain dalam struktur data: rooms/topicID/gameID/roomID/players
   const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
 
-  // Mendaftarkan listener 'onValue' untuk menangkap setiap perubahan pada data players
   return onValue(playersRef, (snapshot) => {
     const playersData = snapshot.val() || {};
-    const playersArray = Object.values(playersData); // Konversi objek menjadi array
-    callback(playersArray); // Jalankan callback dengan data pemain
+    const playersArray = Object.values(playersData);
+    callback(playersArray);
   });
 };
 
-/**
- * Set status permainan (misalnya: "waiting", "playing", "finished").
- */
 export const setNusaCardGameStatus = async (topicID, gameID, roomID, status) => {
   if (!topicID || !gameID || !roomID) return;
 
@@ -38,9 +27,6 @@ export const setNusaCardGameStatus = async (topicID, gameID, roomID, status) => 
   }
 };
 
-/**
- * Mendengarkan perubahan status permainan secara real-time.
- */
 export const listenToNusaCardGameStatus = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
 
@@ -50,11 +36,6 @@ export const listenToNusaCardGameStatus = (topicID, gameID, roomID, callback) =>
   });
 };
 
-/**
- * Inisialisasi state permainan NusaCard untuk pertama kali.
- * Menentukan jumlah deck sesuai dengan jumlah pemain, serta mengatur DECK_ORDER.
- * Pastikan hanya deck yang sesuai jumlah pemain yang dibuat, agar tidak muncul deck 0.
- */
 export const initializeNusaCardGameState = async (topicID, gameID, roomID, players) => {
   if (!topicID || !gameID || !roomID || !players) {
     console.error("Missing parameters for initializeNusaCardGameState");
@@ -64,33 +45,35 @@ export const initializeNusaCardGameState = async (topicID, gameID, roomID, playe
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
 
   try {
-    // Buat deckCounts dinamis: minimal ada 'bottom'
-    const deckCounts = { bottom: 4 };
-    if (players.length > 1) deckCounts.top = 4;
-    if (players.length > 2) deckCounts.left = 4;
-    if (players.length > 3) deckCounts.right = 4;
-
-    // Buat DECK_ORDER dinamis berdasarkan jumlah pemain
+    const playerCount = players.length;
+    let deckCounts = { bottom: 4 };
     let DECK_ORDER = ['bottom'];
-    if (players.length === 2) {
+
+    if (playerCount === 2) {
+      deckCounts.top = 4;
       DECK_ORDER = ['bottom', 'top'];
-    } else if (players.length === 3) {
+    } else if (playerCount === 3) {
+      deckCounts.left = 4;
+      deckCounts.right = 4;
       DECK_ORDER = ['bottom', 'left', 'right'];
-    } else if (players.length === 4) {
+    } else if (playerCount === 4) {
+      deckCounts.left = 4;
+      deckCounts.top = 4;
+      deckCounts.right = 4;
       DECK_ORDER = ['bottom', 'left', 'top', 'right'];
     }
 
     const initialState = {
       players: players,
       currentPlayerIndex: 0,
-      gameStatus: 'playing', // Status saat game dimulai
+      gameStatus: 'playing',
       deckCounts: deckCounts,
       DECK_ORDER: DECK_ORDER,
       cards: Array.from({ length: 4 }, () => getRandomQuestion()),
       hints: [],
       lastActiveDeck: null,
       isShuffling: false,
-      victory: false, // Mulai dari false
+      victory: false,
       winner: "",
       deckDepleted: null,
     };
@@ -102,10 +85,6 @@ export const initializeNusaCardGameState = async (topicID, gameID, roomID, playe
   }
 };
 
-/**
- * Mendengarkan perubahan pada state permainan secara real-time.
- * Setiap ada perubahan, callback akan dipanggil dengan state terbaru.
- */
 export const listenToNusaCardGameState = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
 
@@ -118,9 +97,6 @@ export const listenToNusaCardGameState = (topicID, gameID, roomID, callback) => 
   });
 };
 
-/**
- * Memperbarui state permainan dengan validasi agar tidak menimpa state yang tidak perlu.
- */
 export const updateNusaCardGameState = async (topicID, gameID, roomID, updates) => {
   if (!topicID || !gameID || !roomID || !updates) {
     console.error("Missing parameters for updateNusaCardGameState");
@@ -138,17 +114,13 @@ export const updateNusaCardGameState = async (topicID, gameID, roomID, updates) 
       return;
     }
 
-    // Sanitasi updates agar tidak merusak struktur data
     const sanitizedUpdates = {
       ...updates,
       deckCounts: updates.deckCounts
-        ? {
-            ...currentState.deckCounts,
-            ...updates.deckCounts,
-          }
+        ? { ...currentState.deckCounts, ...updates.deckCounts }
         : currentState.deckCounts,
-      cards: updates.cards ? updates.cards : currentState.cards,
-      hints: updates.hints ? updates.hints : currentState.hints,
+      cards: updates.cards || currentState.cards,
+      hints: updates.hints || currentState.hints,
     };
 
     await update(gameStateRef, sanitizedUpdates);
@@ -157,9 +129,6 @@ export const updateNusaCardGameState = async (topicID, gameID, roomID, updates) 
   }
 };
 
-/**
- * Mendapatkan state permainan saat ini.
- */
 export const getNusaCardGameState = async (topicID, gameID, roomID) => {
   if (!topicID || !gameID || !roomID) {
     console.error("Missing parameters for getNusaCardGameState");
@@ -176,9 +145,6 @@ export const getNusaCardGameState = async (topicID, gameID, roomID) => {
   }
 };
 
-/**
- * Reset state game NusaCard, biasanya saat permainan selesai atau akan dimulai ulang.
- */
 export const resetNusaCardGameState = async (topicID, gameID, roomID) => {
   if (!topicID || !gameID || !roomID) {
     console.error("Missing parameters for resetNusaCardGameState");
@@ -188,147 +154,15 @@ export const resetNusaCardGameState = async (topicID, gameID, roomID) => {
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
   try {
     await remove(gameStateRef);
+    console.log("Game state direset menjadi bersih.");
   } catch (error) {
     console.error("Error resetting NusaCard game state:", error);
   }
 };
 
-/**
- * Inisialisasi timer permainan jika diperlukan.
- */
-export const initializeNusaCardGameTimer = async (topicID, gameID, roomID, duration) => {
-  if (!topicID || !gameID || !roomID || !duration) {
-    console.error("Missing parameters for initializeNusaCardGameTimer");
-    return;
-  }
+// Fungsi dapat disesuaikan untuk timer, winner, dll.
+// Misalnya setNusaCardGameWinner, cleanupNusaCardGame, dsb.
 
-  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
-  try {
-    const snapshot = await get(gameTimerRef);
-    if (!snapshot.exists()) {
-      await set(gameTimerRef, {
-        startTime: Date.now(),
-        duration: duration,
-        isActive: true,
-      });
-    }
-  } catch (error) {
-    console.error("Error initializing NusaCard game timer:", error);
-  }
-};
-
-/**
- * Update timer permainan jika waktu berubah.
- */
-export const updateNusaCardGameTimer = async (topicID, gameID, roomID, timeLeft) => {
-  if (!topicID || !gameID || !roomID || timeLeft === undefined) {
-    console.error("Missing parameters for updateNusaCardGameTimer");
-    return;
-  }
-
-  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
-  try {
-    await set(gameTimerRef, {
-      startTime: Date.now(),
-      duration: timeLeft,
-      isActive: true,
-    });
-  } catch (error) {
-    console.error("Error updating NusaCard game timer:", error);
-  }
-};
-
-/**
- * Hentikan timer permainan.
- */
-export const stopNusaCardGameTimer = async (topicID, gameID, roomID) => {
-  if (!topicID || !gameID || !roomID) {
-    console.error("Missing parameters for stopNusaCardGameTimer");
-    return;
-  }
-
-  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
-  try {
-    await set(gameTimerRef, {
-      isActive: false,
-    });
-  } catch (error) {
-    console.error("Error stopping NusaCard game timer:", error);
-  }
-};
-
-/**
- * Mendengarkan perubahan timer secara real-time.
- */
-export const listenToNusaCardGameTimer = (topicID, gameID, roomID, callback) => {
-  if (!topicID || !gameID || !roomID) return () => {};
-
-  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
-  return onValue(gameTimerRef, (snapshot) => {
-    const timerData = snapshot.val();
-    if (timerData && timerData.isActive) {
-      const elapsedTime = Math.floor((Date.now() - timerData.startTime) / 1000);
-      const remainingTime = Math.max(0, timerData.duration - elapsedTime);
-      callback(remainingTime);
-    }
-  });
-};
-
-/**
- * Set pemenang game saat permainan berakhir.
- */
-export const setNusaCardGameWinner = async (topicID, gameID, roomID, winnerUID) => {
-  if (!topicID || !gameID || !roomID || !winnerUID) {
-    console.error("Missing parameters for setNusaCardGameWinner");
-    return;
-  }
-
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
-  try {
-    await update(gameStateRef, {
-      gameStatus: 'finished',
-      winner: winnerUID,
-    });
-  } catch (error) {
-    console.error("Error setting NusaCard game winner:", error);
-  }
-};
-
-/**
- * Membersihkan data game saat selesai atau tidak digunakan lagi.
- */
-export const cleanupNusaCardGame = async (topicID, gameID, roomID, user) => {
-  if (!topicID || !gameID || !roomID || !user?.uid) {
-    console.error("Missing parameters for cleanupNusaCardGame");
-    return;
-  }
-
-  try {
-    const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
-    await remove(gameStateRef);
-
-    const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
-    await remove(gameTimerRef);
-
-    await setNusaCardGameStatus(topicID, gameID, roomID, null);
-
-    const chatRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/chatMessages`);
-    await remove(chatRef);
-
-    const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
-    await remove(playersRef);
-
-    // Reset total room jika diperlukan
-    await resetRoom(topicID, gameID, roomID);
-  } catch (error) {
-    console.error("Error cleaning up NusaCard game:", error);
-  }
-};
-
-/**
- * Fungsi utilitas untuk mendapatkan pertanyaan acak.
- * Ganti dengan logika pertanyaan yang sebenarnya jika diperlukan.
- */
 export const getRandomQuestion = () => {
   const questions = [
     {
@@ -341,7 +175,6 @@ export const getRandomQuestion = () => {
       options: ["Soekarno", "Soeharto", "Habibie", "Megawati"],
       correctAnswer: "Soekarno",
     },
-    // Tambahkan pertanyaan lain sesuai kebutuhan
   ];
 
   const randomIndex = Math.floor(Math.random() * questions.length);

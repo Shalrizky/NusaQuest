@@ -15,7 +15,9 @@ import {
   initializeNusaCardGameState,
   getNusaCardGameState,
   listenToNusaCardGameState,
-  resetNusaCardGameState, // Pastikan ini diimport
+  resetNusaCardGameState,
+  onBottomCardClick, // Impor fungsi backend
+  onDeckCardClick,   // Jika diperlukan
 } from "../services/gameDataServicesNuca";
 
 import "../style/routes/NusaCard.css";
@@ -126,6 +128,19 @@ function NusaCard() {
             setDeckCounts(state.deckCounts || {});
             setDECK_ORDER(state.DECK_ORDER || []);
             setGameStatusState(state.gameStatus || 'playing');
+            setCards(state.cards || []);
+            setCurrentTurn(state.currentTurn || 'bottom');
+            setLastActiveDeck(state.lastActiveDeck || null);
+            setIsShuffling(state.isShuffling || false);
+            setVictory(state.victory || false);
+            setWinner(state.winner || "");
+            setDeckDepleted(state.deckDepleted || null);
+            setShowPopup(state.showPopup || false);
+            setActiveCard(state.activeCard || null);
+            setIsCorrectAnswer(state.isCorrectAnswer || null);
+            setAnsweringPlayer(state.answeringPlayer || null);
+            setHasAnswered(state.hasAnswered || false);
+            setFeedbackIcon(state.feedbackIcon || { show: false, isCorrect: null, position: null });
           }
         });
 
@@ -205,7 +220,8 @@ function NusaCard() {
     }, 1000);
   };
 
-  const handleDeckCardClick = (deck) => {
+  // Handler untuk klik pada deck atas/kiri/kanan
+  const handleDeckCardClick = async (deck) => {
     resetInactivityTimer();
     if (currentTurn !== deck || showPopup || isActionInProgress || isShuffling)
       return;
@@ -215,21 +231,17 @@ function NusaCard() {
       setTurnTimeRemaining(null);
     }
 
-    if (deckCounts[deck] > 0) {
-      setIsActionInProgress(true);
-      setDeckCounts((prev) => ({
-        ...prev,
-        [deck]: prev[deck] - 1,
-      }));
-      setLastActiveDeck(deck);
-      setActiveCard(getRandomQuestion());
-      setAnsweringPlayer(getNextPlayer(deck));
-      setShowPopup(true);
-      setHasAnswered(false);
+    try {
+      await onDeckCardClick(topicID, gameID, roomID, deck);
+      console.log(`Deck ${deck} clicked successfully.`);
+      // Listener akan menangani pembaruan state
+    } catch (error) {
+      console.error("Error handling deck card click:", error);
     }
   };
 
-  const handleBottomCardClick = (card, index) => {
+  // Handler untuk klik pada bottom deck
+  const handleBottomCardClick = async (card, index) => {
     if (currentTurn !== "bottom" || showPopup || isActionInProgress || isShuffling)
       return;
 
@@ -239,13 +251,15 @@ function NusaCard() {
     }
 
     setIsActionInProgress(true);
-    setActiveCard(card);
-    setShowPopup(true);
-    setLastActiveDeck("bottom");
-    setAnsweringPlayer(getNextPlayer("bottom"));
-    setHasAnswered(false);
 
-    removeCardFromDeck(index);
+    try {
+      await onBottomCardClick(topicID, gameID, roomID, index);
+      console.log("Bottom deck clicked successfully.");
+      // Listener akan menangani pembaruan state
+    } catch (error) {
+      console.error("Error handling bottom deck click:", error);
+      setIsActionInProgress(false);
+    }
   };
 
   const handleAnswerSelect = (isCorrect, wasTimeout = false) => {
@@ -275,7 +289,7 @@ function NusaCard() {
       setCurrentTurn(nextTurn);
       setAnsweringPlayer(getNextPlayer(nextTurn));
       handleAnswerTimeout();
-    }, 3000);
+    }, FEEDBACK_DURATION);
   };
 
   const getNextPlayer = (currentDeck) => {
@@ -586,7 +600,7 @@ function NusaCard() {
             )}
             <BottomDeckCard
               cards={cards}
-              onCardClick={handleBottomCardClick}
+              onCardClick={handleBottomCardClick} // Pastikan ini adalah fungsi async
               showPopup={showPopup}
               isExitingPopup={isExitingPopup}
             />

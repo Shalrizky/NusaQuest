@@ -242,6 +242,7 @@ export const onDeckCardClick = async (topicID, gameID, roomID, deck) => {
 };
 
 export const onBottomCardClick = async (topicID, gameID, roomID, cardIndex) => {
+  console.log(`onBottomCardClick called with cardIndex: ${cardIndex}`);
   const state = await getGameState(topicID, gameID, roomID);
   if (!state) return;
 
@@ -334,6 +335,7 @@ export const onAnswerSelect = async (topicID, gameID, roomID, isCorrect, wasTime
       };
 
       await updateGameState(topicID, gameID, roomID, finalUpdates);
+      console.log("State setelah turn timeout dan victory check:", finalUpdates);
       // Frontend melihat isShuffling = true, setelah 0.5 detik frontend bisa memanggil fungsi utk set isShuffling=false dan start turn timer
       // atau jika mau otomatis, gunakan mekanisme serupa di backend melalui Cloud Functions.
     }, POPUP_TRANSITION_DURATION);

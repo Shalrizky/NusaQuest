@@ -1,35 +1,32 @@
-import React, { useState } from 'react';
+// BottomDeckCard.js
+
+import React, { useState, useEffect } from 'react';
 import { Card } from 'react-bootstrap';
 import '../../../style/components/games/nuca/BottomDeckCard.css';
 
 const BottomDeckCard = ({ cards, onCardClick, showPopup, isExitingPopup }) => {
   const [selectedCard, setSelectedCard] = useState(null);
-  const [isCardExiting, setIsCardExiting] = useState(false);
   const [isInteractionDisabled, setIsInteractionDisabled] = useState(false);
 
   const handleCardClick = (card, index) => {
-    if (isInteractionDisabled) return; // Prevent clicks if interactions are disabled
-    
-    setSelectedCard({ ...card, index });
-    setIsInteractionDisabled(true); // Disable interactions after a card is selected
-    
+    if (isInteractionDisabled) return;
+
+    console.log("Card clicked in BottomDeckCard:", { card, index });
+    setSelectedCard(card);
+    setIsInteractionDisabled(true);
+
     setTimeout(() => {
       onCardClick(card, index);
     }, 100);
   };
 
-  // Watch for popup closing to trigger card exit animation
-  React.useEffect(() => {
+  useEffect(() => {
     if (isExitingPopup) {
-      setIsCardExiting(true);
-      setTimeout(() => {
-        setSelectedCard(null);
-        setIsCardExiting(false);
-        setIsInteractionDisabled(false); // Re-enable interactions after animation completes
-      }, 2000); // Match the popup exit duration
+      console.log("Popup is exiting. Resetting interactions.");
+      setSelectedCard(null);
+      setIsInteractionDisabled(false);
     }
   }, [isExitingPopup]);
-  
 
   return (
     <div className={`stackable-cards ${isInteractionDisabled ? 'interaction-disabled' : ''}`}>
@@ -49,10 +46,10 @@ const BottomDeckCard = ({ cards, onCardClick, showPopup, isExitingPopup }) => {
           </Card.Body>
         </Card>
       ))}
-      
+
       {/* Moving Card Element */}
       {selectedCard && (
-        <div className={`moving-card ${showPopup ? 'animate' : ''} ${isCardExiting ? 'exit' : ''}`}>
+        <div className={`moving-card ${showPopup ? 'animate' : ''}`}>
           <div className="card-content">
             {selectedCard.question}
           </div>

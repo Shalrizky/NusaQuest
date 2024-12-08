@@ -783,7 +783,6 @@ function NusaCard() {
           className="victory-overlay"
           onClick={async () => {
             console.log("Victory overlay clicked. Cleaning up game.");
-            // Reset state after victory to start a fresh game next time
             await cleanupNusaCardGame(topicID, gameID, roomID);
             navigate("/");
           }}

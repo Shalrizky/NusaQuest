@@ -1,3 +1,4 @@
+// NusaCard.js
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -21,8 +22,8 @@ import {
   submitPlayerAnswer,
   listenToPlayerAnswers,
   cleanupNusaCardGame,
-  getRandomQuestion,         // Add this import
-  updateNusaCardGameState   // Add this import
+  getRandomQuestion,         // Added import
+  updateNusaCardGameState   // Added import
 } from "../services/gameDataServicesNuca";
 
 import "../style/routes/NusaCard.css";
@@ -71,7 +72,6 @@ function NusaCard() {
   const [answeringPlayer, setAnsweringPlayer] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [playerWhoPlayed, setPlayerWhoPlayed] = useState(null);
-
 
   // Timer
   const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
@@ -153,7 +153,7 @@ function NusaCard() {
             setAnsweringPlayer(state.answeringPlayer || null);
             setIsCorrectAnswer(state.isCorrectAnswer || null);
             setFeedbackIcon(state.feedbackIcon || { show: false, isCorrect: null, position: null });
-            // setPlayerWhoPlayed(state.playerWhoPlayed || null); // Optional: Jika perlu
+            setPlayerWhoPlayed(state.playerWhoPlayed || null);  // Add this line
 
             // Additional Logic to Show Popup if Another Player Played a Card
             if (state.activeCard && state.playerWhoPlayed !== user.uid) {
@@ -162,8 +162,7 @@ function NusaCard() {
               setAnsweringPlayer(state.answeringPlayer);
               setIsActionInProgress(state.isActionInProgress);
               setHasAnswered(false);
-              setPlayerWhoPlayed(state.playerWhoPlayed || null);  // Add this line
-
+              setPlayerWhoPlayed(state.playerWhoPlayed || null);  // Ensure this is set
             }
           }
         });
@@ -283,8 +282,8 @@ function NusaCard() {
       await updateNusaCardGameState(topicID, gameID, roomID, {
         deckCounts: { [deck]: deckCounts[deck] - 1 },
         activeCard: newCard,
-        playerWhoPlayed: user.uid, // Mengatur pemain yang melempar kartu
-        showPopup: true,
+        playerWhoPlayed: user.uid, // Set the player who played the card
+        showPopup: true, // This will trigger the popup for other players
         answeringPlayer: nextPlayer,
         isActionInProgress: true,
         lastActiveDeck: deck,
@@ -304,7 +303,7 @@ function NusaCard() {
       isShuffling
     )
       return;
-
+    
     setIsActionInProgress(true);
     setActiveCard(card);
     setShowPopup(true);
@@ -327,7 +326,15 @@ function NusaCard() {
   };
 
   const handleAnswerSelect = async (isCorrect, wasTimeout = false) => {
+    // Jika sudah pernah menjawab, hentikan
     if (hasAnswered) return;
+
+    // Cek apakah user ini adalah yang melempar kartu.
+    // Jika iya, jangan lakukan apapun (return saja).
+    if (playerWhoPlayed === user.uid) {
+      console.log("Player who played the card cannot submit answers.");
+      return;
+    }
 
     console.log("Answer selected:", { isCorrect, wasTimeout });
 
@@ -746,24 +753,6 @@ function NusaCard() {
 
       {/* Display Pop-up Pertanyaan untuk Pemain Lain */}
       {showPopup && activeCard && playerWhoPlayed !== user.uid && (
-        <>
-          <div style={{ position: "relative", zIndex: "2000" }}>
-            <PertanyaanNuca
-              question={activeCard.question}
-              options={activeCard.options}
-              correctAnswer={activeCard.correctAnswer}
-              onAnswerSelect={(isCorrect) => handleAnswerSelect(isCorrect)}
-              isExiting={isExitingPopup}
-            />
-          </div>
-          <div className="potion-icon">
-            <Potion />
-          </div>
-        </>
-      )}
-
-      {/* Display Pop-up Pertanyaan untuk Pemain yang Memainkan Kartu */}
-      {showPopup && activeCard && playerWhoPlayed === user.uid && (
         <>
           <div style={{ position: "relative", zIndex: "2000" }}>
             <PertanyaanNuca

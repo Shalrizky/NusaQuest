@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Rect, Text, Image as KonvaImage } from "react-konva";
-import Pion from "./PionUtanggaAi"; 
+import Pion from "../games/uTangga/PionUTangga"; 
 
 // Import semua gambar yang diperlukan
 import pionImageSrc from "../../assets/games/Utangga/Pions 1.png";

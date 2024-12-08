@@ -353,11 +353,6 @@ function UtanggaVsAi() {
                 </Form>
                 {submitted && (
                   <div className="answer-feedback">
-                    {isCorrect ? (
-                      <p className="text-success">Jawaban benar!</p>
-                    ) : (
-                      <p className="text-danger">Jawaban salah!</p>
-                    )}
                   </div>
                 )}
               </div>

@@ -17,10 +17,7 @@ import {
   initializeNusaCardGameState,
   getNusaCardGameState,
   listenToNusaCardGameState,
-  resetNusaCardGameState, // Ensure this is imported
-  submitPlayerAnswer, // Added
-  updateNusaCardGameState, // Added
-  cleanupNusaCardGame, // Added
+  resetNusaCardGameState, // Pastikan ini diimport
 } from "../services/gameDataServicesNuca";
 
 import "../style/routes/NusaCard.css";
@@ -39,31 +36,6 @@ const INACTIVITY_DURATION = 600000; // 10 minutes in milliseconds
 const FEEDBACK_DURATION = 3000; // 3 seconds in milliseconds
 const POPUP_TRANSITION_DURATION = 2000; // 2 seconds in milliseconds
 const TURN_TIMER_DURATION = 10; // 10 seconds
-
-// Define getRandomQuestion function
-const getRandomQuestion = () => {
-  // Example questions; replace with your actual questions or fetch from a service
-  const questions = [
-    {
-      question: "What is the capital of France?",
-      options: ["Berlin", "London", "Paris", "Rome"],
-      correctAnswer: "Paris",
-    },
-    {
-      question: "Which planet is known as the Red Planet?",
-      options: ["Earth", "Mars", "Jupiter", "Saturn"],
-      correctAnswer: "Mars",
-    },
-    {
-      question: "What is the largest ocean on Earth?",
-      options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"],
-      correctAnswer: "Pacific Ocean",
-    },
-    // Add more questions as needed
-  ];
-
-  return questions[Math.floor(Math.random() * questions.length)];
-};
 
 function NusaCard() {
   const { gameID, topicID, roomID } = useParams();
@@ -167,7 +139,7 @@ function NusaCard() {
         return () => {
           unsubscribePlayers();
           unsubscribeGameState();
-          // Removed 'unsubscribePlayerAnswers' as it was not defined
+          unsubscribePlayerAnswers();
         };
       } catch (error) {
         console.error("Error initializing game:", error);
@@ -681,7 +653,7 @@ function NusaCard() {
             )}
             <BottomDeckCard
               cards={cards}
-              onCardClick={handleBottomCardClick} // Ensure this is an async function if needed
+              onCardClick={handleBottomCardClick} // Pastikan ini adalah fungsi async
               showPopup={showPopup}
               isExitingPopup={isExitingPopup}
             />
@@ -705,7 +677,7 @@ function NusaCard() {
       </Row>
 
       {/* Display Pop-up Pertanyaan untuk Pemain Lain */}
-      {showPopup && activeCard && answeringPlayer !== user.uid && (
+      {showPopup && activeCard && playerWhoPlayed !== user.uid && (
         <>
           <div style={{ position: "relative", zIndex: "2000" }}>
             <PertanyaanNuca
@@ -723,7 +695,7 @@ function NusaCard() {
       )}
 
       {/* Display Pop-up Pertanyaan untuk Pemain yang Memainkan Kartu */}
-      {showPopup && activeCard && answeringPlayer === user.uid && (
+      {showPopup && activeCard && playerWhoPlayed === user.uid && (
         <>
           <div style={{ position: "relative", zIndex: "2000" }}>
             <PertanyaanNuca

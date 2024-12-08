@@ -175,7 +175,6 @@ function NusaCard() {
           roomID,
           (answersData) => {
             console.log("Player answers received:", answersData);
-            // Implement logic to handle player answers if needed
           }
         );
 

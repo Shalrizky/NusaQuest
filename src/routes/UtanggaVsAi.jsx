@@ -1,5 +1,6 @@
+// UtanggaVsAi.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Container, Row, Col, Image, Form, Button } from "react-bootstrap";
+import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import HeaderGame from "../components/games/HeaderGame";
@@ -109,8 +110,8 @@ function UtanggaVsAi() {
 
   // Handle kelanjutan lemparan dadu
   const handleDiceRollComplete = useCallback(
-    () => {
-      const diceNumber = 5
+    (diceNumber) => {
+      console.log(`Dice rolled: ${diceNumber}`);
       const newPositions = [...pionPositionIndex];
       const currentPos = newPositions[currentPlayerIndex];
       let newPos = Math.min(currentPos + diceNumber, 99);
@@ -137,8 +138,9 @@ function UtanggaVsAi() {
         setPendingPosition(finalPos); // Simpan posisi akhir tangga
         setShowQuestion(true);
         setSubmitted(false);
-        setIsCorrect(null);
+        setIsCorrect(false); // Reset isCorrect sebelum jawaban
         setAllowExtraRoll(false);
+        // Pion tetap di currentPos sampai jawaban
       } else if (isSnake) {
         // Jika ular, langsung turun ke posisi akhir ular
         newPositions[currentPlayerIndex] = finalPos;
@@ -147,7 +149,7 @@ function UtanggaVsAi() {
       } else if (diceNumber === 6) {
         setShowQuestion(true);
         setSubmitted(false);
-        setIsCorrect(null);
+        setIsCorrect(false); // Reset isCorrect sebelum jawaban
         setAllowExtraRoll(true);
       } else {
         setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
@@ -155,7 +157,7 @@ function UtanggaVsAi() {
 
       setIsPionMoving(false);
     },
-    [currentPlayerIndex, pionPositionIndex, players.length, checkVictory]
+    [currentPlayerIndex, pionPositionIndex, players.length, checkVictory, tanggaUp, snakesDown]
   );
 
   // Logika Bot
@@ -171,6 +173,7 @@ function UtanggaVsAi() {
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
         const botRoll = Math.floor(Math.random() * 6) + 1; // Roll dadu secara acak
+        console.log(`Bot rolled: ${botRoll}`);
 
         // Mulai animasi dadu
         setDiceState({ isRolling: true, currentNumber: botRoll });
@@ -240,6 +243,10 @@ function UtanggaVsAi() {
     setIsCorrect(isAnswerCorrect);
     setSubmitted(true);
 
+    console.log(
+      `Player ${currentPlayerIndex} answered: ${answer}, Correct: ${isAnswerCorrect}`
+    );
+
     if (isAnswerCorrect) {
       if (pendingPosition !== null) {
         // Jika ada pendingPosition, pindahkan pion ke posisi tersebut
@@ -273,18 +280,6 @@ function UtanggaVsAi() {
     }, 1800);
   };
 
-  // Render layar kemenangan
-  if (victory) {
-    return (
-      <Container className="d-flex flex-column align-items-center justify-content-center vh-100">
-        <h1>{winner} Wins!</h1>
-        <Button variant="primary" className="mt-4" onClick={() => navigate("/")}>
-          Back to Home
-        </Button>
-      </Container>
-    );
-  }
-
   return (
     <Container
       fluid
@@ -301,6 +296,7 @@ function UtanggaVsAi() {
             snakesDown={snakesDown}
             players={players}
             currentPlayerIndex={currentPlayerIndex}
+            isCorrect={isCorrect} // Tambahkan isCorrect sebagai prop
           />
         </Col>
 
@@ -328,12 +324,13 @@ function UtanggaVsAi() {
                     {questions[currentQuestionIndex].options.map((option, index) => (
                       <div
                         key={index}
-                        className={`form-check ${submitted
+                        className={`form-check ${
+                          submitted
                             ? option === questions[currentQuestionIndex].correctAnswer
                               ? "correct-answer"
                               : "wrong-answer"
                             : ""
-                          }`}
+                        }`}
                       >
                         <input
                           type="radio"
@@ -356,6 +353,11 @@ function UtanggaVsAi() {
                 </Form>
                 {submitted && (
                   <div className="answer-feedback">
+                    {isCorrect ? (
+                      <p className="text-success">Jawaban benar!</p>
+                    ) : (
+                      <p className="text-danger">Jawaban salah!</p>
+                    )}
                   </div>
                 )}
               </div>

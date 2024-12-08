@@ -21,6 +21,8 @@ import {
   submitPlayerAnswer,
   listenToPlayerAnswers,
   cleanupNusaCardGame,
+  getRandomQuestion,         // Add this import
+  updateNusaCardGameState   // Add this import
 } from "../services/gameDataServicesNuca";
 
 import "../style/routes/NusaCard.css";
@@ -68,6 +70,8 @@ function NusaCard() {
   const [isActionInProgress, setIsActionInProgress] = useState(false);
   const [answeringPlayer, setAnsweringPlayer] = useState(null);
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [playerWhoPlayed, setPlayerWhoPlayed] = useState(null);
+
 
   // Timer
   const [timeRemaining, setTimeRemaining] = useState(TIMER_DURATION);
@@ -158,7 +162,8 @@ function NusaCard() {
               setAnsweringPlayer(state.answeringPlayer);
               setIsActionInProgress(state.isActionInProgress);
               setHasAnswered(false);
-              // Reset feedback icon or other necessary states
+              setPlayerWhoPlayed(state.playerWhoPlayed || null);  // Add this line
+
             }
           }
         });

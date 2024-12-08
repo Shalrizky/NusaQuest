@@ -135,7 +135,7 @@ function Board({
                 snake2ImageSrc,
                 snake3ImageSrc,
                 snake4ImageSrc,
-                snake5ImageSrc,
+                snake5ImageSrc, 
                 snake6ImageSrc,
                 snake7ImageSrc,
                 snake8ImageSrc,

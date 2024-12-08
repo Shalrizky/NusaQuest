@@ -1,4 +1,3 @@
-// UtanggaVsAi.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { Container, Row, Col, Image, Form, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -110,7 +109,8 @@ function UtanggaVsAi() {
 
   // Handle kelanjutan lemparan dadu
   const handleDiceRollComplete = useCallback(
-    (diceNumber) => {
+    () => {
+      const diceNumber = 5
       const newPositions = [...pionPositionIndex];
       const currentPos = newPositions[currentPlayerIndex];
       let newPos = Math.min(currentPos + diceNumber, 99);
@@ -328,13 +328,12 @@ function UtanggaVsAi() {
                     {questions[currentQuestionIndex].options.map((option, index) => (
                       <div
                         key={index}
-                        className={`form-check ${
-                          submitted
+                        className={`form-check ${submitted
                             ? option === questions[currentQuestionIndex].correctAnswer
                               ? "correct-answer"
                               : "wrong-answer"
                             : ""
-                        }`}
+                          }`}
                       >
                         <input
                           type="radio"
@@ -357,11 +356,6 @@ function UtanggaVsAi() {
                 </Form>
                 {submitted && (
                   <div className="answer-feedback">
-                    {isCorrect ? (
-                      <span className="text-success">Jawaban Benar!</span>
-                    ) : (
-                      <span className="text-danger">Jawaban Salah!</span>
-                    )}
                   </div>
                 )}
               </div>

@@ -1,3 +1,5 @@
+// NusaCard.js
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Col, Container, Row, Image, Spinner } from "react-bootstrap";
@@ -5,7 +7,7 @@ import useAuth from "../hooks/useAuth";
 import DeckPlayer from "../components/games/nuca/DeckPlayer";
 import BottomDeckCard from "../components/games/nuca/BottomDeckCard";
 import HeaderNuca from "../components/games/HeaderGame";
-import PertanyaanNuca, { getRandomQuestion } from "../components/games/nuca/PertanyaanNuca";
+import PertanyaanNuca from "../components/games/nuca/PertanyaanNuca";
 import Potion from "../components/games/potion";
 import PlayerProfile from "../components/games/nuca/PlayerProfile";
 
@@ -15,29 +17,25 @@ import {
   initializeNusaCardGameState,
   getNusaCardGameState,
   listenToNusaCardGameState,
-  resetNusaCardGameState,
-  onBottomCardClick, // Impor fungsi backend
-  onDeckCardClick,   // Jika diperlukan
+  resetNusaCardGameState, // Pastikan ini diimport
 } from "../services/gameDataServicesNuca";
 
 import "../style/routes/NusaCard.css";
 
-// Import gambar yang diperlukan
+// Import images
 import potionImage from "../assets/games/potion.png";
 import shuffleIcon from "../assets/games/nuca/shuffle.png";
-import checklist from "../assets/games/nuca/checklist.png";
-import cross from "../assets/games/nuca/cross.png";
 import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
 
-// Konstanta
+// Constants
 const INITIAL_DECK_COUNT = 4;
-const TIMER_DURATION = 15;
-const INACTIVITY_DURATION = 600000;
-const FEEDBACK_DURATION = 3000;
-const POPUP_TRANSITION_DURATION = 2000;
-const TURN_TIMER_DURATION = 10;
+const TIMER_DURATION = 15; // Time for answering a question
+const INACTIVITY_DURATION = 600000; // 10 minutes in milliseconds
+const FEEDBACK_DURATION = 3000; // 3 seconds in milliseconds
+const POPUP_TRANSITION_DURATION = 2000; // 2 seconds in milliseconds
+const TURN_TIMER_DURATION = 10; // 10 seconds
 
 function NusaCard() {
   const { gameID, topicID, roomID } = useParams();
@@ -47,15 +45,11 @@ function NusaCard() {
   const [loading, setLoading] = useState(true);
   const [players, setPlayers] = useState([]);
 
-  const gameIDRef = useRef(gameID);
-  const topicIDRef = useRef(topicID);
-  const roomIDRef = useRef(roomID);
-
   const [deckCounts, setDeckCounts] = useState({});
   const [DECK_ORDER, setDECK_ORDER] = useState([]);
   const [positionsMap, setPositionsMap] = useState({});
 
-  // State Game
+  // Game State
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [hints, setHints] = useState([]);
   const [lastActiveDeck, setLastActiveDeck] = useState(null);
@@ -94,59 +88,58 @@ function NusaCard() {
     Array.from({ length: INITIAL_DECK_COUNT }, () => getRandomQuestion())
   );
 
+  // Ref to track if component is mounted
+  const isMounted = useRef(true);
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // Initialize Game
   useEffect(() => {
     const initGame = async () => {
       try {
-        // **PENTING: Reset state lama terlebih dahulu agar tidak ada sisa data yang memicu victory**
+        // **IMPORTANT: Reset old state first to avoid leftover data triggering victory**
         await resetNusaCardGameState(topicID, gameID, roomID);
 
-        // Setelah reset, set gameStatus menjadi "playing"
+        // After reset, set gameStatus to "playing"
         await setNusaCardGameStatus(topicID, gameID, roomID, "playing");
 
-        // Dengarkan data pemain
+        // Listen to players data
         const unsubscribePlayers = fetchNusaCardPlayers(
           topicID, 
           gameID, 
           roomID, 
           async (playersData) => {
+            console.log("Players fetched:", playersData);
             setPlayers(playersData);
             setLoading(false);
 
-            // Setelah dapat data pemain, cek apakah state sudah ada
+            // After getting players data, check if state exists
             const currentGameState = await getNusaCardGameState(topicID, gameID, roomID);
             if (!currentGameState) {
-              // Jika tidak ada, inisialisasi state baru
+              // If not, initialize new state
               await initializeNusaCardGameState(topicID, gameID, roomID, playersData);
-              console.log("Game state berhasil diinisialisasi.");
+              console.log("Game state initialized successfully.");
             }
           }
         );
 
-        // Dengarkan perubahan pada gameState
+        // Listen to gameState changes
         const unsubscribeGameState = listenToNusaCardGameState(topicID, gameID, roomID, (state) => {
+          console.log("Real-time game state update received:", state);
           if (state) {
             setDeckCounts(state.deckCounts || {});
             setDECK_ORDER(state.DECK_ORDER || []);
             setGameStatusState(state.gameStatus || 'playing');
-            setCards(state.cards || []);
-            setCurrentTurn(state.currentTurn || 'bottom');
-            setLastActiveDeck(state.lastActiveDeck || null);
-            setIsShuffling(state.isShuffling || false);
-            setVictory(state.victory || false);
-            setWinner(state.winner || "");
-            setDeckDepleted(state.deckDepleted || null);
-            setShowPopup(state.showPopup || false);
-            setActiveCard(state.activeCard || null);
-            setIsCorrectAnswer(state.isCorrectAnswer || null);
-            setAnsweringPlayer(state.answeringPlayer || null);
-            setHasAnswered(state.hasAnswered || false);
-            setFeedbackIcon(state.feedbackIcon || { show: false, isCorrect: null, position: null });
           }
         });
 
         return () => {
           unsubscribePlayers();
           unsubscribeGameState();
+          unsubscribePlayerAnswers();
         };
       } catch (error) {
         console.error("Error initializing game:", error);
@@ -157,6 +150,7 @@ function NusaCard() {
     initGame();
   }, [topicID, gameID, roomID, user.uid]);
 
+  // Map Players to Positions
   useEffect(() => {
     if (players.length > 0) {
       const currentUserIndex = players.findIndex(p => p.uid === user.uid);
@@ -212,6 +206,7 @@ function NusaCard() {
       setInactivityTimeRemaining((prevTime) => {
         if (prevTime <= 1000) {
           clearInterval(inactivityTimerRef.current);
+          console.log("Inactivity timeout reached. Redirecting to home.");
           navigate("/");
           return 0;
         }
@@ -220,10 +215,14 @@ function NusaCard() {
     }, 1000);
   };
 
-  // Handler untuk klik pada deck atas/kiri/kanan
-  const handleDeckCardClick = async (deck) => {
+  const handleDeckCardClick = (deck) => {
     resetInactivityTimer();
-    if (currentTurn !== deck || showPopup || isActionInProgress || isShuffling)
+    if (
+      currentTurn !== deck ||
+      showPopup ||
+      isActionInProgress ||
+      isShuffling
+    )
       return;
 
     if (turnTimerRef.current) {
@@ -231,39 +230,38 @@ function NusaCard() {
       setTurnTimeRemaining(null);
     }
 
-    try {
-      await onDeckCardClick(topicID, gameID, roomID, deck);
-      console.log(`Deck ${deck} clicked successfully.`);
-      // Listener akan menangani pembaruan state
-    } catch (error) {
-      console.error("Error handling deck card click:", error);
+    if (deckCounts[deck] > 0) {
+      setIsActionInProgress(true);
+      setDeckCounts((prev) => ({
+        ...prev,
+        [deck]: prev[deck] - 1,
+      }));
+      setLastActiveDeck(deck);
+      setActiveCard(getRandomQuestion());
+      setAnsweringPlayer(getNextPlayer(deck));
+      setShowPopup(true);
+      setHasAnswered(false);
     }
   };
 
-  // Handler untuk klik pada bottom deck
-  const handleBottomCardClick = async (card, index) => {
+  const handleBottomCardClick = (card, index) => {
     if (currentTurn !== "bottom" || showPopup || isActionInProgress || isShuffling)
       return;
 
-    if (turnTimerRef.current) {
-      clearInterval(turnTimerRef.current);
-      setTurnTimeRemaining(null);
-    }
-
     setIsActionInProgress(true);
+    setActiveCard(card);
+    setShowPopup(true);
+    setLastActiveDeck("bottom");
+    setAnsweringPlayer(getNextPlayer("bottom"));
+    setHasAnswered(false);
 
-    try {
-      await onBottomCardClick(topicID, gameID, roomID, index);
-      console.log("Bottom deck clicked successfully.");
-      // Listener akan menangani pembaruan state
-    } catch (error) {
-      console.error("Error handling bottom deck click:", error);
-      setIsActionInProgress(false);
-    }
+    removeCardFromDeck(index);
   };
 
-  const handleAnswerSelect = (isCorrect, wasTimeout = false) => {
+  const handleAnswerSelect = async (isCorrect, wasTimeout = false) => {
     if (hasAnswered) return;
+
+    console.log("Answer selected:", { isCorrect, wasTimeout });
 
     clearInterval(timerRef.current);
     setTimeRemaining(TIMER_DURATION);
@@ -276,16 +274,40 @@ function NusaCard() {
       position: answeringPlayer,
     });
 
+    // Submit player's answer to Firebase
+    await submitPlayerAnswer(topicID, gameID, roomID, user.uid, isCorrect);
+
     if (!isCorrect && !wasTimeout) {
+      console.log(`Answer incorrect. Incrementing deck count for ${answeringPlayer}.`);
       incrementDeckCount(answeringPlayer);
     }
 
-    if (isCorrect && lastActiveDeck !== "bottom" && answeringPlayer !== "bottom") {
+    if (
+      isCorrect &&
+      lastActiveDeck !== "bottom" &&
+      answeringPlayer !== "bottom"
+    ) {
+      console.log(`Answer correct. Adding new card to deck.`);
       addNewCardToDeck();
     }
 
-    setTimeout(() => {
+    // After FEEDBACK_DURATION, proceed to the next turn
+    setTimeout(async () => {
+      if (!isMounted.current) return; // Prevent state updates if unmounted
+
+      // Reset relevant fields in Firebase
+      await updateNusaCardGameState(topicID, gameID, roomID, {
+        showPopup: false,
+        activeCard: null,
+        isCorrectAnswer: null,
+        feedbackIcon: { show: false, isCorrect: null, position: null },
+        isActionInProgress: false,
+        answeringPlayer: null,
+        hasAnswered: false,
+      });
+
       const nextTurn = getNextTurn();
+      console.log(`Proceeding to next turn: ${nextTurn}`);
       setCurrentTurn(nextTurn);
       setAnsweringPlayer(getNextPlayer(nextTurn));
       handleAnswerTimeout();
@@ -305,51 +327,65 @@ function NusaCard() {
   };
 
   const removeCardFromDeck = (index) => {
+    console.log(`Removing card at index ${index} from deck.`);
     setCards((prev) => prev.filter((_, cardIndex) => cardIndex !== index));
+    // Optionally, update Firebase
   };
 
   const addNewCardToDeck = () => {
-    setCards((prev) => [...prev, { ...getRandomQuestion(), isNew: true }]);
+    const newCard = { ...getRandomQuestion(), isNew: true };
+    console.log("Adding new card to deck:", newCard);
+    setCards((prev) => [...prev, newCard]);
+    // Optionally, update Firebase
   };
 
   const incrementDeckCount = (deck) => {
     if (deck === "bottom") {
+      console.log("Adding new card to bottom deck.");
       addNewCardToDeck();
     } else {
+      console.log(`Incrementing deck count for ${deck}.`);
       setDeckCounts((prev) => ({
         ...prev,
         [deck]: prev[deck] + 1,
       }));
     }
+    // Optionally, update Firebase
   };
 
   const handleAnswerTimeout = () => {
     setTimeout(() => {
+      if (!isMounted.current) return;
+      console.log("Handling answer timeout.");
       setIsCorrectAnswer(null);
       setActiveCard(null);
       setIsExitingPopup(true);
 
       setTimeout(() => {
+        if (!isMounted.current) return;
         setShowPopup(false);
         setIsExitingPopup(false);
         setAnsweringPlayer(null);
         setFeedbackIcon({ show: false, isCorrect: null, position: null });
         triggerShuffleAnimation();
-        setIsActionInProgress(false);
+        setIsActionInProgress(false); // Reset the action flag
       }, POPUP_TRANSITION_DURATION);
     }, FEEDBACK_DURATION);
   };
 
   const triggerShuffleAnimation = () => {
+    console.log("Triggering shuffle animation.");
     setIsShuffling(true);
     setTurnTimeRemaining(null);
     setTimeout(() => {
+      if (!isMounted.current) return;
       setIsShuffling(false);
       startTurnTimer();
     }, 500);
   };
 
   const handleTurnTimeout = () => {
+    console.log("Turn timer expired. Proceeding to next turn.");
     const nextTurn = getNextPlayer(currentTurn);
     setCurrentTurn(nextTurn);
     setLastActiveDeck(currentTurn);
@@ -360,6 +396,7 @@ function NusaCard() {
   const startTurnTimer = () => {
     if (victory || deckDepleted || showPopup || isActionInProgress) return;
 
+    console.log(`Starting turn timer for ${TURN_TIMER_DURATION} seconds.`);
     setTurnTimeRemaining(TURN_TIMER_DURATION);
     if (turnTimerRef.current) clearInterval(turnTimerRef.current);
     turnTimerRef.current = setInterval(() => {
@@ -375,6 +412,7 @@ function NusaCard() {
     }, 1000);
   };
 
+  // Initialize inactivity timer and reset on user activity
   useEffect(() => {
     startInactivityTimer();
     const resetTimerOnActivity = () => resetInactivityTimer();
@@ -389,33 +427,44 @@ function NusaCard() {
     };
   }, []);
 
+  // Monitor game state for victory conditions
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
 
-    // Cek victory hanya jika gameStatus = 'playing'
+    // Check victory only if gameStatus = 'playing'
     if (gameStatus !== 'playing') return;
+
+    let victoryTriggered = false;
 
     Object.entries(deckCounts).forEach(([deck, count]) => {
       if (count === 0 && !deckDepleted) {
+        console.log(`Deck "${deck}" depleted. Victory condition met.`);
         setDeckDepleted(deck);
+        victoryTriggered = true;
       }
     });
 
     if (cards.length === 0 && !deckDepleted) {
+      console.log(`All cards depleted from bottom deck. Victory condition met.`);
       setDeckDepleted("bottom");
+      victoryTriggered = true;
     }
 
-    if (deckDepleted && !victory) {
+    if (victoryTriggered && !victory) {
       setVictory(true);
-      setWinner(deckDepleted);
+      setWinner(deckDepleted || "bottom");
+      setIsActionInProgress(false); // Reset the action flag on victory
+      console.log(`Victory triggered! Winner: ${deckDepleted || "bottom"}`);
     }
   }, [deckCounts, cards, deckDepleted, victory, gameStatus]);
 
+  // Handle popup timer
   useEffect(() => {
     if (showPopup && answeringPlayer) {
+      console.log(`Popup opened. Starting answer timer for ${TIMER_DURATION} seconds.`);
       setTimeRemaining(TIMER_DURATION);
       timerRef.current = setInterval(() => {
         setTimeRemaining((prev) => prev - 1);
@@ -426,12 +475,15 @@ function NusaCard() {
     return () => clearInterval(timerRef.current);
   }, [showPopup, answeringPlayer]);
 
+  // Handle answer timeout
   useEffect(() => {
     if (timeRemaining === 0) {
+      console.log("Answer timer expired.");
       handleAnswerSelect(false, true);
     }
   }, [timeRemaining]);
 
+  // Start turn timer when appropriate
   useEffect(() => {
     if (!isShuffling && !showPopup && !isActionInProgress) {
       startTurnTimer();
@@ -448,6 +500,7 @@ function NusaCard() {
     return winnerPlayer ? winnerPlayer.displayName : "";
   };
 
+  // Handle loading state
   useEffect(() => {
     const loadingTimeout = setTimeout(() => {
       setLoading(false);
@@ -623,14 +676,15 @@ function NusaCard() {
         </Col>
       </Row>
 
-      {showPopup && activeCard && !hasAnswered && (
+      {/* Display Pop-up Pertanyaan untuk Pemain Lain */}
+      {showPopup && activeCard && playerWhoPlayed !== user.uid && (
         <>
           <div style={{ position: "relative", zIndex: "2000" }}>
             <PertanyaanNuca
               question={activeCard.question}
               options={activeCard.options}
               correctAnswer={activeCard.correctAnswer}
-              onAnswerSelect={handleAnswerSelect}
+              onAnswerSelect={(isCorrect) => handleAnswerSelect(isCorrect)}
               isExiting={isExitingPopup}
             />
           </div>
@@ -640,12 +694,35 @@ function NusaCard() {
         </>
       )}
 
+      {/* Display Pop-up Pertanyaan untuk Pemain yang Memainkan Kartu */}
+      {showPopup && activeCard && playerWhoPlayed === user.uid && (
+        <>
+          <div style={{ position: "relative", zIndex: "2000" }}>
+            <PertanyaanNuca
+              question={activeCard.question}
+              options={activeCard.options}
+              correctAnswer={activeCard.correctAnswer}
+              onAnswerSelect={(isCorrect) => handleAnswerSelect(isCorrect)}
+              isExiting={isExitingPopup}
+            />
+          </div>
+          <div className="potion-icon">
+            <Potion />
+          </div>
+        </>
+      )}
+
+      {/* Victory Overlay */}
       {victory && (
-        <div className="victory-overlay" onClick={async () => {
-          // Reset state setelah kemenangan agar game baru dimulai fresh lain kali
-          await resetNusaCardGameState(topicID, gameID, roomID);
-          navigate("/");
-        }}>
+        <div
+          className="victory-overlay"
+          onClick={async () => {
+            console.log("Victory overlay clicked. Cleaning up game.");
+            // Reset state after victory to start a fresh game next time
+            await cleanupNusaCardGame(topicID, gameID, roomID);
+            navigate("/");
+          }}
+        >
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
           <p>Pemenang: {getWinnerName()}</p>
           <p>Kamu mendapatkan:</p>

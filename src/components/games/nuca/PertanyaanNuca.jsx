@@ -1,3 +1,5 @@
+// PertanyaanNuca.js
+
 import React, { useState } from 'react';
 import '../../../style/components/games/nuca/PertanyaanNuca.css';
 
@@ -56,6 +58,7 @@ function PertanyaanNuca({ question, options, correctAnswer, onAnswerSelect }) {
     setSelectedAnswer(answer);
     setIsCorrect(isCorrectAnswer);
     onAnswerSelect(isCorrectAnswer);
+    // Set timeout to reset selection and correctness
     setTimeout(() => {
       setSelectedAnswer(null);
       setIsCorrect(null);

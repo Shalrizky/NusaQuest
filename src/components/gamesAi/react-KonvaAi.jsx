@@ -1,6 +1,7 @@
+// React-KonvaUlar.jsx
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Rect, Text, Image as KonvaImage } from "react-konva";
-import Pion from "../games/uTangga/PionUTangga"; 
+import Pion from "../gamesAi/PionUtanggaAi";
 
 // Import semua gambar yang diperlukan
 import pionImageSrc from "../../assets/games/Utangga/Pions 1.png";
@@ -26,354 +27,365 @@ import tangga8ImageSrc from "../../assets/games/Utangga/tangga8.png";
 import tangga9ImageSrc from "../../assets/games/Utangga/tangga9.png";
 
 function Board({
-    pionPositionIndex = [],
-    setPionPositionIndex,
-    snakesAndLadders,
-    waitingForAnswer,
-    currentPlayerIndex,
-    tanggaUp,
-    snakesDown,
-    isCorrect,
-    setIsCorrect,
-    players=[],
+  pionPositionIndex = [0, 0], // Konsisten dengan UtanggaVsAi.jsx
+  setPionPositionIndex,
+  currentPlayerIndex,
+  tanggaUp,
+  snakesDown,
+  isCorrect,
+  onAnimationComplete, // Tambahkan onAnimationComplete sebagai prop
 }) {
-    const numRowsCols = 10;
-    const [stageSize, setStageSize] = useState({ width: 900, height: 900 });
-    const [cellSize, setCellSize] = useState(80);
+  const numRowsCols = 10;
+  const [stageSize, setStageSize] = useState({ width: 900, height: 900 });
+  const [cellSize, setCellSize] = useState(80);
 
-    // Asset Ular dan Tangga
-    const [snakeImages, setSnakeImages] = useState([]);
-    const [tanggaImages, setTanggaImages] = useState([]);
+  // Asset Ular dan Tangga
+  const [snakeImages, setSnakeImages] = useState([]);
+  const [tanggaImages, setTanggaImages] = useState([]);
 
-    // Asset Pion
-    const [pionImages, setPionImages] = useState([]);
+  // Asset Pion
+  const [pionImages, setPionImages] = useState([]);
 
-    const stageRef = useRef();
+  const stageRef = useRef();
 
-    // Responsive resizing logic
-    useEffect(() => {
-        const updateSize = () => {
-            if (stageRef.current) {
-                const containerWidth = stageRef.current.parentElement.offsetWidth;
-                const containerHeight = stageRef.current.parentElement.offsetHeight;
-                const newStageSize = Math.min(containerWidth, containerHeight);
-                setStageSize({ width: newStageSize, height: newStageSize });
-                const newCellSize = newStageSize / numRowsCols;
-                setCellSize(newCellSize);
-            }
-        };
-
-        window.addEventListener("resize", updateSize);
-        updateSize();
-
-        return () => window.removeEventListener("resize", updateSize);
-    }, []);
-
-    // Draw the board grid
-    const drawBoard = () => {
-        let squares = [];
-        let number = 1;
-        for (let i = numRowsCols - 1; i >= 0; i--) {
-            let startCol = 0;
-            let endCol = numRowsCols - 1;
-            let direction = 1;
-
-            if ((numRowsCols - 1 - i) % 2 !== 0) {
-                startCol = numRowsCols - 1;
-                endCol = 0;
-                direction = -1;
-            }
-
-            for (
-                let j = startCol;
-                direction === 1 ? j <= endCol : j >= endCol;
-                j += direction
-            ) {
-                let color = (i + j) % 2 === 0 ? "#FD9502" : "#CDCDAB";
-                squares.push(
-                    <Rect
-                        key={`${i}-${j}`}
-                        x={j * cellSize}
-                        y={i * cellSize}
-                        width={cellSize}
-                        height={cellSize}
-                        fill={color}
-                    />
-                );
-                squares.push(
-                    <Text
-                        key={`text-${i}-${j}`}
-                        x={j * cellSize + cellSize / 2}
-                        y={i * cellSize + cellSize / 2}
-                        text={number}
-                        fontSize={Math.max(cellSize / 5, 10)}
-                        fill="black"
-                        align="center"
-                        verticalAlign="middle"
-                        offsetX={cellSize / 2}
-                        offsetY={cellSize / 2}
-                    />
-                );
-                number++;
-            }
-        }
-        return squares;
+  // Responsive resizing logic
+  useEffect(() => {
+    const updateSize = () => {
+      if (stageRef.current) {
+        const containerWidth = stageRef.current.parentElement.offsetWidth;
+        const containerHeight = stageRef.current.parentElement.offsetHeight;
+        const newStageSize = Math.min(containerWidth, containerHeight);
+        setStageSize({ width: newStageSize, height: newStageSize });
+        const newCellSize = newStageSize / numRowsCols;
+        setCellSize(newCellSize);
+      }
     };
 
-    // Load all snake and tangga images
-    useEffect(() => {
-        const loadImage = (src) =>
-            new Promise((resolve) => {
-                const img = new window.Image();
-                img.src = src;
-                img.onload = () => resolve(img);
-            });
+    window.addEventListener("resize", updateSize);
+    updateSize();
 
-        const loadAllImages = async () => {
-            const snakeSrcs = [
-                snakeImageSrc,
-                snake2ImageSrc,
-                snake3ImageSrc,
-                snake4ImageSrc,
-                snake5ImageSrc, 
-                snake6ImageSrc,
-                snake7ImageSrc,
-                snake8ImageSrc,
-            ];
-            const tanggaSrcs = [
-                tanggaImageSrc,
-                tangga2ImageSrc,
-                tangga3ImageSrc,
-                tangga4ImageSrc,
-                tangga5ImageSrc,
-                tangga6ImageSrc,
-                tangga7ImageSrc,
-                tangga8ImageSrc,
-                tangga9ImageSrc,
-            ];
-            const pionSrcs = [
-                pionImageSrc,
-                pion2ImageSrc,
-                pion3ImageSrc,
-                pion4ImageSrc,
-            ];
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
 
-            const loadedSnakes = await Promise.all(snakeSrcs.map(loadImage));
-            const loadedTanggas = await Promise.all(tanggaSrcs.map(loadImage));
-            const loadedPions = await Promise.all(pionSrcs.map(loadImage));
+  // Draw the board grid
+  const drawBoard = () => {
+    let squares = [];
+    let number = 1;
+    for (let i = numRowsCols - 1; i >= 0; i--) {
+      let startCol = 0;
+      let endCol = numRowsCols - 1;
+      let direction = 1;
 
-            setSnakeImages(loadedSnakes);
-            setTanggaImages(loadedTanggas);
-            setPionImages(loadedPions);
+      if ((numRowsCols - 1 - i) % 2 !== 0) {
+        startCol = numRowsCols - 1;
+        endCol = 0;
+        direction = -1;
+      }
+
+      for (
+        let j = startCol;
+        direction === 1 ? j <= endCol : j >= endCol;
+        j += direction
+      ) {
+        let color = (i + j) % 2 === 0 ? "#FD9502" : "#CDCDAB";
+        squares.push(
+          <Rect
+            key={`${i}-${j}`}
+            x={j * cellSize}
+            y={i * cellSize}
+            width={cellSize}
+            height={cellSize}
+            fill={color}
+          />
+        );
+        squares.push(
+          <Text
+            key={`text-${i}-${j}`}
+            x={j * cellSize + cellSize / 2}
+            y={i * cellSize + cellSize / 2}
+            text={number}
+            fontSize={Math.max(cellSize / 5, 10)}
+            fill="black"
+            align="center"
+            verticalAlign="middle"
+            offsetX={cellSize / 2}
+            offsetY={cellSize / 2}
+          />
+        );
+        number++;
+      }
+    }
+    return squares;
+  };
+
+  // Load all snake and tangga images
+  useEffect(() => {
+    const loadImage = (src) =>
+      new Promise((resolve, reject) => {
+        const img = new window.Image();
+        img.src = src;
+        img.onload = () => resolve(img);
+        img.onerror = () => {
+          console.error(`Failed to load image: ${src}`);
+          reject(new Error(`Failed to load image: ${src}`));
         };
+      });
 
-        loadAllImages();
-    }, []);
+    const loadAllImages = async () => {
+      try {
+        const snakeSrcs = [
+          snakeImageSrc,
+          snake2ImageSrc,
+          snake3ImageSrc,
+          snake4ImageSrc,
+          snake5ImageSrc,
+          snake6ImageSrc,
+          snake7ImageSrc,
+          snake8ImageSrc,
+        ];
+        const tanggaSrcs = [
+          tanggaImageSrc,
+          tangga2ImageSrc,
+          tangga3ImageSrc,
+          tangga4ImageSrc,
+          tangga5ImageSrc,
+          tangga6ImageSrc,
+          tangga7ImageSrc,
+          tangga8ImageSrc,
+          tangga9ImageSrc,
+        ];
+        const pionSrcs = [
+          pionImageSrc,
+          pion2ImageSrc,
+          pion3ImageSrc,
+          pion4ImageSrc,
+        ];
 
-    // Calculate pion position based on index (0-based)
-    const getPosition = useCallback(
-        (index) => {
-            const row = Math.floor(index / numRowsCols);
-            let col;
-            if (row % 2 === 0) {
-                col = index % numRowsCols;
-            } else {
-                col = numRowsCols - 1 - (index % numRowsCols);
-            }
-            const x = col * cellSize;
-            const y = (numRowsCols - 1 - row) * cellSize;
-            return { x, y };
-        },
-        [numRowsCols, cellSize]
+        const loadedSnakes = await Promise.all(snakeSrcs.map(loadImage));
+        const loadedTanggas = await Promise.all(tanggaSrcs.map(loadImage));
+        const loadedPions = await Promise.all(pionSrcs.map(loadImage));
+
+        setSnakeImages(loadedSnakes);
+        setTanggaImages(loadedTanggas);
+        setPionImages(loadedPions);
+      } catch (error) {
+        console.error("Error loading images:", error);
+      }
+    };
+
+    loadAllImages();
+  }, []);
+
+  // Calculate pion position based on index (0-based)
+  const getPosition = useCallback(
+    (index) => {
+      const row = Math.floor(index / numRowsCols);
+      let col;
+      if (row % 2 === 0) {
+        col = index % numRowsCols;
+      } else {
+        col = numRowsCols - 1 - (index % numRowsCols);
+      }
+      const x = col * cellSize;
+      const y = (numRowsCols - 1 - row) * cellSize;
+      return { x, y };
+    },
+    [numRowsCols, cellSize]
+  );
+
+  // Optional: Logging untuk debugging
+  useEffect(() => {
+    console.log(
+      `Board Updated: isCorrect=${isCorrect}, currentPlayerIndex=${currentPlayerIndex}`
     );
+  }, [isCorrect, currentPlayerIndex, pionPositionIndex]);
 
-    return (
-        <div style={{ width: "100%", height: "100%" }} ref={stageRef}>
-            <Stage width={stageSize.width} height={stageSize.height}>
-                <Layer>
-                    {drawBoard()}
+  return (
+    <div style={{ width: "100%", height: "100%" }} ref={stageRef}>
+      <Stage width={stageSize.width} height={stageSize.height}>
+        <Layer>
+          {drawBoard()}
 
-                    {/* Tambahkan gambar ular */}
-                    {snakeImages.map((img, index) => {
-                        if (!img) return null;
-                        // Atur posisi dan ukuran sesuai kebutuhan
-                        const positions = [
-                            {
-                                x: 1 * cellSize,
-                                y: 6 * cellSize,
-                                width: 2 * cellSize,
-                                height: 4 * cellSize,
-                            },
-                            {
-                                x: 8.3 * cellSize,
-                                y: 7.2 * cellSize,
-                                width: 1.5 * cellSize,
-                                height: 2.6 * cellSize,
-                            },
-                            {
-                                x: 5.2 * cellSize,
-                                y: 2.3 * cellSize,
-                                width: 3 * cellSize,
-                                height: 7 * cellSize,
-                            },
-                            {
-                                x: 1.5 * cellSize,
-                                y: 4.1 * cellSize,
-                                width: 1.5 * cellSize,
-                                height: 2.5 * cellSize,
-                            },
-                            {
-                                x: 3 * cellSize,
-                                y: 2.5 * cellSize,
-                                width: 3 * cellSize,
-                                height: 4 * cellSize,
-                            },
-                            {
-                                x: 7.3 * cellSize,
-                                y: 0 * cellSize,
-                                width: 2.5 * cellSize,
-                                height: 6 * cellSize,
-                            },
-                            {
-                                x: 5.5 * cellSize,
-                                y: 0.3 * cellSize,
-                                width: 1.5 * cellSize,
-                                height: 3 * cellSize,
-                            },
-                            {
-                                x: 1.5 * cellSize,
-                                y: 0 * cellSize,
-                                width: 2 * cellSize,
-                                height: 3 * cellSize,
-                            },
-                        ];
+          {/* Tambahkan gambar ular */}
+          {snakeImages.map((img, index) => {
+            if (!img) return null;
+            // Atur posisi dan ukuran sesuai kebutuhan
+            const positions = [
+              {
+                x: 1 * cellSize,
+                y: 6 * cellSize,
+                width: 2 * cellSize,
+                height: 4 * cellSize,
+              },
+              {
+                x: 8.3 * cellSize,
+                y: 7.2 * cellSize,
+                width: 1.5 * cellSize,
+                height: 2.6 * cellSize,
+              },
+              {
+                x: 5.2 * cellSize,
+                y: 2.3 * cellSize,
+                width: 3 * cellSize,
+                height: 7 * cellSize,
+              },
+              {
+                x: 1.5 * cellSize,
+                y: 4.1 * cellSize,
+                width: 1.5 * cellSize,
+                height: 2.5 * cellSize,
+              },
+              {
+                x: 3 * cellSize,
+                y: 2.5 * cellSize,
+                width: 3 * cellSize,
+                height: 4 * cellSize,
+              },
+              {
+                x: 7.3 * cellSize,
+                y: 0 * cellSize,
+                width: 2.5 * cellSize,
+                height: 6 * cellSize,
+              },
+              {
+                x: 5.5 * cellSize,
+                y: 0.3 * cellSize,
+                width: 1.5 * cellSize,
+                height: 3 * cellSize,
+              },
+              {
+                x: 1.5 * cellSize,
+                y: 0 * cellSize,
+                width: 2 * cellSize,
+                height: 3 * cellSize,
+              },
+            ];
 
-                        const pos = positions[index] || {
-                            x: 0,
-                            y: 0,
-                            width: cellSize,
-                            height: cellSize,
-                        };
+            const pos = positions[index] || {
+              x: 0,
+              y: 0,
+              width: cellSize,
+              height: cellSize,
+            };
 
-                        return (
-                            <KonvaImage
-                                key={`snake-${index}`}
-                                x={pos.x}
-                                y={pos.y}
-                                width={pos.width}
-                                height={pos.height}
-                                image={img}
-                            />
-                        );
-                    })}
+            return (
+              <KonvaImage
+                key={`snake-${index}`}
+                x={pos.x}
+                y={pos.y}
+                width={pos.width}
+                height={pos.height}
+                image={img}
+              />
+            );
+          })}
 
-                    {/* Tambahkan gambar tangga */}
-                    {tanggaImages.map((img, index) => {
-                        if (!img) return null;
-                        // Atur posisi dan ukuran sesuai kebutuhan
-                        const positions = [
-                            {
-                                x: 0 * cellSize,
-                                y: 4.1 * cellSize,
-                                width: 1 * cellSize,
-                                height: 5 * cellSize,
-                            },
-                            {
-                                x: 4.3 * cellSize,
-                                y: 7.2 * cellSize,
-                                width: 1.5 * cellSize,
-                                height: 2.5 * cellSize,
-                            },
-                            {
-                                x: 5.5 * cellSize,
-                                y: 4 * cellSize,
-                                width: 4 * cellSize,
-                                height: 5 * cellSize,
-                            },
-                            {
-                                x: 3 * cellSize,
-                                y: 3 * cellSize,
-                                width: 4 * cellSize,
-                                height: 6 * cellSize,
-                            },
-                            {
-                                x: 9.1 * cellSize,
-                                y: 3.2 * cellSize,
-                                width: 1 * cellSize,
-                                height: 3 * cellSize,
-                            },
-                            {
-                                x: 4.1 * cellSize,
-                                y: 2 * cellSize,
-                                width: 0.8 * cellSize,
-                                height: 2 * cellSize,
-                            },
-                            {
-                                x: 0 * cellSize,
-                                y: 1.1 * cellSize,
-                                width: 2 * cellSize,
-                                height: 3 * cellSize,
-                            },
-                            {
-                                x: 5.5 * cellSize,
-                                y: 0 * cellSize,
-                                width: 5 * cellSize,
-                                height: 4 * cellSize,
-                            },
-                            {
-                                x: 3 * cellSize,
-                                y: 0 * cellSize,
-                                width: 5 * cellSize,
-                                height: 3 * cellSize,
-                            },
-                        ];
+          {/* Tambahkan gambar tangga */}
+          {tanggaImages.map((img, index) => {
+            if (!img) return null;
+            // Atur posisi dan ukuran sesuai kebutuhan
+            const positions = [
+              {
+                x: 0 * cellSize,
+                y: 4.1 * cellSize,
+                width: 1 * cellSize,
+                height: 5 * cellSize,
+              },
+              {
+                x: 4.3 * cellSize,
+                y: 7.2 * cellSize,
+                width: 1.5 * cellSize,
+                height: 2.5 * cellSize,
+              },
+              {
+                x: 5.5 * cellSize,
+                y: 4 * cellSize,
+                width: 4 * cellSize,
+                height: 5 * cellSize,
+              },
+              {
+                x: 3 * cellSize,
+                y: 3 * cellSize,
+                width: 4 * cellSize,
+                height: 6 * cellSize,
+              },
+              {
+                x: 9.1 * cellSize,
+                y: 3.2 * cellSize,
+                width: 1 * cellSize,
+                height: 3 * cellSize,
+              },
+              {
+                x: 4.1 * cellSize,
+                y: 2 * cellSize,
+                width: 0.8 * cellSize,
+                height: 2 * cellSize,
+              },
+              {
+                x: 0 * cellSize,
+                y: 1.1 * cellSize,
+                width: 2 * cellSize,
+                height: 3 * cellSize,
+              },
+              {
+                x: 5.5 * cellSize,
+                y: 0 * cellSize,
+                width: 5 * cellSize,
+                height: 4 * cellSize,
+              },
+              {
+                x: 3 * cellSize,
+                y: 0 * cellSize,
+                width: 5 * cellSize,
+                height: 3 * cellSize,
+              },
+            ];
 
-                        const pos = positions[index] || {
-                            x: 0,
-                            y: 0,
-                            width: cellSize,
-                            height: cellSize,
-                        };
+            const pos = positions[index] || {
+              x: 0,
+              y: 0,
+              width: cellSize,
+              height: cellSize,
+            };
 
-                        return (
-                            <KonvaImage
-                                key={`tangga-${index}`}
-                                x={pos.x}
-                                y={pos.y}
-                                width={pos.width}
-                                height={pos.height}
-                                image={img}
-                            />
-                        );
-                    })}
+            return (
+              <KonvaImage
+                key={`tangga-${index}`}
+                x={pos.x}
+                y={pos.y}
+                width={pos.width}
+                height={pos.height}
+                image={img}
+              />
+            );
+          })}
 
-                    {/* Tambahkan gambar pion */}
-                    {pionImages.map((img, index) => {
-                        if (!img || pionPositionIndex[index] === undefined || !players[index]) return null;
-
-                        // Determine if the pion is controlled by a bot based on the player at this index
-                        const isBot = players[index].isBot;
-
-                        return (
-                            <Pion
-                                key={`pion-${index}`}
-                                desiredIndex={pionPositionIndex[index]}
-                                cellSize={cellSize}
-                                getPosition={getPosition}
-                                image={img}
-                                index={index}
-                                isBot={isBot}
-                                onAnimationComplete={() => { }}
-                                tanggaUp={tanggaUp}
-                                snakesDown={snakesDown}
-                                isCorrect={isCorrect}
-                            />
-                        );
-                    })}
-                </Layer>
-            </Stage>
-        </div>
-    );
+          {/* Tambahkan gambar pion */}
+          {pionImages.map((img, index) => {
+            if (!img || pionPositionIndex[index] === undefined) return null; // Pastikan pion dan posisinya ada
+            return (
+              <Pion
+                key={`pion-${index}`}
+                desiredIndex={pionPositionIndex[index]}
+                cellSize={cellSize}
+                getPosition={getPosition}
+                image={img}
+                index={index}
+                onAnimationComplete={(idx, targetIdx) => {
+                  if (onAnimationComplete) {
+                    onAnimationComplete(idx, targetIdx);
+                  }
+                }} // Pass onAnimationComplete callback
+                tanggaUp={tanggaUp}
+                snakesDown={snakesDown}
+                isCorrect={currentPlayerIndex === index ? isCorrect : false} // Hanya pion pemain saat ini menerima isCorrect
+              />
+            );
+          })}
+        </Layer>
+      </Stage>
+    </div>
+  );
 }
 
 export default Board;

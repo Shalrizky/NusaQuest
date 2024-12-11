@@ -12,7 +12,6 @@ function Pion({
   tanggaUp,
   snakesDown,
   isCorrect,
-  isBot,
 }) {
   const imageRef = useRef(null);
   const [positionIndex, setPositionIndex] = useState(desiredIndex);
@@ -20,77 +19,116 @@ function Pion({
 
   useEffect(() => {
     if (!imageRef.current) return;
-  
+
     const node = imageRef.current;
-  
+
     if (positionIndex === desiredIndex || isAnimating.current) return;
-  
-    gsap.killTweensOf(node); // Pastikan animasi sebelumnya dihentikan
+
+    gsap.killTweensOf(node);
     isAnimating.current = true;
-  
-    // Fungsi untuk memindahkan pion ke indeks target
+
     const moveToIndex = (targetIndex) => {
       const targetPos = getPosition(targetIndex);
-  
-      gsap.to(node, {
-        x: targetPos.x,
-        y: targetPos.y,
-        duration: 0.3, // Durasi setiap langkah animasi
-        ease: "power2.inOut",
-        onComplete: () => {
-          setPositionIndex(targetIndex);
-          isAnimating.current = false;
-  
-          if (onAnimationComplete) {
-            onAnimationComplete(index, targetIndex);
-          }
-        },
-      });
-    };
-  
-    // Animasi langkah demi langkah
-    const steps = Math.abs(desiredIndex - positionIndex);
-    const direction = desiredIndex > positionIndex ? 1 : -1;
-  
-    const animateStep = (step) => {
-      if (step > steps) {
-        // Jika semua langkah selesai
-        setPositionIndex(desiredIndex);
-        isAnimating.current = false;
-  
-        if (onAnimationComplete) {
-          onAnimationComplete(index, desiredIndex);
-        }
-        return;
+
+      // Animasi slide langsung untuk naik tangga
+      if (tanggaUp[positionIndex] && isCorrect) {
+        gsap.to(node, {
+          x: targetPos.x,
+          y: targetPos.y,
+          duration: 0.5,
+          ease: "power1.out",
+          onComplete: () => {
+            setPositionIndex(targetIndex);
+            isAnimating.current = false;
+            if (onAnimationComplete) {
+              onAnimationComplete(index, targetIndex);
+            }
+          },
+        });
+      } else if (snakesDown[positionIndex]) {
+        // Animasi turun ular
+        gsap.to(node, {
+          x: targetPos.x,
+          y: targetPos.y,
+          duration: 0.5,
+          ease: "power1.out",
+          onComplete: () => {
+            setPositionIndex(targetIndex);
+            isAnimating.current = false;
+            if (onAnimationComplete) {
+              onAnimationComplete(index, targetIndex);
+            }
+          },
+        });
+      } else {
+        gsap.to(node, {
+          x: targetPos.x,
+          y: targetPos.y,
+          duration: 0.3,
+          ease: "none",
+          onComplete: () => {
+            setPositionIndex(targetIndex);
+            isAnimating.current = false;
+            if (onAnimationComplete) {
+              onAnimationComplete(index, targetIndex);
+            }
+          },
+        });
       }
-  
-      const intermediateIndex = positionIndex + step * direction; // Tentukan indeks sementara
-      const targetPos = getPosition(intermediateIndex);
-  
-      // Efek animasi lompatan kecil
-      gsap.to(node, {
-        y: targetPos.y - 20, // Lompatan ke atas
-        duration: 0.2,
-        ease: "power1.in",
-        onComplete: () => {
-          gsap.to(node, {
-            x: targetPos.x,
-            y: targetPos.y, // Kembali ke posisi target
-            duration: 0.2,
-            ease: "power1.out",
-            onComplete: () => {
-              setPositionIndex(intermediateIndex); // Perbarui posisi setelah setiap langkah
-              animateStep(step + 1); // Panggil langkah berikutnya
-            },
-          });
-        },
-      });
     };
-  
-    // Mulai animasi langkah pertama
-    animateStep(1);
-  }, [desiredIndex, getPosition, index, onAnimationComplete, positionIndex]);
-  
+
+    // Logika pergerakan
+    if (tanggaUp[positionIndex] && isCorrect) {
+      moveToIndex(tanggaUp[positionIndex]);
+    } else if (snakesDown[positionIndex]) {
+      moveToIndex(snakesDown[positionIndex]);
+    } else {
+      const steps = Math.abs(desiredIndex - positionIndex);
+      const direction = desiredIndex > positionIndex ? 1 : -1;
+
+      const animateStep = (step) => {
+        if (step > steps) {
+          setPositionIndex(desiredIndex);
+          isAnimating.current = false;
+          if (onAnimationComplete) {
+            onAnimationComplete(index, desiredIndex);
+          }
+          return;
+        }
+
+        const intermediateIndex = positionIndex + step * direction;
+        const targetPos = getPosition(intermediateIndex);
+
+        gsap.to(node, {
+          y: targetPos.y - 20,
+          duration: 0.22,
+          onComplete: () => {
+            gsap.to(node, {
+              x: targetPos.x,
+              y: targetPos.y,
+              duration: 0.15,
+              ease: "power1.out",
+              onComplete: () => {
+                setPositionIndex(intermediateIndex);
+                animateStep(step + 1);
+              },
+            });
+          },
+        });
+      };
+
+      animateStep(1);
+    }
+  }, [
+    desiredIndex,
+    getPosition,
+    index,
+    onAnimationComplete,
+    positionIndex,
+    tanggaUp,
+    isCorrect,
+    snakesDown,
+  ]);
 
   return (
     <KonvaImage

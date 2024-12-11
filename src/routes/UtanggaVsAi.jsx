@@ -110,7 +110,8 @@ function UtanggaVsAi() {
 
   // Handle kelanjutan lemparan dadu
   const handleDiceRollComplete = useCallback(
-    (diceNumber) => {
+    () => {
+      const diceNumber=5
       console.log(`Dice rolled: ${diceNumber}`);
       const newPositions = [...pionPositionIndex];
       const currentPos = newPositions[currentPlayerIndex];
@@ -324,13 +325,12 @@ function UtanggaVsAi() {
                     {questions[currentQuestionIndex].options.map((option, index) => (
                       <div
                         key={index}
-                        className={`form-check ${
-                          submitted
+                        className={`form-check ${submitted
                             ? option === questions[currentQuestionIndex].correctAnswer
                               ? "correct-answer"
                               : "wrong-answer"
                             : ""
-                        }`}
+                          }`}
                       >
                         <input
                           type="radio"

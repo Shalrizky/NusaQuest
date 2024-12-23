@@ -1,4 +1,3 @@
-// React-KonvaUlar.jsx
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Rect, Text, Image as KonvaImage } from "react-konva";
 import Pion from "../gamesAi/PionUtanggaAi";

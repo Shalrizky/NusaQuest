@@ -1,4 +1,3 @@
-// UtanggaVsAi.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +28,6 @@ const questions = [
     options: ["Diponegoro", "Sudirman", "Bung Tomo", "Soekarno"],
     correctAnswer: "Bung Tomo",
   },
-  // Tambahkan pertanyaan lainnya sesuai kebutuhan
 ];
 
 // Tangga dan ular
@@ -59,7 +57,6 @@ function UtanggaVsAi() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Pemain: 1 pengguna dan 1 bot
   const [players, setPlayers] = useState([
     {
       uid: "player1",
@@ -91,9 +88,9 @@ function UtanggaVsAi() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
-  const [gameTimeLeft, setGameTimeLeft] = useState(1800); // 30 menit
+  const [gameTimeLeft, setGameTimeLeft] = useState(1800);
   const [gameOver, setGameOver] = useState(false);
-  const [pendingPosition, setPendingPosition] = useState(null); // Posisi yang akan dituju setelah menjawab
+  const [pendingPosition, setPendingPosition] = useState(null);
 
   // Helper function untuk mengecek kemenangan
   const checkVictory = useCallback(
@@ -111,7 +108,7 @@ function UtanggaVsAi() {
   // Handle kelanjutan lemparan dadu
   const handleDiceRollComplete = useCallback(
     () => {
-      const diceNumber=5
+      const diceNumber = 5
       console.log(`Dice rolled: ${diceNumber}`);
       const newPositions = [...pionPositionIndex];
       const currentPos = newPositions[currentPlayerIndex];
@@ -120,37 +117,35 @@ function UtanggaVsAi() {
       setIsPionMoving(true);
       setDiceState({ isRolling: false, currentNumber: diceNumber });
 
-      // Update posisi pion sementara ke newPos
       newPositions[currentPlayerIndex] = newPos;
       setPionPositionIndex(newPositions);
 
-      // Cek kemenangan
+
       if (checkVictory(newPos)) {
         setIsPionMoving(false);
         return;
       }
 
-      // Cek tangga atau ular
       const isLadder = tanggaUp[newPos] !== undefined;
       const isSnake = snakesDown[newPos] !== undefined;
       const finalPos = tanggaUp[newPos] || snakesDown[newPos] || newPos;
 
       if (isLadder) {
-        setPendingPosition(finalPos); // Simpan posisi akhir tangga
+        setPendingPosition(finalPos);
         setShowQuestion(true);
         setSubmitted(false);
-        setIsCorrect(false); // Reset isCorrect sebelum jawaban
+        setIsCorrect(false);
         setAllowExtraRoll(false);
-        // Pion tetap di currentPos sampai jawaban
+
       } else if (isSnake) {
-        // Jika ular, langsung turun ke posisi akhir ular
+
         newPositions[currentPlayerIndex] = finalPos;
         setPionPositionIndex(newPositions);
         setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
       } else if (diceNumber === 6) {
         setShowQuestion(true);
         setSubmitted(false);
-        setIsCorrect(false); // Reset isCorrect sebelum jawaban
+        setIsCorrect(false);
         setAllowExtraRoll(true);
       } else {
         setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
@@ -234,7 +229,6 @@ function UtanggaVsAi() {
     }
   }, [timeLeft, showQuestion, victory, gameOver, players.length]);
 
-  // Menangani perubahan jawaban
   const handleAnswerChange = (e) => {
     const answer = e.target.value;
     setSelectedAnswer(answer);
@@ -250,7 +244,6 @@ function UtanggaVsAi() {
 
     if (isAnswerCorrect) {
       if (pendingPosition !== null) {
-        // Jika ada pendingPosition, pindahkan pion ke posisi tersebut
         const newPositions = [...pionPositionIndex];
         newPositions[currentPlayerIndex] = pendingPosition;
         setPionPositionIndex(newPositions);
@@ -267,10 +260,9 @@ function UtanggaVsAi() {
       // Jika jawaban salah, pindah giliran
       setAllowExtraRoll(false);
       setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-      setPendingPosition(null); // Reset pendingPosition karena jawaban salah
+      setPendingPosition(null);
     }
 
-    // Setelah menjawab, sembunyikan pertanyaan dan tampilkan giliran berikutnya
     setTimeout(() => {
       setShowQuestion(false);
       setSelectedAnswer("");
@@ -297,7 +289,7 @@ function UtanggaVsAi() {
             snakesDown={snakesDown}
             players={players}
             currentPlayerIndex={currentPlayerIndex}
-            isCorrect={isCorrect} // Tambahkan isCorrect sebagai prop
+            isCorrect={isCorrect}
           />
         </Col>
 
@@ -325,13 +317,12 @@ function UtanggaVsAi() {
                     {questions[currentQuestionIndex].options.map((option, index) => (
                       <div
                         key={index}
-                        className={`form-check ${
-                          submitted
+                        className={`form-check ${submitted
                             ? option === questions[currentQuestionIndex].correctAnswer
                               ? "correct-answer"
                               : "wrong-answer"
                             : ""
-                        }`}
+                          }`}
                       >
                         <input
                           type="radio"

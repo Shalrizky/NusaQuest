@@ -51,7 +51,7 @@ function Pion({
       const isAscending = targetIndex > positionIndex;
       const isDescending = targetIndex < positionIndex;
 
-      if (isAscending && isCorrect) { // Pastikan hanya naik tangga jika isCorrect
+      if (isAscending && isCorrect) { 
         // Animasi naik tangga
         gsap.to(node, {
           x: targetPos.x,
@@ -73,7 +73,7 @@ function Pion({
           x: targetPos.x,
           y: targetPos.y,
           duration: 0.5,
-          ease: "power1.in", // Easing berbeda untuk efek penurunan yang lebih realistis
+          ease: "power1.in", 
           onComplete: () => {
             setPositionIndex(targetIndex);
             console.log(`Pion ${index} telah turun dari ular ke index ${targetIndex}`);
@@ -103,7 +103,7 @@ function Pion({
           const intermediatePos = getPosition(intermediateIndex);
 
           gsap.to(node, {
-            y: intermediatePos.y - 20, // Efek melompat sedikit sebelum bergerak
+            y: intermediatePos.y - 20, 
             duration: 0.22,
             onComplete: () => {
               gsap.to(node, {

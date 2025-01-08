@@ -6,8 +6,8 @@
   import Potion from "../components/games/potion";
   // import VictoryOverlay from "../components/games/VictoryOverlay";
   // import LoseOverlay from "../components/games/LoseOverlay";
-  import Board from "../components/gamesAi/react-KonvaAi";
-  import Dice from "../components/gamesAi/DiceAi";
+  import Board from "../components/gamesAi/uTangga/react-KonvaAi";
+  import Dice from "../components/gamesAi/uTangga/DiceAi";
   import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
   import PlayerList from "../components/games/uTangga/PlayerList";
   // import {

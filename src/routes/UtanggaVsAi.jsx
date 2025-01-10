@@ -14,7 +14,7 @@ import Achievement2 from "../assets/games/achievement2.png";
 import potionImage from "../assets/games/potion.png";
 import bgUlarTangga from "../assets/common/bg-ular.png";
 
-// Definisi pertanyaan
+
 const questions = [
   {
     id: 1,

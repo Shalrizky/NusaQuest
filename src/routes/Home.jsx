@@ -35,26 +35,15 @@ function Home() {
         />
         <meta
           property="og:image"
-          content="https://nusaquest.com/assets/og-image.jpg"
+          content="https://nusaquest.com/assets/favicon-512x512.png"
         />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
         <meta property="og:url" content="https://nusaquest.com/" />
         <meta property="og:type" content="website" />
       </Helmet>
 
       <Container fluid id="home-container">
-        {/* Helmet untuk konfigurasi SEO */}
-        <Helmet>
-          <title>NusaQuest - Explore Indonesia</title>
-          <meta
-            name="description"
-            content="Ayo Bermain dan Jelajahi Indonesia Bersama NusaQuest"
-          />
-          <meta
-            name="keywords"
-            content="nusaquest, indonesia, gamifikasi, game, game ular tangga, game gamifikasi, NusaQuest"
-          />
-          <link rel="canonical" href="https://nusaquest.com/" />
-        </Helmet>
         <Header layout="home" showBackIcon={false} />
         <Row>
           <Col lg={12}>

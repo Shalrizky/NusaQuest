@@ -3,7 +3,7 @@
     "public": "build",
     "headers": [
       {
-        "source": "**/*.@(js|css|html|png|jpg|jpeg|svg|gif|webp)",
+        "source": "**/*.@(js|css|html|png|jpg|jpeg|svg|gif|webp|xml)",
         "headers": [
           {
             "key": "Cache-Control",

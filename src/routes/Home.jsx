@@ -5,8 +5,8 @@ import Header from "../components/Header";
 import NusaMaps from "../components/NusaMaps";
 import Footer from "../components/Footer";
 import ModalGame from "../components/ModalGame";
-import NusaQuestLogo from "../assets/common/nusaQuest-logo.webp";
-import Batu from "../assets/common/batu.webp";
+import NusaQuestLogo from "../assets/common/nusaQuest-logo.png";
+import Batu from "../assets/common/batu.png";
 import "../style/routes/Home.css";
 
 function Home() {
@@ -15,7 +15,6 @@ function Home() {
 
   return (
     <>
-      {/* Helmet untuk konfigurasi SEO */}
       <Helmet>
         <title>NusaQuest - Explore Indonesia</title>
         <meta
@@ -42,19 +41,28 @@ function Home() {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <Container fluid className="home-container">
+      <Container fluid id="home-container">
+        {/* Helmet untuk konfigurasi SEO */}
+        <Helmet>
+          <title>NusaQuest - Explore Indonesia</title>
+          <meta
+            name="description"
+            content="Ayo Bermain dan Jelajahi Indonesia Bersama NusaQuest"
+          />
+          <meta
+            name="keywords"
+            content="nusaquest, indonesia, gamifikasi, game, game ular tangga, game gamifikasi, NusaQuest"
+          />
+          <link rel="canonical" href="https://nusaquest.com/" />
+        </Helmet>
         <Header layout="home" showBackIcon={false} />
         <Row>
-          <Col lg={12} className="text-center">
-            <img
-              src={Batu}
-              alt="Logo Batu Ikonik NusaQuest"
-              className="img-fluid"
-            />
+          <Col lg={12}>
+            <img src={Batu} alt="Batu Logo" id="batu" />
             <img
               src={NusaQuestLogo}
-              alt="Logo NusaQuest"
-              className="img-fluid"
+              alt="NusaQuest Logo"
+              id="nusa-quest-logo"
             />
           </Col>
         </Row>
@@ -65,9 +73,9 @@ function Home() {
         <ModalGame
           show={showModal}
           onHide={() => setShowModal(false)}
-          selectedTopic={selectedTopic || "Default Topic"}
+          selectedTopic={selectedTopic}
         />
-        <Footer textColor="#222" />
+        <Footer textColor={"#222"} />
       </Container>
     </>
   );

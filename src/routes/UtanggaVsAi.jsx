@@ -1,34 +1,20 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Container, Row, Col, Form, Button } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { Container, Row, Col } from "react-bootstrap";
+import { useNavigate, useParams } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import HeaderGame from "../components/games/HeaderGame";
 import Board from "../components/gamesAi/react-KonvaAi";
 import Dice from "../components/gamesAi/DiceAi";
 import Potion from "../components/games/potion";
 import PlayerList from "../components/games/uTangga/PlayerList";
+import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
+import { getQuestions, shuffle } from "../services/questionDataServices";
 import "../style/routes/UlarTangga.css";
 import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
 import potionImage from "../assets/games/potion.png";
 import bgUlarTangga from "../assets/common/bg-ular.png";
-
-
-const questions = [
-  {
-    id: 1,
-    question: "Makanan paling enak apa di Jawa?",
-    options: ["Soto Betawi", "Gudeg", "Batagor", "Rendang"],
-    correctAnswer: "Gudeg",
-  },
-  {
-    id: 2,
-    question: "Siapa pahlawan nasional dari Jawa Timur?",
-    options: ["Diponegoro", "Sudirman", "Bung Tomo", "Soekarno"],
-    correctAnswer: "Bung Tomo",
-  },
-];
 
 // Tangga dan ular
 const tanggaUp = {
@@ -42,6 +28,7 @@ const tanggaUp = {
   27: 48,
   49: 69,
 };
+
 const snakesDown = {
   22: 1,
   29: 8,
@@ -54,6 +41,7 @@ const snakesDown = {
 };
 
 function UtanggaVsAi() {
+  const { topicID } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -61,145 +49,58 @@ function UtanggaVsAi() {
     {
       uid: "player1",
       displayName: user.displayName,
-      // photo: user.photoURL || require("../assets/games/Utangga/placeholder.jpg"),
       isBot: false,
     },
     {
       uid: "bot",
       displayName: "Bot",
-      // photo: require("../assets/games/Utangga/bot.jpg"), // Pastikan gambar bot tersedia
       isBot: true,
     },
   ]);
 
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const [pionPositionIndex, setPionPositionIndex] = useState([0, 0]); // [player, bot]
+  const [pionPositionIndex, setPionPositionIndex] = useState([0, 0]);
   const [diceState, setDiceState] = useState({
     isRolling: false,
     currentNumber: 1,
+    lastRoll: null,
   });
   const [isPionMoving, setIsPionMoving] = useState(false);
   const [victory, setVictory] = useState(false);
   const [winner, setWinner] = useState("");
   const [showQuestion, setShowQuestion] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(null);
+  const [waitingForAnswer, setWaitingForAnswer] = useState(false);
+  const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
   const [gameTimeLeft, setGameTimeLeft] = useState(1800);
   const [gameOver, setGameOver] = useState(false);
-  const [pendingPosition, setPendingPosition] = useState(null);
+  const [hints, setHints] = useState([]);
+  const [showOffcanvas, setShowOffcanvas] = useState(false);
+  const [isGameReady, setIsGameReady] = useState(false);
 
-  // Helper function untuk mengecek kemenangan
-  const checkVictory = useCallback(
-    (newPosition) => {
-      if (newPosition === 99) {
-        setVictory(true);
-        setWinner(players[currentPlayerIndex].displayName);
-        return true;
-      }
-      return false;
-    },
-    [currentPlayerIndex, players]
-  );
-
-  // Handle kelanjutan lemparan dadu
-  const handleDiceRollComplete = useCallback(
-    () => {
-      const diceNumber = 5
-      console.log(`Dice rolled: ${diceNumber}`);
-      const newPositions = [...pionPositionIndex];
-      const currentPos = newPositions[currentPlayerIndex];
-      let newPos = Math.min(currentPos + diceNumber, 99);
-
-      setIsPionMoving(true);
-      setDiceState({ isRolling: false, currentNumber: diceNumber });
-
-      newPositions[currentPlayerIndex] = newPos;
-      setPionPositionIndex(newPositions);
-
-
-      if (checkVictory(newPos)) {
-        setIsPionMoving(false);
-        return;
-      }
-
-      const isLadder = tanggaUp[newPos] !== undefined;
-      const isSnake = snakesDown[newPos] !== undefined;
-      const finalPos = tanggaUp[newPos] || snakesDown[newPos] || newPos;
-
-      if (isLadder) {
-        setPendingPosition(finalPos);
-        setShowQuestion(true);
-        setSubmitted(false);
-        setIsCorrect(false);
-        setAllowExtraRoll(false);
-
-      } else if (isSnake) {
-
-        newPositions[currentPlayerIndex] = finalPos;
-        setPionPositionIndex(newPositions);
-        setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-      } else if (diceNumber === 6) {
-        setShowQuestion(true);
-        setSubmitted(false);
-        setIsCorrect(false);
-        setAllowExtraRoll(true);
-      } else {
-        setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-      }
-
-      setIsPionMoving(false);
-    },
-    [currentPlayerIndex, pionPositionIndex, players.length, checkVictory, tanggaUp, snakesDown]
-  );
-
-  // Logika Bot
+  // Initialize questions
   useEffect(() => {
-    if (
-      players[currentPlayerIndex].isBot &&
-      !victory &&
-      !showQuestion &&
-      !isPionMoving
-    ) {
-      const botTurn = async () => {
-        // Delay sebelum bot mengambil giliran
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+    const initGame = async () => {
+      try {
+        const fetchedQuestions = await getQuestions(topicID);
+        const shuffledQuestions = shuffle(fetchedQuestions);
+        setQuestions(shuffledQuestions);
+        setIsGameReady(true);
+      } catch (error) {
+        console.error("Error initializing game:", error);
+      }
+    };
+    initGame();
+  }, [topicID]);
 
-        const botRoll = Math.floor(Math.random() * 6) + 1; // Roll dadu secara acak
-        console.log(`Bot rolled: ${botRoll}`);
-
-        // Mulai animasi dadu
-        setDiceState({ isRolling: true, currentNumber: botRoll });
-
-        // Berhenti animasi setelah durasi tertentu
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setDiceState({ isRolling: false, currentNumber: botRoll });
-        handleDiceRollComplete(botRoll); // Jalankan logika setelah animasi selesai
-      };
-
-      botTurn();
-    }
-  }, [
-    currentPlayerIndex,
-    players,
-    victory,
-    handleDiceRollComplete,
-    showQuestion,
-    isPionMoving,
-  ]);
-
-  // Timer global untuk menghitung waktu permainan
+  // Handle game over
   useEffect(() => {
     if (gameTimeLeft > 0) {
       const gameTimer = setInterval(() => {
-        setGameTimeLeft((prevTime) => {
-          const newTime = prevTime - 1;
-          return newTime;
-        });
+        setGameTimeLeft((prev) => prev - 1);
       }, 1000);
       return () => clearInterval(gameTimer);
     } else {
@@ -207,71 +108,144 @@ function UtanggaVsAi() {
     }
   }, [gameTimeLeft]);
 
-  // Menangani game over
   useEffect(() => {
     if (gameOver) {
-      alert("Waktu permainan habis! Permainan telah berakhir.");
-      navigate("/"); // Arahkan pemain ke halaman utama
+      navigate("/");
     }
   }, [gameOver, navigate]);
 
-  // Timer untuk setiap giliran pemain
+  // Timer for each player's turn
   useEffect(() => {
     if (!showQuestion && !victory && !gameOver) {
       if (timeLeft > 0) {
         const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
         return () => clearTimeout(timerId);
       } else {
-        // Jika waktu habis, pindah ke pemain berikutnya
         setTimeLeft(30);
         setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
       }
     }
   }, [timeLeft, showQuestion, victory, gameOver, players.length]);
 
-  const handleAnswerChange = (e) => {
-    const answer = e.target.value;
-    setSelectedAnswer(answer);
+  // Handle dice roll completion
+  const handleDiceRollComplete = useCallback(
+    () => {
+      const diceNumber=5
+      if (isPionMoving || waitingForAnswer) return;
 
-    const correctAnswer = questions[currentQuestionIndex].correctAnswer;
-    const isAnswerCorrect = answer === correctAnswer;
+      const newPositions = [...pionPositionIndex];
+      const currentPos = newPositions[currentPlayerIndex];
+      let newPos = Math.min(currentPos + diceNumber, 99);
+
+      setDiceState({
+        isRolling: false,
+        currentNumber: diceNumber,
+        lastRoll: diceNumber,
+      });
+      setIsPionMoving(true);
+
+      newPositions[currentPlayerIndex] = newPos;
+      setPionPositionIndex(newPositions);
+
+      // Victory check
+      if (newPos === 99) {
+        setVictory(true);
+        setWinner(players[currentPlayerIndex].displayName);
+        setIsPionMoving(false);
+        return;
+      }
+
+      setTimeout(() => {
+        if (tanggaUp[newPos]) {
+          setShowQuestion(true);
+          setWaitingForAnswer(true);
+          setIsCorrect(null);
+        } else if (snakesDown[newPos]) {
+          newPositions[currentPlayerIndex] = snakesDown[newPos];
+          setPionPositionIndex(newPositions);
+          setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+        } else if (diceNumber === 6) {
+          setShowQuestion(true);
+          setWaitingForAnswer(true);
+          setIsCorrect(null);
+          setAllowExtraRoll(true);
+        } else {
+          setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+        }
+        setIsPionMoving(false);
+      }, 1000);
+    },
+    [currentPlayerIndex, isPionMoving, pionPositionIndex, players, waitingForAnswer]
+  );
+
+  // Bot logic
+  useEffect(() => {
+    if (players[currentPlayerIndex]?.isBot && !victory && !showQuestion && !isPionMoving) {
+      const botTurn = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const botRoll = Math.floor(Math.random() * 6) + 1;
+        
+        setDiceState({ isRolling: true, currentNumber: botRoll });
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        handleDiceRollComplete(botRoll);
+      };
+
+      botTurn();
+    }
+  }, [currentPlayerIndex, players, victory, handleDiceRollComplete, showQuestion, isPionMoving]);
+
+  // Handle answer changes
+  const handleAnswerChange = async ({ isCorrect: isAnswerCorrect, hint }) => {
     setIsCorrect(isAnswerCorrect);
-    setSubmitted(true);
-
-    console.log(
-      `Player ${currentPlayerIndex} answered: ${answer}, Correct: ${isAnswerCorrect}`
-    );
-
-    if (isAnswerCorrect) {
-      if (pendingPosition !== null) {
-        const newPositions = [...pionPositionIndex];
-        newPositions[currentPlayerIndex] = pendingPosition;
-        setPionPositionIndex(newPositions);
-        setPendingPosition(null);
-      }
-
-      if (allowExtraRoll) {
-        // Pemain mendapat kesempatan roll ulang
-        setAllowExtraRoll(false);
-      } else {
-        // Tidak perlu mengubah giliran
-      }
-    } else {
-      // Jika jawaban salah, pindah giliran
-      setAllowExtraRoll(false);
-      setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-      setPendingPosition(null);
+    
+    if (!isAnswerCorrect && hint) {
+      setHints((prevHints) => [...prevHints, hint]);
+      setShowOffcanvas(true);
     }
 
     setTimeout(() => {
       setShowQuestion(false);
-      setSelectedAnswer("");
-      setSubmitted(false);
-      setIsCorrect(null);
-      setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
-      setTimeLeft(30);
-    }, 1800);
+      setWaitingForAnswer(false);
+      
+      const nextQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+      setCurrentQuestionIndex(nextQuestionIndex);
+
+      if (isAnswerCorrect) {
+        if (allowExtraRoll) {
+          setAllowExtraRoll(false);
+          setTimeLeft(30);
+        } else {
+          const newPositions = [...pionPositionIndex];
+          const currentPos = newPositions[currentPlayerIndex];
+
+          if (tanggaUp[currentPos]) {
+            newPositions[currentPlayerIndex] = tanggaUp[currentPos];
+            setPionPositionIndex(newPositions);
+          }
+
+          setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+        }
+      } else {
+        setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+      }
+    }, 2000);
   };
+
+  // Bot answer logic
+  useEffect(() => {
+    if (players[currentPlayerIndex]?.isBot && showQuestion && waitingForAnswer) {
+      setTimeout(() => {
+        // Bot has 70% chance to answer correctly
+        const isCorrect = Math.random() < 0.7;
+        handleAnswerChange({ isCorrect });
+      }, 2000);
+    }
+  }, [currentPlayerIndex, players, showQuestion, waitingForAnswer]);
+
+  if (!isGameReady) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Container
@@ -279,7 +253,13 @@ function UtanggaVsAi() {
       className="utangga-container"
       style={{ backgroundImage: `url(${bgUlarTangga})` }}
     >
-      <HeaderGame layout="home" />
+      <HeaderGame 
+        layout="home"
+        hints={hints}
+        showOffcanvas={showOffcanvas}
+        setShowOffcanvas={setShowOffcanvas}
+        onCloseOffcanvas={() => setShowOffcanvas(false)}
+      />
 
       <Row className="utu-container-board d-flex justify-content-center my-3">
         <Col xs={12} md={6} className="utu-konva px-4">
@@ -298,83 +278,34 @@ function UtanggaVsAi() {
           md={6}
           className="d-flex flex-column align-items-center justify-content-center px-4 gap-4"
         >
-          {/* Kotak Giliran Pemain */}
-          <div className="player-turn-box">
-            {players[currentPlayerIndex] ? (
-              <h3>{players[currentPlayerIndex].displayName}'s Turn</h3>
-            ) : (
-              <h3>Waiting for player...</h3>
-            )}
+          <PlayerTurnBox
+            players={players}
+            currentPlayerIndex={currentPlayerIndex}
+            showQuestion={showQuestion}
+            waitingForAnswer={waitingForAnswer}
+            currentQuestion={questions[currentQuestionIndex]}
+            onAnswerChange={handleAnswerChange}
+            isMyTurn={!players[currentPlayerIndex]?.isBot}
+          />
 
-            {/* Pertanyaan */}
-            {showQuestion && (
-              <div className="question-section">
-                <Form>
-                  <Form.Group>
-                    <Form.Label>
-                      {questions[currentQuestionIndex].question}
-                    </Form.Label>
-                    {questions[currentQuestionIndex].options.map((option, index) => (
-                      <div
-                        key={index}
-                        className={`form-check ${submitted
-                            ? option === questions[currentQuestionIndex].correctAnswer
-                              ? "correct-answer"
-                              : "wrong-answer"
-                            : ""
-                          }`}
-                      >
-                        <input
-                          type="radio"
-                          name="quizOption"
-                          id={`quizOption${index}`}
-                          value={option}
-                          onChange={handleAnswerChange}
-                          checked={selectedAnswer === option}
-                          className="d-none"
-                        />
-                        <label
-                          htmlFor={`quizOption${index}`}
-                          className="form-check-label"
-                        >
-                          {option}
-                        </label>
-                      </div>
-                    ))}
-                  </Form.Group>
-                </Form>
-                {submitted && (
-                  <div className="answer-feedback">
-                  </div>
-                )}
-              </div>
-            )}
+          <div className="timer-player d-flex justify-content-center align-items-center gap-2 mb-3">
+            <span className="timer-count">{timeLeft}</span>
+            <span className="timer-text">Sec</span>
           </div>
 
-          {/* Timer pemain */}
-          <div className="timer-display">
-            <span className="time-text">{timeLeft}</span>
-            <span className="time-label">Sec</span>
-          </div>
+          <Dice
+            onRollComplete={handleDiceRollComplete}
+            disabled={
+              players[currentPlayerIndex]?.isBot ||
+              isPionMoving ||
+              victory ||
+              waitingForAnswer
+            }
+            diceState={diceState}
+          />
 
-          {/* Dadu dan Potion */}
-          <div className="dice-potion-container">
-            <Dice
-              onRollComplete={(number) => {
-                handleDiceRollComplete(number);
-              }}
-              disabled={
-                players[currentPlayerIndex].isBot ||
-                isPionMoving ||
-                victory ||
-                showQuestion
-              }
-              diceState={diceState}
-            />
-            <Potion />
-          </div>
+          <Potion />
 
-          {/* Daftar pemain */}
           <PlayerList
             players={players}
             currentPlayerIndex={currentPlayerIndex}
@@ -382,7 +313,6 @@ function UtanggaVsAi() {
         </Col>
       </Row>
 
-      {/* Overlay Victory */}
       {victory && (
         <div className="victory-overlay" onClick={() => navigate("/")}>
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />

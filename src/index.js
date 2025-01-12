@@ -17,6 +17,7 @@ import UlarTangga from './routes/UlarTangga';
 import UtanggaVsAi from './routes/UtanggaVsAi';
 import NusaCard from './routes/NusaCard';
 import NucaVsAi from './routes/NucaVsAi';
+import NotFoundPage from './routes/404';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -110,6 +111,7 @@ const App = () => {
             </ProtectedRoute>
           )
         },
+        { path: '*', element: withLoader(NotFoundPage)() }
       ]
     }
   ]);

@@ -1,0 +1,16 @@
+#container-404 {
+   background-image: url('../../assets/common/bg-ular.png');
+   background-repeat: no-repeat;
+   background-position: center;
+   background-size: cover;
+   justify-content: center;
+   align-items: center;
+   display: flex;
+   min-height: 100vh;
+}
+
+.text-404 {
+   font-family: Potta One, sans-serif;
+   color: #fff;
+   text-shadow: 2px 2px 4px rgba(0, 0, 0, 1);
+}

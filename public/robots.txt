@@ -1,0 +1,3 @@
+User-agent: *
+Disallow:
+Sitemap: https://nusaquest.com/sitemap.xml

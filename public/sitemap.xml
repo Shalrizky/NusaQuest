@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url>
+    <loc>https://nusaquest.com/</loc>
+    <priority>1.0</priority>
+    <changefreq>daily</changefreq>
+  </url>
+
+  <!-- Login -->
+  <url>
+    <loc>https://nusaquest.com/login</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <!-- Profile -->
+  <url>
+    <loc>https://nusaquest.com/profile</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <!-- Information -->
+  <url>
+    <loc>https://nusaquest.com/information</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Credit -->
+  <url>
+    <loc>https://nusaquest.com/credit</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Dynamic Pages -->
+  <url>
+    <loc>https://nusaquest.com/destination/123</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://nusaquest.com/lobby/topic123/game123</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://nusaquest.com/game123/topic123/room123</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://nusaquest.com/game123/topic123/room123/playUTangga</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://nusaquest.com/game123/topic123/room123/playUtanggaVsAi</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://nusaquest.com/game123/topic123/room123/playNuca</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://nusaquest.com/game123/topic123/room123/playNucaVsAi</loc>
+    <priority>0.6</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+</urlset>

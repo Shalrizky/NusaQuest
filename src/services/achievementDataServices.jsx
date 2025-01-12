@@ -142,6 +142,12 @@ export const updateWinningAchievement = async (uid, gameKey, topicKey) => {
   }
 
   try {
+    // Ambil nama game dari konstanta GAMES
+    const game = GAMES[gameKey];
+    if (!game) {
+      throw new Error(`Invalid gameKey: ${gameKey}`);
+    }
+
     // Ambil nama topik dari konstanta TOPICS
     const topic = TOPICS[topicKey];
     if (!topic) {
@@ -155,10 +161,10 @@ export const updateWinningAchievement = async (uid, gameKey, topicKey) => {
       if (currentData === null) {
         return {
           totalWins: 1,
-          achievement_name: `Master ${gameKey === "game1" ? "Ular Tangga" : "Nuca"} ${topic.name}`,
+          achievement_name: `${game.prefix} ${topic.name}`,
           achievement_trophy: "/assets/game/trophy.png",
           badge: {
-            badgeName: `Bronze Badge - 1 Win in ${topic.name}`,
+            badgeName: `Bronze Badge - 1 Win in ${topic.name} (${game.name})`,
             iconURL: "/assets/game/bronze-badge.png"
           },
           lastUpdated: new Date().toISOString()
@@ -167,7 +173,7 @@ export const updateWinningAchievement = async (uid, gameKey, topicKey) => {
 
       // Increment wins
       const newTotalWins = (currentData.totalWins || 0) + 1;
-      
+
       // Tentukan badge berdasarkan total kemenangan
       let badge = {
         badgeName: `No Badge`,
@@ -176,17 +182,17 @@ export const updateWinningAchievement = async (uid, gameKey, topicKey) => {
 
       if (newTotalWins >= 5) {
         badge = {
-          badgeName: `Gold Badge - ${newTotalWins} Wins in ${topic.name}`,
+          badgeName: `Gold Badge - ${newTotalWins} Wins in ${topic.name} (${game.name})`,
           iconURL: "/assets/game/gold-badge.png"
         };
       } else if (newTotalWins >= 3) {
         badge = {
-          badgeName: `Silver Badge - ${newTotalWins} Wins in ${topic.name}`,
+          badgeName: `Silver Badge - ${newTotalWins} Wins in ${topic.name} (${game.name})`,
           iconURL: "/assets/game/silver-badge.png"
         };
       } else if (newTotalWins >= 1) {
         badge = {
-          badgeName: `Bronze Badge - ${newTotalWins} Wins in ${topic.name}`,
+          badgeName: `Bronze Badge - ${newTotalWins} Wins in ${topic.name} (${game.name})`,
           iconURL: "/assets/game/bronze-badge.png"
         };
       }

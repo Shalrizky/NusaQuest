@@ -137,12 +137,17 @@ export const getUserAchievements = async (uid) => {
 
 // Update achievement saat menang
 export const updateWinningAchievement = async (uid, gameKey, topicKey) => {
-  console.log("updateWinningAchievement called");
   if (!uid || !gameKey || !topicKey) {
     throw new Error("Missing required parameters for achievement update");
   }
 
   try {
+    // Ambil nama topik dari konstanta TOPICS
+    const topic = TOPICS[topicKey];
+    if (!topic) {
+      throw new Error(`Invalid topicKey: ${topicKey}`);
+    }
+
     const achievementRef = ref(database, `achievements/${uid}/${gameKey}/${topicKey}`);
     
     // Menggunakan transaction untuk memastikan update yang akurat
@@ -150,10 +155,10 @@ export const updateWinningAchievement = async (uid, gameKey, topicKey) => {
       if (currentData === null) {
         return {
           totalWins: 1,
-          achievement_name: `Master ${gameKey === "game1" ? "Ular Tangga" : "Nuca"} ${topicKey.replace(/_/g, " ")}`,
+          achievement_name: `Master ${gameKey === "game1" ? "Ular Tangga" : "Nuca"} ${topic.name}`,
           achievement_trophy: "/assets/game/trophy.png",
           badge: {
-            badgeName: `Bronze Badge - 1 Win`,
+            badgeName: `Bronze Badge - 1 Win in ${topic.name}`,
             iconURL: "/assets/game/bronze-badge.png"
           },
           lastUpdated: new Date().toISOString()
@@ -163,7 +168,7 @@ export const updateWinningAchievement = async (uid, gameKey, topicKey) => {
       // Increment wins
       const newTotalWins = (currentData.totalWins || 0) + 1;
       
-      // Get badge details
+      // Tentukan badge berdasarkan total kemenangan
       let badge = {
         badgeName: `No Badge`,
         iconURL: "/assets/game/no-badge.png"
@@ -171,17 +176,17 @@ export const updateWinningAchievement = async (uid, gameKey, topicKey) => {
 
       if (newTotalWins >= 5) {
         badge = {
-          badgeName: `Gold Badge - ${newTotalWins} Wins`,
+          badgeName: `Gold Badge - ${newTotalWins} Wins in ${topic.name}`,
           iconURL: "/assets/game/gold-badge.png"
         };
       } else if (newTotalWins >= 3) {
         badge = {
-          badgeName: `Silver Badge - ${newTotalWins} Wins`,
+          badgeName: `Silver Badge - ${newTotalWins} Wins in ${topic.name}`,
           iconURL: "/assets/game/silver-badge.png"
         };
       } else if (newTotalWins >= 1) {
         badge = {
-          badgeName: `Bronze Badge - ${newTotalWins} Wins`,
+          badgeName: `Bronze Badge - ${newTotalWins} Wins in ${topic.name}`,
           iconURL: "/assets/game/bronze-badge.png"
         };
       }
@@ -200,6 +205,7 @@ export const updateWinningAchievement = async (uid, gameKey, topicKey) => {
     throw new Error("Failed to update achievement");
   }
 };
+
 
 // Get specific achievement
 export const getSpecificAchievement = async (uid, gameKey, topicKey) => {

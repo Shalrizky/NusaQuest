@@ -74,9 +74,6 @@ function UtanggaVsAi() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30);
-  const [gameTimeLeft, setGameTimeLeft] = useState(1800);
-  const [gameOver, setGameOver] = useState(false);
   const [hints, setHints] = useState([]);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [isGameReady, setIsGameReady] = useState(false);
@@ -96,41 +93,10 @@ function UtanggaVsAi() {
     initGame();
   }, [topicID]);
 
-  // Handle game over
-  useEffect(() => {
-    if (gameTimeLeft > 0) {
-      const gameTimer = setInterval(() => {
-        setGameTimeLeft((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(gameTimer);
-    } else {
-      setGameOver(true);
-    }
-  }, [gameTimeLeft]);
-
-  useEffect(() => {
-    if (gameOver) {
-      navigate("/");
-    }
-  }, [gameOver, navigate]);
-
-  // Timer for each player's turn
-  useEffect(() => {
-    if (!showQuestion && !victory && !gameOver) {
-      if (timeLeft > 0) {
-        const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-        return () => clearTimeout(timerId);
-      } else {
-        setTimeLeft(30);
-        setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-      }
-    }
-  }, [timeLeft, showQuestion, victory, gameOver, players.length]);
-
   // Handle dice roll completion
   const handleDiceRollComplete = useCallback(
     () => {
-      const diceNumber=5
+      const diceNumber = 5;
       if (isPionMoving || waitingForAnswer) return;
 
       const newPositions = [...pionPositionIndex];
@@ -184,10 +150,10 @@ function UtanggaVsAi() {
       const botTurn = async () => {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         const botRoll = Math.floor(Math.random() * 6) + 1;
-        
+
         setDiceState({ isRolling: true, currentNumber: botRoll });
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        
+
         handleDiceRollComplete(botRoll);
       };
 
@@ -198,7 +164,7 @@ function UtanggaVsAi() {
   // Handle answer changes
   const handleAnswerChange = async ({ isCorrect: isAnswerCorrect, hint }) => {
     setIsCorrect(isAnswerCorrect);
-    
+
     if (!isAnswerCorrect && hint) {
       setHints((prevHints) => [...prevHints, hint]);
       setShowOffcanvas(true);
@@ -207,14 +173,13 @@ function UtanggaVsAi() {
     setTimeout(() => {
       setShowQuestion(false);
       setWaitingForAnswer(false);
-      
+
       const nextQuestionIndex = (currentQuestionIndex + 1) % questions.length;
       setCurrentQuestionIndex(nextQuestionIndex);
 
       if (isAnswerCorrect) {
         if (allowExtraRoll) {
           setAllowExtraRoll(false);
-          setTimeLeft(30);
         } else {
           const newPositions = [...pionPositionIndex];
           const currentPos = newPositions[currentPlayerIndex];
@@ -287,11 +252,6 @@ function UtanggaVsAi() {
             onAnswerChange={handleAnswerChange}
             isMyTurn={!players[currentPlayerIndex]?.isBot}
           />
-
-          <div className="timer-player d-flex justify-content-center align-items-center gap-2 mb-3">
-            <span className="timer-count">{timeLeft}</span>
-            <span className="timer-text">Sec</span>
-          </div>
 
           <Dice
             onRollComplete={handleDiceRollComplete}

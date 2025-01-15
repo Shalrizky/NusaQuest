@@ -106,12 +106,18 @@ function UtanggaVsAi() {
 
   // Handle dice roll completion
   const handleDiceRollComplete = useCallback(
-    () => {
-      const diceNumber = 5;
+    (number) => {
+      const diceNumber = number || Math.floor(Math.random() * 6) + 1;
+      console.log(`🎲 Dice rolled: ${diceNumber}`);
+      
       if (isPionMoving || waitingForAnswer) return;
 
       const currentPos = pionPositionIndex[currentPlayerIndex];
       let newPos = Math.min(currentPos + diceNumber, 99);
+      
+      console.log(`🎮 Player ${currentPlayerIndex + 1}'s turn`);
+      console.log(`📍 Current Position: ${currentPos}`);
+      console.log(`🎯 Target Position: ${newPos}`);
 
       setDiceState({
         isRolling: false,
@@ -127,6 +133,7 @@ function UtanggaVsAi() {
       // Victory check
       if (newPos === 99) {
         moveToPosition(newPos);
+        console.log(`🏆 Victory! ${players[currentPlayerIndex].displayName} wins!`);
         setVictory(true);
         setWinner(players[currentPlayerIndex].displayName);
         setIsPionMoving(false);
@@ -139,6 +146,7 @@ function UtanggaVsAi() {
       setTimeout(() => {
         // Check for ladder or snake
         if (tanggaUp[newPos]) {
+          console.log(`🪜 Found ladder at ${newPos}! Climbing to ${tanggaUp[newPos]}`);
           setAnimationType('ladder');
           setStartPosition(newPos);
           setEndPosition(tanggaUp[newPos]);
@@ -147,6 +155,7 @@ function UtanggaVsAi() {
           setShowQuestion(true);
           setWaitingForAnswer(true);
         } else if (snakesDown[newPos]) {
+          console.log(`🐍 Found snake at ${newPos}! Sliding down to ${snakesDown[newPos]}`);
           setAnimationType('snake');
           setStartPosition(newPos);
           setEndPosition(snakesDown[newPos]);
@@ -159,10 +168,12 @@ function UtanggaVsAi() {
             setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
           }, 1000);
         } else if (diceNumber === 6) {
+          console.log(`🎯 Got a 6! Extra turn granted!`);
           setShowQuestion(true);
           setWaitingForAnswer(true);
           setAllowExtraRoll(true);
         } else {
+          console.log(`➡️ Moving to next player`);
           setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
         }
         setIsPionMoving(false);
@@ -175,12 +186,18 @@ function UtanggaVsAi() {
   useEffect(() => {
     if (players[currentPlayerIndex]?.isBot && !victory && !showQuestion && !isPionMoving && !isAnimating) {
       const botTurn = async () => {
+        console.log(`🤖 Bot's turn`);
         await new Promise((resolve) => setTimeout(resolve, 1500));
         const botRoll = Math.floor(Math.random() * 6) + 1;
+        console.log(`🎲 Bot rolled: ${botRoll}`);
 
-        setDiceState({ isRolling: true, currentNumber: botRoll });
+        setDiceState({ 
+          isRolling: true, 
+          currentNumber: botRoll,
+          lastRoll: null 
+        });
+        
         await new Promise((resolve) => setTimeout(resolve, 1000));
-
         handleDiceRollComplete(botRoll);
       };
 
@@ -188,8 +205,9 @@ function UtanggaVsAi() {
     }
   }, [currentPlayerIndex, players, victory, handleDiceRollComplete, showQuestion, isPionMoving, isAnimating]);
 
-  // Handle answer changes
+  // Handle answer changes with logs
   const handleAnswerChange = async ({ isCorrect: isAnswerCorrect, hint }) => {
+    console.log(`❓ Question answered - Correct: ${isAnswerCorrect}`);
     setIsCorrect(isAnswerCorrect);
 
     if (!isAnswerCorrect && hint) {
@@ -206,9 +224,10 @@ function UtanggaVsAi() {
 
       if (isAnswerCorrect) {
         if (allowExtraRoll) {
+          console.log(`🎲 Extra roll granted!`);
           setAllowExtraRoll(false);
         } else if (pendingPosition !== null) {
-          // Animasi naik tangga setelah menjawab benar
+          console.log(`🪜 Moving up ladder to position ${pendingPosition}`);
           setIsAnimating(true);
           setAnimationType('ladder');
           setTimeout(() => {
@@ -221,9 +240,11 @@ function UtanggaVsAi() {
             setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
           }, 1000);
         } else {
+          console.log(`➡️ Moving to next player`);
           setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
         }
       } else {
+        console.log(`❌ Wrong answer, moving to next player`);
         setPendingPosition(null);
         setStartPosition(null);
         setEndPosition(null);
@@ -231,7 +252,6 @@ function UtanggaVsAi() {
       }
     }, 2000);
   };
-
   // Bot answer logic
   useEffect(() => {
     if (players[currentPlayerIndex]?.isBot && showQuestion && waitingForAnswer) {

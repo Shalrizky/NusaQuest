@@ -12,12 +12,16 @@ function Pion({
   tanggaUp,
   snakesDown,
   isCorrect,
+  isAnimating,
+  animationType,
+  startPosition,
+  endPosition,
+  pendingPosition,
 }) {
   const imageRef = useRef(null);
   const [positionIndex, setPositionIndex] = useState(desiredIndex);
-  const isAnimating = useRef(false);
+  const isAnimatingRef = useRef(false);
 
-  // Inisialisasi posisi awal pion menggunakan GSAP saat komponen di-mount
   useEffect(() => {
     if (!imageRef.current) return;
     
@@ -28,120 +32,122 @@ function Pion({
       x: initialPos.x,
       y: initialPos.y,
     });
-
-    console.log(`Pion ${index} diinisialisasi di index ${positionIndex} (x: ${initialPos.x}, y: ${initialPos.y})`);
-  }, [getPosition, positionIndex, index]);
+  }, [getPosition, positionIndex]);
 
   useEffect(() => {
-    if (!imageRef.current) return;
+    if (!imageRef.current || isAnimatingRef.current) return;
 
     const node = imageRef.current;
-
-    // Jangan lakukan apa-apa jika posisi sudah sesuai atau sedang animasi
-    if (positionIndex === desiredIndex || isAnimating.current) return;
-
-    // Hentikan animasi yang sedang berjalan
     gsap.killTweensOf(node);
-    isAnimating.current = true;
 
-    const moveToIndex = (targetIndex) => {
-      const targetPos = getPosition(targetIndex);
-      console.log(`Pion ${index} bergerak ke index ${targetIndex} dengan posisi x: ${targetPos.x}, y: ${targetPos.y}`);
+    const animateMovement = (start, end, type) => {
+      isAnimatingRef.current = true;
+      const startPos = getPosition(start);
+      const endPos = getPosition(end);
 
-      const isAscending = targetIndex > positionIndex;
-      const isDescending = targetIndex < positionIndex;
-
-      if (isAscending && isCorrect) { 
+      if (type === 'ladder') {
         // Animasi naik tangga
         gsap.to(node, {
-          x: targetPos.x,
-          y: targetPos.y,
-          duration: 0.5,
-          ease: "power1.out",
+          x: startPos.x,
+          y: startPos.y - cellSize, // Naik dulu
+          duration: 0.3,
+          ease: "power2.out",
           onComplete: () => {
-            setPositionIndex(targetIndex);
-            console.log(`Pion ${index} telah naik tangga ke index ${targetIndex}`);
-            isAnimating.current = false;
-            if (onAnimationComplete) {
-              onAnimationComplete(index, targetIndex);
-            }
-          },
+            gsap.to(node, {
+              x: endPos.x,
+              y: endPos.y,
+              duration: 0.5,
+              ease: "power2.inOut",
+              onComplete: () => {
+                setPositionIndex(end);
+                isAnimatingRef.current = false;
+                if (onAnimationComplete) onAnimationComplete(index, end);
+              }
+            });
+          }
         });
-      } else if (isDescending) {
+      } else if (type === 'snake') {
         // Animasi turun ular
+        const midX = (startPos.x + endPos.x) / 2;
+        const controlY = startPos.y + cellSize * 2;
+
         gsap.to(node, {
-          x: targetPos.x,
-          y: targetPos.y,
-          duration: 0.5,
-          ease: "power1.in", 
-          onComplete: () => {
-            setPositionIndex(targetIndex);
-            console.log(`Pion ${index} telah turun dari ular ke index ${targetIndex}`);
-            isAnimating.current = false;
-            if (onAnimationComplete) {
-              onAnimationComplete(index, targetIndex);
-            }
+          bezier: {
+            type: "soft",
+            values: [
+              { x: startPos.x, y: startPos.y },
+              { x: midX, y: controlY },
+              { x: endPos.x, y: endPos.y }
+            ]
           },
+          duration: 0.8,
+          ease: "power1.inOut",
+          onComplete: () => {
+            setPositionIndex(end);
+            isAnimatingRef.current = false;
+            if (onAnimationComplete) onAnimationComplete(index, end);
+          }
         });
       } else {
-        // Animasi langkah demi langkah jika tidak menemui tangga atau ular
-        const steps = Math.abs(desiredIndex - positionIndex);
-        const direction = desiredIndex > positionIndex ? 1 : -1;
-
-        const animateStep = (step) => {
-          if (step > steps) {
-            setPositionIndex(desiredIndex);
-            console.log(`Pion ${index} telah mencapai index ${desiredIndex} secara normal`);
-            isAnimating.current = false;
-            if (onAnimationComplete) {
-              onAnimationComplete(index, desiredIndex);
-            }
+        // Animasi normal (langkah demi langkah)
+        const steps = Math.abs(end - start);
+        const direction = end > start ? 1 : -1;
+        
+        const animateStep = (currentStep = 0) => {
+          if (currentStep >= steps) {
+            isAnimatingRef.current = false;
+            if (onAnimationComplete) onAnimationComplete(index, end);
             return;
           }
 
-          const intermediateIndex = positionIndex + step * direction;
-          const intermediatePos = getPosition(intermediateIndex);
+          const currentIndex = start + (currentStep * direction);
+          const nextIndex = currentIndex + direction;
+          const currentPos = getPosition(currentIndex);
+          const nextPos = getPosition(nextIndex);
 
           gsap.to(node, {
-            y: intermediatePos.y - 20, 
-            duration: 0.22,
+            y: currentPos.y - 20,
+            duration: 0.15,
             onComplete: () => {
               gsap.to(node, {
-                x: intermediatePos.x,
-                y: intermediatePos.y,
+                x: nextPos.x,
+                y: nextPos.y,
                 duration: 0.15,
-                ease: "power1.out",
+                ease: "bounce.out",
                 onComplete: () => {
-                  setPositionIndex(intermediateIndex);
-                  console.log(`Pion ${index} bergerak ke intermediate index ${intermediateIndex}`);
-                  animateStep(step + 1);
-                },
+                  setPositionIndex(nextIndex);
+                  animateStep(currentStep + 1);
+                }
               });
-            },
+            }
           });
         };
 
-        animateStep(1);
+        animateStep();
       }
     };
 
-    // Logika pergerakan
-    if (tanggaUp[positionIndex] && isCorrect) {
-      moveToIndex(tanggaUp[positionIndex]);
-    } else if (snakesDown[positionIndex]) {
-      moveToIndex(snakesDown[positionIndex]);
-    } else {
-      moveToIndex(desiredIndex);
+    if (animationType === 'ladder' && isCorrect && pendingPosition !== null) {
+      animateMovement(positionIndex, pendingPosition, 'ladder');
+    } else if (animationType === 'snake' && startPosition !== null && endPosition !== null) {
+      animateMovement(startPosition, endPosition, 'snake');
+    } else if (desiredIndex !== positionIndex) {
+      animateMovement(positionIndex, desiredIndex, 'normal');
     }
+
   }, [
     desiredIndex,
     getPosition,
+    cellSize,
     index,
     onAnimationComplete,
     positionIndex,
-    tanggaUp,
-    snakesDown,
     isCorrect,
+    isAnimating,
+    animationType,
+    startPosition,
+    endPosition,
+    pendingPosition
   ]);
 
   return (

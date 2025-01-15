@@ -66,6 +66,7 @@ function UtanggaVsAi() {
     lastRoll: null,
   });
   const [isPionMoving, setIsPionMoving] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const [victory, setVictory] = useState(false);
   const [winner, setWinner] = useState("");
   const [showQuestion, setShowQuestion] = useState(false);
@@ -77,6 +78,10 @@ function UtanggaVsAi() {
   const [hints, setHints] = useState([]);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [isGameReady, setIsGameReady] = useState(false);
+  const [pendingPosition, setPendingPosition] = useState(null);
+  const [animationType, setAnimationType] = useState(null); // 'ladder' atau 'snake'
+  const [startPosition, setStartPosition] = useState(null);
+  const [endPosition, setEndPosition] = useState(null);
 
   // Initialize questions
   useEffect(() => {
@@ -93,14 +98,19 @@ function UtanggaVsAi() {
     initGame();
   }, [topicID]);
 
+  const moveToPosition = useCallback((position) => {
+    const newPositions = [...pionPositionIndex];
+    newPositions[currentPlayerIndex] = position;
+    setPionPositionIndex(newPositions);
+  }, [currentPlayerIndex, pionPositionIndex]);
+
   // Handle dice roll completion
   const handleDiceRollComplete = useCallback(
     () => {
       const diceNumber = 5;
       if (isPionMoving || waitingForAnswer) return;
 
-      const newPositions = [...pionPositionIndex];
-      const currentPos = newPositions[currentPlayerIndex];
+      const currentPos = pionPositionIndex[currentPlayerIndex];
       let newPos = Math.min(currentPos + diceNumber, 99);
 
       setDiceState({
@@ -108,32 +118,49 @@ function UtanggaVsAi() {
         currentNumber: diceNumber,
         lastRoll: diceNumber,
       });
-      setIsPionMoving(true);
 
-      newPositions[currentPlayerIndex] = newPos;
-      setPionPositionIndex(newPositions);
+      // Set initial movement
+      setIsPionMoving(true);
+      setStartPosition(currentPos);
+      setEndPosition(newPos);
 
       // Victory check
       if (newPos === 99) {
+        moveToPosition(newPos);
         setVictory(true);
         setWinner(players[currentPlayerIndex].displayName);
         setIsPionMoving(false);
         return;
       }
 
+      // Move to initial position after dice roll
+      moveToPosition(newPos);
+
       setTimeout(() => {
+        // Check for ladder or snake
         if (tanggaUp[newPos]) {
+          setAnimationType('ladder');
+          setStartPosition(newPos);
+          setEndPosition(tanggaUp[newPos]);
+          setIsAnimating(true);
+          setPendingPosition(tanggaUp[newPos]);
           setShowQuestion(true);
           setWaitingForAnswer(true);
-          setIsCorrect(null);
         } else if (snakesDown[newPos]) {
-          newPositions[currentPlayerIndex] = snakesDown[newPos];
-          setPionPositionIndex(newPositions);
-          setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+          setAnimationType('snake');
+          setStartPosition(newPos);
+          setEndPosition(snakesDown[newPos]);
+          setIsAnimating(true);
+          
+          setTimeout(() => {
+            moveToPosition(snakesDown[newPos]);
+            setIsAnimating(false);
+            setAnimationType(null);
+            setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+          }, 1000);
         } else if (diceNumber === 6) {
           setShowQuestion(true);
           setWaitingForAnswer(true);
-          setIsCorrect(null);
           setAllowExtraRoll(true);
         } else {
           setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
@@ -141,12 +168,12 @@ function UtanggaVsAi() {
         setIsPionMoving(false);
       }, 1000);
     },
-    [currentPlayerIndex, isPionMoving, pionPositionIndex, players, waitingForAnswer]
+    [currentPlayerIndex, isPionMoving, pionPositionIndex, players, waitingForAnswer, moveToPosition]
   );
 
   // Bot logic
   useEffect(() => {
-    if (players[currentPlayerIndex]?.isBot && !victory && !showQuestion && !isPionMoving) {
+    if (players[currentPlayerIndex]?.isBot && !victory && !showQuestion && !isPionMoving && !isAnimating) {
       const botTurn = async () => {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         const botRoll = Math.floor(Math.random() * 6) + 1;
@@ -159,7 +186,7 @@ function UtanggaVsAi() {
 
       botTurn();
     }
-  }, [currentPlayerIndex, players, victory, handleDiceRollComplete, showQuestion, isPionMoving]);
+  }, [currentPlayerIndex, players, victory, handleDiceRollComplete, showQuestion, isPionMoving, isAnimating]);
 
   // Handle answer changes
   const handleAnswerChange = async ({ isCorrect: isAnswerCorrect, hint }) => {
@@ -180,18 +207,26 @@ function UtanggaVsAi() {
       if (isAnswerCorrect) {
         if (allowExtraRoll) {
           setAllowExtraRoll(false);
+        } else if (pendingPosition !== null) {
+          // Animasi naik tangga setelah menjawab benar
+          setIsAnimating(true);
+          setAnimationType('ladder');
+          setTimeout(() => {
+            moveToPosition(pendingPosition);
+            setIsAnimating(false);
+            setAnimationType(null);
+            setPendingPosition(null);
+            setStartPosition(null);
+            setEndPosition(null);
+            setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+          }, 1000);
         } else {
-          const newPositions = [...pionPositionIndex];
-          const currentPos = newPositions[currentPlayerIndex];
-
-          if (tanggaUp[currentPos]) {
-            newPositions[currentPlayerIndex] = tanggaUp[currentPos];
-            setPionPositionIndex(newPositions);
-          }
-
           setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
         }
       } else {
+        setPendingPosition(null);
+        setStartPosition(null);
+        setEndPosition(null);
         setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
       }
     }, 2000);
@@ -201,7 +236,6 @@ function UtanggaVsAi() {
   useEffect(() => {
     if (players[currentPlayerIndex]?.isBot && showQuestion && waitingForAnswer) {
       setTimeout(() => {
-        // Bot has 70% chance to answer correctly
         const isCorrect = Math.random() < 0.7;
         handleAnswerChange({ isCorrect });
       }, 2000);
@@ -235,6 +269,11 @@ function UtanggaVsAi() {
             players={players}
             currentPlayerIndex={currentPlayerIndex}
             isCorrect={isCorrect}
+            isAnimating={isAnimating}
+            animationType={animationType}
+            startPosition={startPosition}
+            endPosition={endPosition}
+            pendingPosition={pendingPosition}
           />
         </Col>
 
@@ -259,7 +298,8 @@ function UtanggaVsAi() {
               players[currentPlayerIndex]?.isBot ||
               isPionMoving ||
               victory ||
-              waitingForAnswer
+              waitingForAnswer ||
+              isAnimating
             }
             diceState={diceState}
           />

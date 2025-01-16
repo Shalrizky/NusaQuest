@@ -5,7 +5,7 @@ import useAuth from "../hooks/useAuth";
 import HeaderGame from "../components/games/HeaderGame";
 import Board from "../components/gamesAi/react-KonvaAi";
 import Dice from "../components/gamesAi/DiceAi";
-import Potion from "../components/games/potion";
+// import Potion from "../components/games/potion";
 import PlayerList from "../components/games/uTangga/PlayerList";
 import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
 import { getQuestions, shuffle } from "../services/questionDataServices";
@@ -13,8 +13,9 @@ import "../style/routes/UlarTangga.css";
 import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
-import potionImage from "../assets/games/potion.png";
+// import potionImage from "../assets/games/potion.png";
 import bgUlarTangga from "../assets/common/bg-ular.png";
+import defaultProfile from "../assets/common/nusaQuest-logo.png";
 
 // Tangga dan ular
 const tanggaUp = {
@@ -44,19 +45,7 @@ function UtanggaVsAi() {
   const { topicID } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  const [players, setPlayers] = useState([
-    {
-      uid: "player1",
-      displayName: user.displayName,
-      isBot: false,
-    },
-    {
-      uid: "bot",
-      displayName: "Bot",
-      isBot: true,
-    },
-  ]);
+  const [players, setPlayers] = useState([]);
 
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [pionPositionIndex, setPionPositionIndex] = useState([0, 0]);
@@ -77,7 +66,29 @@ function UtanggaVsAi() {
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [isGameReady, setIsGameReady] = useState(false);
   const [waitingForAnswer, setWaitingForAnswer] = useState(false);
-
+  //inisialisi pemain
+  useEffect(() => {
+    if (user) {
+      console.log("User Object:", user); // Log seluruh objek user
+      console.log("User Photo URL:", user.photoURL); // Log hanya photoURL
+      setPlayers([
+        {
+          uid: "player1",
+          displayName: user.displayName,
+          isBot: false,
+          photoURL: user.googlePhotoURL || user.firebasePhotoURL || defaultProfile, // Menggunakan photoURL dari user atau default
+        },
+        {
+          uid: "bot",
+          displayName: "Bot",
+          isBot: true,
+          photoURL: defaultProfile, // Menggunakan defaultProfile untuk bot
+        },
+      ]);
+    }
+  }, [user, defaultProfile]);
+  
+  
   // Inisialisasi pertanyaan
   useEffect(() => {
     const initGame = async () => {
@@ -327,7 +338,7 @@ function UtanggaVsAi() {
               }
               diceState={diceState}
             />
-            <Potion />
+            {/* <Potion /> */}
           </div>
 
           <PlayerList
@@ -345,7 +356,7 @@ function UtanggaVsAi() {
           <div className="rewards">
             <img src={Achievement} alt="achievement" className="Achievement1-logo" />
             <img src={Achievement2} alt="achievement2" className="Achievement2-logo" />
-            <img src={potionImage} alt="potion" className="potion-logo" />
+            {/* <img src={potionImage} alt="potion" className="potion-logo" /> */}
           </div>
           <p>Sentuh dimana saja untuk keluar.</p>
         </div>

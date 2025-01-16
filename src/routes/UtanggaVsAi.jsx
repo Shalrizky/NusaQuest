@@ -66,7 +66,6 @@ function UtanggaVsAi() {
     lastRoll: null,
   });
   const [isPionMoving, setIsPionMoving] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
   const [victory, setVictory] = useState(false);
   const [winner, setWinner] = useState("");
   const [showQuestion, setShowQuestion] = useState(false);
@@ -78,12 +77,8 @@ function UtanggaVsAi() {
   const [hints, setHints] = useState([]);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [isGameReady, setIsGameReady] = useState(false);
-  const [pendingPosition, setPendingPosition] = useState(null);
-  const [animationType, setAnimationType] = useState(null); // 'ladder' atau 'snake'
-  const [startPosition, setStartPosition] = useState(null);
-  const [endPosition, setEndPosition] = useState(null);
 
-  // Initialize questions
+  // Inisialisasi pertanyaan
   useEffect(() => {
     const initGame = async () => {
       try {
@@ -98,118 +93,85 @@ function UtanggaVsAi() {
     initGame();
   }, [topicID]);
 
-  const moveToPosition = useCallback((position) => {
-    const newPositions = [...pionPositionIndex];
-    newPositions[currentPlayerIndex] = position;
-    setPionPositionIndex(newPositions);
-  }, [currentPlayerIndex, pionPositionIndex]);
+  // Menangani kemenangan permainan
+  useEffect(() => {
+    if (victory) {
+      navigate("/");
+    }
+  }, [victory, navigate]);
 
-  // Handle dice roll completion
+  // Menangani giliran pemain
   const handleDiceRollComplete = useCallback(
-    (number) => {
-      const diceNumber = number || Math.floor(Math.random() * 6) + 1;
-      console.log(`🎲 Dice rolled: ${diceNumber}`);
-      
+    () => {
+      const diceNumber=5
       if (isPionMoving || waitingForAnswer) return;
 
-      const currentPos = pionPositionIndex[currentPlayerIndex];
+      const newPositions = [...pionPositionIndex];
+      const currentPos = newPositions[currentPlayerIndex];
       let newPos = Math.min(currentPos + diceNumber, 99);
-      
-      console.log(`🎮 Player ${currentPlayerIndex + 1}'s turn`);
-      console.log(`📍 Current Position: ${currentPos}`);
-      console.log(`🎯 Target Position: ${newPos}`);
 
       setDiceState({
         isRolling: false,
         currentNumber: diceNumber,
         lastRoll: diceNumber,
       });
-
-      // Set initial movement
       setIsPionMoving(true);
-      setStartPosition(currentPos);
-      setEndPosition(newPos);
 
-      // Victory check
+      newPositions[currentPlayerIndex] = newPos;
+      setPionPositionIndex(newPositions);
+
+      // Cek kemenangan
       if (newPos === 99) {
-        moveToPosition(newPos);
-        console.log(`🏆 Victory! ${players[currentPlayerIndex].displayName} wins!`);
         setVictory(true);
         setWinner(players[currentPlayerIndex].displayName);
         setIsPionMoving(false);
         return;
       }
 
-      // Move to initial position after dice roll
-      moveToPosition(newPos);
-
       setTimeout(() => {
-        // Check for ladder or snake
         if (tanggaUp[newPos]) {
-          console.log(`🪜 Found ladder at ${newPos}! Climbing to ${tanggaUp[newPos]}`);
-          setAnimationType('ladder');
-          setStartPosition(newPos);
-          setEndPosition(tanggaUp[newPos]);
-          setIsAnimating(true);
-          setPendingPosition(tanggaUp[newPos]);
           setShowQuestion(true);
           setWaitingForAnswer(true);
+          setIsCorrect(null);
         } else if (snakesDown[newPos]) {
-          console.log(`🐍 Found snake at ${newPos}! Sliding down to ${snakesDown[newPos]}`);
-          setAnimationType('snake');
-          setStartPosition(newPos);
-          setEndPosition(snakesDown[newPos]);
-          setIsAnimating(true);
-          
-          setTimeout(() => {
-            moveToPosition(snakesDown[newPos]);
-            setIsAnimating(false);
-            setAnimationType(null);
-            setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-          }, 1000);
+          newPositions[currentPlayerIndex] = snakesDown[newPos];
+          setPionPositionIndex(newPositions);
+          setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
         } else if (diceNumber === 6) {
-          console.log(`🎯 Got a 6! Extra turn granted!`);
           setShowQuestion(true);
           setWaitingForAnswer(true);
+          setIsCorrect(null);
           setAllowExtraRoll(true);
         } else {
-          console.log(`➡️ Moving to next player`);
           setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
         }
         setIsPionMoving(false);
       }, 1000);
     },
-    [currentPlayerIndex, isPionMoving, pionPositionIndex, players, waitingForAnswer, moveToPosition]
+    [currentPlayerIndex, isPionMoving, pionPositionIndex, players, waitingForAnswer]
   );
 
-  // Bot logic
+  // Logika bot
   useEffect(() => {
-    if (players[currentPlayerIndex]?.isBot && !victory && !showQuestion && !isPionMoving && !isAnimating) {
+    if (players[currentPlayerIndex]?.isBot && !victory && !showQuestion && !isPionMoving) {
       const botTurn = async () => {
-        console.log(`🤖 Bot's turn`);
         await new Promise((resolve) => setTimeout(resolve, 1500));
         const botRoll = Math.floor(Math.random() * 6) + 1;
-        console.log(`🎲 Bot rolled: ${botRoll}`);
-
-        setDiceState({ 
-          isRolling: true, 
-          currentNumber: botRoll,
-          lastRoll: null 
-        });
         
+        setDiceState({ isRolling: true, currentNumber: botRoll });
         await new Promise((resolve) => setTimeout(resolve, 1000));
+        
         handleDiceRollComplete(botRoll);
       };
 
       botTurn();
     }
-  }, [currentPlayerIndex, players, victory, handleDiceRollComplete, showQuestion, isPionMoving, isAnimating]);
+  }, [currentPlayerIndex, players, victory, handleDiceRollComplete, showQuestion, isPionMoving]);
 
-  // Handle answer changes with logs
+  // Menangani perubahan jawaban
   const handleAnswerChange = async ({ isCorrect: isAnswerCorrect, hint }) => {
-    console.log(`❓ Question answered - Correct: ${isAnswerCorrect}`);
     setIsCorrect(isAnswerCorrect);
-
+    
     if (!isAnswerCorrect && hint) {
       setHints((prevHints) => [...prevHints, hint]);
       setShowOffcanvas(true);
@@ -218,44 +180,36 @@ function UtanggaVsAi() {
     setTimeout(() => {
       setShowQuestion(false);
       setWaitingForAnswer(false);
-
+      
       const nextQuestionIndex = (currentQuestionIndex + 1) % questions.length;
       setCurrentQuestionIndex(nextQuestionIndex);
 
       if (isAnswerCorrect) {
         if (allowExtraRoll) {
-          console.log(`🎲 Extra roll granted!`);
           setAllowExtraRoll(false);
-        } else if (pendingPosition !== null) {
-          console.log(`🪜 Moving up ladder to position ${pendingPosition}`);
-          setIsAnimating(true);
-          setAnimationType('ladder');
-          setTimeout(() => {
-            moveToPosition(pendingPosition);
-            setIsAnimating(false);
-            setAnimationType(null);
-            setPendingPosition(null);
-            setStartPosition(null);
-            setEndPosition(null);
-            setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-          }, 1000);
+          // Timer dihapus
         } else {
-          console.log(`➡️ Moving to next player`);
+          const newPositions = [...pionPositionIndex];
+          const currentPos = newPositions[currentPlayerIndex];
+
+          if (tanggaUp[currentPos]) {
+            newPositions[currentPlayerIndex] = tanggaUp[currentPos];
+            setPionPositionIndex(newPositions);
+          }
+
           setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
         }
       } else {
-        console.log(`❌ Wrong answer, moving to next player`);
-        setPendingPosition(null);
-        setStartPosition(null);
-        setEndPosition(null);
         setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
       }
     }, 2000);
   };
-  // Bot answer logic
+
+  // Logika jawaban bot
   useEffect(() => {
     if (players[currentPlayerIndex]?.isBot && showQuestion && waitingForAnswer) {
       setTimeout(() => {
+        // Bot memiliki peluang 70% untuk menjawab benar
         const isCorrect = Math.random() < 0.7;
         handleAnswerChange({ isCorrect });
       }, 2000);
@@ -289,11 +243,6 @@ function UtanggaVsAi() {
             players={players}
             currentPlayerIndex={currentPlayerIndex}
             isCorrect={isCorrect}
-            isAnimating={isAnimating}
-            animationType={animationType}
-            startPosition={startPosition}
-            endPosition={endPosition}
-            pendingPosition={pendingPosition}
           />
         </Col>
 
@@ -312,14 +261,16 @@ function UtanggaVsAi() {
             isMyTurn={!players[currentPlayerIndex]?.isBot}
           />
 
+          {/* Elemen UI timer dihapus */}
+
           <Dice
             onRollComplete={handleDiceRollComplete}
             disabled={
               players[currentPlayerIndex]?.isBot ||
               isPionMoving ||
               victory ||
-              waitingForAnswer ||
-              isAnimating
+              waitingForAnswer
+              // Timer dihapus dari kondisi disable
             }
             diceState={diceState}
           />

@@ -26,17 +26,13 @@ import tangga8ImageSrc from "../../assets/games/Utangga/tangga8.png";
 import tangga9ImageSrc from "../../assets/games/Utangga/tangga9.png";
 
 function Board({
-  pionPositionIndex = [0, 0],
+  pionPositionIndex = [0, 0], // Konsisten dengan UtanggaVsAi.jsx
+  setPionPositionIndex,
   currentPlayerIndex,
   tanggaUp,
   snakesDown,
   isCorrect,
-  isAnimating,
-  animationType,
-  startPosition,
-  endPosition,
-  pendingPosition,
-  onAnimationComplete,
+  onAnimationComplete, // Tambahkan onAnimationComplete sebagai prop
 }) {
   const numRowsCols = 10;
   const [stageSize, setStageSize] = useState({ width: 900, height: 900 });
@@ -196,6 +192,13 @@ function Board({
     [numRowsCols, cellSize]
   );
 
+  // Optional: Logging untuk debugging
+  useEffect(() => {
+    console.log(
+      `Board Updated: isCorrect=${isCorrect}, currentPlayerIndex=${currentPlayerIndex}`
+    );
+  }, [isCorrect, currentPlayerIndex, pionPositionIndex]);
+
   return (
     <div style={{ width: "100%", height: "100%" }} ref={stageRef}>
       <Stage width={stageSize.width} height={stageSize.height}>
@@ -205,6 +208,7 @@ function Board({
           {/* Tambahkan gambar ular */}
           {snakeImages.map((img, index) => {
             if (!img) return null;
+            // Atur posisi dan ukuran sesuai kebutuhan
             const positions = [
               {
                 x: 1 * cellSize,
@@ -278,6 +282,7 @@ function Board({
           {/* Tambahkan gambar tangga */}
           {tanggaImages.map((img, index) => {
             if (!img) return null;
+            // Atur posisi dan ukuran sesuai kebutuhan
             const positions = [
               {
                 x: 0 * cellSize,
@@ -354,9 +359,9 @@ function Board({
             );
           })}
 
-          {/* Tambahkan pion */}
+          {/* Tambahkan gambar pion */}
           {pionImages.map((img, index) => {
-            if (!img || pionPositionIndex[index] === undefined) return null;
+            if (!img || pionPositionIndex[index] === undefined) return null; // Pastikan pion dan posisinya ada
             return (
               <Pion
                 key={`pion-${index}`}
@@ -365,15 +370,14 @@ function Board({
                 getPosition={getPosition}
                 image={img}
                 index={index}
-                onAnimationComplete={onAnimationComplete}
+                onAnimationComplete={(idx, targetIdx) => {
+                  if (onAnimationComplete) {
+                    onAnimationComplete(idx, targetIdx);
+                  }
+                }} // Pass onAnimationComplete callback
                 tanggaUp={tanggaUp}
                 snakesDown={snakesDown}
-                isCorrect={currentPlayerIndex === index ? isCorrect : false}
-                isAnimating={isAnimating}
-                animationType={animationType}
-                startPosition={startPosition}
-                endPosition={endPosition}
-                pendingPosition={pendingPosition}
+                isCorrect={currentPlayerIndex === index ? isCorrect : false} // Hanya pion pemain saat ini menerima isCorrect
               />
             );
           })}

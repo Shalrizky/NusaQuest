@@ -1,11 +1,11 @@
+// UtanggaVsAi.js
 import React, { useState, useEffect, useCallback } from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import HeaderGame from "../components/games/HeaderGame";
 import Board from "../components/gamesAi/react-KonvaAi";
 import Dice from "../components/gamesAi/DiceAi";
-// import Potion from "../components/games/potion";
 import PlayerList from "../components/games/uTangga/PlayerList";
 import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
 import { getQuestions, shuffle } from "../services/questionDataServices";
@@ -13,42 +13,30 @@ import "../style/routes/UlarTangga.css";
 import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
-// import potionImage from "../assets/games/potion.png";
 import bgUlarTangga from "../assets/common/bg-ular.png";
 import defaultProfile from "../assets/common/nusaQuest-logo.png";
 
-// Tangga dan ular
 const tanggaUp = {
-  5: 24,
-  16: 66,
-  61: 80,
-  64: 75,
-  72: 88,
-  85: 94,
-  19: 59,
-  27: 48,
-  49: 69,
+  5: 24, 16: 66, 61: 80, 64: 75, 72: 88, 
+  85: 94, 19: 59, 27: 48, 49: 69,
 };
 
 const snakesDown = {
-  22: 1,
-  29: 8,
-  57: 38,
-  65: 43,
-  67: 13,
-  90: 48,
-  93: 66,
-  98: 76,
+  22: 1, 29: 8, 57: 38, 65: 43, 67: 13, 
+  90: 48, 93: 66, 98: 76,
 };
 
 function UtanggaVsAi() {
-  const { topicID } = useParams();
+  const { topicID, roomID } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [players, setPlayers] = useState([]);
+  const location = useLocation();
+  const aiCardsCount = location.state?.aiCardsCount || 1;
 
+  // Game state
+  const [players, setPlayers] = useState([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const [pionPositionIndex, setPionPositionIndex] = useState([0, 0]);
+  const [pionPositionIndex, setPionPositionIndex] = useState([]);
   const [diceState, setDiceState] = useState({
     isRolling: false,
     currentNumber: 1,
@@ -56,40 +44,50 @@ function UtanggaVsAi() {
   const [isPionMoving, setIsPionMoving] = useState(false);
   const [victory, setVictory] = useState(false);
   const [winner, setWinner] = useState("");
+  
+  // Questions state
   const [showQuestion, setShowQuestion] = useState(false);
   const [isCorrect, setIsCorrect] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [allowExtraRoll, setAllowExtraRoll] = useState(false);
   const [pendingPosition, setPendingPosition] = useState(null);
+  const [waitingForAnswer, setWaitingForAnswer] = useState(false);
+  
+  // UI state
   const [hints, setHints] = useState([]);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [isGameReady, setIsGameReady] = useState(false);
-  const [waitingForAnswer, setWaitingForAnswer] = useState(false);
-  //inisialisi pemain
+
+  // In the player initialization useEffect:
   useEffect(() => {
     if (user) {
-      console.log("User Object:", user); // Log seluruh objek user
-      console.log("User Photo URL:", user.photoURL); // Log hanya photoURL
-      setPlayers([
-        {
-          uid: "player1",
-          displayName: user.displayName,
-          isBot: false,
-          photoURL: user.googlePhotoURL || user.firebasePhotoURL || defaultProfile, // Menggunakan photoURL dari user atau default
-        },
-        {
-          uid: "bot",
-          displayName: "Bot",
+      const mainPlayer = {
+        uid: "player1",
+        displayName: user.displayName,
+        isBot: false,
+        photoURL: user.googlePhotoURL || user.firebasePhotoURL || defaultProfile,
+      };
+
+      // Only create bot players if we're in room5 (VS AI mode)
+      if (roomID === "room5") {
+        const botPlayers = Array.from({ length: aiCardsCount }, (_, index) => ({
+          uid: `bot${index + 1}`,
+          displayName: `Bot ${index + 1}`,
           isBot: true,
-          photoURL: defaultProfile, // Menggunakan defaultProfile untuk bot
-        },
-      ]);
+          photoURL: defaultProfile,
+        }));
+        setPlayers([mainPlayer, ...botPlayers]);
+        setPionPositionIndex(new Array(1 + aiCardsCount).fill(0));
+      } else {
+        // For multiplayer, keep existing player logic
+        setPlayers([mainPlayer]);
+        setPionPositionIndex([0]);
+      }
     }
-  }, [user, defaultProfile]);
-  
-  
-  // Inisialisasi pertanyaan
+  }, [user, aiCardsCount, roomID]);
+
+  // Initialize questions
   useEffect(() => {
     const initGame = async () => {
       try {
@@ -99,17 +97,17 @@ function UtanggaVsAi() {
         setIsGameReady(true);
       } catch (error) {
         console.error("Error initializing game:", error);
-        // Fallback ke pertanyaan default jika fetch gagal
+        // Fallback questions
         setQuestions([
           {
             id: 1,
-            question: "Makanan paling enak apa di Jawa?",
+            question: "What's the most famous food in Java?",
             options: ["Soto Betawi", "Gudeg", "Batagor", "Rendang"],
             correctAnswer: "Gudeg",
           },
           {
             id: 2,
-            question: "Siapa pahlawan nasional dari Jawa Timur?",
+            question: "Who is a national hero from East Java?",
             options: ["Diponegoro", "Sudirman", "Bung Tomo", "Soekarno"],
             correctAnswer: "Bung Tomo",
           },
@@ -120,82 +118,71 @@ function UtanggaVsAi() {
     initGame();
   }, [topicID]);
 
-  // Helper function untuk mengecek kemenangan
-  const checkVictory = useCallback(
-    (newPosition) => {
-      if (newPosition === 99) {
-        setVictory(true);
-        setWinner(players[currentPlayerIndex].displayName);
-        return true;
-      }
-      return false;
-    },
-    [currentPlayerIndex, players]
-  );
+  // Check for victory
+  const checkVictory = useCallback((newPosition) => {
+    if (newPosition === 99) {
+      setVictory(true);
+      setWinner(players[currentPlayerIndex].displayName);
+      return true;
+    }
+    return false;
+  }, [currentPlayerIndex, players]);
 
-  // Handle kelanjutan lemparan dadu
-  const handleDiceRollComplete = useCallback(
-    (diceNumber) => {
-      if (isPionMoving || waitingForAnswer) return;
+  // Handle dice roll completion
+  const handleDiceRollComplete = useCallback((diceNumber) => {
+    if (isPionMoving || waitingForAnswer) return;
 
-      console.log(`Dice rolled: ${diceNumber}`);
-      const newPositions = [...pionPositionIndex];
-      const currentPos = newPositions[currentPlayerIndex];
-      let newPos = Math.min(currentPos + diceNumber, 99);
+    const newPositions = [...pionPositionIndex];
+    const currentPos = newPositions[currentPlayerIndex];
+    let newPos = Math.min(currentPos + diceNumber, 99);
 
-      setIsPionMoving(true);
-      setDiceState({ isRolling: false, currentNumber: diceNumber });
+    setIsPionMoving(true);
+    setDiceState({ isRolling: false, currentNumber: diceNumber });
 
-      // First move animation
-      newPositions[currentPlayerIndex] = newPos;
-      setPionPositionIndex(newPositions);
+    newPositions[currentPlayerIndex] = newPos;
+    setPionPositionIndex(newPositions);
 
-      if (checkVictory(newPos)) {
+    if (checkVictory(newPos)) {
+      setIsPionMoving(false);
+      return;
+    }
+
+    setTimeout(() => {
+      const isLadder = tanggaUp[newPos] !== undefined;
+      const isSnake = snakesDown[newPos] !== undefined;
+      const finalPos = tanggaUp[newPos] || snakesDown[newPos] || newPos;
+
+      if (isLadder) {
+        setPendingPosition(finalPos);
+        setShowQuestion(true);
+        setWaitingForAnswer(true);
+        setIsCorrect(null);
+        setAllowExtraRoll(false);
         setIsPionMoving(false);
-        return;
-      }
-
-      // Add delay for basic movement animation
-      setTimeout(() => {
-        const isLadder = tanggaUp[newPos] !== undefined;
-        const isSnake = snakesDown[newPos] !== undefined;
-        const finalPos = tanggaUp[newPos] || snakesDown[newPos] || newPos;
-
-        if (isLadder) {
-          setPendingPosition(finalPos);
-          setShowQuestion(true);
-          setWaitingForAnswer(true);
-          setIsCorrect(null);
-          setAllowExtraRoll(false);
-          setIsPionMoving(false);
-        } else if (isSnake) {
-          // Add delay for snake animation
+      } else if (isSnake) {
+        setTimeout(() => {
+          newPositions[currentPlayerIndex] = finalPos;
+          setPionPositionIndex(newPositions);
+          
           setTimeout(() => {
-            newPositions[currentPlayerIndex] = finalPos;
-            setPionPositionIndex(newPositions);
-            
-            // Add delay after snake animation
-            setTimeout(() => {
-              setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-              setIsPionMoving(false);
-            }, 500);
+            setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+            setIsPionMoving(false);
           }, 500);
-        } else if (diceNumber === 6) {
-          setShowQuestion(true);
-          setWaitingForAnswer(true);
-          setIsCorrect(null);
-          setAllowExtraRoll(true);
-          setIsPionMoving(false);
-        } else {
-          setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-          setIsPionMoving(false);
-        }
-      }, 1000);
-    },
-    [currentPlayerIndex, isPionMoving, pionPositionIndex, players.length, checkVictory, waitingForAnswer]
-  );
+        }, 500);
+      } else if (diceNumber === 6) {
+        setShowQuestion(true);
+        setWaitingForAnswer(true);
+        setIsCorrect(null);
+        setAllowExtraRoll(true);
+        setIsPionMoving(false);
+      } else {
+        setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+        setIsPionMoving(false);
+      }
+    }, 1000);
+  }, [currentPlayerIndex, isPionMoving, pionPositionIndex, players.length, checkVictory, waitingForAnswer]);
 
-  // Logika Bot
+  // Bot turn handling
   useEffect(() => {
     if (
       players[currentPlayerIndex]?.isBot &&
@@ -207,7 +194,6 @@ function UtanggaVsAi() {
       const botTurn = async () => {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         const botRoll = Math.floor(Math.random() * 6) + 1;
-        console.log(`Bot rolled: ${botRoll}`);
         
         setDiceState({ isRolling: true, currentNumber: botRoll });
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -227,7 +213,7 @@ function UtanggaVsAi() {
     waitingForAnswer
   ]);
 
-  // Handle Answer Changes
+  // Handle answer changes
   const handleAnswerChange = async ({ isCorrect: isAnswerCorrect, hint }) => {
     setIsCorrect(isAnswerCorrect);
     
@@ -245,7 +231,6 @@ function UtanggaVsAi() {
 
       if (isAnswerCorrect) {
         if (pendingPosition !== null) {
-          // Add animation delay for ladder movement
           setIsPionMoving(true);
           setTimeout(() => {
             const newPositions = [...pionPositionIndex];
@@ -253,7 +238,6 @@ function UtanggaVsAi() {
             setPionPositionIndex(newPositions);
             setPendingPosition(null);
             
-            // Add delay after ladder animation
             setTimeout(() => {
               if (!allowExtraRoll) {
                 setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
@@ -272,11 +256,11 @@ function UtanggaVsAi() {
     }, 2000);
   };
 
-  // Bot Answer Logic
+  // Bot answer logic
   useEffect(() => {
     if (players[currentPlayerIndex]?.isBot && showQuestion && waitingForAnswer) {
       setTimeout(() => {
-        const isCorrect = Math.random() < 0.7;
+        const isCorrect = Math.random() < 0.7; // 70% chance to answer correctly
         handleAnswerChange({ isCorrect });
       }, 2000);
     }
@@ -338,7 +322,6 @@ function UtanggaVsAi() {
               }
               diceState={diceState}
             />
-            {/* <Potion /> */}
           </div>
 
           <PlayerList
@@ -352,13 +335,12 @@ function UtanggaVsAi() {
         <div className="victory-overlay" onClick={() => navigate("/")}>
           <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
           <h2>{winner} Wins!</h2>
-          <p>Kamu mendapatkan:</p>
+          <p>You earned:</p>
           <div className="rewards">
             <img src={Achievement} alt="achievement" className="Achievement1-logo" />
             <img src={Achievement2} alt="achievement2" className="Achievement2-logo" />
-            {/* <img src={potionImage} alt="potion" className="potion-logo" /> */}
           </div>
-          <p>Sentuh dimana saja untuk keluar.</p>
+          <p>Touch anywhere to exit.</p>
         </div>
       )}
     </Container>

@@ -1,6 +1,5 @@
-// UtanggaVsAi.js
 import React, { useState, useEffect, useCallback } from "react";
-import { Container, Row, Col } from "react-bootstrap";
+import { Container, Row, Col, Spinner } from "react-bootstrap";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import HeaderGame from "../components/games/HeaderGame";
@@ -87,7 +86,7 @@ function UtanggaVsAi() {
     }
   }, [user, aiCardsCount, roomID]);
 
-  // Initialize questions
+  // Initialize pertanyaan
   useEffect(() => {
     const initGame = async () => {
       try {
@@ -97,7 +96,7 @@ function UtanggaVsAi() {
         setIsGameReady(true);
       } catch (error) {
         console.error("Error initializing game:", error);
-        // Fallback questions
+        // fungsi callback jika pertanyaan error
         setQuestions([
           {
             id: 1,
@@ -129,7 +128,8 @@ function UtanggaVsAi() {
   }, [currentPlayerIndex, players]);
 
   // Handle dice roll completion
-  const handleDiceRollComplete = useCallback((diceNumber) => {
+  const handleDiceRollComplete = useCallback(() => {
+    const diceNumber=6
     if (isPionMoving || waitingForAnswer) return;
 
     const newPositions = [...pionPositionIndex];
@@ -260,14 +260,21 @@ function UtanggaVsAi() {
   useEffect(() => {
     if (players[currentPlayerIndex]?.isBot && showQuestion && waitingForAnswer) {
       setTimeout(() => {
-        const isCorrect = Math.random() < 0.7; // 70% chance to answer correctly
+        const isCorrect = Math.random() < 0.7; // fungsi 70% jawaban bot bener
         handleAnswerChange({ isCorrect });
       }, 2000);
     }
   }, [currentPlayerIndex, players, showQuestion, waitingForAnswer]);
 
+  // Render logic
   if (!isGameReady) {
-    return <div>Loading...</div>;
+    return (
+      <div className="loading-container d-flex justify-content-center align-items-center vh-100">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
   }
 
   return (

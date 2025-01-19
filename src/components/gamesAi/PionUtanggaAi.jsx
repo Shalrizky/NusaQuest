@@ -20,16 +20,14 @@ function Pion({
   // Inisialisasi posisi awal pion menggunakan GSAP saat komponen di-mount
   useEffect(() => {
     if (!imageRef.current) return;
-    
+
     const node = imageRef.current;
     const initialPos = getPosition(positionIndex);
-    
+
     gsap.set(node, {
       x: initialPos.x,
       y: initialPos.y,
     });
-
-    console.log(`Pion ${index} diinisialisasi di index ${positionIndex} (x: ${initialPos.x}, y: ${initialPos.y})`);
   }, [getPosition, positionIndex, index]);
 
   useEffect(() => {
@@ -46,12 +44,11 @@ function Pion({
 
     const moveToIndex = (targetIndex) => {
       const targetPos = getPosition(targetIndex);
-      console.log(`Pion ${index} bergerak ke index ${targetIndex} dengan posisi x: ${targetPos.x}, y: ${targetPos.y}`);
 
       const isAscending = targetIndex > positionIndex;
       const isDescending = targetIndex < positionIndex;
 
-      if (isAscending && isCorrect) { 
+      if (isAscending && isCorrect) {
         // Animasi naik tangga
         gsap.to(node, {
           x: targetPos.x,
@@ -60,7 +57,6 @@ function Pion({
           ease: "power1.out",
           onComplete: () => {
             setPositionIndex(targetIndex);
-            console.log(`Pion ${index} telah naik tangga ke index ${targetIndex}`);
             isAnimating.current = false;
             if (onAnimationComplete) {
               onAnimationComplete(index, targetIndex);
@@ -73,10 +69,9 @@ function Pion({
           x: targetPos.x,
           y: targetPos.y,
           duration: 0.5,
-          ease: "power1.in", 
+          ease: "power1.in",
           onComplete: () => {
             setPositionIndex(targetIndex);
-            console.log(`Pion ${index} telah turun dari ular ke index ${targetIndex}`);
             isAnimating.current = false;
             if (onAnimationComplete) {
               onAnimationComplete(index, targetIndex);
@@ -91,7 +86,6 @@ function Pion({
         const animateStep = (step) => {
           if (step > steps) {
             setPositionIndex(desiredIndex);
-            console.log(`Pion ${index} telah mencapai index ${desiredIndex} secara normal`);
             isAnimating.current = false;
             if (onAnimationComplete) {
               onAnimationComplete(index, desiredIndex);
@@ -103,7 +97,7 @@ function Pion({
           const intermediatePos = getPosition(intermediateIndex);
 
           gsap.to(node, {
-            y: intermediatePos.y - 20, 
+            y: intermediatePos.y - 20,
             duration: 0.22,
             onComplete: () => {
               gsap.to(node, {
@@ -113,7 +107,6 @@ function Pion({
                 ease: "power1.out",
                 onComplete: () => {
                   setPositionIndex(intermediateIndex);
-                  console.log(`Pion ${index} bergerak ke intermediate index ${intermediateIndex}`);
                   animateStep(step + 1);
                 },
               });

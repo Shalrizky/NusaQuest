@@ -192,13 +192,6 @@ function Board({
     [numRowsCols, cellSize]
   );
 
-  // Optional: Logging untuk debugging
-  useEffect(() => {
-    console.log(
-      `Board Updated: isCorrect=${isCorrect}, currentPlayerIndex=${currentPlayerIndex}`
-    );
-  }, [isCorrect, currentPlayerIndex, pionPositionIndex]);
-
   return (
     <div style={{ width: "100%", height: "100%" }} ref={stageRef}>
       <Stage width={stageSize.width} height={stageSize.height}>

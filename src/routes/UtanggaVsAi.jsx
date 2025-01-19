@@ -128,8 +128,7 @@ function UtanggaVsAi() {
   }, [currentPlayerIndex, players]);
 
   // Handle dice roll completion
-  const handleDiceRollComplete = useCallback(() => {
-    const diceNumber=6
+  const handleDiceRollComplete = useCallback((diceNumber) => {
     if (isPionMoving || waitingForAnswer) return;
 
     const newPositions = [...pionPositionIndex];

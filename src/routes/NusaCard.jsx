@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { Col, Container, Row, Image, Spinner } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import DeckPlayer from "../components/games/nuca/DeckPlayer";
 import BottomDeckCard from "../components/games/nuca/BottomDeckCard";
 import HeaderNuca from "../components/games/HeaderGame";
@@ -18,7 +18,7 @@ import cross from "../assets/games/nuca/cross.png";
 import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
-import defaultPlayerPhoto from "../assets/games/Utangga/narutoa.png";
+import defaultPlayerPhoto from "../assets/games/uTangga/narutoa.png";
 
 // Constants
 const INITIAL_DECK_COUNT = 4;

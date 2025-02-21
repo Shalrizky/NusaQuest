@@ -1,7 +1,7 @@
 import ReactDOM from 'react-dom/client';
 import React, { useState, useEffect } from 'react';
-import { AuthProvider } from './context/AuthContext';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import Loader from './utils/Loader';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';

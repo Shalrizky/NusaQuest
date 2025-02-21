@@ -1,3 +1,4 @@
+// CardVsAi.js
 import React, { useState, useRef, useEffect } from "react";
 import { Card, Col, Image } from "react-bootstrap";
 import { Plus, Minus, Award } from "lucide-react";
@@ -12,27 +13,23 @@ const CardVsAi = ({
   achievements,
   badge,
   handlePhotoError,
-  onAiCardsChange, // Accept the callback prop
+  onAiCardsChange,
 }) => {
   const [aiCards, setAiCards] = useState([false, false, false]);
   const cardRefs = useRef([]);
-
-  // Tambahkan ref untuk kartu pemain utama
   const playerCardRef = useRef(null);
   const [hasAnimated, setHasAnimated] = useState(false);
 
-  // Ambil nama badge dan total wins, default jika tidak ada untuk user
   const badgeName = badge?.badgeName
     ? badge.badgeName.split(" ")[0] + " " + badge.badgeName.split(" ")[1]
     : "No Badge";
-  const totalWins =
-    badge?.badgeName && badge.badgeName.match(/\d+/)
-      ? parseInt(badge.badgeName.match(/\d+/)[0], 10)
-      : 0;
+  const totalWins = badge?.badgeName && badge.badgeName.match(/\d+/)
+    ? parseInt(badge.badgeName.match(/\d+/)[0], 10)
+    : 0;
 
-  // UseEffect untuk animasi kartu pemain utama saat komponen dimuat
+  // Initial animation for player card
   useEffect(() => {
-    if (!hasAnimated) {
+    if (!hasAnimated && playerCardRef.current) {
       gsap.fromTo(
         playerCardRef.current,
         { y: -200, opacity: 0 },
@@ -42,7 +39,7 @@ const CardVsAi = ({
     }
   }, [hasAnimated]);
 
-  // Notify parent component when AI cards change
+  // Notify parent component of AI cards changes
   useEffect(() => {
     const aiCount = aiCards.filter((isAi) => isAi).length;
     if (onAiCardsChange) {
@@ -50,7 +47,7 @@ const CardVsAi = ({
     }
   }, [aiCards, onAiCardsChange]);
 
-  // Handle Click untuk animasi kartu AI saat di klik
+  // Handle add AI card
   const handleAddAiClick = (index) => {
     const newAiCards = [...aiCards];
     newAiCards[index] = true;
@@ -63,6 +60,7 @@ const CardVsAi = ({
     );
   };
 
+  // Handle remove AI card
   const handleRemoveAiClick = (index) => {
     gsap.to(cardRefs.current[index], {
       opacity: 0,
@@ -84,7 +82,7 @@ const CardVsAi = ({
 
   return (
     <Col className="card-vs-ai-container d-flex justify-content-center align-items-center px-4">
-      {/* Card untuk Player */}
+      {/* Player Card */}
       <div className="card-wrapper-vs-ai" ref={playerCardRef}>
         <Card className="card-player-vs-ai d-flex justify-content-center align-items-center">
           <Card.Img
@@ -96,6 +94,7 @@ const CardVsAi = ({
           <Card.Body>
             <Card.Title className="title">{username}</Card.Title>
 
+            {/* Badge Section */}
             {badge?.iconURL ? (
               <div className="badge-section-vs-ai mt-3 text-start">
                 <Image
@@ -113,7 +112,7 @@ const CardVsAi = ({
               </div>
             )}
 
-            {/* Bagian Achievement */}
+            {/* Achievement Section */}
             {totalWins >= 5 && achievements?.achievement_name ? (
               <div className="achievement-section-vs-ai mt-3 text-start">
                 <Image
@@ -135,7 +134,7 @@ const CardVsAi = ({
         </Card>
       </div>
 
-      {/* Card untuk AI atau Add AI */}
+      {/* AI Cards */}
       {aiCards.map((isAiAdded, index) => (
         <div
           key={index}

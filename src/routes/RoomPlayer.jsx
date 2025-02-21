@@ -52,14 +52,14 @@ function RoomPlayer() {
     if (roomID === "room5" || isSinglePlayer) {
       switch (gameID) {
         case "game1":
-          return "playUtanggaVsAi";  
+          return "playUtanggaVsAi";
         case "game2":
-          return "playNucaVsAi";  
+          return "playNucaVsAi";
         default:
           return "playUtanggaVsAi";
       }
     }
-  
+
     // Regular multiplayer routes
     switch (gameID) {
       case "game1":
@@ -290,14 +290,19 @@ function RoomPlayer() {
     setAiCardsCount(newCount);
   };
 
-  // Handle Start Game Button Click
+  // Update only the handleStartGame function in RoomPlayer.js
   const handleStartGame = async () => {
-    if ((isFirstPlayer || isSinglePlayer) && (aiCardsCount > 0 || !isSinglePlayer)) {
+    if (
+      (isFirstPlayer || isSinglePlayer) &&
+      (aiCardsCount > 0 || !isSinglePlayer)
+    ) {
       if (roomID === "room5") {
-        // Untuk room5, langsung navigasi ke halaman VS AI
-        navigate(`/${gameID}/${topicID}/${roomID}/playUtanggaVsAi`);
+        // For room5, navigate to VS AI page with aiCardsCount
+        navigate(`/${gameID}/${topicID}/${roomID}/playUtanggaVsAi`, {
+          state: { aiCardsCount },
+        });
       } else {
-        // Room normal tetap pakai database
+        // Keep existing multiplayer logic unchanged
         await setGameStartStatus(topicID, gameID, roomID, true);
       }
     }

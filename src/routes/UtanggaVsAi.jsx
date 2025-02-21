@@ -1,206 +1,356 @@
-  import React, { useState, useEffect, useCallback, useRef } from "react";
-  import { useNavigate, useParams } from "react-router-dom";
-  import { Container, Row, Col, Spinner } from "react-bootstrap";
-  import useAuth from "../hooks/useAuth";
-  import HeaderGame from "../components/games/HeaderGame";
-  import Potion from "../components/games/potion";
-  // import VictoryOverlay from "../components/games/VictoryOverlay";
-  // import LoseOverlay from "../components/games/LoseOverlay";
-  import Board from "../components/gamesAi/uTangga/react-KonvaAi";
-  import Dice from "../components/gamesAi/uTangga/DiceAi";
-  import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
-  import PlayerList from "../components/games/uTangga/PlayerList";
-  // import {
-  //   fetchGamePlayers,
-  //   initializeGameState,
-  //   updateGameState,
-  //   listenToGameState,
-  //   setGameStatus,
-  //   setGameStartStatus,
-  //   initializeGameTimer,
-  //   cleanupGame,
-  //   stopGameTimer,
-  //   listenToGameTimer,
-  //   getGameState,
-  // } from "../services/gameDataServices";
-  // import {
-  //   getPotionData,
-  //   saveNewPotionData,
-  // } from "../services/itemsDataServices";
-  // import { updateWinningAchievement } from "../services/achievementDataServices";
-  // import { usePlayerTimer, useGameTimer } from "../utils/timerUtils";
-  // import { getQuestions, shuffle } from "../services/questionDataServices";
-  import "../style/routes/UlarTangga.css";
+import React, { useState, useEffect, useCallback } from "react";
+import { Container, Row, Col, Spinner } from "react-bootstrap";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
+import HeaderGame from "../components/games/HeaderGame";
+import Board from "../components/gamesAi/uTangga/react-KonvaAi";
+import Dice from "../components/gamesAi/uTangga/DiceAi";
+import PlayerList from "../components/games/uTangga/PlayerList";
+import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
+import { getQuestions, shuffle } from "../services/questionDataServices";
+import victoryImage from "../assets/games/victory.png";
+import Achievement from "../assets/games/achievement1.png";
+import Achievement2 from "../assets/games/achievement2.png";
+import bgUlarTangga from "../assets/common/bg-ular.png";
+import defaultProfile from "../assets/common/nusaQuest-logo.png";
+import "../style/routes/UlarTangga.css";
 
-  // Tangga dan ular
-  const tanggaUp = {
-    5: 24,
-    16: 66,
-    61: 80,
-    64: 75,
-    72: 88,
-    85: 94,
-    19: 59,
-    27: 48,
-    49: 69,
-  };
-  const snakesDown = {
-    22: 1,
-    29: 8,
-    57: 38,
-    65: 43,
-    67: 13,
-    90: 48,
-    93: 66,
-    98: 76,
-  };
+const tanggaUp = {
+  5: 24, 16: 66, 61: 80, 64: 75, 72: 88, 
+  85: 94, 19: 59, 27: 48, 49: 69,
+};
 
-  function UtanggaVsAi() {
-    const { user } = useAuth();
-    const navigate = useNavigate();
+const snakesDown = {
+  22: 1, 29: 8, 57: 38, 65: 43, 67: 13, 
+  90: 48, 93: 66, 98: 76,
+};
 
-    // Player and bot initialization
-    const [players, setPlayers] = useState([
-      { uid: "player1", displayName: user.displayName, isBot: false },
-      { uid: "bot", displayName: "Bot", isBot: true },
-    ]);
+function UtanggaVsAi() {
+  const { topicID, roomID } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const aiCardsCount = location.state?.aiCardsCount || 1;
 
-    const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-    const [pionPositionIndex, setPionPositionIndex] = useState([0, 0]);
-    const [diceState, setDiceState] = useState({
-      isRolling: false,
-      currentNumber: 1,
-    });
-    const [isPionMoving, setIsPionMoving] = useState(false);
-    const [victory, setVictory] = useState(false);
-    const [winner, setWinner] = useState("");
-    const [diceRolling, setDiceRolling] = useState(false);
+  // Game state
+  const [players, setPlayers] = useState([]);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+  const [pionPositionIndex, setPionPositionIndex] = useState([]);
+  const [diceState, setDiceState] = useState({
+    isRolling: false,
+    currentNumber: 1,
+  });
+  const [isPionMoving, setIsPionMoving] = useState(false);
+  const [victory, setVictory] = useState(false);
+  const [winner, setWinner] = useState("");
+  
+  // Questions state
+  const [showQuestion, setShowQuestion] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [allowExtraRoll, setAllowExtraRoll] = useState(false);
+  const [pendingPosition, setPendingPosition] = useState(null);
+  const [waitingForAnswer, setWaitingForAnswer] = useState(false);
+  
+  // UI state
+  const [hints, setHints] = useState([]);
+  const [showOffcanvas, setShowOffcanvas] = useState(false);
+  const [isGameReady, setIsGameReady] = useState(false);
 
-    // Helper function to check and handle victory
-    const checkVictory = useCallback(
-      (newPosition) => {
-        if (newPosition === 99) {
-          setVictory(true);
-          setWinner(players[currentPlayerIndex].displayName);
-          return true;
-        }
-        return false;
-      },
-      [currentPlayerIndex, players]
-    );
+  // In the player initialization useEffect:
+  useEffect(() => {
+    if (user) {
+      const mainPlayer = {
+        uid: "player1",
+        displayName: user.displayName,
+        isBot: false,
+        photoURL: user.googlePhotoURL || user.firebasePhotoURL || defaultProfile,
+      };
 
-    // Handle dice roll completion
-    const handleDiceRollComplete = useCallback(
-      (diceNumber) => {
-        const newPositions = [...pionPositionIndex];
-        const currentPos = newPositions[currentPlayerIndex];
-        const newPos = Math.min(currentPos + diceNumber, 99);
+      // Only create bot players if we're in room5 (VS AI mode)
+      if (roomID === "room5") {
+        const botPlayers = Array.from({ length: aiCardsCount }, (_, index) => ({
+          uid: `bot${index + 1}`,
+          displayName: `Bot ${index + 1}`,
+          isBot: true,
+          photoURL: defaultProfile,
+        }));
+        setPlayers([mainPlayer, ...botPlayers]);
+        setPionPositionIndex(new Array(1 + aiCardsCount).fill(0));
+      } else {
+        // For multiplayer, keep existing player logic
+        setPlayers([mainPlayer]);
+        setPionPositionIndex([0]);
+      }
+    }
+  }, [user, aiCardsCount, roomID]);
 
-        setIsPionMoving(true);
+  // Initialize pertanyaan
+  useEffect(() => {
+    const initGame = async () => {
+      try {
+        const fetchedQuestions = await getQuestions(topicID);
+        const shuffledQuestions = shuffle(fetchedQuestions);
+        setQuestions(shuffledQuestions);
+        setIsGameReady(true);
+      } catch (error) {
+        console.error("Error initializing game:", error);
+        // fungsi callback jika pertanyaan error
+        setQuestions([
+          {
+            id: 1,
+            question: "What's the most famous food in Java?",
+            options: ["Soto Betawi", "Gudeg", "Batagor", "Rendang"],
+            correctAnswer: "Gudeg",
+          },
+          {
+            id: 2,
+            question: "Who is a national hero from East Java?",
+            options: ["Diponegoro", "Sudirman", "Bung Tomo", "Soekarno"],
+            correctAnswer: "Bung Tomo",
+          },
+        ]);
+        setIsGameReady(true);
+      }
+    };
+    initGame();
+  }, [topicID]);
 
-        // Move the pion to the new position
-        newPositions[currentPlayerIndex] = newPos;
+  // Check for victory
+  const checkVictory = useCallback((newPosition) => {
+    if (newPosition === 99) {
+      setVictory(true);
+      setWinner(players[currentPlayerIndex].displayName);
+      return true;
+    }
+    return false;
+  }, [currentPlayerIndex, players]);
 
-        // Check for victory or ladder/snake conditions
+  // Handle dice roll completion
+  const handleDiceRollComplete = useCallback((diceNumber) => {
+    if (isPionMoving || waitingForAnswer) return;
+
+    const newPositions = [...pionPositionIndex];
+    const currentPos = newPositions[currentPlayerIndex];
+    let newPos = Math.min(currentPos + diceNumber, 99);
+
+    setIsPionMoving(true);
+    setDiceState({ isRolling: false, currentNumber: diceNumber });
+
+    newPositions[currentPlayerIndex] = newPos;
+    setPionPositionIndex(newPositions);
+
+    if (checkVictory(newPos)) {
+      setIsPionMoving(false);
+      return;
+    }
+
+    setTimeout(() => {
+      const isLadder = tanggaUp[newPos] !== undefined;
+      const isSnake = snakesDown[newPos] !== undefined;
+      const finalPos = tanggaUp[newPos] || snakesDown[newPos] || newPos;
+
+      if (isLadder) {
+        setPendingPosition(finalPos);
+        setShowQuestion(true);
+        setWaitingForAnswer(true);
+        setIsCorrect(null);
+        setAllowExtraRoll(false);
+        setIsPionMoving(false);
+      } else if (isSnake) {
         setTimeout(() => {
-          if (checkVictory(newPos)) {
-            setPionPositionIndex(newPositions);
-            setIsPionMoving(false);
-            return;
-          }
-
-          const finalPos = tanggaUp[newPos] || snakesDown[newPos] || newPos;
           newPositions[currentPlayerIndex] = finalPos;
-
           setPionPositionIndex(newPositions);
-          setIsPionMoving(false);
-
-          // If dice is not 6, switch turn
-          if (diceNumber !== 6) {
+          
+          setTimeout(() => {
             setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-          }
-        }, 1000);
-      },
-      [currentPlayerIndex, pionPositionIndex, checkVictory]
-    );
+            setIsPionMoving(false);
+          }, 500);
+        }, 500);
+      } else if (diceNumber === 6) {
+        setShowQuestion(true);
+        setWaitingForAnswer(true);
+        setIsCorrect(null);
+        setAllowExtraRoll(true);
+        setIsPionMoving(false);
+      } else {
+        setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+        setIsPionMoving(false);
+      }
+    }, 1000);
+  }, [currentPlayerIndex, isPionMoving, pionPositionIndex, players.length, checkVictory, waitingForAnswer]);
 
-   // Bot logic
-   useEffect(() => {
-    if (players[currentPlayerIndex].isBot && !victory) {
-      setTimeout(() => {
-        const botRoll = Math.floor(Math.random() * 6) + 1; // Roll dice secara acak
+  // Bot turn handling
+  useEffect(() => {
+    if (
+      players[currentPlayerIndex]?.isBot &&
+      !victory &&
+      !showQuestion &&
+      !isPionMoving &&
+      !waitingForAnswer
+    ) {
+      const botTurn = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const botRoll = Math.floor(Math.random() * 6) + 1;
         
-        // Mulai animasi dadu
-        setDiceRolling(true);
         setDiceState({ isRolling: true, currentNumber: botRoll });
-  
-        // Berhenti animasi setelah durasi tertentu
-        setTimeout(() => {
-          setDiceRolling(false);
-          setDiceState({ isRolling: false, currentNumber: botRoll });
-          handleDiceRollComplete(botRoll); // Jalankan logic setelah animasi selesai
-        }, 1000); // Durasi animasi dadu
-      }, 1500); // Delay sebelum giliran bot
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        handleDiceRollComplete(botRoll);
+      };
+
+      botTurn();
     }
-  }, [currentPlayerIndex, players, victory, handleDiceRollComplete]);
-  
+  }, [
+    currentPlayerIndex,
+    players,
+    victory,
+    handleDiceRollComplete,
+    showQuestion,
+    isPionMoving,
+    waitingForAnswer
+  ]);
 
-    // Render victory screen
-    if (victory) {
-      return (
-        <Container className="d-flex flex-column align-items-center justify-content-center vh-100">
-          <h1>{winner} Wins!</h1>
-          <button className="btn btn-primary mt-4" onClick={() => navigate("/")}>
-            Back to Home
-          </button>
-        </Container>
-      );
+  // Handle answer changes
+  const handleAnswerChange = async ({ isCorrect: isAnswerCorrect, hint }) => {
+    setIsCorrect(isAnswerCorrect);
+    
+    if (!isAnswerCorrect && hint) {
+      setHints((prevHints) => [...prevHints, hint]);
+      setShowOffcanvas(true);
     }
 
-    // Main game UI
-    return (
-      <Container fluid className="utangga-container d-flex flex-column">
-        <HeaderGame layout="home" />
-        <Row className="utu-container-board d-flex justify-content-center my-3">
-          <Col xs={12} md={6} className="utu-konva px-4">
-            <Board
-              pionPositionIndex={pionPositionIndex}
-              tanggaUp={tanggaUp}
-              snakesDown={snakesDown}
-              players={players} // Pastikan props ini dikirim ke Board
-              currentPlayerIndex={currentPlayerIndex}
-            />
-          </Col>
+    setTimeout(() => {
+      setShowQuestion(false);
+      setWaitingForAnswer(false);
+      
+      const nextQuestionIndex = (currentQuestionIndex + 1) % questions.length;
+      setCurrentQuestionIndex(nextQuestionIndex);
 
-          <Col
-            xs={12}
-            md={6}
-            className="d-flex flex-column align-items-center justify-content-center px-4 gap-4"
-          >
-            <PlayerTurnBox
-              players={players}
-              currentPlayerIndex={currentPlayerIndex}
-            />
-
-            <Dice
-              onRollComplete={(number) => {
-                setDiceState({ isRolling: false, currentNumber: number });
-                handleDiceRollComplete(number);
-              }}
-              disabled={
-                players[currentPlayerIndex].isBot || isPionMoving || victory
+      if (isAnswerCorrect) {
+        if (pendingPosition !== null) {
+          setIsPionMoving(true);
+          setTimeout(() => {
+            const newPositions = [...pionPositionIndex];
+            newPositions[currentPlayerIndex] = pendingPosition;
+            setPionPositionIndex(newPositions);
+            setPendingPosition(null);
+            
+            setTimeout(() => {
+              if (!allowExtraRoll) {
+                setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
               }
-              diceState={diceState}
-            />
+              setIsPionMoving(false);
+            }, 500);
+          }, 500);
+        } else if (allowExtraRoll) {
+          setAllowExtraRoll(false);
+        }
+      } else {
+        setAllowExtraRoll(false);
+        setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+        setPendingPosition(null);
+      }
+    }, 2000);
+  };
 
-            <PlayerList
-              players={players}
-              currentPlayerIndex={currentPlayerIndex}
-            />
-          </Col>
-        </Row>
-      </Container>
+  // Bot answer logic
+  useEffect(() => {
+    if (players[currentPlayerIndex]?.isBot && showQuestion && waitingForAnswer) {
+      setTimeout(() => {
+        const isCorrect = Math.random() < 0.7; // fungsi 70% jawaban bot bener
+        handleAnswerChange({ isCorrect });
+      }, 2000);
+    }
+  }, [currentPlayerIndex, players, showQuestion, waitingForAnswer]);
+
+  // Render logic
+  if (!isGameReady) {
+    return (
+      <div className="loading-container d-flex justify-content-center align-items-center vh-100">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
     );
   }
 
-  export default UtanggaVsAi;
+  return (
+    <Container
+      fluid
+      className="utangga-container"
+      style={{ backgroundImage: `url(${bgUlarTangga})` }}
+    >
+      <HeaderGame 
+        layout="home"
+        hints={hints}
+        showOffcanvas={showOffcanvas}
+        setShowOffcanvas={setShowOffcanvas}
+        onCloseOffcanvas={() => setShowOffcanvas(false)}
+      />
+
+      <Row className="utu-container-board d-flex justify-content-center my-3">
+        <Col xs={12} md={6} className="utu-konva px-4">
+          <Board
+            pionPositionIndex={pionPositionIndex}
+            tanggaUp={tanggaUp}
+            snakesDown={snakesDown}
+            players={players}
+            currentPlayerIndex={currentPlayerIndex}
+            isCorrect={isCorrect}
+          />
+        </Col>
+
+        <Col
+          xs={12}
+          md={6}
+          className="d-flex flex-column align-items-center justify-content-center px-4 gap-4"
+        >
+          <PlayerTurnBox
+            players={players}
+            currentPlayerIndex={currentPlayerIndex}
+            showQuestion={showQuestion}
+            waitingForAnswer={waitingForAnswer}
+            currentQuestion={questions[currentQuestionIndex]}
+            onAnswerChange={handleAnswerChange}
+            isMyTurn={!players[currentPlayerIndex]?.isBot}
+          />
+
+          <div className="dice-potion-container">
+            <Dice
+              onRollComplete={handleDiceRollComplete}
+              disabled={
+                players[currentPlayerIndex]?.isBot ||
+                isPionMoving ||
+                victory ||
+                waitingForAnswer
+              }
+              diceState={diceState}
+            />
+          </div>
+
+          <PlayerList
+            players={players}
+            currentPlayerIndex={currentPlayerIndex}
+          />
+        </Col>
+      </Row>
+
+      {victory && (
+        <div className="victory-overlay" onClick={() => navigate("/")}>
+          <img src={victoryImage} alt="Victory Logo" className="victory-logo" />
+          <h2>{winner} Wins!</h2>
+          <p>You earned:</p>
+          <div className="rewards">
+            <img src={Achievement} alt="achievement" className="Achievement1-logo" />
+            <img src={Achievement2} alt="achievement2" className="Achievement2-logo" />
+          </div>
+          <p>Touch anywhere to exit.</p>
+        </div>
+      )}
+    </Container>
+  );
+}
+
+export default UtanggaVsAi;

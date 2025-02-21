@@ -261,8 +261,9 @@ function NusaMaps({ setShowModal, setSelectedTopic }) {
         height={imageData[index].size.height}
         onMouseEnter={() => handleMouseEnter(index)}
         onMouseLeave={handleMouseLeave}
-        ref={(ref) => (imageRefs.current[index] = ref)}
         onClick={() => handleImageClick(index)}
+        onTap={() => handleImageClick(index)}
+        ref={(ref) => (imageRefs.current[index] = ref)}
       />
     ));
 

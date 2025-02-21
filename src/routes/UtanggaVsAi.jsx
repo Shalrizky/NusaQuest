@@ -3,17 +3,17 @@ import { Container, Row, Col, Spinner } from "react-bootstrap";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import HeaderGame from "../components/games/HeaderGame";
-import Board from "../components/gamesAi/react-KonvaAi";
-import Dice from "../components/gamesAi/DiceAi";
+import Board from "../components/gamesAi/uTangga/react-KonvaAi";
+import Dice from "../components/gamesAi/uTangga/DiceAi";
 import PlayerList from "../components/games/uTangga/PlayerList";
 import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
 import { getQuestions, shuffle } from "../services/questionDataServices";
-import "../style/routes/UlarTangga.css";
 import victoryImage from "../assets/games/victory.png";
 import Achievement from "../assets/games/achievement1.png";
 import Achievement2 from "../assets/games/achievement2.png";
 import bgUlarTangga from "../assets/common/bg-ular.png";
 import defaultProfile from "../assets/common/nusaQuest-logo.png";
+import "../style/routes/UlarTangga.css";
 
 const tanggaUp = {
   5: 24, 16: 66, 61: 80, 64: 75, 72: 88, 

@@ -7,6 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 import Login from './routes/Login';
 import Home from './routes/Home';
+import Credit from './routes/Credit';
 import Profile from './routes/Profile';
 import LobbyGame from './routes/LobbyGame';
 import Information from './routes/InformationDestination';
@@ -16,6 +17,7 @@ import UlarTangga from './routes/UlarTangga';
 import UtanggaVsAi from './routes/UtanggaVsAi';
 import NusaCard from './routes/NusaCard';
 import NucaVsAi from './routes/NucaVsAi';
+import NotFoundPage from './routes/404';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -59,6 +61,7 @@ const App = () => {
           )
         },
         { path: '/information', element: withLoader(Information)() },
+        { path: '/credit', element: withLoader(Credit)() },
         { path: '/destination/:id', element: withLoader(DestinationDetail)() },
         {
           path: '/lobby/:topicID/:gameID',
@@ -108,6 +111,7 @@ const App = () => {
             </ProtectedRoute>
           )
         },
+        { path: '*', element: withLoader(NotFoundPage)() }
       ]
     }
   ]);

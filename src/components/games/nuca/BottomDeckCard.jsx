@@ -29,6 +29,7 @@ const BottomDeckCard = ({ cards, onCardClick, showPopup, isExitingPopup }) => {
       }, 2000); // Match the popup exit duration
     }
   }, [isExitingPopup]);
+  
 
   return (
     <div className={`stackable-cards ${isInteractionDisabled ? 'interaction-disabled' : ''}`}>

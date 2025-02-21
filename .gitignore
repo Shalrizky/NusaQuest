@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Ignore Firebase CLI cache and local settings
+.firebase/
+
 # dependencies
 /node_modules
 /.pnp

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Modal, CloseButton } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { fetchGames } from "../services/gameDataServices";
+import ImageUtanggaLobby from "../assets/common/uler-tangga-logo.png";
+import ImageNucaLobby from "../assets/common/nuca-logo.png";
 import gsap from "gsap";
 import "../style/components/ModalGame.css";
-import { fetchGames } from "../services/gameDataServices";
 //! Custom Toast Hapus jika game nusa card sudah ready
 import CustomToast from "./CustomToast";
 
@@ -77,12 +79,13 @@ function ModalGame({ show, onHide, selectedTopic }) {
                   style={{ cursor: "pointer" }}
                 >
                   <img
-                    src={games[gameID].image}
+                    src={gameID === "game1" ? ImageUtanggaLobby : ImageNucaLobby} 
                     alt={games[gameID].name}
                     width={150}
                     className={`game-image-${index}`}
                     style={{
-                      transform: hoveredIndex === index ? "scale(1.1)" : "scale(1)"
+                      transform:
+                        hoveredIndex === index ? "scale(1.1)" : "scale(1)",
                     }}
                   />
                   <span className="text-white fw-bold mt-2">

@@ -1,0 +1,90 @@
+
+.card-stack .card {
+  position: absolute;
+  bottom: 0;
+  width: 120px;
+  height: 150px;
+  background-color: #FD9401;
+  border: 5px solid #CECDAB;
+  border-radius: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, z-index 0.3s ease, width 0.3s ease, height 0.3s ease;
+  transform: translateX(calc((var(--index) - var(--total-cards) / 2) * 70px)); 
+  z-index: calc(var(--total-cards) - var(--index)); 
+  padding: 10px;
+  cursor: pointer;
+}
+
+.card-stack .card:hover {
+  transform: translateY(-30px) translateX(calc((var(--index) - var(--total-cards) / 2) * 80px + 18px));
+  z-index: var(--total-cards);
+  width: auto; 
+  height: auto; 
+  min-width: 120px; 
+  min-height: 150px; 
+}
+
+.card-stack .card .card-body {
+  height: 100%;
+  padding: 0;
+}
+
+.card-stack .card .card-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  line-clamp: 5; 
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 13px;
+  color: #fff;
+  font-weight: bold;
+  line-height: 1.5;
+  width: 100%;
+}
+
+.card-stack .card:hover .card-text {
+  display: -webkit-box;
+  -webkit-line-clamp: unset;
+  line-clamp: 5;  
+  overflow: visible; 
+  white-space: normal; 
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px), (max-width: 992px) {
+  .card-stack .card {
+    width: 110px; 
+    height: 140px; 
+    transform: translateX(calc((var(--index) - var(--total-cards) / 2) * 60px)); 
+  }
+
+  .card-stack .card:hover {
+    transform: translateY(-25px) translateX(calc((var(--index) - var(--total-cards) / 2) * 70px + 15px)); 
+    min-width: 110px; 
+    min-height: 140px; 
+  }
+
+  .card-stack .card .card-text {
+    font-size: 12px; 
+  }
+}
+
+
+@media (max-width: 768px), (max-width: 576px) {
+  .card-stack .card {
+    width: 90px; 
+    height: 120px; 
+    transform: translateX(calc((var(--index) - var(--total-cards) / 2) * 40px)); 
+  }
+
+  .card-stack .card:hover {
+    transform: translateY(-15px) translateX(calc((var(--index) - var(--total-cards) / 2) * 50px + 10px));
+    min-width: 90px; 
+    min-height: 120px; 
+  }
+
+  .card-stack .card .card-text {
+    font-size: 10px; 
+  }
+}

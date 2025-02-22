@@ -1,0 +1,102 @@
+.stack-container {
+  width: 100%;
+  height: 40px;
+}
+
+.card-item {
+  position: absolute;
+  width: 90px; 
+  height: 120px; 
+  transition: transform 0.3s ease;
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  --stack-spacing: calc(45px + (5 / var(--total-cards)) * 60px); /* Jarak antar stack kartu */
+  --card-stack-gap: calc(var(--index) * 5px); /* Jarak default untuk middle */
+  --wide-stack-gap: calc(var(--index) * 18px); /* Jarak lebih lebar untuk lainnya */
+  --vertical-center: calc(50% - 130px); /* Untuk pemusatan vertikal */
+}
+
+.card-item img {
+  width: 100%;
+  height: auto;
+}
+
+.card-item.top {
+  transform: translateX(var(--wide-stack-gap)) rotate(180deg);
+  left: calc(50% - var(--total-cards) * 15px);
+}
+
+.card-item.left {
+  transform: translateY(var(--wide-stack-gap)) rotate(-90deg);
+  left: 0;
+  top: var(--vertical-center);
+}
+
+.card-item.middle {
+  transform: translateX(var(--card-stack-gap));
+  left: calc(50% - var(--total-cards) * 10px);
+  top: calc(50% - 110px);
+}
+
+.card-item.right {
+  transform: translateY(var(--wide-stack-gap)) rotate(90deg);
+  right: 0;
+  top: var(--vertical-center);
+}
+
+.shuffle-image {
+  position: absolute;
+  width: 210px;
+  height: auto;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  top: -135px; 
+  left: 52%;
+  transform: translateX(-50%);
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px ), (max-width: 992px) {
+  .card-item {
+    width: 80px; 
+    height: 110px; 
+  }
+
+  .card-item.left {
+    transform: translateY(calc(var(--wide-stack-gap) * 0.9)) rotate(-90deg); 
+  }
+
+  .card-item.right {
+    transform: translateY(calc(var(--wide-stack-gap) * 0.9)) rotate(90deg); 
+  }
+
+  .shuffle-image {
+    width: 180px; 
+    top: -125px; 
+    left: 50%;
+  }
+}
+
+
+@media (max-width: 768px), (max-width: 576px) {
+  .card-item {
+    width: 70px; 
+    height: 80px; 
+  }
+
+  .card-item.left {
+    transform: translateY(calc(var(--wide-stack-gap) * 0.8)) rotate(-90deg);
+    top: -66px;
+  }
+
+  .card-item.right {
+    transform: translateY(calc(var(--wide-stack-gap) * 0.8)) rotate(90deg);
+    top: -150px;
+  }
+
+  .shuffle-image {
+    width: 160px; 
+    top: -125px; 
+    left: 49%; 
+  }
+}

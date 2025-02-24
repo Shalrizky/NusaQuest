@@ -1,11 +1,11 @@
 .stack-container {
   width: 100%;
-  height: 40px;
+  height: 30px;
 }
 
-.card-item {
+.back-card-item, .not-avail-card-item {
   position: absolute;
-  width: 90px; 
+  width: 100px; 
   height: 120px; 
   transition: transform 0.3s ease;
   transform-style: preserve-3d;
@@ -13,61 +13,94 @@
   --stack-spacing: calc(45px + (5 / var(--total-cards)) * 60px); /* Jarak antar stack kartu */
   --card-stack-gap: calc(var(--index) * 5px); /* Jarak default untuk middle */
   --wide-stack-gap: calc(var(--index) * 18px); /* Jarak lebih lebar untuk lainnya */
-  --vertical-center: calc(50% - 130px); /* Untuk pemusatan vertikal */
+  --vertical-center: calc(50% - 135px); /* Untuk pemusatan vertikal */
 }
 
-.card-item img {
+.back-card-item img {
   width: 100%;
   height: auto;
 }
 
-.card-item.top {
+.not-avail-card-item img {
+  width: 170px;
+  height: auto;
+}
+
+.back-card-item.top {
   transform: translateX(var(--wide-stack-gap)) rotate(180deg);
   left: calc(50% - var(--total-cards) * 15px);
 }
 
-.card-item.left {
-  transform: translateY(var(--wide-stack-gap)) rotate(-90deg);
+.back-card-item.left {
+  transform: translateY(var(--wide-stack-gap)) rotate(90deg);
   left: 0;
   top: var(--vertical-center);
 }
 
-.card-item.middle {
+.back-card-item.middle {
   transform: translateX(var(--card-stack-gap));
   left: calc(50% - var(--total-cards) * 10px);
-  top: calc(50% - 110px);
+  top: calc(50% - 120px);
 }
 
-.card-item.right {
-  transform: translateY(var(--wide-stack-gap)) rotate(90deg);
+.back-card-item.right  {
+  transform: translateY(var(--wide-stack-gap)) rotate(-90deg);
   right: 0;
+  top: var(--vertical-center);
+}
+
+.not-avail-card-item.top {
+  left: calc(50% - var(--total-cards) * 15px);
+  top: -70px;
+}
+
+.not-avail-card-item.left {
+  left: -25px;
+  top: var(--vertical-center);
+}
+
+.not-avail-card-item.right {
+  right: 50px;
   top: var(--vertical-center);
 }
 
 .shuffle-image {
   position: absolute;
-  width: 210px;
+  width: 220px;
   height: auto;
   cursor: pointer;
   transition: transform 0.3s ease;
-  top: -135px; 
+  top: -145px; 
   left: 52%;
   transform: translateX(-50%);
 }
 
 /* Responsive Styles */
 @media (max-width: 1200px ), (max-width: 992px) {
-  .card-item {
+  .back-card-item {
     width: 80px; 
     height: 110px; 
   }
-
-  .card-item.left {
-    transform: translateY(calc(var(--wide-stack-gap) * 0.9)) rotate(-90deg); 
+  
+  .not-avail-card-item img {
+    width: 150px; 
   }
 
-  .card-item.right {
-    transform: translateY(calc(var(--wide-stack-gap) * 0.9)) rotate(90deg); 
+  .back-card-item.middle {
+    top: calc(50% - 105px);
+  }
+
+  .not-avail-card-item.top {
+    top: -50px;
+  }
+  
+  .not-avail-card-item.left {
+    top: -104px; 
+  }
+
+  .not-avail-card-item.right {
+    right: 25px; 
+    top: -110px; 
   }
 
   .shuffle-image {
@@ -77,21 +110,42 @@
   }
 }
 
-
 @media (max-width: 768px), (max-width: 576px) {
-  .card-item {
+  .back-card-item {
     width: 70px; 
     height: 80px; 
   }
 
-  .card-item.left {
-    transform: translateY(calc(var(--wide-stack-gap) * 0.8)) rotate(-90deg);
-    top: -66px;
+  .not-avail-card-item img {
+    width: 100px; 
+  } 
+
+  .back-card-item.left {
+    transform: translateY(calc(var(--wide-stack-gap) * 0.8)) rotate(90deg);
+    top: -85px;
   }
 
-  .card-item.right {
-    transform: translateY(calc(var(--wide-stack-gap) * 0.8)) rotate(90deg);
+  .back-card-item.middle {
+    top: calc(50% - 108px);
+  }
+
+  .back-card-item.right {
+    transform: translateY(calc(var(--wide-stack-gap) * 0.8)) rotate(-90deg);
     top: -150px;
+  }
+  
+  .not-avail-card-item.top {
+    left: calc(50% - var(--total-cards) * 11px);
+    top: -30px;
+  }
+  
+  .not-avail-card-item.left {
+    top: -60px; 
+  }
+
+  .not-avail-card-item.right {
+    right: -25px; 
+    top: -120px; 
   }
 
   .shuffle-image {

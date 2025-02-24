@@ -1,9 +1,10 @@
-
 .card-stack .card {
   position: absolute;
   bottom: 0;
   width: 120px;
   height: 150px;
+  padding: 10px;
+  cursor: pointer;
   background-color: #FD9401;
   border: 5px solid #CECDAB;
   border-radius: 20px;
@@ -11,8 +12,6 @@
   transition: transform 0.3s ease, z-index 0.3s ease, width 0.3s ease, height 0.3s ease;
   transform: translateX(calc((var(--index) - var(--total-cards) / 2) * 70px)); 
   z-index: calc(var(--total-cards) - var(--index)); 
-  padding: 10px;
-  cursor: pointer;
 }
 
 .card-stack .card:hover {

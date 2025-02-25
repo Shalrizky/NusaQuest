@@ -1,77 +1,73 @@
 .stack-container {
+  position: relative;
   width: 100%;
-  height: 30px;
+  height: 100%;
 }
 
 .back-card-item, .not-avail-card-item {
   position: absolute;
   width: 100px; 
-  height: 120px; 
+  height: 150px; 
   transition: transform 0.3s ease;
   transform-style: preserve-3d;
   transform-origin: center center;
-  --stack-spacing: calc(45px + (5 / var(--total-cards)) * 60px); /* Jarak antar stack kartu */
-  --card-stack-gap: calc(var(--index) * 5px); /* Jarak default untuk middle */
-  --wide-stack-gap: calc(var(--index) * 18px); /* Jarak lebih lebar untuk lainnya */
-  --vertical-center: calc(50% - 135px); /* Untuk pemusatan vertikal */
+  --card-stack-gap: calc((var(--index) - var(--total-cards) / 2) * 10px); 
+  --wide-stack-gap: calc((var(--index) - var(--total-cards) / 2) * 20px);
 }
 
+/* Back Card Player */
 .back-card-item img {
   width: 100%;
   height: auto;
 }
 
-.not-avail-card-item img {
-  width: 170px;
-  height: auto;
-}
-
 .back-card-item.top {
-  transform: translateX(var(--wide-stack-gap)) rotate(180deg);
-  left: calc(50% - var(--total-cards) * 15px);
+  transform: translateX(var( --wide-stack-gap)) rotate(180deg);
 }
 
 .back-card-item.left {
   transform: translateY(var(--wide-stack-gap)) rotate(90deg);
-  left: 0;
-  top: var(--vertical-center);
+  left: 0px;
 }
 
 .back-card-item.middle {
   transform: translateX(var(--card-stack-gap));
-  left: calc(50% - var(--total-cards) * 10px);
-  top: calc(50% - 120px);
+  left: 50% - var(--total-cards) ;
+  top: calc(50% - 100px);
 }
 
 .back-card-item.right  {
   transform: translateY(var(--wide-stack-gap)) rotate(-90deg);
-  right: 0;
-  top: var(--vertical-center);
+  right: 0px;
+}
+
+/* Not Available Player */
+.not-avail-card-item img {
+  width: 160px;
+  height: auto;
 }
 
 .not-avail-card-item.top {
-  left: calc(50% - var(--total-cards) * 15px);
+  left: calc(50% - var(--total-cards) * 16px);
   top: -70px;
 }
 
 .not-avail-card-item.left {
   left: -25px;
-  top: var(--vertical-center);
 }
 
 .not-avail-card-item.right {
   right: 50px;
-  top: var(--vertical-center);
 }
 
 .shuffle-image {
   position: absolute;
-  width: 220px;
+  width: 235px;
   height: auto;
   cursor: pointer;
   transition: transform 0.3s ease;
-  top: -145px; 
-  left: 52%;
+  top: -150px; 
+  left: 49%;
   transform: translateX(-50%);
 }
 
@@ -81,19 +77,11 @@
     width: 80px; 
     height: 110px; 
   }
-  
+
   .not-avail-card-item img {
     width: 150px; 
   }
 
-  .back-card-item.middle {
-    top: calc(50% - 105px);
-  }
-
-  .not-avail-card-item.top {
-    top: -50px;
-  }
-  
   .not-avail-card-item.left {
     top: -104px; 
   }
@@ -104,9 +92,9 @@
   }
 
   .shuffle-image {
-    width: 180px; 
-    top: -125px; 
-    left: 50%;
+    width: 200px; 
+    top: -145px; 
+    left: 49%;
   }
 }
 
@@ -116,41 +104,41 @@
     height: 80px; 
   }
 
-  .not-avail-card-item img {
-    width: 100px; 
-  } 
-
   .back-card-item.left {
     transform: translateY(calc(var(--wide-stack-gap) * 0.8)) rotate(90deg);
-    top: -85px;
+    top: -80px;
   }
 
   .back-card-item.middle {
-    top: calc(50% - 108px);
+    top: calc(50% - 94px);
   }
 
   .back-card-item.right {
     transform: translateY(calc(var(--wide-stack-gap) * 0.8)) rotate(-90deg);
-    top: -150px;
+    top: -86px;
   }
   
+  .not-avail-card-item img {
+    width: 100px; 
+  } 
+
   .not-avail-card-item.top {
-    left: calc(50% - var(--total-cards) * 11px);
-    top: -30px;
+    left: -50px;
+    top: -40px;
   }
   
   .not-avail-card-item.left {
-    top: -60px; 
+    top: -90px; 
   }
 
   .not-avail-card-item.right {
-    right: -25px; 
-    top: -120px; 
+    right: -28px; 
+    top: -90px; 
   }
 
   .shuffle-image {
-    width: 160px; 
-    top: -125px; 
+    width: 180px; 
+    top: -138px; 
     left: 49%; 
   }
 }

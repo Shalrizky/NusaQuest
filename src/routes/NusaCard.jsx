@@ -27,8 +27,8 @@ function NusaCard() {
     player3Cards: 5,
     player4Cards: 5, 
     playerStatus: {
-      player2: "available", 
-      player3: "not_available", 
+      player2: "navailable", 
+      player3: "available", 
       player4: "not_available", 
     },
   });

@@ -15,10 +15,12 @@ function BackStackCard({
     id: index,
   }));
 
+  const thisTotalCards = cards.length;
+
   return (
     <div
-      className="stack-container d-flex justify-content-center align-items-center position-relative"
-      style={{ "--total-cards": totalCards }}
+      className="stack-container position-relative d-flex justify-content-center align-items-center text-center"
+      style={{ "--total-cards": thisTotalCards }}
     >
       {showNotAvail ? (
         <div className={`not-avail-card-item ${position}`}>
@@ -33,7 +35,10 @@ function BackStackCard({
           <div
             key={card.id}
             className={`back-card-item ${position}`}
-            style={{ "--index": index, zIndex: totalCards - index }}
+            style={{
+              "--index": index,
+              zIndex: thisTotalCards - index,  
+            }}
           >
             <Image src={BackCard} alt="Back Card" />
           </div>

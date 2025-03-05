@@ -12,6 +12,7 @@
   transform-origin: center center;
    --card-stack-gap: calc((var(--index) - var(--total-cards) / 2) * 10px ); 
    --wide-stack-gap: calc((var(--index) - var(--total-cards) / 2) * 18px );
+   --card-gap: calc(10px / var(--total-cards));
 }
 
 /* Style untuk gambar back card */
@@ -21,11 +22,11 @@
 }
 
 .back-card-item.top {
-    transform: translateX(calc(-1 * var(--wide-stack-gap))) rotate(180deg);
+  transform: translateX(calc(-1 * var(--wide-stack-gap) - var(--card-gap))) rotate(180deg);
 }
 
 .back-card-item.left {
-  transform: translateY(var(--wide-stack-gap)) rotate(90deg);
+  transform: translateY(calc(var(--wide-stack-gap) + var(--card-gap))) rotate(90deg);
   top: calc(50% - 100px);
   left: 0px;
 }
@@ -37,7 +38,7 @@
 }
 
 .back-card-item.right {
-  transform: translateY(calc(-1 * var(--wide-stack-gap))) rotate(-90deg);
+  transform: translateY(calc(-1 * var(--wide-stack-gap) - var(--card-gap))) rotate(-90deg);
   top: calc(50% - 120px);
   right: 0px;
 }

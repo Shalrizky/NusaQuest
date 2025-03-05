@@ -76,7 +76,7 @@
   }
   
   .player-profile-right {
-    top: calc(-125px - var(--total-player-cards) * 8px);
+    top: calc(-122px - var(--total-player-cards) * 8px);
     transform: translateX(-18%);
     right: 0px;
   }

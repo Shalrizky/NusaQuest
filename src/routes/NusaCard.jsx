@@ -23,20 +23,18 @@ function NusaCard() {
         question:
           "Siapa penemu dodol dan bagaimana sejarahnya hingga menjadi makanan tradisional?",
       },
-      
     ],
     player2Cards: 5,
     player3Cards: 5,
     player4Cards: 5,
     playerStatus: {
       player2: "available",
-      player3: "available",
-      player4: "available",
+      player3: "not_available",
+      player4: "not_available",
     },
   });
 
   const [userProfile] = useState({});
-  
 
   return (
     <div className="nusa-page d-flex flex-column">
@@ -50,11 +48,13 @@ function NusaCard() {
         {/* Player 3 (Top) */}
         <Row className="justify-content-center align-items-center">
           <Col xs="auto" className="position-relative">
-            <PlayerProfileNuca
-              userProfile={userProfile}
-              position="top-left"
-              totalCards={gameState.player3Cards}
-            />
+            {gameState.playerStatus.player3 === "available" && (
+              <PlayerProfileNuca
+                userProfile={userProfile}
+                position="top-left"
+                totalCards={gameState.player3Cards}
+              />
+            )}
             <BackStackCard
               totalCards={gameState.player3Cards}
               position="top"
@@ -68,11 +68,13 @@ function NusaCard() {
         <Row className="d-flex justify-content-between align-items-center mx-3 mx-lg-4">
           <Col md={4}>
             <div className="position-relative">
-              <PlayerProfileNuca
-                userProfile={userProfile}
-                position="left"
-                totalCards={gameState.player2Cards}
-              />
+              {gameState.playerStatus.player2 === "available" && (
+                <PlayerProfileNuca
+                  userProfile={userProfile}
+                  position="left"
+                  totalCards={gameState.player2Cards}
+                />
+              )}
               <BackStackCard
                 totalCards={gameState.player2Cards}
                 position="left"
@@ -97,12 +99,13 @@ function NusaCard() {
 
           <Col md={4}>
             <div className="position-relative">
-              <PlayerProfileNuca
-                userProfile={userProfile}
-                position="right"
-                totalCards={gameState.player4Cards}
-              />
-
+              {gameState.playerStatus.player4 === "available" && (
+                <PlayerProfileNuca
+                  userProfile={userProfile}
+                  position="right"
+                  totalCards={gameState.player4Cards}
+                />
+              )}
               <BackStackCard
                 totalCards={gameState.player4Cards}
                 position="right"
@@ -122,7 +125,7 @@ function NusaCard() {
               <PlayingStackCard cards={gameState.player1Cards} />
               <PlayerProfileNuca
                 userProfile={userProfile}
-                position="bottom"
+                position="bottom-right"
                 totalCards={gameState.player1Cards.length}
               />
             </div>

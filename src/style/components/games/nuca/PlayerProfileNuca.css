@@ -26,8 +26,8 @@
   right: 0px;
 }
 
-.player-profile-bottom {
-  left: calc(var(--total-player-cards, 1) * 34px + 2px);
+.player-profile-bottom-right {
+  left: calc(var(--total-player-cards, 1) * 34px + 1px);
   transform: translateY(-168%);
 }
 
@@ -53,8 +53,8 @@
     right: 0px;
   }
   
-  .player-profile-bottom {
-    left: calc(var(--total-player-cards, 1) * 32px + 2px);
+  .player-profile-bottom-right {
+    left: calc(var(--total-player-cards, 1) * 32px + 1px);
     transform: translateY(-180%);
   }
 
@@ -81,8 +81,8 @@
     right: 0px;
   }
   
-  .player-profile-bottom {
-    left: calc(var(--total-player-cards, 1) * 25px + 2px);
+  .player-profile-bottom-right  {
+    left: calc(var(--total-player-cards, 1) * 25px + 1px);
     transform: translateY(-190%);
   }
 }

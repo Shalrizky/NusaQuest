@@ -13,7 +13,6 @@ function PlayingStackCard ({ cards })  {
         {cards.map((card, index) => (
           <Card
             key={index} 
-            className="stacked-card"
             style={{ "--index": index }} 
           >
             <Card.Body className="d-flex justify-content-center align-items-center">

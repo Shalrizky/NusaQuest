@@ -13,7 +13,7 @@ function BackStackCard({
 }) {
   return (
     <div
-      className="stack-container position-relative d-flex justify-content-center align-items-center text-center"
+      className="stack-container position-relative d-flex justify-content-center align-items-center"
       style={{ "--total-cards": totalCards }}
     >
       {showNotAvail ? (

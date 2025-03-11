@@ -35,6 +35,23 @@ function NusaCard() {
   });
 
   const [userProfile] = useState({});
+  const [throwingCardIndex, setThrowingCardIndex] = useState(null); // Track the card being thrown
+
+  const handleCardClick = (index) => {
+    const newCards = [...gameState.player1Cards];
+    if (!newCards[index].thrown) { // Check if the card has not been thrown
+      newCards[index].thrown = true; // Mark the card as thrown
+      setThrowingCardIndex(index); // Set the index of the card being thrown
+      setTimeout(() => {
+        newCards.splice(index, 1); // Remove the card after a delay
+        setGameState((prevState) => ({
+          ...prevState,
+          player1Cards: newCards,
+        }));
+        setThrowingCardIndex(null); // Reset the throwing card index
+      }, 300); // Match this timeout with the CSS transition duration
+    }
+  };
 
   return (
     <div className="nusa-page d-flex flex-column">
@@ -122,7 +139,11 @@ function NusaCard() {
         <Row className="d-flex justify-content-center align-items-center mb-4">
           <Col xs="auto">
             <div className="position-relative">
-              <PlayingStackCard cards={gameState.player1Cards} />
+              <PlayingStackCard 
+                cards={gameState.player1Cards} 
+                onCardClick={handleCardClick} 
+                throwingCardIndex={throwingCardIndex}
+              />
               <PlayerProfileNuca
                 userProfile={userProfile}
                 position="bottom-right"

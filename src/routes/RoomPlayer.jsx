@@ -182,6 +182,26 @@ function RoomPlayer() {
     };
   }, [user, topicID, gameID, roomID, userPhoto, navigate]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      // Reset game and player state when user closes the tab or browser
+      if (user?.uid && roomID !== "room5") {
+        setGameStartStatus(topicID, gameID, roomID, false);
+        playerLeaveRoom(topicID, gameID, roomID, user);
+        syncCurrentPlayers(topicID, gameID, roomID);
+        resetRoom(topicID, gameID, roomID);
+      }
+    };
+
+    // Add event listener for beforeunload (user closes the tab/browser)
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      // Clean up the event listener
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [user, topicID, gameID, roomID]);
+
   // Fetch and Update Players
   useEffect(() => {
     const handlePlayersUpdate = async (playersData) => {

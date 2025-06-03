@@ -6,10 +6,14 @@ import ImageUtanggaLobby from "../assets/common/uler-tangga-logo.png";
 import ImageNucaLobby from "../assets/common/nuca-logo.png";
 import gsap from "gsap";
 import "../style/components/ModalGame.css";
+//! Custom Toast Hapus jika game nusa card sudah ready
+import CustomToast from "./CustomToast";
 
 function ModalGame({ show, onHide, selectedTopic }) {
   const [games, setGames] = useState({});
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  //! Componen toast hpus saat nusa card sudah ready
+  const [showToast, setShowToast] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,8 +39,13 @@ function ModalGame({ show, onHide, selectedTopic }) {
   };
 
   const handleGameSelection = (gameID) => {
-    navigate(`/lobby/${selectedTopic}/${gameID}`);
-    onHide();
+    //! Hapus condition jika game nusa card sudah ready
+    if (gameID === "game2") {
+      setShowToast(true);
+    } else {
+      navigate(`/lobby/${selectedTopic}/${gameID}`);
+      onHide();
+    }
   };
 
   return (
@@ -70,9 +79,7 @@ function ModalGame({ show, onHide, selectedTopic }) {
                   style={{ cursor: "pointer" }}
                 >
                   <img
-                    src={
-                      gameID === "game1" ? ImageUtanggaLobby : ImageNucaLobby
-                    }
+                    src={gameID === "game1" ? ImageUtanggaLobby : ImageNucaLobby} 
                     alt={games[gameID].name}
                     width={150}
                     className={`game-image-${index}`}
@@ -92,6 +99,15 @@ function ModalGame({ show, onHide, selectedTopic }) {
           </div>
         </Modal.Body>
       </Modal>
+
+      <CustomToast
+        showToast={showToast}
+        setShowToast={setShowToast}
+        title="Nusa Card Game"
+        body="Untuk saat ini pilihan game nusa card sedang dalam masa pengembangan, harap menunggu dan berikan kami dukungan"
+        bgColor="info"
+        actionType="success"
+      />
     </>
   );
 }

@@ -229,7 +229,7 @@ function UlarTangga() {
     return () => unsubscribe();
   }, [topicID, gameID, roomID, handleGameOver]);
 
-  const gameTimeLeft = useGameTimer(1800, handleGameOver, {
+  const { gameTimeLeft, updateActivity } = useGameTimer(1800, handleGameOver, {
     topicID: topicIDRef.current,
     gameID: gameIDRef.current,
     roomID: roomIDRef.current,
@@ -237,8 +237,8 @@ function UlarTangga() {
   });
 
   useEffect(() => {
-    // console.log("Game time left:", gameTimeLeft);
-  }, [gameTimeLeft]);
+  console.log('Game time left:', gameTimeLeft);
+}, [gameTimeLeft]);
 
   // Listen to game state changes
   useEffect(() => {
@@ -325,6 +325,8 @@ function UlarTangga() {
 
   // Handle dice roll
   const handleDiceRollComplete = async (diceNumber, isInitialRoll) => {
+     updateActivity();
+
     if (!isMyTurn || isPionMoving || waitingForAnswer) return;
 
     if (isInitialRoll) {
@@ -433,6 +435,7 @@ function UlarTangga() {
 
   // Handle answer changes
   const handleAnswerChange = async ({ isCorrect: isAnswerCorrect, hint }) => {
+    updateActivity();
     if (!isMyTurn) return;
 
     await updateGameState(topicID, gameID, roomID, {
@@ -493,6 +496,7 @@ function UlarTangga() {
   };
   // Handle potion use
   const handlePotionUse = async () => {
+     updateActivity()
     if (!isMyTurn || !potionUsable) return;
 
     const currentPos = pionPositionIndex[currentPlayerIndex];
@@ -562,7 +566,7 @@ function UlarTangga() {
       console.error("Error awarding victory potions:", error);
     }
   };
-  
+
   // Render logic
   if (!isGameReady) {
     return (
@@ -584,18 +588,6 @@ function UlarTangga() {
           setShowOffcanvas(false);
         }}
       />
-
-      {/* Aktifkan fungsi global timer untuk debug */}
-      {/* <div className="global-timer-container d-flex justify-content-center align-items-center mb-3">
-        <div className="global-timer-box px-4 py-2 bg-primary text-white rounded-pill">
-          <span className="fw-bold">Game Time: </span>
-          <span className="timer-count">
-            {Math.floor(gameTimeLeft / 60)}:
-            {String(gameTimeLeft % 60).padStart(2, "0")}
-          </span>
-        </div>
-      </div> */}
-
       <Row className="utu-container-board d-flex justify-content-center my-3">
         <Col xs={12} md={6} className="utu-konva px-4">
           <Board

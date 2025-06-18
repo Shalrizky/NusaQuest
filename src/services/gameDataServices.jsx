@@ -1,5 +1,5 @@
 import { database, ref, onValue, set, get } from "../firebaseConfig";
-import { resetRoom } from "./roomDataServices"; 
+import { resetRoom } from "./roomDataServices";
 
 // Fetch games data
 export const fetchGames = (callback) => {
@@ -16,9 +16,7 @@ export const fetchGamePlayers = (topicID, gameID, roomID, callback) => {
     console.error("Missing required parameters for fetchGamePlayers");
     return () => {};
   }
-
   const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
-  
   return onValue(playersRef, (snapshot) => {
     const playersData = snapshot.val() || {};
     const playersArray = Object.values(playersData);
@@ -29,7 +27,6 @@ export const fetchGamePlayers = (topicID, gameID, roomID, callback) => {
 // Set game status
 export const setGameStatus = async (topicID, gameID, roomID, status) => {
   if (!topicID || !gameID || !roomID) return;
-  
   const gameStatusRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameStatus`);
   try {
     await set(gameStatusRef, status);
@@ -38,10 +35,9 @@ export const setGameStatus = async (topicID, gameID, roomID, status) => {
   }
 };
 
-// Set game start status 
+// Set game start status
 export const setGameStartStatus = async (topicID, gameID, roomID, isStarting) => {
   if (!topicID || !gameID || !roomID) return;
-  
   const gameStartRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameStarted`);
   try {
     await set(gameStartRef, isStarting);
@@ -53,7 +49,6 @@ export const setGameStartStatus = async (topicID, gameID, roomID, isStarting) =>
 // Listen to game start status
 export const listenToGameStart = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
-  
   const gameStartRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameStarted`);
   return onValue(gameStartRef, (snapshot) => {
     callback(snapshot.val());
@@ -63,12 +58,10 @@ export const listenToGameStart = (topicID, gameID, roomID, callback) => {
 // Initialize game state
 export const initializeGameState = async (topicID, gameID, roomID, players, questions) => {
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
-  
   try {
     const snapshot = await get(gameStateRef);
     if (!snapshot.exists()) {
       const playerCount = Array.isArray(players) ? players.length : 0;
-
       const initialState = {
         currentPlayerIndex: 0,
         pionPositions: new Array(playerCount).fill(0),
@@ -78,17 +71,26 @@ export const initializeGameState = async (topicID, gameID, roomID, players, ques
         isCorrect: null,
         allowExtraRoll: false,
         potionUsable: false,
-        currentQuestionIndex: 0, // Tambahkan ini
-        questions: questions,    // Simpan daftar pertanyaan yang diacak
+        currentQuestionIndex: 0,
+        questions: questions,
         gameStatus: 'playing',
         diceState: {
           isRolling: false,
           currentNumber: 1,
           lastRoll: null
         },
-        playerTimers: new Array(playerCount).fill(30)
+        playerTimers: new Array(playerCount).fill(30),
+        // Tambahan untuk player activity tracking
+        playerActivity: players.reduce((acc, player, index) => {
+          acc[player.uid] = {
+            lastActivity: Date.now(),
+            isActive: true,
+            playerIndex: index
+          };
+          return acc;
+        }, {}),
+        gameCreatedAt: Date.now()
       };
-
       await set(gameStateRef, initialState);
     }
   } catch (error) {
@@ -97,71 +99,155 @@ export const initializeGameState = async (topicID, gameID, roomID, players, ques
   }
 };
 
+// Update player activity timestamp
+export const updatePlayerActivity = async (topicID, gameID, roomID, userUID) => {
+  if (!topicID || !gameID || !roomID || !userUID) return;
+  
+  const activityRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState/playerActivity/${userUID}`);
+  try {
+    const snapshot = await get(activityRef);
+    if (snapshot.exists()) {
+      await set(activityRef, {
+        ...snapshot.val(),
+        lastActivity: Date.now(),
+        isActive: true
+      });
+    }
+  } catch (error) {
+    console.error("Error updating player activity:", error);
+  }
+};
+
+// Check for inactive players and handle game abandonment
+export const checkInactivePlayers = async (topicID, gameID, roomID, inactivityTimeout = 600000) => {
+  if (!topicID || !gameID || !roomID) return;
+  
+  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+  try {
+    const snapshot = await get(gameStateRef);
+    const gameState = snapshot.val();
+    
+    if (!gameState || !gameState.playerActivity) return;
+    
+    const now = Date.now();
+    const playerActivity = gameState.playerActivity;
+    
+    // Check setiap player apakah sudah tidak aktif lebih dari timeout
+    for (const [userUID, activity] of Object.entries(playerActivity)) {
+      const timeSinceLastActivity = now - activity.lastActivity;
+      
+      if (timeSinceLastActivity >= inactivityTimeout && activity.isActive) {
+        console.log(`Player ${userUID} tidak aktif selama ${timeSinceLastActivity}ms, mengakhiri game...`);
+        
+        // Mark game as abandoned
+        await updateGameState(topicID, gameID, roomID, {
+          gameStatus: 'abandoned',
+          abandonedBy: userUID,
+          abandonedAt: now,
+          reason: 'player_inactive',
+          [`playerActivity/${userUID}/isActive`]: false
+        });
+        
+        // Stop game timer
+        await stopGameTimer(topicID, gameID, roomID);
+        
+        return true; // Game ended due to inactivity
+      }
+    }
+    
+    return false; // Game masih aktif
+  } catch (error) {
+    console.error("Error checking inactive players:", error);
+    return false;
+  }
+};
+
+// Listen to player activity untuk monitor inactivity
+export const listenToPlayerActivity = (topicID, gameID, roomID, callback, inactivityTimeout = 600000) => {
+  if (!topicID || !gameID || !roomID) return () => {};
+  
+  const activityRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState/playerActivity`);
+  
+  return onValue(activityRef, (snapshot) => {
+    const playerActivity = snapshot.val();
+    if (!playerActivity) return;
+    
+    const now = Date.now();
+    const inactivePlayers = [];
+    
+    Object.entries(playerActivity).forEach(([userUID, activity]) => {
+      const timeSinceLastActivity = now - activity.lastActivity;
+      if (timeSinceLastActivity >= inactivityTimeout && activity.isActive) {
+        inactivePlayers.push({
+          userUID,
+          timeSinceLastActivity,
+          playerIndex: activity.playerIndex
+        });
+      }
+    });
+    
+    if (inactivePlayers.length > 0) {
+      callback(inactivePlayers);
+    }
+  });
+};
 
 // Update game state dengan validasi data
 export const updateGameState = async (topicID, gameID, roomID, updates) => {
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
-  
   try {
     // Ambil current state dulu
     const snapshot = await get(gameStateRef);
     const currentState = snapshot.val() || {};
-    
+
     // Validasi dan sanitasi data sebelum update
-    const sanitizedUpdates = {
-      ...updates,
-      // Pastikan pionPositions selalu array valid
-      pionPositions: Array.isArray(updates.pionPositions) 
+    const sanitizedUpdates = { ...updates };
+    
+    // Pastikan pionPositions selalu array valid
+    if (updates.pionPositions) {
+      sanitizedUpdates.pionPositions = Array.isArray(updates.pionPositions) 
         ? updates.pionPositions 
-        : currentState.pionPositions || [],
-        
-      // Pastikan diceState selalu object valid
-      diceState: updates.diceState 
-        ? {
-            isRolling: Boolean(updates.diceState.isRolling),
-            currentNumber: Number(updates.diceState.currentNumber) || 1,
-            lastRoll: Number(updates.diceState.lastRoll) || null
-          }
-        : currentState.diceState || {
-            isRolling: false,
-            currentNumber: 1,
-            lastRoll: null
-          },
-          
-      // Pastikan playerTimers selalu array valid
-      playerTimers: Array.isArray(updates.playerTimers)
-        ? updates.playerTimers.map(time => Number(time) || 0)
-        : currentState.playerTimers || [],
-        
-      // Validasi properti lainnya
-      currentPlayerIndex: typeof updates.currentPlayerIndex === 'number' 
-        ? updates.currentPlayerIndex 
-        : currentState.currentPlayerIndex || 0,
-      
-      isMoving: typeof updates.isMoving === 'boolean' 
-        ? updates.isMoving 
-        : currentState.isMoving || false,
-      
-      showQuestion: typeof updates.showQuestion === 'boolean'
-        ? updates.showQuestion
-        : currentState.showQuestion || false,
-        
-      waitingForAnswer: typeof updates.waitingForAnswer === 'boolean'
-        ? updates.waitingForAnswer 
-        : currentState.waitingForAnswer || false,
-        
-      isCorrect: updates.isCorrect !== undefined 
-        ? updates.isCorrect 
-        : currentState.isCorrect,
-        
-      allowExtraRoll: typeof updates.allowExtraRoll === 'boolean'
-        ? updates.allowExtraRoll 
-        : currentState.allowExtraRoll || false,
-        
-      potionUsable: typeof updates.potionUsable === 'boolean'
-        ? updates.potionUsable 
-        : currentState.potionUsable || false
-    };
+        : currentState.pionPositions || [];
+    }
+    
+    // Pastikan diceState selalu object valid
+    if (updates.diceState) {
+      sanitizedUpdates.diceState = {
+        isRolling: Boolean(updates.diceState.isRolling),
+        currentNumber: Number(updates.diceState.currentNumber) || 1,
+        lastRoll: Number(updates.diceState.lastRoll) || null
+      };
+    }
+    
+    // Pastikan playerTimers selalu array valid
+    if (updates.playerTimers) {
+      sanitizedUpdates.playerTimers = Array.isArray(updates.playerTimers) 
+        ? updates.playerTimers.map(time => Number(time) || 0) 
+        : currentState.playerTimers || [];
+    }
+
+    // Validasi properti lainnya
+    if (typeof updates.currentPlayerIndex === 'number') {
+      sanitizedUpdates.currentPlayerIndex = updates.currentPlayerIndex;
+    }
+    if (typeof updates.isMoving === 'boolean') {
+      sanitizedUpdates.isMoving = updates.isMoving;
+    }
+    if (typeof updates.showQuestion === 'boolean') {
+      sanitizedUpdates.showQuestion = updates.showQuestion;
+    }
+    if (typeof updates.waitingForAnswer === 'boolean') {
+      sanitizedUpdates.waitingForAnswer = updates.waitingForAnswer;
+    }
+    if (updates.isCorrect !== undefined) {
+      sanitizedUpdates.isCorrect = updates.isCorrect;
+    }
+    if (typeof updates.allowExtraRoll === 'boolean') {
+      sanitizedUpdates.allowExtraRoll = updates.allowExtraRoll;
+    }
+    if (typeof updates.potionUsable === 'boolean') {
+      sanitizedUpdates.potionUsable = updates.potionUsable;
+    }
 
     // Filter out undefined values
     const cleanUpdates = Object.fromEntries(
@@ -169,11 +255,7 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
     );
 
     // Update ke Firebase dengan data yang sudah divalidasi
-    await set(gameStateRef, {
-      ...currentState,
-      ...cleanUpdates
-    });
-    
+    await set(gameStateRef, { ...currentState, ...cleanUpdates });
   } catch (error) {
     console.error("Error updating game state:", error);
     throw error;
@@ -183,7 +265,6 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
 // Listen to game state
 export const listenToGameState = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
-  
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
   return onValue(gameStateRef, (snapshot) => {
     const state = snapshot.val();
@@ -202,7 +283,6 @@ export const updateDiceState = async (topicID, gameID, roomID, diceState) => {
   }
 };
 
-
 // Get current game state
 export const getGameState = async (topicID, gameID, roomID) => {
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
@@ -212,6 +292,17 @@ export const getGameState = async (topicID, gameID, roomID) => {
   } catch (error) {
     console.error("Error getting game state:", error);
     return null;
+  }
+};
+
+// Check if game was abandoned
+export const checkGameAbandoned = async (topicID, gameID, roomID) => {
+  try {
+    const gameState = await getGameState(topicID, gameID, roomID);
+    return gameState?.gameStatus === 'abandoned';
+  } catch (error) {
+    console.error("Error checking if game abandoned:", error);
+    return false;
   }
 };
 
@@ -231,7 +322,6 @@ export const initializeGameTimer = async (topicID, gameID, roomID, duration) => 
     console.error("Error initializing game timer:", error);
   }
 };
-
 
 // Update game timer
 export const updateGameTimer = async (topicID, gameID, roomID, timeLeft) => {
@@ -261,7 +351,6 @@ export const stopGameTimer = async (topicID, gameID, roomID) => {
 
 export const listenToGameTimer = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
-  
   const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
   return onValue(gameTimerRef, (snapshot) => {
     const timerData = snapshot.val();
@@ -273,24 +362,27 @@ export const listenToGameTimer = (topicID, gameID, roomID, callback) => {
   });
 };
 
-
-// Update cleanup game to include timer cleanup
-export const cleanupGame = async (topicID, gameID, roomID, user) => {
+// Enhanced cleanup game dengan abandoned game handling
+export const cleanupGame = async (topicID, gameID, roomID, user, reason = 'normal') => {
   if (!topicID || !gameID || !roomID || !user?.uid) return;
-
+  
   try {
+    // Jika cleanup karena player inactivity, mark as abandoned dulu
+    if (reason === 'inactivity') {
+      await updateGameState(topicID, gameID, roomID, {
+        gameStatus: 'abandoned',
+        abandonedBy: user.uid,
+        abandonedAt: Date.now(),
+        reason: 'player_inactive'
+      });
+    }
+
     // Reset gameState
-    const gameStateRef = ref(
-      database,
-      `rooms/${topicID}/${gameID}/${roomID}/gameState`
-    );
+    const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
     await set(gameStateRef, null);
 
     // Reset gameTimer
-    const gameTimerRef = ref(
-      database,
-      `rooms/${topicID}/${gameID}/${roomID}/gameTimer`
-    );
+    const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
     await set(gameTimerRef, null);
 
     // Reset game status and start status
@@ -298,17 +390,11 @@ export const cleanupGame = async (topicID, gameID, roomID, user) => {
     await setGameStartStatus(topicID, gameID, roomID, false);
 
     // Hapus semua pesan chat dalam room
-    const chatRef = ref(
-      database,
-      `rooms/${topicID}/${gameID}/${roomID}/chatMessages`
-    );
+    const chatRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/chatMessages`);
     await set(chatRef, null);
 
     // Reset player data dalam room
-    const playersRef = ref(
-      database,
-      `rooms/${topicID}/${gameID}/${roomID}/players`
-    );
+    const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
     await set(playersRef, null);
 
     // Reset keseluruhan room data
@@ -317,7 +403,6 @@ export const cleanupGame = async (topicID, gameID, roomID, user) => {
     console.error("Error cleaning up game:", error);
   }
 };
-
 
 // Reset game state
 export const resetGameState = async (topicID, gameID, roomID) => {
@@ -334,7 +419,8 @@ export const checkGameActive = async (topicID, gameID, roomID) => {
   const gameStatusRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameStatus`);
   try {
     const snapshot = await get(gameStatusRef);
-    return snapshot.val() === 'playing';
+    const status = snapshot.val();
+    return status === 'playing' && status !== 'abandoned';
   } catch (error) {
     console.error("Error checking game status:", error);
     return false;
@@ -352,7 +438,6 @@ export const setGameWinner = async (topicID, gameID, roomID, winnerUID) => {
     console.error("Error setting game winner:", error);
   }
 };
-
 
 // Handle player timeout
 export const handlePlayerTimeout = async (topicID, gameID, roomID, currentPlayerIndex, totalPlayers) => {

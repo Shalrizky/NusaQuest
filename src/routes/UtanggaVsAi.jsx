@@ -212,7 +212,6 @@ function UtanggaVsAi() {
     waitingForAnswer
   ]);
 
-  // Handle answer changes
   const handleAnswerChange = async ({ isCorrect: isAnswerCorrect, hint }) => {
     setIsCorrect(isAnswerCorrect);
     

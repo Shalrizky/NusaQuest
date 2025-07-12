@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "nusaquest-d10bb"
+    "default": "nusaquest-d10bb",
+    "production": "nusaquest-d10bb",
+    "development": "nusaquest-my-lokal"
   }
 }

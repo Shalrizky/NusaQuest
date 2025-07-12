@@ -229,7 +229,7 @@ function UlarTangga() {
     return () => unsubscribe();
   }, [topicID, gameID, roomID, handleGameOver]);
 
-  const { gameTimeLeft, updateActivity } = useGameTimer(1800, handleGameOver, {
+  const { updateActivity } = useGameTimer(1800, handleGameOver, {
     topicID: topicIDRef.current,
     gameID: gameIDRef.current,
     roomID: roomIDRef.current,

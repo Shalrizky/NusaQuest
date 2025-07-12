@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Stage, Layer, Rect, Text, Image as KonvaImage } from "react-konva";
 import Pion from "./PionUTangga";
 
@@ -27,14 +27,14 @@ import tangga9ImageSrc from "../../../assets/games/uTangga/tangga9.png";
 
 function Board({
   pionPositionIndex = [0, 0, 0, 0],
-  setPionPositionIndex,
-  snakesAndLadders,
-  waitingForAnswer,
-  currentPlayerIndex,
+  // setPionPositionIndex,
+  // snakesAndLadders,
+  // waitingForAnswer,
+  // currentPlayerIndex,
   tanggaUp,
   snakesDown,
   isCorrect,
-  setIsCorrect,
+  // setIsCorrect,
 }) {
   const numRowsCols = 10;
   const [stageSize, setStageSize] = useState({ width: 900, height: 900 });

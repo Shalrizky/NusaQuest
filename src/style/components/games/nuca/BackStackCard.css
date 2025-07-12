@@ -112,7 +112,8 @@
   }
 
   .back-card-item.middle {
-    top: calc(50% - 94px);
+    top: calc(50% - 90px);
+    width: 40px;
   }
 
   .back-card-item.right {
@@ -139,8 +140,8 @@
   }
 
   .shuffle-image {
-    width: 180px;
-    top: -138px;
+    width: 120px;
+    top: -125px;
     left: 49%;
   }
 }

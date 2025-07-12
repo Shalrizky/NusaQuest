@@ -3,6 +3,7 @@ import { Container, Row, Col } from "react-bootstrap";
 import HeaderGame from "../components/games/HeaderGame";
 import BackStackCard from "../components/games/nuca/BackStackCard";
 import PlayingStackCard from "../components/games/nuca/PlayingStackCard";
+import SentCard from "../components/games/nuca/SentCardPlayer";
 import PlayerProfileNuca from "../components/games/nuca/PlayerProfileNuca";
 import NotAvailPlayer from "../assets/games/nuca/notAvailPlayerNuca.png";
 import "../style/routes/NusaCard.css";
@@ -35,22 +36,20 @@ function NusaCard() {
   });
 
   const [userProfile] = useState({});
-  const [throwingCardIndex, setThrowingCardIndex] = useState(null); // Track the card being thrown
+  const [sentCard, setSentCard] = useState(null);
 
-  const handleCardClick = (index) => {
-    const newCards = [...gameState.player1Cards];
-    if (!newCards[index].thrown) { // Check if the card has not been thrown
-      newCards[index].thrown = true; // Mark the card as thrown
-      setThrowingCardIndex(index); // Set the index of the card being thrown
-      setTimeout(() => {
-        newCards.splice(index, 1); // Remove the card after a delay
-        setGameState((prevState) => ({
-          ...prevState,
-          player1Cards: newCards,
-        }));
-        setThrowingCardIndex(null); // Reset the throwing card index
-      }, 300); // Match this timeout with the CSS transition duration
-    }
+  // Fungsi ini akan dipanggil oleh PlayingStackCard ketika sebuah kartu telah diklik
+  const handleP1CardClicked = (cardData, originalIndex) => {
+    setSentCard(cardData);
+    setGameState((prevState) => {
+      const newCards = prevState.player1Cards.filter(
+        (_, index) => index !== originalIndex
+      );
+      return {
+        ...prevState,
+        player1Cards: newCards,
+      };
+    });
   };
 
   return (
@@ -105,13 +104,15 @@ function NusaCard() {
 
           <Col
             md={4}
-            className="d-flex justify-content-center align-items-center"
+            className="d-flex justify-content-center align-items-center position-relative"
           >
             <BackStackCard
               totalCards={5}
               position="middle"
               showShuffle={true}
             />
+            {/* Kartu Tengah Yang di sent oleh pemain*/}
+            {sentCard && <SentCard cardData={sentCard} />}
           </Col>
 
           <Col md={4}>
@@ -137,19 +138,16 @@ function NusaCard() {
 
         {/* Player 1 (Bottom) */}
         <Row className="d-flex justify-content-center align-items-center mb-4">
-          <Col xs="auto">
-            <div className="position-relative">
-              <PlayingStackCard 
-                cards={gameState.player1Cards} 
-                onCardClick={handleCardClick} 
-                throwingCardIndex={throwingCardIndex}
-              />
-              <PlayerProfileNuca
-                userProfile={userProfile}
-                position="bottom-right"
-                totalCards={gameState.player1Cards.length}
-              />
-            </div>
+          <Col xs="auto" className="position-relative">
+            <PlayingStackCard
+              cards={gameState.player1Cards}
+              onCardClick={handleP1CardClicked}
+            />
+            <PlayerProfileNuca
+              userProfile={userProfile}
+              position="bottom-right"
+              totalCards={gameState.player1Cards.length}
+            />
           </Col>
         </Row>
       </Container>

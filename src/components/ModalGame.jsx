@@ -40,12 +40,12 @@ function ModalGame({ show, onHide, selectedTopic }) {
 
   const handleGameSelection = (gameID) => {
     //! Hapus condition jika game nusa card sudah ready
-    if (gameID === "game2") {
-      setShowToast(true);
-    } else {
+    // if (gameID === "game2") {
+    //   setShowToast(true);
+    // } else {
       navigate(`/lobby/${selectedTopic}/${gameID}`);
       onHide();
-    }
+    // }
   };
 
   return (

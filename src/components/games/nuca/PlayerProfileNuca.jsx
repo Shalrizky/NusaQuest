@@ -1,4 +1,3 @@
-import React from "react";
 import { Image } from "react-bootstrap";
 import DefaultProfileImage from "../../../assets/common/icon-profile.svg";
 import "../../../style/components/games/nuca/PlayerProfileNuca.css";

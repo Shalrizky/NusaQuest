@@ -1,4 +1,3 @@
-import React from "react";
 import { Image } from "react-bootstrap";
 import BackCard from "../../../assets/games/nuca/backCard.png";
 import ShuffleImage from "../../../assets/games/nuca/shuffle.png";

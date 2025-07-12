@@ -1,0 +1,86 @@
+.sent-card {
+    position: fixed;
+    opacity: 0.5;
+    top: 41%;
+    left: 60%;
+    width: 100px;
+    height: 120px;
+    padding: 10px;
+    cursor: not-allowed;
+    background-color: #FD9401;
+    border: 5px solid #CECDAB;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sent-card .card-body {
+    height: 100%;
+    padding: 0;
+}
+
+.sent-card .card-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    line-clamp: 5;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    font-size: 10px;
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.5;
+    width: 100%;
+}
+
+.sent-card:hover {
+    opacity: 0.8;
+    width: 150px;
+    height: auto;
+}
+
+.sent-card:hover .card-text {
+    display: -webkit-box;
+    -webkit-line-clamp: unset;
+    line-clamp: 5;
+    overflow: visible;
+    white-space: normal;
+}
+
+@media (max-width: 1200px),
+(max-width: 992px) {
+    .sent-card {
+        top: 40%;
+        left: 60%;
+        width: 8%;
+        height: 16%;
+    }
+
+    .sent-card:hover {
+        width: 120px;
+        height: auto;
+    }
+
+    .sent-card .card-text {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 768px),
+(max-width: 576px) {
+    .sent-card {
+        width: 50px;
+        height: 60px;
+        left: 62%;
+        z-index: 1000;
+    }
+
+    .sent-card:hover {
+        width: 90px;
+        height: auto;
+    }
+
+    .sent-card .card-text {
+        font-size: 6px;
+    }
+}

@@ -104,7 +104,7 @@ export const usePlayerTimer = (initialTime, onTimeEnd, gameData) => {
 };
 
 // Hook untuk mendeteksi aktivitas player
-export const usePlayerActivity = (onInactivity, inactivityTimeout = 600000, gameData) => {
+export const usePlayerActivity = (onInactivity, inactivityTimeout = 60000, gameData) => {
   const lastActivityRef = useRef(Date.now());
   const checkIntervalRef = useRef(null);
   const isActiveRef = useRef(true);
@@ -136,7 +136,6 @@ export const usePlayerActivity = (onInactivity, inactivityTimeout = 600000, game
       clearTimeout(inactivityTimeoutRef.current);
     }
 
-    // Set new timeout
     inactivityTimeoutRef.current = setTimeout(() => {
       if (isActiveRef.current) {
         isActiveRef.current = false;
@@ -164,10 +163,8 @@ export const usePlayerActivity = (onInactivity, inactivityTimeout = 600000, game
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Tab tidak aktif, tidak perlu update activity
         console.log('Tab menjadi tidak aktif');
       } else {
-        // Tab aktif kembali, update activity
         console.log('Tab menjadi aktif kembali');
         updateActivity();
       }
@@ -211,7 +208,7 @@ export const useGameTimer = (initialTime, onGameEnd, { topicID, gameID, roomID, 
   const handlePlayerInactivity = useCallback(async () => {
     if (gameEndedRef.current) return;
     
-    console.log('Player tidak aktif selama 10 menit, mengakhiri game...');
+    console.log('Player tidak aktif selama 1 menit, mengakhiri game...');
     
     try {
       // Cleanup game dengan reason inactivity
@@ -243,7 +240,7 @@ export const useGameTimer = (initialTime, onGameEnd, { topicID, gameID, roomID, 
       if (gameEndedRef.current) return;
       
       try {
-        const gameAbandoned = await checkInactivePlayers(topicID, gameID, roomID, 600000);
+        const gameAbandoned = await checkInactivePlayers(topicID, gameID, roomID, 60000);
         if (gameAbandoned && !gameEndedRef.current) {
           console.log('Game ditinggalkan karena player tidak aktif');
           gameEndedRef.current = true;

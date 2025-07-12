@@ -236,9 +236,10 @@ function UlarTangga() {
     user,
   });
 
-  useEffect(() => {
-  console.log('Game time left:', gameTimeLeft);
-}, [gameTimeLeft]);
+// ? Aktifkan Untuk Debug Global Game Timer
+//   useEffect(() => {
+//   console.log('Game time left:', gameTimeLeft);
+// }, [gameTimeLeft]);
 
   // Listen to game state changes
   useEffect(() => {

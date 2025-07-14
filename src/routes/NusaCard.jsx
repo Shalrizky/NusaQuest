@@ -90,26 +90,24 @@ function NusaCard() {
   const [collectedHints, setCollectedHints] = useState([]);
 
   // STATE UNTUK OFFCANVAS
-  const [showOffcanvas, setShowOffcanvas] = useState(false); 
-  const handleCloseOffcanvas = () => setShowOffcanvas(false); 
+  const [showOffcanvas, setShowOffcanvas] = useState(false);
+  const handleCloseOffcanvas = () => setShowOffcanvas(false);
 
   // Fungsi untuk playing  card di klik
-  const handleP1CardClicked = (cardData, originalIndex) => {
+  const handleP1CardClicked = (cardData) => {
     setSentCard(cardData);
     setCurrentQuestionForModal(cardData);
     setShowQuestionModal(true);
 
-    setTimeout(() => {
-      setGameState((prevState) => {
-        const newCards = prevState.player1Cards.filter(
-          (card) => card.id !== cardData.id
-        );
-        return {
-          ...prevState,
-          player1Cards: newCards,
-        };
-      });
-    }, 1000);
+    setGameState((prevState) => {
+      const newCards = prevState.player1Cards.filter(
+        (card) => card.id !== cardData.id
+      );
+      return {
+        ...prevState,
+        player1Cards: newCards,
+      };
+    });
   };
 
   // FUNGSI UNTUK MENAMPILKAN HINTS DAN OFFCAVAS
@@ -132,8 +130,8 @@ function NusaCard() {
 
   const handleCloseQuestionModal = () => {
     setShowQuestionModal(false);
-    setCurrentQuestionForModal(null); 
-    setSentCard(null); 
+    setCurrentQuestionForModal(null);
+    setSentCard(null);
     // Lanjutkan alur game setelah modal ditutup (misal giliran pemain lain)
   };
 
@@ -142,7 +140,7 @@ function NusaCard() {
       <HeaderGame
         hints={collectedHints}
         showOffcanvas={showOffcanvas}
-        setShowOffcanvas={setShowOffcanvas} 
+        setShowOffcanvas={setShowOffcanvas}
         onCloseOffcanvas={handleCloseOffcanvas}
       />
 

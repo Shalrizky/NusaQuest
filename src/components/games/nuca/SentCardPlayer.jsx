@@ -5,7 +5,7 @@ function SentCard({ cardData }) {
     return (
         <Card className="sent-card"> 
             <Card.Body className="d-flex justify-content-center align-items-center">
-                <Card.Text>{cardData.question}</Card.Text>
+                <Card.Text>{cardData.question_text}</Card.Text>
             </Card.Body>
         </Card>
     );

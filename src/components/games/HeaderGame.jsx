@@ -104,7 +104,7 @@ function HeaderGame({
         placement="start"
         className="custom-offcanvas"
       >
-        <Offcanvas.Header closeButton>
+        <Offcanvas.Header closeButton closeVariant="white">
           <Offcanvas.Title>Kumpulan Jawaban</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>

@@ -33,7 +33,7 @@ function PlayingStackCard({ cards, onCardClick }) {
         className={`${isAnimatingOut ? "throwing" : ""}`}
       >
         <Card.Body className="d-flex justify-content-center align-items-center">
-          <Card.Text>{card.question}</Card.Text>
+          <Card.Text>{card.question_text}</Card.Text>
         </Card.Body>
       </Card>
     );

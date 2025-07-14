@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Form } from "react-bootstrap";
-import "../../../style/components/games/uTangga/questionForm.css";
+import "../../style/components/games/questionForm.css";
 
 function QuestionForm({ question, onAnswerChange, isMyTurn }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);

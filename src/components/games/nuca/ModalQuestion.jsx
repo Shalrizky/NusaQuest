@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
 import { Modal } from "react-bootstrap";
-import QuestionForm from "../QuestionForm"; // Pastikan path ini benar
+import QuestionForm from "../QuestionForm"; 
+import "../../../style/components/games/nuca/ModalQuestion.css"
 
 function ModalQuestion({
   show,
@@ -14,7 +14,7 @@ function ModalQuestion({
     onSubmitAnswer(answerResult);
     setTimeout(() => {
       onClose();
-    }, 1500);
+    }, 1000);
   };
 
   const handleClose = () => {
@@ -27,13 +27,14 @@ function ModalQuestion({
 
   return (
     <Modal
+      id="modal-question-nuca"
       show={show}
       onHide={handleClose}
       size="md"
       centered
       backdrop="static"
     >
-      <Modal.Body>
+      <Modal.Body className="modal-content">
         <QuestionForm
           question={questionData}
           onAnswerChange={handleAnswerChangeFromForm} 

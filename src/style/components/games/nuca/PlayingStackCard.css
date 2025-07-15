@@ -24,6 +24,20 @@
   min-height: 150px;
 }
 
+.card-stack .card.disabled-throwing {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.card-stack .card.disabled-throwing:hover {
+  transform: translateY(-30px) translateX(calc((var(--index) - var(--total-cards) / 2) * 65px * var(--spacing-factor) + 20px));
+  z-index: var(--total-cards);
+  width: auto;
+  height: auto;
+  min-width: 120px;
+  min-height: 150px;
+}
+
 .card-stack .card .card-body {
   height: 100%;
   padding: 0;
@@ -91,6 +105,12 @@
     min-height: 140px;
   }
 
+  .card-stack .card.disabled-throwing:hover {
+    transform: translateY(-25px) translateX(calc((var(--index) - var(--total-cards) / 2) * 70px * var(--spacing-factor) + 15px));
+    min-width: 110px;
+    min-height: 140px;
+  }
+
   .card-stack .card .card-text {
     font-size: 12px;
   }
@@ -106,6 +126,12 @@
   }
 
   .card-stack .card:hover {
+    transform: translateY(-15px) translateX(calc((var(--index) - var(--total-cards) / 2) * 50px * var(--spacing-factor) + 15px));
+    min-width: 90px;
+    min-height: 120px;
+  }
+
+  .card-stack .card.disabled-throwing:hover {
     transform: translateY(-15px) translateX(calc((var(--index) - var(--total-cards) / 2) * 50px * var(--spacing-factor) + 15px));
     min-width: 90px;
     min-height: 120px;

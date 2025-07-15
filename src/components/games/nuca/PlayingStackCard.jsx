@@ -3,11 +3,16 @@ import { Card } from "react-bootstrap";
 import "../../../style/components/games/nuca/PlayingStackCard.css";
 
 // Memoisasi CardItem untuk mencegah re-render yang tidak perlu
-const CardItem = memo(({ card, index, totalCardsInStack, onCardClickedFromP1 }) => {
+const CardItem = memo(({ card, index, totalCardsInStack, onCardClickedFromP1, isThrowingEnabled }) => {
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
   const handleClick = () => {
-    if (isAnimatingOut) return;
+    // Menonaktifkan klik jika isThrowingEnabled false.
+    // Properti `is_penalty` tidak ada lagi, sehingga tidak perlu dicek di sini.
+    if (!isThrowingEnabled || isAnimatingOut) { 
+      console.log("Melempar kartu dinonaktifkan saat ini.");
+      return;
+    }
     setIsAnimatingOut(true);
     setTimeout(() => {
       onCardClickedFromP1(card, index);
@@ -22,7 +27,8 @@ const CardItem = memo(({ card, index, totalCardsInStack, onCardClickedFromP1 }) 
         "--total-cards": totalCardsInStack,
       }}
       onClick={handleClick}
-      className={`${isAnimatingOut ? "throwing" : ""}`}
+      // Hapus kelas `disabled-throwing` yang terkait dengan `card.is_penalty`
+      className={`${isAnimatingOut ? "throwing" : ""} ${!isThrowingEnabled ? "disabled-throwing" : ""}`} 
     >
       <Card.Body className="d-flex justify-content-center align-items-center">
         <Card.Text>{card.question_text}</Card.Text>
@@ -35,7 +41,7 @@ const CardItem = memo(({ card, index, totalCardsInStack, onCardClickedFromP1 }) 
 CardItem.displayName = "CardItem";
 
 // Memoisasi PlayingStackCard untuk mencegah re-render ketika props tidak berubah
-const PlayingStackCard = memo(({ cards, onCardClick }) => {
+const PlayingStackCard = memo(({ cards, onCardClick, isThrowingEnabled }) => { // Terima prop isThrowingEnabled
   const totalCards = cards.length;
 
   return (
@@ -50,6 +56,7 @@ const PlayingStackCard = memo(({ cards, onCardClick }) => {
           index={index}
           totalCardsInStack={totalCards}
           onCardClickedFromP1={onCardClick}
+          isThrowingEnabled={isThrowingEnabled} // Teruskan ke CardItem
         />
       ))}
     </div>

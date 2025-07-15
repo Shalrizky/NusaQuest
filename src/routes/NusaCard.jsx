@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import HeaderGame from "../components/games/HeaderGame";
 import BackStackCard from "../components/games/nuca/BackStackCard";
@@ -6,8 +6,11 @@ import PlayingStackCard from "../components/games/nuca/PlayingStackCard";
 import SentCard from "../components/games/nuca/SentCardPlayer";
 import PlayerProfileNuca from "../components/games/nuca/PlayerProfileNuca";
 import NotAvailPlayer from "../assets/games/nuca/notAvailPlayerNuca.png";
-import ModalQuestion from "../components/games/nuca/ModalQuestion"; // Pastikan import ini benar
+import ModalQuestion from "../components/games/nuca/ModalQuestion";
+import { usePlayerTimer } from "../utils/timerUtils"; // Pastikan path ini benar
 import "../style/routes/NusaCard.css";
+
+const DEFAULT_TIMER_DURATION = 15; // Waktu default untuk setiap giliran
 
 function NusaCard() {
   const [gameState, setGameState] = useState({
@@ -76,45 +79,211 @@ function NusaCard() {
     player4Cards: 5,
     playerStatus: {
       player2: "available",
-      player3: "not_available",
-      player4: "not_available",
+      player3: "available", // Diubah ke 'available' untuk pengujian
+      player4: "available", // Diubah ke 'available' untuk pengujian
     },
+
+    // ========== DATA GAMESTATE UTAMA (TERMASUK UNTUK TIMER) ==========
+    currentPlayerIndex: 0, // Index pemain yang sedang aktif (0: P1, 1: P2, 2: P3, 3: P4)
+    playerTimers: [
+      DEFAULT_TIMER_DURATION,
+      DEFAULT_TIMER_DURATION,
+      DEFAULT_TIMER_DURATION,
+      DEFAULT_TIMER_DURATION,
+    ], // Timer untuk setiap pemain
+    activePlayerIndices: [0, 1, 2, 3], // Contoh awal: semua pemain aktif (akan dihitung ulang di useEffect)
+
+    // Data untuk usePlayerTimer (bisa diisi dari API nanti)
+    isGlobalTimerController: true, // Instance usePlayerTimer ini adalah controller global, selalu aktif
+    gameTopicID: "nusa-card",
+    gameID: "game-id",
+    roomID: "room-id",
+    players: Array(4)
+      .fill(null)
+      .map((_, i) => ({ id: `player${i + 1}` })), // Hanya pemain yang aktif (akan dihitung ulang)
+    // ========================================================================
   });
 
   const [userProfile] = useState({});
   const [sentCard, setSentCard] = useState(null);
-
-  // State untuk Modal Pertanyaan
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [currentQuestionForModal, setCurrentQuestionForModal] = useState(null);
   const [collectedHints, setCollectedHints] = useState([]);
-
-  // STATE UNTUK OFFCANVAS
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const handleCloseOffcanvas = () => setShowOffcanvas(false);
 
-  // Fungsi untuk playing  card di klik
-  const handleP1CardClicked = (cardData) => {
+  // --- Logika Timer dan Giliran ---
+  // Callback: Ini HANYA dipanggil oleh usePlayerTimer saat waktu habis
+  const handleTimeEnd = useCallback(() => {
+    setGameState((prev) => {
+      // Cari indeks pemain saat ini dalam daftar pemain aktif
+      const currentIndexInActiveList = prev.activePlayerIndices.indexOf(
+        prev.currentPlayerIndex
+      );
+      // Hitung indeks pemain berikutnya dalam daftar aktif
+      const nextIndexInActiveList =
+        (currentIndexInActiveList + 1) % prev.activePlayerIndices.length;
+      // Dapatkan indeks global pemain berikutnya
+      const nextGlobalPlayerIndex =
+        prev.activePlayerIndices[nextIndexInActiveList];
+
+      console.log(
+        `Waktu habis untuk P_global:${
+          prev.currentPlayerIndex + 1
+        }! Memindahkan giliran dari P${prev.currentPlayerIndex + 1} ke P${
+          nextGlobalPlayerIndex + 1
+        }`
+      );
+
+      return {
+        ...prev,
+        currentPlayerIndex: nextGlobalPlayerIndex,
+        // Reset timer untuk pemain yang baru aktif (di state playerTimers)
+        playerTimers: prev.playerTimers.map((timer, index) =>
+          index === nextGlobalPlayerIndex ? DEFAULT_TIMER_DURATION : timer
+        ),
+      };
+    });
+  }, []); // Dependensi dikosongkan karena menggunakan updater function
+
+  // Data game untuk usePlayerTimer (ambil langsung dari gameState)
+  const gameDataForTimer = {
+    isMyTurn: gameState.isGlobalTimerController,
+    currentPlayerIndex: gameState.currentPlayerIndex,
+    playerTimers: gameState.playerTimers,
+    topicID: gameState.gameTopicID,
+    gameID: gameState.gameID,
+    roomID: gameState.roomID,
+    players: gameState.players,
+  };
+
+  const [timeLeft, resetTimer] = usePlayerTimer(
+    DEFAULT_TIMER_DURATION,
+    handleTimeEnd,
+    gameDataForTimer
+  );
+
+  // Effect untuk menginisialisasi daftar pemain aktif (activePlayerIndices) saat komponen dimuat atau playerStatus berubah
+  useEffect(() => {
+    setGameState((prev) => {
+      const availableIndices = [];
+      availableIndices.push(0); // Player 1 (user) selalu aktif (indeks 0)
+      if (prev.playerStatus.player2 === "available") availableIndices.push(1);
+      if (prev.playerStatus.player3 === "available") availableIndices.push(2);
+      if (prev.playerStatus.player4 === "available") availableIndices.push(3);
+
+      let newCurrentPlayerIndex = prev.currentPlayerIndex;
+      // Jika pemain aktif saat ini tidak lagi available, pindah ke yang pertama di daftar
+      if (!availableIndices.includes(newCurrentPlayerIndex)) {
+        newCurrentPlayerIndex =
+          availableIndices.length > 0 ? availableIndices[0] : -1;
+      }
+
+      return {
+        ...prev,
+        activePlayerIndices: availableIndices,
+        currentPlayerIndex: newCurrentPlayerIndex,
+        players: availableIndices.map((idx) => ({ id: `player${idx + 1}` })), // Update daftar players untuk usePlayerTimer
+      };
+    });
+  }, [gameState.playerStatus]);
+
+  // Efek untuk mereset timer pada usePlayerTimer saat currentPlayerIndex berubah
+  useEffect(() => {
+    // Logging ini hanya untuk debugging, tidak mempengaruhi logika
+    console.log(
+      `NusaCard global effect: Global Player Index changed to ${gameState.currentPlayerIndex}. Mereset timer.`
+    );
+    if (
+      gameState.activePlayerIndices.length > 0 &&
+      gameState.currentPlayerIndex !== -1
+    ) {
+      resetTimer();
+    }
+  }, [
+    gameState.currentPlayerIndex,
+    resetTimer,
+    gameState.activePlayerIndices.length,
+  ]);
+
+  // Update state playerTimers lokal NusaCard setiap detik dari timeLeft yang diberikan usePlayerTimer
+  useEffect(() => {
+    setGameState((prev) => {
+      const newTimers = [...prev.playerTimers];
+      if (
+        prev.currentPlayerIndex !== -1 &&
+        newTimers[prev.currentPlayerIndex] !== undefined
+      ) {
+        newTimers[prev.currentPlayerIndex] = timeLeft;
+      }
+      return {
+        ...prev,
+        playerTimers: newTimers,
+      };
+    });
+  }, [timeLeft, gameState.currentPlayerIndex]);
+
+  // Fungsi helper untuk menentukan apakah ini giliran seorang pemain (berdasarkan indeks global)
+  const isPlayerTurn = (playerGlobalIndex) => {
+    return gameState.currentPlayerIndex === playerGlobalIndex;
+  };
+
+  // Fungsi helper untuk mendapatkan sisa waktu yang ditampilkan pada profil pemain
+  const getPlayerTimeLeft = (playerGlobalIndex) => {
+    return isPlayerTurn(playerGlobalIndex) ? timeLeft : DEFAULT_TIMER_DURATION;
+  };
+
+  // Fungsi untuk manual switch turn (untuk debug)
+  const handleDebugSwitchTurn = useCallback(() => {
+    setGameState((prev) => {
+      const currentListIndex = prev.activePlayerIndices.indexOf(
+        prev.currentPlayerIndex
+      );
+      const nextListIndex =
+        (currentListIndex + 1) % prev.activePlayerIndices.length;
+      const nextGlobalPlayerIndex = prev.activePlayerIndices[nextListIndex];
+
+      console.log(
+        `Debug Switch: Mengubah giliran dari P${
+          prev.currentPlayerIndex + 1
+        } ke P${nextGlobalPlayerIndex + 1}`
+      );
+
+      // Reset timer untuk pemain yang baru aktif (di state playerTimers)
+      const newPlayerTimers = prev.playerTimers.map((timer, index) =>
+        index === nextGlobalPlayerIndex ? DEFAULT_TIMER_DURATION : timer
+      );
+
+      return {
+        ...prev,
+        currentPlayerIndex: nextGlobalPlayerIndex,
+        playerTimers: newPlayerTimers,
+      };
+    });
+  }, []); // Dependensi dikosongkan karena menggunakan updater function
+
+  // --- FUNGSI ASLI ANDA UNTUK handleP1CardClicked ---
+  const handleP1CardClicked = (cardData, originalIndex) => {
     setSentCard(cardData);
     setCurrentQuestionForModal(cardData);
     setShowQuestionModal(true);
 
-    setGameState((prevState) => {
-      const newCards = prevState.player1Cards.filter(
-        (card) => card.id !== cardData.id
-      );
-      return {
-        ...prevState,
-        player1Cards: newCards,
-      };
-    });
+    setTimeout(() => {
+      setGameState((prevState) => {
+        const newCards = prevState.player1Cards.filter(
+          (card) => card.id !== cardData.id
+        );
+        return {
+          ...prevState,
+          player1Cards: newCards,
+        };
+      });
+    }, 1000);
   };
 
-  // FUNGSI UNTUK MENAMPILKAN HINTS DAN OFFCAVAS
-  const handleAnswerSubmittedByPlayer = (result) => {
+  // --- FUNGSI ASLI ANDA UNTUK handleAnswerSubmittedByPlayer ---
+  const handleAnswerSubmittedByPlayer = useCallback((result) => {
     const { isCorrect, hint } = result;
-    //console.log("Answer received by NusaCard. Correct:", isCorrect, "Hint:", hint);
-
     if (!isCorrect && hint) {
       setCollectedHints((prevHints) => {
         if (!prevHints.includes(hint)) {
@@ -126,14 +295,14 @@ function NusaCard() {
     } else if (isCorrect) {
       console.log("Jawaban benar!");
     }
-  };
+  }, []);
 
-  const handleCloseQuestionModal = () => {
+  // --- FUNGSI ASLI ANDA UNTUK handleCloseQuestionModal ---
+  const handleCloseQuestionModal = useCallback(() => {
     setShowQuestionModal(false);
     setCurrentQuestionForModal(null);
     setSentCard(null);
-    // Lanjutkan alur game setelah modal ditutup (misal giliran pemain lain)
-  };
+  }, []);
 
   return (
     <div className="nusa-page d-flex flex-column">
@@ -144,12 +313,49 @@ function NusaCard() {
         onCloseOffcanvas={handleCloseOffcanvas}
       />
 
+      {/* Debug Info */}
+      <div
+        style={{
+          position: "fixed",
+          top: "10px",
+          right: "10px",
+          background: "rgba(0,0,0,0.8)",
+          color: "white",
+          padding: "10px",
+          borderRadius: "5px",
+          fontSize: "12px",
+          zIndex: 9999,
+        }}
+      >
+        <div>
+          **Current Active Player:** P{gameState.currentPlayerIndex + 1}
+        </div>
+        <div>**Time Left for Current:** {timeLeft}s</div>
+        <hr style={{ borderColor: "white", margin: "5px 0" }} />
+        {/* Informasi Timer Tiap Player */}
+        <div>**Player Timers:**</div>
+        {/* Map berdasarkan indeks global 0-3 untuk menampilkan P1, P2, P3, P4 */}
+        {gameState.playerTimers.map((timer, index) => (
+          <div key={index}>
+            P{index + 1}: {timer}s {isPlayerTurn(index) && "(ACTIVE)"}
+          </div>
+        ))}
+        <hr style={{ borderColor: "white", margin: "5px 0" }} />
+        {/* Button Next Player */}
+        <button
+          onClick={handleDebugSwitchTurn}
+          style={{ marginTop: "5px", fontSize: "10px", padding: "5px 10px" }}
+        >
+          Next Player (Debug)
+        </button>
+      </div>
+
       <Container
         fluid
         id="nuca-container"
         className="flex-grow-1 d-flex flex-column justify-content-between"
       >
-        {/* Player 3 (Top) */}
+        {/* Player 3 (Top) - Index 2 */}
         <Row className="justify-content-center align-items-center">
           <Col xs="auto" className="position-relative">
             {gameState.playerStatus.player3 === "available" && (
@@ -157,6 +363,9 @@ function NusaCard() {
                 userProfile={userProfile}
                 position="top-left"
                 totalCards={gameState.player3Cards}
+                isActive={isPlayerTurn(2)}
+                timeLeft={getPlayerTimeLeft(2)}
+                maxTime={DEFAULT_TIMER_DURATION}
               />
             )}
             <BackStackCard
@@ -168,7 +377,7 @@ function NusaCard() {
           </Col>
         </Row>
 
-        {/* Player 2 (Left), Middle Deck, Player 4 (Right) */}
+        {/* Player 2 (Left) - Index 1, Middle Deck, Player 4 (Right) - Index 3 */}
         <Row className="d-flex justify-content-between align-items-center mx-3 mx-lg-4">
           <Col md={4}>
             <div className="position-relative">
@@ -177,6 +386,9 @@ function NusaCard() {
                   userProfile={userProfile}
                   position="left"
                   totalCards={gameState.player2Cards}
+                  isActive={isPlayerTurn(1)}
+                  timeLeft={getPlayerTimeLeft(1)}
+                  maxTime={DEFAULT_TIMER_DURATION}
                 />
               )}
               <BackStackCard
@@ -199,7 +411,6 @@ function NusaCard() {
               position="middle"
               showShuffle={true}
             />
-            {/* Kartu Tengah Yang di sent oleh pemain*/}
             {sentCard && <SentCard cardData={sentCard} />}
           </Col>
 
@@ -210,6 +421,9 @@ function NusaCard() {
                   userProfile={userProfile}
                   position="right"
                   totalCards={gameState.player4Cards}
+                  isActive={isPlayerTurn(3)}
+                  timeLeft={getPlayerTimeLeft(3)}
+                  maxTime={DEFAULT_TIMER_DURATION}
                 />
               )}
               <BackStackCard
@@ -224,7 +438,7 @@ function NusaCard() {
           </Col>
         </Row>
 
-        {/* Player 1 (Bottom) */}
+        {/* Player 1 (Bottom) - Index 0 */}
         <Row className="d-flex justify-content-center align-items-center mb-4">
           <Col xs="auto" className="position-relative">
             <PlayingStackCard
@@ -235,6 +449,9 @@ function NusaCard() {
               userProfile={userProfile}
               position="bottom-right"
               totalCards={gameState.player1Cards.length}
+              isActive={isPlayerTurn(0)}
+              timeLeft={getPlayerTimeLeft(0)}
+              maxTime={DEFAULT_TIMER_DURATION}
             />
           </Col>
         </Row>
@@ -246,7 +463,7 @@ function NusaCard() {
         questionData={currentQuestionForModal}
         onClose={handleCloseQuestionModal}
         onSubmitAnswer={handleAnswerSubmittedByPlayer}
-        isMyTurn={true} // Anda bisa membuat ini dinamis dari state game jika ada giliran pemain
+        isMyTurn={isPlayerTurn(0)}
       />
     </div>
   );

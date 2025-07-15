@@ -1,69 +1,72 @@
-import React, { useState, useEffect } from "react";
+import React, { memo } from "react";
 import { Image } from "react-bootstrap";
 import DefaultProfileImage from "../../../assets/common/icon-profile.svg";
 import "../../../style/components/games/nuca/PlayerProfileNuca.css";
 
-const PlayerProfileNuca = ({ userProfile, position, totalCards, radius = 30, timerDuration = 30 }) => {
+// Memoisasi PlayerProfileNuca untuk mencegah re-render yang tidak perlu
+const PlayerProfileNuca = memo(({ 
+  userProfile, 
+  position, 
+  totalCards, 
+  radius = 29, 
+  isActive, 
+  timeLeft, 
+  maxTime 
+}) => {
   const profileImage = userProfile?.image || DefaultProfileImage;
   const positionClass = `player-profile-${position}`;
   const cssVars = { "--total-player-cards": totalCards };
 
-  // Countdown timer state
-  const [timeLeft, setTimeLeft] = useState(timerDuration);
-  const [isTimerActive, setIsTimerActive] = useState(true);
+  // Perhitungan ukuran SVG dan pusat
+  const strokeWidth = 6;
+  const svgSize = (radius * 2) + (strokeWidth * 2);
+  const center = svgSize / 2;
+  const circleLength = 2 * Math.PI * radius;
 
-  useEffect(() => {
-    if (!isTimerActive || timeLeft === 0) return;
+  // Mendapatkan offset untuk animasi progress bar
+  const getStrokeDashoffset = () => {
+    if (maxTime === 0) return circleLength;
+    const clampedTimeLeft = Math.max(0, Math.min(maxTime, timeLeft));
+    const progress = clampedTimeLeft / maxTime;
+    return circleLength * (1 - progress);
+  };
 
-    const timer = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
-          setIsTimerActive(false);
-          return 0;
-        }
-        return prevTime - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeLeft, isTimerActive]);
-
+  // Menentukan warna stroke berdasarkan persentase waktu
   const getStrokeColor = () => {
-    const percentage = (timeLeft / timerDuration) * 100;
+    if (maxTime === 0) return "transparent";
+    const percentage = (timeLeft / maxTime) * 100;
     if (percentage > 55) return "#06923E";
     if (percentage > 25) return "#FFC107";
     if (percentage > 0) return "#B22222";
     return "transparent";
   };
 
-  const svgSize = (radius + 10) * 2;
-  const center = svgSize / 2;
-  const circleLength = 2 * Math.PI * radius;
-
   return (
     <div
       className={`player-profile-container ${positionClass}`}
       style={cssVars}
     >
-      <svg
-        width={svgSize}
-        height={svgSize}
-        viewBox={`0 0 ${svgSize} ${svgSize}`}
-        className="profile-border-svg"
-      >
-        {/* Progress circle */}
-        <circle
-          cx={center}
-          cy={center}
-          r={radius}
-          stroke={getStrokeColor()}
-          strokeWidth="6"
-          fill="none"
-          strokeDasharray={circleLength}
-          strokeDashoffset={circleLength * (1 - timeLeft / timerDuration)}
-          strokeLinecap="round"
-        />
-      </svg>
+      {/* Tampilkan SVG timer HANYA jika ini giliran pemain aktif */}
+      {isActive && (
+        <svg
+          width={svgSize}
+          height={svgSize}
+          viewBox={`0 0 ${svgSize} ${svgSize}`}
+          className="profile-border-svg"
+        >
+          <circle
+            cx={center}
+            cy={center}
+            r={radius}
+            stroke={getStrokeColor()}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={circleLength}
+            strokeDashoffset={getStrokeDashoffset()}
+            strokeLinecap="round"
+          />
+        </svg>
+      )}
 
       <Image
         src={profileImage}
@@ -73,6 +76,9 @@ const PlayerProfileNuca = ({ userProfile, position, totalCards, radius = 30, tim
       />
     </div>
   );
-};
+});
+
+// Set display name untuk debugging
+PlayerProfileNuca.displayName = "PlayerProfileNuca";
 
 export default PlayerProfileNuca;

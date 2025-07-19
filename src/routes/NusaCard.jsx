@@ -15,12 +15,12 @@ function NusaCard() {
     activeGlobalPlayerIndex,
     allPlayerTimers,
     currentTurnTimeLeft,
-    
+
     // Game Status
     isMyPlayerTurnToThrow,
     isMyPlayerTurnToAnswer,
     currentActiveTurnPhase,
-    
+
     // Game Objects
     thrownCardData,
     shouldShowQuestionModal,
@@ -28,7 +28,7 @@ function NusaCard() {
     collectedGameHints,
     showGameOffcanvas,
     triggerShuffleAnimation,
-    
+
     // Actions
     setActiveLocalPlayerId,
     setShowGameOffcanvas,
@@ -36,80 +36,95 @@ function NusaCard() {
     handleCardPlayAttempt,
     handlePlayerAnswerSubmission,
     handleCloseQuestionPromptModal,
-    
+
     // Utility Functions
     isPlayerTurnStatus,
     getPlayerRemainingTime,
-    
+
     // Constants
     THROW_CARD_DURATION_SECONDS,
     ANSWER_QUESTION_DURATION_SECONDS,
-    
+
     // DEBUG FUNCTIONS - Only used in development for debug tools
-    debugSwitchPlayerTurn,           // DEBUG: Switch to next player turn
-    handleTurnTimeExpiration,        // DEBUG: Force timer expiration  
-    resetFullGameState,              // DEBUG: Reset entire game state
-    setCurrentGameState,             // DEBUG: Direct state manipulation
-    getRandomCardFromAvailablePool,  // DEBUG: Add penalty cards
+    debugSwitchPlayerTurn, // DEBUG: Switch to next player turn
+    handleTurnTimeExpiration, // DEBUG: Force timer expiration
+    resetFullGameState, // DEBUG: Reset entire game state
+    setCurrentGameState, // DEBUG: Direct state manipulation
+    getRandomCardFromAvailablePool, // DEBUG: Add penalty cards
   } = useNucaLogic();
 
-  // DEBUG HELPER FUNCTIONS - Only for debug tools in development
-  const debugHelpers = useMemo(() => ({
-    // DEBUG: Trigger end turn timer manually
-    debugTriggerEndTurnTimer: () => {
-      handleTurnTimeExpiration();
-    },
+  // Computed values
+  const displayQuestionModalForMe =
+    shouldShowQuestionModal && isMyPlayerTurnToAnswer();
 
-    // DEBUG: Simulate answer (correct/incorrect)
-    debugSimulateAnswer: (isCorrect) => {
-      if (shouldShowQuestionModal && questionForModalDisplay) {
-        handlePlayerAnswerSubmission({ 
-          isCorrect, 
-          hint: questionForModalDisplay.hint 
+  //! DEBUG HELPER FUNCTIONS - Only for debug tools in development
+  const debugHelpers = useMemo(
+    () => ({
+      debugTriggerEndTurnTimer: () => {
+        handleTurnTimeExpiration();
+      },
+
+      debugSimulateAnswer: (isCorrect) => {
+        if (shouldShowQuestionModal && questionForModalDisplay) {
+          handlePlayerAnswerSubmission({
+            isCorrect,
+            hint: questionForModalDisplay.hint,
+          });
+        } else {
+          console.warn(
+            "Debug: Tidak ada modal pertanyaan aktif untuk disimulasikan jawabannya."
+          );
+        }
+      },
+
+      debugResetGame: () => {
+        resetFullGameState();
+      },
+
+      debugAddPenaltyCard: () => {
+        const newRandomCard = getRandomCardFromAvailablePool();
+        setCurrentGameState((prevState) => {
+          const playerTargetId = `player${activeGlobalPlayerIndex + 1}`;
+          return {
+            ...prevState,
+            [`${playerTargetId}Cards`]: [
+              ...prevState[`${playerTargetId}Cards`],
+              newRandomCard,
+            ],
+          };
         });
-      } else {
-        console.warn("Debug: Tidak ada modal pertanyaan aktif untuk disimulasikan jawabannya.");
-      }
+        console.log(
+          `Debug: Menambahkan 1 kartu penalti ke P${
+            activeGlobalPlayerIndex + 1
+          }`
+        );
+      },
+    }),
+    [
+      handleTurnTimeExpiration,
+      shouldShowQuestionModal,
+      questionForModalDisplay,
+      handlePlayerAnswerSubmission,
+      resetFullGameState,
+      getRandomCardFromAvailablePool,
+      setCurrentGameState,
+      activeGlobalPlayerIndex,
+    ]
+  );
+
+  //! DEBUG: Player position calculator for debug tools
+  const getPlayerAtRelativePosition = useCallback(
+    (position) => {
+      const positions = ["player1", "player2", "player3", "player4"];
+      const currentIndex = positions.indexOf(activeLocalPlayerId);
+      const offsetMap = { left: 1, top: 2, right: 3 };
+      const targetIndex = (currentIndex + offsetMap[position]) % 4;
+      return positions[targetIndex];
     },
+    [activeLocalPlayerId]
+  );
 
-    // DEBUG: Reset game to initial state
-    debugResetGame: () => {
-      resetFullGameState();
-    },
-
-    // DEBUG: Add penalty card to current active player
-    debugAddPenaltyCard: () => {
-      const newRandomCard = getRandomCardFromAvailablePool();
-      setCurrentGameState(prevState => {
-        const playerTargetId = `player${activeGlobalPlayerIndex + 1}`;
-        return {
-          ...prevState,
-          [`${playerTargetId}Cards`]: [...prevState[`${playerTargetId}Cards`], newRandomCard],
-        };
-      });
-      console.log(`Debug: Menambahkan 1 kartu penalti ke P${activeGlobalPlayerIndex + 1}`);
-    },
-  }), [
-    handleTurnTimeExpiration,
-    shouldShowQuestionModal,
-    questionForModalDisplay,
-    handlePlayerAnswerSubmission,
-    resetFullGameState,
-    getRandomCardFromAvailablePool,
-    setCurrentGameState,
-    activeGlobalPlayerIndex
-  ]);
-
-  // DEBUG: Player position calculator for debug tools
-  const getPlayerAtRelativePosition = useCallback((position) => {
-    const positions = ["player1", "player2", "player3", "player4"];
-    const currentIndex = positions.indexOf(activeLocalPlayerId);
-    const offsetMap = { left: 1, top: 2, right: 3 };
-    const targetIndex = (currentIndex + offsetMap[position]) % 4;
-    return positions[targetIndex];
-  }, [activeLocalPlayerId]);
-
-  // DEBUG TOOLS INTEGRATION - Only rendered in development
+  //! DEBUG TOOLS INTEGRATION - Only rendered in development
   const { DebugPanel } = useDebugTools({
     // Core debug data
     currentUserId: activeLocalPlayerId,
@@ -119,26 +134,23 @@ function NusaCard() {
     playerTimersData: allPlayerTimers,
     currentTurnPhase: currentActiveTurnPhase,
     playerAnsweringGlobalIndex: activeGlobalPlayerIndex,
-    currentGameState,  // DEBUG: For player availability detection
+    currentGameState, // DEBUG: For player availability detection
 
     // Position helper for debug display
     getPlayerAtRelativePosition,
 
     // Debug control functions
-    handleDebugSwitchTurn: debugSwitchPlayerTurn,        // DEBUG: Switch turn manually
-    handleDebugSwitchUser: setActiveLocalPlayerId,       // DEBUG: Change active user
-    triggerAutoEndTimer: debugHelpers.debugTriggerEndTurnTimer,  // DEBUG: End timer
-    resetGame: debugHelpers.debugResetGame,              // DEBUG: Reset game
-    simulateAnswer: debugHelpers.debugSimulateAnswer,    // DEBUG: Simulate answer
-    addPenaltyCard: debugHelpers.debugAddPenaltyCard,    // DEBUG: Add penalty card
+    handleDebugSwitchTurn: debugSwitchPlayerTurn, // DEBUG: Switch turn manually
+    handleDebugSwitchUser: setActiveLocalPlayerId, // DEBUG: Change active user
+    triggerAutoEndTimer: debugHelpers.debugTriggerEndTurnTimer, // DEBUG: End timer
+    resetGame: debugHelpers.debugResetGame, // DEBUG: Reset game
+    simulateAnswer: debugHelpers.debugSimulateAnswer, // DEBUG: Simulate answer
+    addPenaltyCard: debugHelpers.debugAddPenaltyCard, // DEBUG: Add penalty card
 
     // Debug display data
-    currentQuestion: questionForModalDisplay,            // DEBUG: Current question data
-    isQuestionModalActive: shouldShowQuestionModal,      // DEBUG: Modal state
+    currentQuestion: questionForModalDisplay, // DEBUG: Current question data
+    isQuestionModalActive: shouldShowQuestionModal, // DEBUG: Modal state
   });
-
-  // Computed values
-  const displayQuestionModalForMe = shouldShowQuestionModal && isMyPlayerTurnToAnswer();
 
   return (
     <div className="nusa-page d-flex flex-column">

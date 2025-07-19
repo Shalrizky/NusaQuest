@@ -1,73 +1,117 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import { Image } from "react-bootstrap";
 import DefaultProfileImage from "../../../assets/common/icon-profile.svg";
 import "../../../style/components/games/nuca/PlayerProfileNuca.css";
 
-// Memoisasi PlayerProfileNuca untuk mencegah re-render yang tidak perlu
-const PlayerProfileNuca = memo(({ 
-  userProfile, 
-  position, 
-  totalCards, 
-  radius = 29, 
-  isActive, 
-  timeLeft, 
-  maxTime 
+// Constants
+const DEFAULT_RADIUS = 29;
+const STROKE_WIDTH = 6;
+const TIME_THRESHOLDS = {
+  HIGH: 55,
+  MEDIUM: 25,
+  LOW: 0
+};
+const STROKE_COLORS = {
+  HIGH: "#06923E",      // Green
+  MEDIUM: "#FFC107",    // Yellow
+  LOW: "#B22222",       // Red
+  TRANSPARENT: "transparent"
+};
+
+const PlayerProfileNuca = memo(({
+  userProfile = {},
+  position,
+  totalCards,
+  radius = DEFAULT_RADIUS,
+  isActive = false,
+  timeLeft = 0,
+  maxTime = 0
 }) => {
-  const profileImage = userProfile?.image || DefaultProfileImage;
-  const positionClass = `player-profile-${position}`;
-  const cssVars = { "--total-player-cards": totalCards };
+  // Memoized profile image
+  const profileImage = useMemo(() => 
+    userProfile?.image || DefaultProfileImage, [userProfile?.image]);
 
-  // Perhitungan ukuran SVG dan pusat
-  const strokeWidth = 6;
-  const svgSize = (radius * 2) + (strokeWidth * 2);
-  const center = svgSize / 2;
-  const circleLength = 2 * Math.PI * radius;
+  // Memoized CSS classes and custom properties
+  const styling = useMemo(() => ({
+    className: `player-profile-container player-profile-${position}`,
+    customCssVars: { "--total-player-cards": totalCards }
+  }), [position, totalCards]);
 
-  // Mendapatkan offset untuk animasi progress bar
-  const getStrokeDashoffset = () => {
-    if (maxTime === 0) return circleLength;
+  // Memoized SVG calculations
+  const svgCalculations = useMemo(() => {
+    const svgDisplaySize = (radius * 2) + (STROKE_WIDTH * 2);
+    const circleCenterCoordinate = svgDisplaySize / 2;
+    const circleCircumference = 2 * Math.PI * radius;
+
+    return {
+      svgDisplaySize,
+      circleCenterCoordinate,
+      circleCircumference,
+      viewBox: `0 0 ${svgDisplaySize} ${svgDisplaySize}`
+    };
+  }, [radius]);
+
+  // Memoized timer calculations
+  const timerData = useMemo(() => {
+    if (maxTime === 0) {
+      return {
+        strokeDashoffset: svgCalculations.circleCircumference,
+        strokeColor: STROKE_COLORS.TRANSPARENT
+      };
+    }
+
     const clampedTimeLeft = Math.max(0, Math.min(maxTime, timeLeft));
-    const progress = clampedTimeLeft / maxTime;
-    return circleLength * (1 - progress);
-  };
+    const progressPercentage = clampedTimeLeft / maxTime;
+    const timePercentage = progressPercentage * 100;
+    
+    // Determine stroke color based on time percentage
+    let strokeColor = STROKE_COLORS.TRANSPARENT;
+    if (timePercentage > TIME_THRESHOLDS.HIGH) {
+      strokeColor = STROKE_COLORS.HIGH;
+    } else if (timePercentage > TIME_THRESHOLDS.MEDIUM) {
+      strokeColor = STROKE_COLORS.MEDIUM;
+    } else if (timePercentage > TIME_THRESHOLDS.LOW) {
+      strokeColor = STROKE_COLORS.LOW;
+    }
 
-  // Menentukan warna stroke berdasarkan persentase waktu
-  const getStrokeColor = () => {
-    if (maxTime === 0) return "transparent";
-    const percentage = (timeLeft / maxTime) * 100;
-    if (percentage > 55) return "#06923E";
-    if (percentage > 25) return "#FFC107";
-    if (percentage > 0) return "#B22222";
-    return "transparent";
-  };
+    return {
+      strokeDashoffset: svgCalculations.circleCircumference * (1 - progressPercentage),
+      strokeColor
+    };
+  }, [timeLeft, maxTime, svgCalculations.circleCircumference]);
+
+  // Memoized timer SVG element
+  const timerSvg = useMemo(() => {
+    if (!isActive) return null;
+
+    return (
+      <svg
+        width={svgCalculations.svgDisplaySize}
+        height={svgCalculations.svgDisplaySize}
+        viewBox={svgCalculations.viewBox}
+        className="profile-border-svg"
+      >
+        <circle
+          cx={svgCalculations.circleCenterCoordinate}
+          cy={svgCalculations.circleCenterCoordinate}
+          r={radius}
+          stroke={timerData.strokeColor}
+          strokeWidth={STROKE_WIDTH}
+          fill="none"
+          strokeDasharray={svgCalculations.circleCircumference}
+          strokeDashoffset={timerData.strokeDashoffset}
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }, [isActive, svgCalculations, radius, timerData]);
 
   return (
     <div
-      className={`player-profile-container ${positionClass}`}
-      style={cssVars}
+      className={styling.className}
+      style={styling.customCssVars}
     >
-      {/* Tampilkan SVG timer HANYA jika ini giliran pemain aktif */}
-      {isActive && (
-        <svg
-          width={svgSize}
-          height={svgSize}
-          viewBox={`0 0 ${svgSize} ${svgSize}`}
-          className="profile-border-svg"
-        >
-          <circle
-            cx={center}
-            cy={center}
-            r={radius}
-            stroke={getStrokeColor()}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeDasharray={circleLength}
-            strokeDashoffset={getStrokeDashoffset()}
-            strokeLinecap="round"
-          />
-        </svg>
-      )}
-
+      {timerSvg}
       <Image
         src={profileImage}
         roundedCircle
@@ -77,8 +121,5 @@ const PlayerProfileNuca = memo(({
     </div>
   );
 });
-
-// Set display name untuk debugging
-PlayerProfileNuca.displayName = "PlayerProfileNuca";
 
 export default PlayerProfileNuca;

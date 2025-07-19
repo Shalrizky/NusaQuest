@@ -1,126 +1,170 @@
+import React, { useMemo, useCallback } from "react";
 import { Row, Col } from "react-bootstrap";
-import BackStackCard from "./BackStackCard";
-import PlayingStackCard from "./PlayingStackCard";
-import SentCard from "./SentCardPlayer";
+import PlayerBackStackCards from "./PlayerBackStackCards";
+import PlayerHandCards from "./PlayerHandCards";
+import ThrowingCard from "./ThrowingCard";
 import PlayerProfileNuca from "./PlayerProfileNuca";
-import NotAvailPlayer from "../../../assets/games/nuca/notAvailPlayerNuca.png";
+import NotAvailablePlayerImage from "../../../assets/games/nuca/notAvailPlayerNuca.png";
 import { getPlayerAtRelativePosition, getPlayerGlobalIndex, getPlayerCards, getPlayerStatus } from "../../../utils/games/nuca/NucaUtils";
+
+// Constants to prevent recreation
+const PLAYER_POSITIONS = ["top", "left", "right", "bottom"];
+const MIDDLE_DECK_CARDS = 5;
 
 const GameArea = ({
   currentUserId,
   gameState,
-  currentPlayerGlobalIndex,
-  timeLeft, // timeLeft dari pemain yang sedang AKTIF (baik lempar/jawab)
-  TIMER_PLAYER_DURATION, // ini adalah TIMER_THROW_DURATION
-  sentCard,
+  TIMER_PLAYER_DURATION,
+  throwCard,
   handleCardClicked,
-  isCurrentUserTurn, // isMyTurn dari useGameLogic
-  currentTurnPhase, // Menambahkan prop ini
-  TIMER_ANSWER_DURATION, // Menambahkan prop ini
-  isPlayerTurn: isPlayerTurnFromHook, // Menggunakan nama yang jelas dari hook
-  getPlayerTimeLeft: getPlayerTimeLeftFromHook, // Menggunakan nama yang jelas dari hook
+  isCurrentUserTurn,
+  currentTurnPhase,
+  TIMER_ANSWER_DURATION,
+  isPlayerTurn: isPlayerTurnFromHook,
+  getPlayerTimeLeft: getPlayerTimeLeftFromHook,
+  triggerShuffleAnimation,
 }) => {
+  // Memoized player data calculation to prevent recalculation on every render
+  const playersData = useMemo(() => {
+    const data = {};
+    
+    PLAYER_POSITIONS.forEach(position => {
+      const playerId = position === "bottom" 
+        ? currentUserId 
+        : getPlayerAtRelativePosition(currentUserId, position);
+      
+      const playerCards = getPlayerCards(playerId, gameState);
+      const playerStatus = getPlayerStatus(playerId, gameState);
+      const playerGlobalIndex = getPlayerGlobalIndex(playerId);
+      const isCurrentPlayerActive = isPlayerTurnFromHook(playerGlobalIndex);
+      const currentPlayerTimeLeft = getPlayerTimeLeftFromHook(playerGlobalIndex);
+      const currentMaxTimeForTurn = currentTurnPhase === "throwing" 
+        ? TIMER_PLAYER_DURATION 
+        : TIMER_ANSWER_DURATION;
 
-  const renderPlayerByPosition = (position) => {
-    let playerId;
+      data[position] = {
+        playerId,
+        playerCards,
+        playerStatus,
+        playerGlobalIndex,
+        isCurrentPlayerActive,
+        currentPlayerTimeLeft,
+        currentMaxTimeForTurn,
+        profileData: {}, // Empty object for consistency
+      };
+    });
+    
+    return data;
+  }, [
+    currentUserId,
+    gameState,
+    currentTurnPhase,
+    TIMER_PLAYER_DURATION,
+    TIMER_ANSWER_DURATION,
+    isPlayerTurnFromHook,
+    getPlayerTimeLeftFromHook
+  ]);
 
-    if (position === "bottom") {
-      playerId = currentUserId;
-    } else {
-      playerId = getPlayerAtRelativePosition(currentUserId, position);
-    }
+  // Memoized bottom player render (current user)
+  const renderBottomPlayer = useCallback(() => {
+    const playerData = playersData.bottom;
+    
+    return (
+      <>
+        <PlayerHandCards
+          cards={playerData.playerCards}
+          onCardClick={handleCardClicked}
+          isThrowingEnabled={isCurrentUserTurn()}
+        />
+        <PlayerProfileNuca
+          userProfile={playerData.profileData}
+          position="bottom-right"
+          totalCards={playerData.playerCards.length}
+          isActive={playerData.isCurrentPlayerActive}
+          timeLeft={playerData.currentPlayerTimeLeft}
+          maxTime={playerData.currentMaxTimeForTurn}
+        />
+      </>
+    );
+  }, [playersData.bottom, handleCardClicked, isCurrentUserTurn]);
 
-    const playerCards = getPlayerCards(playerId, gameState);
-    const playerStatus = getPlayerStatus(playerId, gameState);
-    const playerGlobalIndex = getPlayerGlobalIndex(playerId);
-
-    const userProfile = {};
-
-    // Gunakan fungsi dari hook yang sudah diteruskan sebagai props
-    let currentIsActive = isPlayerTurnFromHook(playerGlobalIndex);
-    let currentTimeLeft = getPlayerTimeLeftFromHook(playerGlobalIndex);
-    let currentMaxTime = currentTurnPhase === "throwing" ? TIMER_PLAYER_DURATION : TIMER_ANSWER_DURATION;
-
-
-    if (position === "bottom") {
-      return (
-        <>
-          <PlayingStackCard
-            cards={playerCards}
-            onCardClick={handleCardClicked}
-            isThrowingEnabled={isCurrentUserTurn()} // P1 bisa melempar hanya saat gilirannya melempar
-          />
+  // Memoized other players render (top, left, right)
+  const renderOtherPlayer = useCallback((position) => {
+    const playerData = playersData[position];
+    const profilePosition = position === "top" ? "top-left" : position;
+    
+    return (
+      <>
+        {playerData.playerStatus === "available" && (
           <PlayerProfileNuca
-            userProfile={userProfile}
-            position="bottom-right"
-            totalCards={playerCards.length}
-            isActive={currentIsActive}
-            timeLeft={currentTimeLeft}
-            maxTime={currentMaxTime} 
+            userProfile={playerData.profileData}
+            position={profilePosition}
+            totalCards={playerData.playerCards.length}
+            isActive={playerData.isCurrentPlayerActive}
+            timeLeft={playerData.currentPlayerTimeLeft}
+            maxTime={playerData.currentMaxTimeForTurn}
           />
-        </>
-      );
-    } else {
-      return (
-        <>
-          {playerStatus === "available" && (
-            <PlayerProfileNuca
-              userProfile={userProfile}
-              position={position === "top" ? "top-left" : position}
-              totalCards={playerCards.length}
-              isActive={currentIsActive}
-              timeLeft={currentTimeLeft}
-              maxTime={currentMaxTime} 
-            />
-          )}
-          <BackStackCard
-            totalCards={playerCards.length}
-            position={position}
-            showNotAvail={playerStatus === "not_available"}
-            notAvailImage={NotAvailPlayer}
-          />
-        </>
-      );
-    }
-  };
+        )}
+        <PlayerBackStackCards
+          totalCards={playerData.playerCards.length}
+          position={position}
+          showNotAvail={playerData.playerStatus === "not_available"}
+          notAvailImage={NotAvailablePlayerImage}
+        />
+      </>
+    );
+  }, [playersData]);
+
+  // Memoized center area with deck and thrown card
+  const renderCenterArea = useMemo(() => (
+    <Col
+      md={4}
+      className="d-flex justify-content-center align-items-center position-relative"
+    >
+      <PlayerBackStackCards
+        totalCards={MIDDLE_DECK_CARDS}
+        position="middle"
+        showShuffle={true}
+        triggerShuffleAnimation={triggerShuffleAnimation}
+      />
+      {throwCard && <ThrowingCard cardData={throwCard} />}
+    </Col>
+  ), [throwCard, triggerShuffleAnimation]);
 
   return (
     <>
+      {/* Top Player */}
       <Row className="justify-content-center align-items-center">
         <Col xs="auto" className="position-relative">
-          {renderPlayerByPosition("top")}
+          {renderOtherPlayer("top")}
         </Col>
       </Row>
 
+      {/* Middle Row: Left Player + Center Deck + Right Player */}
       <Row className="d-flex justify-content-between align-items-center mx-3 mx-lg-4">
         <Col md={4}>
           <div className="position-relative">
-            {renderPlayerByPosition("left")}
+            {renderOtherPlayer("left")}
           </div>
         </Col>
 
-        <Col
-          md={4}
-          className="d-flex justify-content-center align-items-center position-relative"
-        >
-          <BackStackCard totalCards={5} position="middle" showShuffle={true} />
-          {sentCard && <SentCard cardData={sentCard} />}
-        </Col>
+        {renderCenterArea}
 
         <Col md={4}>
           <div className="position-relative">
-            {renderPlayerByPosition("right")}
+            {renderOtherPlayer("right")}
           </div>
         </Col>
       </Row>
 
+      {/* Bottom Player (Current User) */}
       <Row className="d-flex justify-content-center align-items-center mb-4">
         <Col xs="auto" className="position-relative">
-          {renderPlayerByPosition("bottom")}
+          {renderBottomPlayer()}
         </Col>
       </Row>
     </>
   );
 };
 
-export default GameArea;
+export default React.memo(GameArea);

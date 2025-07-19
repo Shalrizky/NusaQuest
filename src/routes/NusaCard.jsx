@@ -1,76 +1,155 @@
-import { Container, Row, Col, Spinner } from "react-bootstrap";
+import { useMemo, useCallback } from "react";
+import { Container } from "react-bootstrap";
 import HeaderGame from "../components/games/HeaderGame";
-import ModalQuestion from "../components/games/nuca/ModalQuestion";
+import QuestionModal from "../components/games/nuca/QuestionModal";
 import GameArea from "../components/games/nuca/GameArea";
-import useGameLogic from "../hooks/games/nuca/useGameLogic";
+import useNucaLogic from "../hooks/games/nuca/useNucaLogic";
 import useDebugTools from "../hooks/games/nuca/useDebugTools";
-import { getPlayerGlobalIndex} from "../utils/games/nuca/NucaUtils";
-
-
 import "../style/routes/NusaCard.css";
-// import "../style/components/games/nuca/WaitingOverlay.css"; // Hapus import ini jika Anda tidak lagi menggunakan kelas WaitingOverlay
-
 
 function NusaCard() {
   const {
-    gameState,
-    currentUserId,
-    currentPlayerGlobalIndex, // Pemain yang gilirannya AKTIF (melempar atau menjawab)
-    playerTimersData,
-    timeLeft,
-    isMyTurn, // Cek apakah giliran user untuk melempar
-    isMyTurnToAnswer, // Cek apakah giliran user untuk menjawab
-    sentCard,
-    showQuestionModal, // Menandakan apakah ada pertanyaan yang perlu dijawab (secara global)
-    currentQuestionForModal,
-    collectedHints,
-    showOffcanvas,
-    setCurrentUserId,
-    handleDebugSwitchTurn,
-    setShowOffcanvas,
-    handleCloseOffcanvas,
-    handleCardClicked,
-    handleAnswerSubmittedByPlayer,
-    handleCloseQuestionModal,
-    currentTurnPhase,
-    playerAnsweringGlobalIndex, // Ini akan menjadi sama dengan currentPlayerGlobalIndex di fase answering
-    TIMER_THROW_DURATION,
-    TIMER_ANSWER_DURATION,
-    isPlayerTurn: isPlayerTurnFromHook, // Rename untuk menghindari konflik nama
-    getPlayerTimeLeft: getPlayerTimeLeftFromHook, // Rename untuk menghindari konflik nama
-  } = useGameLogic();
+    // Core Game Data
+    currentGameState,
+    activeLocalPlayerId,
+    activeGlobalPlayerIndex,
+    allPlayerTimers,
+    currentTurnTimeLeft,
+    
+    // Game Status
+    isMyPlayerTurnToThrow,
+    isMyPlayerTurnToAnswer,
+    currentActiveTurnPhase,
+    
+    // Game Objects
+    thrownCardData,
+    shouldShowQuestionModal,
+    questionForModalDisplay,
+    collectedGameHints,
+    showGameOffcanvas,
+    triggerShuffleAnimation,
+    
+    // Actions
+    setActiveLocalPlayerId,
+    setShowGameOffcanvas,
+    handleCloseGameOffcanvas,
+    handleCardPlayAttempt,
+    handlePlayerAnswerSubmission,
+    handleCloseQuestionPromptModal,
+    
+    // Utility Functions
+    isPlayerTurnStatus,
+    getPlayerRemainingTime,
+    
+    // Constants
+    THROW_CARD_DURATION_SECONDS,
+    ANSWER_QUESTION_DURATION_SECONDS,
+    
+    // DEBUG FUNCTIONS - Only used in development for debug tools
+    debugSwitchPlayerTurn,           // DEBUG: Switch to next player turn
+    handleTurnTimeExpiration,        // DEBUG: Force timer expiration  
+    resetFullGameState,              // DEBUG: Reset entire game state
+    setCurrentGameState,             // DEBUG: Direct state manipulation
+    getRandomCardFromAvailablePool,  // DEBUG: Add penalty cards
+  } = useNucaLogic();
 
-  const { DebugPanel } = useDebugTools({
-    currentUserId,
-    currentPlayerGlobalIndex,
-    timeLeft,
-    isMyTurnValue: isMyTurn(), // Pastikan dipanggil sebagai fungsi di sini
-    playerTimersData,
-    currentTurnPhase,
-    playerAnsweringGlobalIndex: currentPlayerGlobalIndex, // di debug panel kita bisa gunakan currentPlayerGlobalIndex saja
-    getPlayerAtRelativePosition: (pos) => {
-      const positions = ["player1", "player2", "player3", "player4"];
-      const currentIndex = positions.indexOf(currentUserId);
-      const offsetMap = { left: 1, top: 2, right: 3 };
-      const targetIndex = (currentIndex + offsetMap[pos]) % 4;
-      return positions[targetIndex];
+  // DEBUG HELPER FUNCTIONS - Only for debug tools in development
+  const debugHelpers = useMemo(() => ({
+    // DEBUG: Trigger end turn timer manually
+    debugTriggerEndTurnTimer: () => {
+      handleTurnTimeExpiration();
     },
-    handleDebugSwitchTurn,
-    currentTurnPhase, // Tambahkan ini
-    handleDebugSwitchUser: setCurrentUserId,
+
+    // DEBUG: Simulate answer (correct/incorrect)
+    debugSimulateAnswer: (isCorrect) => {
+      if (shouldShowQuestionModal && questionForModalDisplay) {
+        handlePlayerAnswerSubmission({ 
+          isCorrect, 
+          hint: questionForModalDisplay.hint 
+        });
+      } else {
+        console.warn("Debug: Tidak ada modal pertanyaan aktif untuk disimulasikan jawabannya.");
+      }
+    },
+
+    // DEBUG: Reset game to initial state
+    debugResetGame: () => {
+      resetFullGameState();
+    },
+
+    // DEBUG: Add penalty card to current active player
+    debugAddPenaltyCard: () => {
+      const newRandomCard = getRandomCardFromAvailablePool();
+      setCurrentGameState(prevState => {
+        const playerTargetId = `player${activeGlobalPlayerIndex + 1}`;
+        return {
+          ...prevState,
+          [`${playerTargetId}Cards`]: [...prevState[`${playerTargetId}Cards`], newRandomCard],
+        };
+      });
+      console.log(`Debug: Menambahkan 1 kartu penalti ke P${activeGlobalPlayerIndex + 1}`);
+    },
+  }), [
+    handleTurnTimeExpiration,
+    shouldShowQuestionModal,
+    questionForModalDisplay,
+    handlePlayerAnswerSubmission,
+    resetFullGameState,
+    getRandomCardFromAvailablePool,
+    setCurrentGameState,
+    activeGlobalPlayerIndex
+  ]);
+
+  // DEBUG: Player position calculator for debug tools
+  const getPlayerAtRelativePosition = useCallback((position) => {
+    const positions = ["player1", "player2", "player3", "player4"];
+    const currentIndex = positions.indexOf(activeLocalPlayerId);
+    const offsetMap = { left: 1, top: 2, right: 3 };
+    const targetIndex = (currentIndex + offsetMap[position]) % 4;
+    return positions[targetIndex];
+  }, [activeLocalPlayerId]);
+
+  // DEBUG TOOLS INTEGRATION - Only rendered in development
+  const { DebugPanel } = useDebugTools({
+    // Core debug data
+    currentUserId: activeLocalPlayerId,
+    currentPlayerGlobalIndex: activeGlobalPlayerIndex,
+    timeLeft: currentTurnTimeLeft,
+    isMyTurnValue: isMyPlayerTurnToThrow(),
+    playerTimersData: allPlayerTimers,
+    currentTurnPhase: currentActiveTurnPhase,
+    playerAnsweringGlobalIndex: activeGlobalPlayerIndex,
+    currentGameState,  // DEBUG: For player availability detection
+
+    // Position helper for debug display
+    getPlayerAtRelativePosition,
+
+    // Debug control functions
+    handleDebugSwitchTurn: debugSwitchPlayerTurn,        // DEBUG: Switch turn manually
+    handleDebugSwitchUser: setActiveLocalPlayerId,       // DEBUG: Change active user
+    triggerAutoEndTimer: debugHelpers.debugTriggerEndTurnTimer,  // DEBUG: End timer
+    resetGame: debugHelpers.debugResetGame,              // DEBUG: Reset game
+    simulateAnswer: debugHelpers.debugSimulateAnswer,    // DEBUG: Simulate answer
+    addPenaltyCard: debugHelpers.debugAddPenaltyCard,    // DEBUG: Add penalty card
+
+    // Debug display data
+    currentQuestion: questionForModalDisplay,            // DEBUG: Current question data
+    isQuestionModalActive: shouldShowQuestionModal,      // DEBUG: Modal state
   });
 
-  const shouldShowQuestionModalForMe = showQuestionModal && isMyTurnToAnswer();
+  // Computed values
+  const displayQuestionModalForMe = shouldShowQuestionModal && isMyPlayerTurnToAnswer();
 
   return (
     <div className="nusa-page d-flex flex-column">
       <HeaderGame
-        hints={collectedHints}
-        showOffcanvas={showOffcanvas}
-        setShowOffcanvas={setShowOffcanvas}
-        onCloseOffcanvas={handleCloseOffcanvas}
+        hints={collectedGameHints}
+        showOffcanvas={showGameOffcanvas}
+        setShowOffcanvas={setShowGameOffcanvas}
+        onCloseOffcanvas={handleCloseGameOffcanvas}
       />
 
+      {/* DEBUG PANEL - Only shown in development environment */}
       {process.env.NODE_ENV === "development" && <DebugPanel />}
 
       <Container
@@ -79,31 +158,32 @@ function NusaCard() {
         className="flex-grow-1 d-flex flex-column justify-content-between"
       >
         <GameArea
-          currentUserId={currentUserId}
-          gameState={gameState}
-          currentPlayerGlobalIndex={currentPlayerGlobalIndex}
-          timeLeft={timeLeft}
-          TIMER_PLAYER_DURATION={TIMER_THROW_DURATION} // Ini akan menjadi TIMER_THROW_DURATION di GameArea
-          sentCard={sentCard}
-          handleCardClicked={handleCardClicked}
-          isCurrentUserTurn={isMyTurn}
-          currentTurnPhase={currentTurnPhase} // TERUSKAN PROPS INI
-          TIMER_ANSWER_DURATION={TIMER_ANSWER_DURATION} // TERUSKAN PROPS INI
-          isPlayerTurn={isPlayerTurnFromHook} // TERUSKAN PROPS INI
-          getPlayerTimeLeft={getPlayerTimeLeftFromHook} // TERUSKAN PROPS INI
+          currentUserId={activeLocalPlayerId}
+          gameState={currentGameState}
+          currentPlayerGlobalIndex={activeGlobalPlayerIndex}
+          timeLeft={currentTurnTimeLeft}
+          TIMER_PLAYER_DURATION={THROW_CARD_DURATION_SECONDS}
+          throwCard={thrownCardData}
+          handleCardClicked={handleCardPlayAttempt}
+          isCurrentUserTurn={isMyPlayerTurnToThrow}
+          currentTurnPhase={currentActiveTurnPhase}
+          TIMER_ANSWER_DURATION={ANSWER_QUESTION_DURATION_SECONDS}
+          isPlayerTurn={isPlayerTurnStatus}
+          getPlayerTimeLeft={getPlayerRemainingTime}
+          triggerShuffleAnimation={triggerShuffleAnimation}
         />
       </Container>
 
-      <ModalQuestion
-        show={shouldShowQuestionModalForMe}
-        questionData={currentQuestionForModal}
-        onClose={handleCloseQuestionModal}
-        onSubmitAnswer={handleAnswerSubmittedByPlayer}
-        isMyTurnToAnswer={isMyTurnToAnswer()}
-        currentPlayerId={currentUserId}
-        playerAnsweringId={`player${currentPlayerGlobalIndex + 1}`}
-        timeLeft={timeLeft}
-        TIMER_ANSWER_DURATION={TIMER_ANSWER_DURATION}
+      <QuestionModal
+        show={displayQuestionModalForMe}
+        questionData={questionForModalDisplay}
+        onClose={handleCloseQuestionPromptModal}
+        onSubmitAnswer={handlePlayerAnswerSubmission}
+        isMyTurnToAnswer={isMyPlayerTurnToAnswer()}
+        currentPlayerId={activeLocalPlayerId}
+        playerAnsweringId={`player${activeGlobalPlayerIndex + 1}`}
+        timeLeft={currentTurnTimeLeft}
+        TIMER_ANSWER_DURATION={ANSWER_QUESTION_DURATION_SECONDS}
       />
     </div>
   );

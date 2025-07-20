@@ -304,7 +304,7 @@ function useNucaLogic() {
   // Refs
   const isTurnTransitioning = useRef(false);
 
-  // Memoized Helper Functions
+  // Helper Function
   const getLocalPlayerGlobalIndex = useCallback(
     () => getPlayerGlobalIndex(activeLocalPlayerId),
     [activeLocalPlayerId]
@@ -367,6 +367,14 @@ function useNucaLogic() {
 
   // Timer Management
   const handleTurnTimeExpiration = useCallback(() => {
+    if (isTurnTransitioning.current) {
+      console.log(
+        "⚠️ handleTurnTimeExpiration: Already transitioning, ignoring multiple trigger."
+      );
+      return;
+    }
+    isTurnTransitioning.current = true; 
+
     console.log(
       "⏰ Timer expired - Phase:",
       currentActiveTurnPhase,
@@ -375,8 +383,6 @@ function useNucaLogic() {
       "Transitioning:",
       isTurnTransitioning.current
     );
-
-    isTurnTransitioning.current = true;
 
     if (currentActiveTurnPhase === "throwing") {
       console.log(
@@ -398,7 +404,8 @@ function useNucaLogic() {
 
       setTimeout(() => {
         isTurnTransitioning.current = false;
-      }, 100);
+        console.log("✅ Throwing transition completed (flag reset)");
+      }, 100); 
     } else if (currentActiveTurnPhase === "answering") {
       console.log(
         `⏰ Waktu menjawab habis untuk P${
@@ -409,22 +416,22 @@ function useNucaLogic() {
       const newRandomCard = getRandomCardFromAvailablePool();
       const playerAnsweringId = `player${activeGlobalPlayerIndex + 1}`;
 
+      // Set feedback 'incorrect'
+      setPlayerAnswerFeedback((prev) => ({
+        ...prev,
+        [playerAnsweringId]: "incorrect",
+      }));
+
+      setTimeout(() => {
+        setPlayerAnswerFeedback((prev) => ({
+          ...prev,
+          [playerAnsweringId]: null,
+        }));
+      }, 2000); 
+
       setCurrentGameState((prevState) => {
         const currentPlayerCards = prevState[`${playerAnsweringId}Cards`] || [];
         const updatedCards = [...currentPlayerCards, newRandomCard];
-        const answeringPlayerId = `player${activeGlobalPlayerIndex + 1}`;
-
-        setPlayerAnswerFeedback((prev) => ({
-          ...prev,
-          [answeringPlayerId]: "incorrect",
-        }));
-
-        setTimeout(() => {
-          setPlayerAnswerFeedback((prev) => ({
-            ...prev,
-            [answeringPlayerId]: null,
-          }));
-        }, 2000);
 
         const newState = {
           ...prevState,
@@ -487,7 +494,7 @@ function useNucaLogic() {
             "✅ Answering transition completed - Ready for next turn"
           );
         }, 500);
-      }, 200);
+      }, 2200); 
     }
   }, [
     activePlayerGlobalIndices,
@@ -497,6 +504,16 @@ function useNucaLogic() {
     getRandomCardFromAvailablePool,
     questionForModalDisplay,
     activeLocalPlayerId,
+    setCurrentGameState,
+    setPlayerAnswerFeedback,
+    setCollectedGameHints,
+    setShowGameOffcanvas,
+    setShouldShowQuestionModal,
+    setQuestionForModalDisplay,
+    setThrownCardData,
+    setActiveGlobalPlayerIndex,
+    setCurrentActiveTurnPhase,
+    setLastCardThrowerGlobalIndex,
   ]);
 
   const [currentTurnTimeLeft, resetPlayerTurnTimer] = usePlayerTimer(
@@ -549,7 +566,7 @@ function useNucaLogic() {
         return;
       }
 
-      isTurnTransitioning.current = true;
+      isTurnTransitioning.current = true; 
 
       setThrownCardData(cardData);
       setQuestionForModalDisplay(cardData);
@@ -580,18 +597,32 @@ function useNucaLogic() {
 
       setTimeout(() => {
         isTurnTransitioning.current = false;
-      }, 100);
+        console.log("✅ Card play transition completed (flag reset)");
+      }, 100); 
     },
     [
       isMyPlayerTurnToThrow,
       activeGlobalPlayerIndex,
       activePlayerGlobalIndices,
       activeLocalPlayerId,
+      setThrownCardData,
+      setQuestionForModalDisplay,
+      setLastCardThrowerGlobalIndex,
+      setTriggerShuffleAnimation,
+      setActiveGlobalPlayerIndex,
+      setShouldShowQuestionModal,
+      setCurrentActiveTurnPhase,
+      setCurrentGameState,
     ]
   );
 
   const handlePlayerAnswerSubmission = useCallback(
     (result) => {
+      if (isTurnTransitioning.current) {
+        return;
+      }
+      isTurnTransitioning.current = true; 
+
       console.log(
         "📝 Manual answer submission:",
         result,
@@ -601,13 +632,14 @@ function useNucaLogic() {
 
       if (!isMyPlayerTurnToAnswer()) {
         console.log("❌ Bukan giliran Anda untuk menjawab!");
+        isTurnTransitioning.current = false; 
         return;
       }
 
-      isTurnTransitioning.current = true;
       const { isCorrect, hint } = result;
-      const answeringPlayerId = `player${activeGlobalPlayerIndex + 1}`; 
+      const answeringPlayerId = `player${activeGlobalPlayerIndex + 1}`;
 
+      // Set feedback for the current answering player
       setPlayerAnswerFeedback((prev) => ({
         ...prev,
         [answeringPlayerId]: isCorrect ? "correct" : "incorrect",
@@ -656,6 +688,7 @@ function useNucaLogic() {
       } else {
         console.log(`✅ Jawaban BENAR dari Player ${answeringPlayerId}.`);
       }
+
       setTimeout(() => {
         setShouldShowQuestionModal(false);
         setQuestionForModalDisplay(null);
@@ -666,16 +699,14 @@ function useNucaLogic() {
           activePlayerGlobalIndices,
           GAME_CONSTANTS.TURN_FLOW_DIRECTION
         );
-
         setActiveGlobalPlayerIndex(nextThrowerIndex);
         setCurrentActiveTurnPhase("throwing");
         setLastCardThrowerGlobalIndex(null);
 
-        // Reset transition flag
         setTimeout(() => {
           isTurnTransitioning.current = false;
-          console.log("✅ Manual answer transition completed");
-        }, 500); 
+          console.log("✅ Manual answer transition completed (flag reset)");
+        }, 500);
       }, 2200); 
     },
     [
@@ -685,17 +716,17 @@ function useNucaLogic() {
       activeLocalPlayerId,
       getRandomCardFromAvailablePool,
       lastCardThrowerGlobalIndex,
-      questionForModalDisplay, 
-      setPlayerAnswerFeedback, 
-      setCollectedGameHints, 
-      setShowGameOffcanvas, 
-      setCurrentGameState, 
-      setShouldShowQuestionModal, 
-      setQuestionForModalDisplay, 
-      setThrownCardData, 
+      questionForModalDisplay,
+      setPlayerAnswerFeedback,
+      setCollectedGameHints,
+      setShowGameOffcanvas,
+      setCurrentGameState,
+      setShouldShowQuestionModal,
+      setQuestionForModalDisplay,
+      setThrownCardData,
       setActiveGlobalPlayerIndex,
-      setCurrentActiveTurnPhase, 
-      setLastCardThrowerGlobalIndex
+      setCurrentActiveTurnPhase,
+      setLastCardThrowerGlobalIndex,
     ]
   );
 
@@ -704,11 +735,11 @@ function useNucaLogic() {
   }, [collectedGameHints, activeLocalPlayerId]);
 
   // Modal Management
-  const handleCloseQuestionPromptModal = () => {
+  const handleCloseQuestionPromptModal = useCallback(() => {
     setShouldShowQuestionModal(false);
     setQuestionForModalDisplay(null);
     setThrownCardData(null);
-  };
+  }, []);
 
   // Effects
   useEffect(() => {
@@ -744,10 +775,7 @@ function useNucaLogic() {
       });
 
       if (isTurnTransitioning.current) {
-        console.log("⚠️ Force resetting stuck transition flag");
-        setTimeout(() => {
-          isTurnTransitioning.current = false;
-        }, 500);
+        return;
       }
 
       resetPlayerTurnTimer();
@@ -774,9 +802,10 @@ function useNucaLogic() {
 
   //! DEBUG FUNCTIONS - Only used by debug tools
   const debugSwitchPlayerTurn = useCallback(() => {
+    // Add transition check here as well for safety
     if (isTurnTransitioning.current) {
       console.log(
-        "Turn transition already in progress, ignoring debug switch."
+        "Debug Switch: Turn transition already in progress, ignoring debug switch."
       );
       return;
     }
@@ -802,16 +831,37 @@ function useNucaLogic() {
     setTriggerShuffleAnimation(true);
 
     setTimeout(() => setTriggerShuffleAnimation(false), 500);
-    isTurnTransitioning.current = false;
-  }, [activePlayerGlobalIndices, activeGlobalPlayerIndex]);
+    setTimeout(() => {
+      isTurnTransitioning.current = false;
+      console.log("Debug Switch: Turn transition completed (flag reset)");
+    }, 600);
+  }, [
+    activePlayerGlobalIndices,
+    activeGlobalPlayerIndex,
+    setShouldShowQuestionModal,
+    setLastCardThrowerGlobalIndex,
+    setThrownCardData,
+    setQuestionForModalDisplay,
+    setTriggerShuffleAnimation,
+    setActiveGlobalPlayerIndex,
+    setCurrentActiveTurnPhase,
+  ]);
 
   //! DEBUG FUNCTIONS - Only used in development for debug tools
   const simulateAnswer = useCallback(
     (isCorrect) => {
+      // Add transition check for debug function as well
+      if (isTurnTransitioning.current) {
+        console.warn("DEBUG: Transition in progress, ignoring simulateAnswer.");
+        return;
+      }
+      isTurnTransitioning.current = true;
+
       if (!questionForModalDisplay) {
         console.warn(
           "DEBUG: Tidak ada pertanyaan aktif untuk disimulasikan jawabannya."
         );
+        isTurnTransitioning.current = false;
         return;
       }
 
@@ -820,6 +870,7 @@ function useNucaLogic() {
         console.warn(
           "DEBUG: Modal pertanyaan tidak aktif atau bukan fase menjawab. Simulasi diabaikan."
         );
+        isTurnTransitioning.current = false;
         return;
       }
 
@@ -827,13 +878,11 @@ function useNucaLogic() {
       const playerToSimulateGlobalIndex = activeGlobalPlayerIndex;
       const targetPlayerId = `player${playerToSimulateGlobalIndex + 1}`;
 
-      // Logika untuk menampilkan feedback jawaban (BENAR/SALAH)
       setPlayerAnswerFeedback((prev) => ({
         ...prev,
         [targetPlayerId]: isCorrect ? "correct" : "incorrect",
       }));
 
-      // Menghilangkan feedback setelah 2 detik
       setTimeout(() => {
         setPlayerAnswerFeedback((prev) => ({
           ...prev,
@@ -893,12 +942,11 @@ function useNucaLogic() {
         setCurrentActiveTurnPhase("throwing");
         setLastCardThrowerGlobalIndex(null);
 
-        // Pastikan flag transisi direset setelah semua selesai
         setTimeout(() => {
           isTurnTransitioning.current = false;
           console.log("✅ Turn transition completed (from simulateAnswer).");
-        }, 100);
-      }, 300); // Jeda singkat untuk membiarkan feedback UI muncul sebelum modal tertutup
+        }, 500);
+      }, 2200);
     },
     [
       questionForModalDisplay,
@@ -912,6 +960,13 @@ function useNucaLogic() {
       lastCardThrowerGlobalIndex,
       activePlayerGlobalIndices,
       activeLocalPlayerId,
+      setCurrentGameState,
+      setShouldShowQuestionModal,
+      setQuestionForModalDisplay,
+      setThrownCardData,
+      setActiveGlobalPlayerIndex,
+      setCurrentActiveTurnPhase,
+      setLastCardThrowerGlobalIndex,
     ]
   );
 

@@ -5,7 +5,7 @@
 
 .profile-border-svg {
   position: absolute;
-  top: -5px !important; 
+  top: -5px !important;
   left: -5px;
   transform: rotate(-90deg);
   transform-origin: center center;
@@ -74,10 +74,12 @@
     transform: scale(0) rotate(0deg);
     opacity: 0;
   }
+
   50% {
     transform: scale(1.2) rotate(180deg);
     opacity: 1;
   }
+
   100% {
     transform: scale(1) rotate(360deg);
     opacity: 1;
@@ -86,7 +88,7 @@
 
 .player-status-text {
   position: absolute;
-  top: -25px; 
+  top: -25px;
   left: 50%;
   transform: translateX(-50%);
   background: #083288;
@@ -98,18 +100,18 @@
   font-weight: 800;
   white-space: nowrap;
   z-index: 10;
-  animation: pulse-smooth 2.6s infinite alternate ease-in-out; 
+  animation: pulse-smooth 2.6s infinite alternate ease-in-out;
   transition: top 0.3s ease, bottom 0.3s ease, opacity 0.3s ease;
 }
 
 .player-profile-container.player-status-text-top .player-status-text {
   top: -34px;
-  bottom: auto; 
+  bottom: auto;
 }
 
 .player-profile-container.player-status-text-bottom .player-status-text {
   top: auto;
-  bottom: -34px; 
+  bottom: -34px;
 }
 
 @keyframes pulse-smooth {
@@ -117,23 +119,18 @@
     opacity: 0.7;
     transform: translateX(-50%) scale(1);
   }
+
   50% {
     opacity: 1;
     transform: translateX(-50%) scale(1.03);
   }
+
   100% {
     opacity: 0.7;
     transform: translateX(-50%) scale(1);
   }
 }
 
-/* Responsive sizing */
-@media (max-width: 768px) {
-  .feedback-icon {
-    width: 32px;
-    height: 32px;
-  }
-}
 
 /* Responsive Styles */
 @media (max-width: 1200px),
@@ -204,5 +201,10 @@
   .player-profile-bottom-right {
     left: calc(var(--total-player-cards, 1) * 17px + 8vh);
     transform: translateY(-190%);
+  }
+
+  .feedback-icon {
+    width: 32px;
+    height: 32px;
   }
 }

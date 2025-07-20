@@ -27,10 +27,6 @@ function QuestionModal({
   const playerState = useMemo(
     () => ({
       isCurrentlyAnsweringPlayer: currentPlayerId === playerAnsweringId,
-      modalTitle:
-        currentPlayerId === playerAnsweringId
-          ? "Waktunya Menjawab!"
-          : "Pemain Lain Sedang Menjawab",
     }),
     [currentPlayerId, playerAnsweringId]
   );
@@ -92,10 +88,6 @@ function QuestionModal({
 
   return (
     <Modal {...modalProps}>
-      <Modal.Header className="justify-content-center border-0">
-        <Modal.Title>{playerState.modalTitle}</Modal.Title>
-      </Modal.Header>
-
       <Modal.Body className="modal-content">
         <QuestionForm
           question={questionData}

@@ -15,6 +15,7 @@ function NusaCard() {
     activeGlobalPlayerIndex,
     allPlayerTimers,
     currentTurnTimeLeft,
+    cardCounts,
 
     // Game Status
     isMyPlayerTurnToThrow,
@@ -173,6 +174,7 @@ function NusaCard() {
           currentUserId={activeLocalPlayerId}
           gameState={currentGameState}
           currentPlayerGlobalIndex={activeGlobalPlayerIndex}
+          cardCounts={cardCounts}
           timeLeft={currentTurnTimeLeft}
           TIMER_PLAYER_DURATION={THROW_CARD_DURATION_SECONDS}
           throwCard={thrownCardData}

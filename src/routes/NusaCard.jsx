@@ -16,6 +16,7 @@ function NusaCard() {
     allPlayerTimers,
     currentTurnTimeLeft,
     cardCounts,
+    playerAnswerFeedback,
 
     // Game Status
     isMyPlayerTurnToThrow,
@@ -46,12 +47,12 @@ function NusaCard() {
     THROW_CARD_DURATION_SECONDS,
     ANSWER_QUESTION_DURATION_SECONDS,
 
-    // DEBUG FUNCTIONS - Only used in development for debug tools
-    debugSwitchPlayerTurn, // DEBUG: Switch to next player turn
-    handleTurnTimeExpiration, // DEBUG: Force timer expiration
-    resetFullGameState, // DEBUG: Reset entire game state
-    setCurrentGameState, // DEBUG: Direct state manipulation
-    getRandomCardFromAvailablePool, // DEBUG: Add penalty cards
+    //! DEBUG FUNCTIONS - Only used in development for debug tools
+    debugSwitchPlayerTurn,
+    handleTurnTimeExpiration,
+    setCurrentGameState,
+    getRandomCardFromAvailablePool,
+    simulateAnswer,
   } = useNucaLogic();
 
   // Computed values
@@ -64,22 +65,10 @@ function NusaCard() {
       debugTriggerEndTurnTimer: () => {
         handleTurnTimeExpiration();
       },
-
       debugSimulateAnswer: (isCorrect) => {
         if (shouldShowQuestionModal && questionForModalDisplay) {
-          handlePlayerAnswerSubmission({
-            isCorrect,
-            hint: questionForModalDisplay.hint,
-          });
-        } else {
-          console.warn(
-            "Debug: Tidak ada modal pertanyaan aktif untuk disimulasikan jawabannya."
-          );
+          simulateAnswer(isCorrect);
         }
-      },
-
-      debugResetGame: () => {
-        resetFullGameState();
       },
 
       debugAddPenaltyCard: () => {
@@ -105,8 +94,7 @@ function NusaCard() {
       handleTurnTimeExpiration,
       shouldShowQuestionModal,
       questionForModalDisplay,
-      handlePlayerAnswerSubmission,
-      resetFullGameState,
+      simulateAnswer,
       getRandomCardFromAvailablePool,
       setCurrentGameState,
       activeGlobalPlayerIndex,
@@ -135,22 +123,21 @@ function NusaCard() {
     playerTimersData: allPlayerTimers,
     currentTurnPhase: currentActiveTurnPhase,
     playerAnsweringGlobalIndex: activeGlobalPlayerIndex,
-    currentGameState, // DEBUG: For player availability detection
+    currentGameState,
 
     // Position helper for debug display
     getPlayerAtRelativePosition,
 
     // Debug control functions
-    handleDebugSwitchTurn: debugSwitchPlayerTurn, // DEBUG: Switch turn manually
-    handleDebugSwitchUser: setActiveLocalPlayerId, // DEBUG: Change active user
-    triggerAutoEndTimer: debugHelpers.debugTriggerEndTurnTimer, // DEBUG: End timer
-    resetGame: debugHelpers.debugResetGame, // DEBUG: Reset game
-    simulateAnswer: debugHelpers.debugSimulateAnswer, // DEBUG: Simulate answer
-    addPenaltyCard: debugHelpers.debugAddPenaltyCard, // DEBUG: Add penalty card
+    handleDebugSwitchTurn: debugSwitchPlayerTurn,
+    handleDebugSwitchUser: setActiveLocalPlayerId,
+    triggerAutoEndTimer: debugHelpers.debugTriggerEndTurnTimer,
+    simulateAnswer: debugHelpers.debugSimulateAnswer,
+    addPenaltyCard: debugHelpers.debugAddPenaltyCard,
 
     // Debug display data
-    currentQuestion: questionForModalDisplay, // DEBUG: Current question data
-    isQuestionModalActive: shouldShowQuestionModal, // DEBUG: Modal state
+    currentQuestion: questionForModalDisplay,
+    isQuestionModalActive: shouldShowQuestionModal,
   });
 
   return (
@@ -173,6 +160,7 @@ function NusaCard() {
         <GameArea
           currentUserId={activeLocalPlayerId}
           gameState={currentGameState}
+          playerAnswerFeedback={playerAnswerFeedback}
           currentPlayerGlobalIndex={activeGlobalPlayerIndex}
           cardCounts={cardCounts}
           timeLeft={currentTurnTimeLeft}

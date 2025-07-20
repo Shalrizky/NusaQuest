@@ -1,6 +1,8 @@
-import React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Image } from "react-bootstrap";
 import DefaultProfileImage from "../../../assets/common/icon-profile.svg";
+import CheckIcon from "../../../assets/games/nuca/checklist.png"; 
+import CrossIcon from "../../../assets/games/nuca/cross.png"; 
 import "../../../style/components/games/nuca/PlayerProfileNuca.css";
 
 // Constants
@@ -27,12 +29,30 @@ const PlayerProfileNuca = memo(
     isActive = false,
     timeLeft = 0,
     maxTime = 0,
+    answerFeedback = null
   }) => {
     // Memoized profile image
     const profileImage = useMemo(
       () => userProfile?.image || DefaultProfileImage,
       [userProfile?.image]
     );
+
+    const feedbackIcon = useMemo(() => {
+      if (!answerFeedback) return null;
+
+      const iconSrc = answerFeedback === 'correct' ? CheckIcon : CrossIcon;
+      const iconAlt = answerFeedback === 'correct' ? 'Correct Answer' : 'Incorrect Answer';
+
+       return (
+      <div className="answer-feedback-overlay">
+        <Image
+          src={iconSrc}
+          alt={iconAlt}
+          className={`feedback-icon feedback-${answerFeedback}`}
+        />
+      </div>
+    );
+    }, [answerFeedback]);
 
     // Memoized CSS classes and custom properties
     const styling = useMemo(
@@ -122,6 +142,7 @@ const PlayerProfileNuca = memo(
           className="user-profile-image"
           alt="User Profile"
         />
+        {feedbackIcon}
       </div>
     );
   }

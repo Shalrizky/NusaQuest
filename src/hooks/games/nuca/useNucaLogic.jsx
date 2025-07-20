@@ -7,7 +7,6 @@ import {
   getNextPlayerIndex,
 } from "../../../utils/games/nuca/NucaUtils";
 
-// Game Constants
 const GAME_CONSTANTS = {
   FIRST_PLAYER_INDEX: 0,
   TURN_FLOW_DIRECTION: "clockwise",
@@ -285,14 +284,20 @@ function useNucaLogic() {
     useState("throwing");
   const [lastCardThrowerGlobalIndex, setLastCardThrowerGlobalIndex] =
     useState(null);
-
-  // UI State
   const [collectedGameHints, setCollectedGameHints] = useState({
     player1: [],
     player2: [],
     player3: [],
     player4: [],
   });
+  const [playerAnswerFeedback, setPlayerAnswerFeedback] = useState({
+    player1: null,
+    player2: null,
+    player3: null,
+    player4: null,
+  });
+
+  // UI State
   const [showGameOffcanvas, setShowGameOffcanvas] = useState(false);
   const [triggerShuffleAnimation, setTriggerShuffleAnimation] = useState(false);
 
@@ -408,6 +413,19 @@ function useNucaLogic() {
       setCurrentGameState((prevState) => {
         const currentPlayerCards = prevState[`${playerAnsweringId}Cards`] || [];
         const updatedCards = [...currentPlayerCards, newRandomCard];
+        const answeringPlayerId = `player${activeGlobalPlayerIndex + 1}`;
+
+        setPlayerAnswerFeedback((prev) => ({
+          ...prev,
+          [answeringPlayerId]: "incorrect",
+        }));
+
+        setTimeout(() => {
+          setPlayerAnswerFeedback((prev) => ({
+            ...prev,
+            [answeringPlayerId]: null,
+          }));
+        }, 2000);
 
         const newState = {
           ...prevState,
@@ -471,8 +489,8 @@ function useNucaLogic() {
           console.log(
             "✅ Answering transition completed - Ready for next turn"
           );
-        }, 100);
-      }, 300); 
+        }, 800);
+      }, 500);
     }
   }, [
     activePlayerGlobalIndices,
@@ -590,11 +608,22 @@ function useNucaLogic() {
       }
 
       isTurnTransitioning.current = true;
-
       const { isCorrect, hint } = result;
 
       if (!isCorrect) {
         const answeringPlayerId = `player${activeGlobalPlayerIndex + 1}`;
+
+        setPlayerAnswerFeedback((prev) => ({
+          ...prev,
+          [answeringPlayerId]: isCorrect ? "correct" : "incorrect",
+        }));
+
+        setTimeout(() => {
+          setPlayerAnswerFeedback((prev) => ({
+            ...prev,
+            [answeringPlayerId]: null,
+          }));
+        }, 2000);
 
         if (hint) {
           setCollectedGameHints((prev) => {
@@ -644,8 +673,8 @@ function useNucaLogic() {
         setTimeout(() => {
           isTurnTransitioning.current = false;
           console.log("✅ Manual answer transition completed");
-        }, 100);
-      }, 200);
+        }, 500);
+      }, 1000);
     },
     [
       isMyPlayerTurnToAnswer,
@@ -688,14 +717,8 @@ function useNucaLogic() {
     } else if (availableIndices.length > 0) {
       setActiveGlobalPlayerIndex(availableIndices[0]);
       setCurrentActiveTurnPhase("throwing");
-      console.log(
-        `🎮 Player 1 tidak tersedia, game dimulai dengan P${
-          availableIndices[0] + 1
-        }`
-      );
     } else {
       setActiveGlobalPlayerIndex(-1);
-      console.log("❌ Tidak ada pemain yang tersedia!");
     }
   }, [currentGameState.playerStatus]);
 
@@ -772,29 +795,118 @@ function useNucaLogic() {
     isTurnTransitioning.current = false;
   }, [activePlayerGlobalIndices, activeGlobalPlayerIndex]);
 
-  //! DEBUG FUNCTION - Reset game state (only for debug tools)
-  const resetFullGameState = useCallback(() => {
-    setCurrentGameState(INITIAL_CARDS_DATA);
-    setActivePlayerGlobalIndices([]);
-    setActiveGlobalPlayerIndex(GAME_CONSTANTS.FIRST_PLAYER_INDEX);
-    setAllPlayerTimers(Array(4).fill(GAME_CONSTANTS.THROW_TIMER_SECONDS));
-    setThrownCardData(null);
-    setShouldShowQuestionModal(false);
-    setQuestionForModalDisplay(null);
-    setCollectedGameHints({
-      player1: [],
-      player2: [],
-      player3: [],
-      player4: [],
-    });
-    setShowGameOffcanvas(false);
-    setCurrentActiveTurnPhase("throwing");
-    setLastCardThrowerGlobalIndex(null);
-    setTriggerShuffleAnimation(false);
-    isTurnTransitioning.current = false;
-    resetPlayerTurnTimer();
-    console.log("Game state has been reset!");
-  }, [resetPlayerTurnTimer]);
+  //! DEBUG FUNCTIONS - Only used in development for debug tools
+  const simulateAnswer = useCallback(
+    (isCorrect) => {
+      if (!questionForModalDisplay) {
+        console.warn(
+          "DEBUG: Tidak ada pertanyaan aktif untuk disimulasikan jawabannya."
+        );
+        return;
+      }
+
+      // Pastikan modal pertanyaan memang sedang aktif
+      if (!shouldShowQuestionModal || currentActiveTurnPhase !== "answering") {
+        console.warn(
+          "DEBUG: Modal pertanyaan tidak aktif atau bukan fase menjawab. Simulasi diabaikan."
+        );
+        return;
+      }
+
+      // Asumsikan pemain yang menjawab adalah pemain yang sedang aktif secara global
+      const playerToSimulateGlobalIndex = activeGlobalPlayerIndex;
+      const targetPlayerId = `player${playerToSimulateGlobalIndex + 1}`;
+
+      // Logika untuk menampilkan feedback jawaban (BENAR/SALAH)
+      setPlayerAnswerFeedback((prev) => ({
+        ...prev,
+        [targetPlayerId]: isCorrect ? "correct" : "incorrect",
+      }));
+
+      // Menghilangkan feedback setelah 2 detik
+      setTimeout(() => {
+        setPlayerAnswerFeedback((prev) => ({
+          ...prev,
+          [targetPlayerId]: null,
+        }));
+      }, 2000);
+
+      if (!isCorrect) {
+        if (questionForModalDisplay?.hint) {
+          setCollectedGameHints((prev) => {
+            const currentPlayerHints = prev[targetPlayerId] || [];
+            if (!currentPlayerHints.includes(questionForModalDisplay.hint)) {
+              return {
+                ...prev,
+                [targetPlayerId]: [
+                  ...currentPlayerHints,
+                  questionForModalDisplay.hint,
+                ],
+              };
+            }
+            return prev;
+          });
+
+          // Hanya tampilkan offcanvas untuk pemain lokal jika mereka dapat penalti/hint
+          if (targetPlayerId === activeLocalPlayerId) {
+            setShowGameOffcanvas(true);
+          }
+        }
+
+        const newRandomCard = getRandomCardFromAvailablePool();
+        setCurrentGameState((prevState) => {
+          const playerTargetId = `player${playerToSimulateGlobalIndex + 1}`;
+          return {
+            ...prevState,
+            [`${playerTargetId}Cards`]: [
+              ...prevState[`${playerTargetId}Cards`],
+              newRandomCard,
+            ],
+          };
+        });
+        console.log(`🃏 Penalti! Player ${targetPlayerId} mendapatkan kartu.`);
+      } else {
+        console.log(`✅ Jawaban BENAR dari Player ${targetPlayerId}.`);
+      }
+
+      // Transisi ke giliran berikutnya setelah jeda singkat
+      // Ini mengulangi bagian dari handleTurnTimeExpiration/handlePlayerAnswerSubmission
+      // tapi ini khusus untuk debug simulasinya.
+      setTimeout(() => {
+        setShouldShowQuestionModal(false);
+        setQuestionForModalDisplay(null);
+        setThrownCardData(null);
+
+        const nextThrowerIndex = getNextPlayerIndex(
+          lastCardThrowerGlobalIndex,
+          activePlayerGlobalIndices,
+          GAME_CONSTANTS.TURN_FLOW_DIRECTION
+        );
+        setActiveGlobalPlayerIndex(nextThrowerIndex);
+        setCurrentActiveTurnPhase("throwing");
+        setLastCardThrowerGlobalIndex(null);
+
+        // Pastikan flag transisi direset setelah semua selesai
+        setTimeout(() => {
+          isTurnTransitioning.current = false;
+          console.log("✅ Turn transition completed (from simulateAnswer).");
+        }, 100);
+      }, 300); // Jeda singkat untuk membiarkan feedback UI muncul sebelum modal tertutup
+    },
+    [
+      questionForModalDisplay,
+      activeGlobalPlayerIndex,
+      shouldShowQuestionModal,
+      currentActiveTurnPhase,
+      setPlayerAnswerFeedback,
+      setCollectedGameHints,
+      setShowGameOffcanvas,
+      getRandomCardFromAvailablePool,
+      lastCardThrowerGlobalIndex,
+      activePlayerGlobalIndices,
+      activeLocalPlayerId,
+    ]
+  );
 
   return {
     // Core Game Data
@@ -804,6 +916,7 @@ function useNucaLogic() {
     allPlayerTimers,
     currentTurnTimeLeft,
     cardCounts,
+    playerAnswerFeedback,
 
     // Game Status
     isMyPlayerTurnToThrow,
@@ -847,12 +960,12 @@ function useNucaLogic() {
     THROW_CARD_DURATION_SECONDS: GAME_CONSTANTS.THROW_TIMER_SECONDS,
     ANSWER_QUESTION_DURATION_SECONDS: GAME_CONSTANTS.ANSWER_TIMER_SECONDS,
 
-    // DEBUG FUNCTIONS - Only for debug tools in development
-    debugSwitchPlayerTurn, // DEBUG: Switch to next player turn
-    handleTurnTimeExpiration, // DEBUG: Force timer expiration
-    resetFullGameState, // DEBUG: Reset entire game state
-    setCurrentGameState, // DEBUG: Direct state manipulation
-    getRandomCardFromAvailablePool, // DEBUG: Add penalty cards
+    //! DEBUG FUNCTIONS - Only for debug tools in development
+    debugSwitchPlayerTurn,
+    handleTurnTimeExpiration,
+    setCurrentGameState,
+    getRandomCardFromAvailablePool,
+    simulateAnswer,
   };
 }
 

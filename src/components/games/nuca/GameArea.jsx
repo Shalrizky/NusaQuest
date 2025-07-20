@@ -19,6 +19,7 @@ const MIDDLE_DECK_CARDS = 5;
 const GameArea = ({
   currentUserId,
   gameState,
+  playerAnswerFeedback,
   TIMER_PLAYER_DURATION,
   throwCard,
   handleCardClicked,
@@ -60,6 +61,7 @@ const GameArea = ({
         currentMaxTimeForTurn,
         profileData: {},
         cardCount: playerCards.length,
+        answerFeedback: playerAnswerFeedback[playerId],
         lastUpdated: Date.now(),
       };
     });
@@ -73,6 +75,7 @@ const GameArea = ({
     TIMER_ANSWER_DURATION,
     isPlayerTurnFromHook,
     getPlayerTimeLeftFromHook,
+    playerAnswerFeedback
   ]); 
 
   // Memoized bottom player render (current user)
@@ -114,6 +117,7 @@ const GameArea = ({
               isActive={playerData.isCurrentPlayerActive}
               timeLeft={playerData.currentPlayerTimeLeft}
               maxTime={playerData.currentMaxTimeForTurn}
+              answerFeedback={playerData.answerFeedback}
             />
           )}
           <PlayerBackStackCards

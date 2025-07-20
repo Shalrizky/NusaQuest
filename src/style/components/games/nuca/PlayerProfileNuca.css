@@ -46,6 +46,52 @@
   transform: translateY(-168%);
 }
 
+.answer-feedback-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.feedback-icon {
+  width: 40px;
+  height: 40px;
+  animation: feedbackPulse 0.6s ease-out;
+}
+
+.feedback-correct {
+  filter: drop-shadow(0 0 8px rgba(77, 255, 0, 0.8));
+}
+
+.feedback-incorrect {
+  filter: drop-shadow(0 0 8px rgba(178, 34, 34, 0.8));
+}
+
+@keyframes feedbackPulse {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+/* Responsive sizing */
+@media (max-width: 768px) {
+  .feedback-icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 /* Responsive Styles */
 @media (max-width: 1200px),
 (max-width: 992px) {

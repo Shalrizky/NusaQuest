@@ -1,11 +1,11 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState, useEffect } from "react";
 import { Image } from "react-bootstrap";
 import DefaultProfileImage from "../../../assets/common/icon-profile.svg";
 import CheckIcon from "../../../assets/games/nuca/checklist.png";
 import CrossIcon from "../../../assets/games/nuca/cross.png";
 import "../../../style/components/games/nuca/PlayerProfileNuca.css";
 
-// Constants
+// Constants 
 const DEFAULT_RADIUS = 29;
 const STROKE_WIDTH = 6;
 const TIME_THRESHOLDS = {
@@ -30,20 +30,55 @@ const PlayerProfileNuca = memo(
     timeLeft = 0,
     maxTime = 0,
     answerFeedback = null,
+    currentTurnPhase = null,
+    isCurrentPlayer = false,
   }) => {
-    // Memoized profile image
     const profileImage = useMemo(
       () => userProfile?.image || DefaultProfileImage,
       [userProfile?.image]
     );
 
+    // State untuk mengontrol jumlah titik (elipsis)
+    const [dots, setDots] = useState("");
+
+    const baseStatusText = useMemo(() => {
+      if (!isActive || !isCurrentPlayer) return null;
+
+      return currentTurnPhase === "throwing" ? "Memilih" : "Menjawab";
+    }, [isActive, isCurrentPlayer, currentTurnPhase]);
+
+    // Effect untuk animasi titik berjalan
+    useEffect(() => {
+      let intervalId;
+      if (baseStatusText) {
+        setDots("");
+        intervalId = setInterval(() => {
+          setDots((prevDots) => {
+            if (prevDots.length < 3) {
+              return prevDots + ".";
+            }
+            return "";
+          });
+        }, 600);
+      }
+
+      return () => {
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+      };
+    }, [baseStatusText]);
+
+    // Teks status akhir yang dianimasikan (dengan titik)
+    const animatedStatusText = useMemo(() => {
+      return baseStatusText ? `${baseStatusText}${dots}` : null;
+    }, [baseStatusText, dots]);
+
     const feedbackIcon = useMemo(() => {
       if (!answerFeedback) return null;
-
       const iconSrc = answerFeedback === "correct" ? CheckIcon : CrossIcon;
       const iconAlt =
         answerFeedback === "correct" ? "Correct Answer" : "Incorrect Answer";
-
       return (
         <div className="answer-feedback-overlay">
           <Image
@@ -53,23 +88,35 @@ const PlayerProfileNuca = memo(
           />
         </div>
       );
-    }, [answerFeedback]); 
+    }, [answerFeedback]);
 
-    // Memoized CSS classes and custom properties
+    // LOGIKA UNTUK MENENTUKAN KELAS POSISI TEKS STATUS
+    const statusTextPositionClass = useMemo(() => {
+      switch (position) {
+        case "top-left":
+           return "player-status-text-bottom";
+        case "left":
+          return "player-status-text-bottom";
+        case "right":
+        case "bottom-right":
+        default:
+          return "player-status-text-top";
+      }
+    }, [position]);
+
+    // Memoized CSS classes dan custom properties
     const styling = useMemo(
       () => ({
-        className: `player-profile-container player-profile-${position}`,
+        className: `player-profile-container player-profile-${position} ${statusTextPositionClass}`,
         customCssVars: { "--total-player-cards": totalCards },
       }),
-      [position, totalCards]
+      [position, totalCards, statusTextPositionClass] 
     );
 
-    // Memoized SVG calculations
     const svgCalculations = useMemo(() => {
       const svgDisplaySize = radius * 2 + STROKE_WIDTH * 2;
       const circleCenterCoordinate = svgDisplaySize / 2;
       const circleCircumference = 2 * Math.PI * radius;
-
       return {
         svgDisplaySize,
         circleCenterCoordinate,
@@ -78,7 +125,6 @@ const PlayerProfileNuca = memo(
       };
     }, [radius]);
 
-    // Memoized timer calculations
     const timerData = useMemo(() => {
       if (maxTime === 0) {
         return {
@@ -108,7 +154,6 @@ const PlayerProfileNuca = memo(
       };
     }, [timeLeft, maxTime, svgCalculations.circleCircumference]);
 
-    // Memoized timer SVG element
     const timerSvg = useMemo(() => {
       if (!isActive) return null;
 
@@ -136,6 +181,11 @@ const PlayerProfileNuca = memo(
 
     return (
       <div className={styling.className} style={styling.customCssVars}>
+        {/* Render animatedStatusText */}
+        {animatedStatusText && (
+          <div className="player-status-text">{animatedStatusText}</div>
+        )}
+
         {timerSvg}
         <Image
           src={profileImage}

@@ -398,7 +398,6 @@ function useNucaLogic() {
 
       setTimeout(() => {
         isTurnTransitioning.current = false;
-        console.log("✅ Throwing transition completed");
       }, 100);
     } else if (currentActiveTurnPhase === "answering") {
       console.log(
@@ -460,8 +459,6 @@ function useNucaLogic() {
           }
           return prev;
         });
-
-        // Show offcanvas jika current user yang timeout
         if (answeringPlayerId === activeLocalPlayerId) {
           setShowGameOffcanvas(true);
         }
@@ -490,7 +487,7 @@ function useNucaLogic() {
             "✅ Answering transition completed - Ready for next turn"
           );
         }, 500);
-      }, 1000);
+      }, 200);
     }
   }, [
     activePlayerGlobalIndices,
@@ -609,26 +606,21 @@ function useNucaLogic() {
 
       isTurnTransitioning.current = true;
       const { isCorrect, hint } = result;
-      const answeringPlayerId = `player${activeGlobalPlayerIndex + 1}`; // Define here to use universally
+      const answeringPlayerId = `player${activeGlobalPlayerIndex + 1}`; 
 
-      // --- START OF MODIFICATION ---
-
-      // Set the feedback for the current answering player regardless of correctness
       setPlayerAnswerFeedback((prev) => ({
         ...prev,
         [answeringPlayerId]: isCorrect ? "correct" : "incorrect",
       }));
 
-      // Set a timeout to clear the feedback after a short duration (e.g., 2 seconds)
       setTimeout(() => {
         setPlayerAnswerFeedback((prev) => ({
           ...prev,
           [answeringPlayerId]: null,
         }));
-      }, 2000); // Display feedback for 2 seconds
+      }, 2000); 
 
       if (!isCorrect) {
-        // This block now only handles penalties and hints for incorrect answers
         console.log(
           `🃏 Penalti! Player ${answeringPlayerId} mendapatkan kartu.`
         );
@@ -684,7 +676,7 @@ function useNucaLogic() {
           isTurnTransitioning.current = false;
           console.log("✅ Manual answer transition completed");
         }, 500); 
-      }, 1500); 
+      }, 2200); 
     },
     [
       isMyPlayerTurnToAnswer,

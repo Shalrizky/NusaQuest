@@ -84,6 +84,49 @@
   }
 }
 
+.player-status-text {
+  position: absolute;
+  top: -25px; 
+  left: 50%;
+  transform: translateX(-50%);
+  background: #083288;
+  border: 1px solid #fff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  z-index: 10;
+  animation: pulse-smooth 2.6s infinite alternate ease-in-out; 
+  transition: top 0.3s ease, bottom 0.3s ease, opacity 0.3s ease;
+}
+
+.player-profile-container.player-status-text-top .player-status-text {
+  top: -34px;
+  bottom: auto; 
+}
+
+.player-profile-container.player-status-text-bottom .player-status-text {
+  top: auto;
+  bottom: -34px; 
+}
+
+@keyframes pulse-smooth {
+  0% {
+    opacity: 0.7;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.03);
+  }
+  100% {
+    opacity: 0.7;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
 /* Responsive sizing */
 @media (max-width: 768px) {
   .feedback-icon {

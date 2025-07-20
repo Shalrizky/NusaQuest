@@ -33,13 +33,11 @@ const GameArea = ({
   // Memoized player data calculation to prevent recalculation on every render
   const playersData = useMemo(() => {
     const data = {};
-
     PLAYER_POSITIONS.forEach((position) => {
       const playerId =
         position === "bottom"
           ? currentUserId
           : getPlayerAtRelativePosition(currentUserId, position);
-
       const playerCards = getPlayerCards(playerId, gameState);
       const playerStatus = getPlayerStatus(playerId, gameState);
       const playerGlobalIndex = getPlayerGlobalIndex(playerId);
@@ -78,7 +76,6 @@ const GameArea = ({
     playerAnswerFeedback
   ]); 
 
-  // Memoized bottom player render (current user)
   const renderBottomPlayer = useCallback(() => {
     const playerData = playersData.bottom;
 
@@ -96,10 +93,17 @@ const GameArea = ({
           isActive={playerData.isCurrentPlayerActive}
           timeLeft={playerData.currentPlayerTimeLeft}
           maxTime={playerData.currentMaxTimeForTurn}
+          currentTurnPhase={currentTurnPhase}
+          isCurrentPlayer={true}
         />
       </>
     );
-  }, [playersData.bottom, handleCardClicked, isCurrentUserTurn]);
+  }, [
+    playersData.bottom, 
+    handleCardClicked, 
+    isCurrentUserTurn, 
+    currentTurnPhase
+  ]);
 
   // Memoized other players render (top, left, right)
   const renderOtherPlayer = useCallback(
@@ -118,6 +122,8 @@ const GameArea = ({
               timeLeft={playerData.currentPlayerTimeLeft}
               maxTime={playerData.currentMaxTimeForTurn}
               answerFeedback={playerData.answerFeedback}
+              currentTurnPhase={currentTurnPhase}
+              isCurrentPlayer={playerData.playerId !== currentUserId}
             />
           )}
           <PlayerBackStackCards
@@ -129,10 +135,9 @@ const GameArea = ({
         </>
       );
     },
-    [playersData]
+    [playersData, currentTurnPhase, currentUserId]
   );
 
-  // Memoized center area with deck and thrown card
   const renderCenterArea = useMemo(
     () => (
       <Col

@@ -182,6 +182,7 @@ function NusaCard() {
         onClose={handleCloseQuestionPromptModal}
         onSubmitAnswer={handlePlayerAnswerSubmission}
         isMyTurnToAnswer={isMyPlayerTurnToAnswer()}
+        playerAnswerFeedback={playerAnswerFeedback}
         currentPlayerId={activeLocalPlayerId}
         playerAnsweringId={`player${activeGlobalPlayerIndex + 1}`}
         timeLeft={currentTurnTimeLeft}

@@ -489,8 +489,8 @@ function useNucaLogic() {
           console.log(
             "✅ Answering transition completed - Ready for next turn"
           );
-        }, 800);
-      }, 500);
+        }, 500);
+      }, 1000);
     }
   }, [
     activePlayerGlobalIndices,
@@ -609,26 +609,34 @@ function useNucaLogic() {
 
       isTurnTransitioning.current = true;
       const { isCorrect, hint } = result;
+      const answeringPlayerId = `player${activeGlobalPlayerIndex + 1}`; // Define here to use universally
 
-      if (!isCorrect) {
-        const answeringPlayerId = `player${activeGlobalPlayerIndex + 1}`;
+      // --- START OF MODIFICATION ---
 
+      // Set the feedback for the current answering player regardless of correctness
+      setPlayerAnswerFeedback((prev) => ({
+        ...prev,
+        [answeringPlayerId]: isCorrect ? "correct" : "incorrect",
+      }));
+
+      // Set a timeout to clear the feedback after a short duration (e.g., 2 seconds)
+      setTimeout(() => {
         setPlayerAnswerFeedback((prev) => ({
           ...prev,
-          [answeringPlayerId]: isCorrect ? "correct" : "incorrect",
+          [answeringPlayerId]: null,
         }));
+      }, 2000); // Display feedback for 2 seconds
 
-        setTimeout(() => {
-          setPlayerAnswerFeedback((prev) => ({
-            ...prev,
-            [answeringPlayerId]: null,
-          }));
-        }, 2000);
+      if (!isCorrect) {
+        // This block now only handles penalties and hints for incorrect answers
+        console.log(
+          `🃏 Penalti! Player ${answeringPlayerId} mendapatkan kartu.`
+        );
 
-        if (hint) {
+        if (questionForModalDisplay?.hint) {
           setCollectedGameHints((prev) => {
             const currentPlayerHints = prev[answeringPlayerId] || [];
-            if (!currentPlayerHints.includes(hint)) {
+            if (!currentPlayerHints.includes(questionForModalDisplay.hint)) {
               return {
                 ...prev,
                 [answeringPlayerId]: [...currentPlayerHints, hint],
@@ -644,15 +652,17 @@ function useNucaLogic() {
 
         const newRandomCard = getRandomCardFromAvailablePool();
         setCurrentGameState((prevState) => {
-          const playerAnsweringId = `player${activeGlobalPlayerIndex + 1}`;
+          const playerTargetId = `player${activeGlobalPlayerIndex + 1}`;
           return {
             ...prevState,
-            [`${playerAnsweringId}Cards`]: [
-              ...prevState[`${playerAnsweringId}Cards`],
+            [`${playerTargetId}Cards`]: [
+              ...prevState[`${playerTargetId}Cards`],
               newRandomCard,
             ],
           };
         });
+      } else {
+        console.log(`✅ Jawaban BENAR dari Player ${answeringPlayerId}.`);
       }
       setTimeout(() => {
         setShouldShowQuestionModal(false);
@@ -669,12 +679,12 @@ function useNucaLogic() {
         setCurrentActiveTurnPhase("throwing");
         setLastCardThrowerGlobalIndex(null);
 
-        // Reset flag
+        // Reset transition flag
         setTimeout(() => {
           isTurnTransitioning.current = false;
           console.log("✅ Manual answer transition completed");
-        }, 500);
-      }, 1000);
+        }, 500); 
+      }, 1500); 
     },
     [
       isMyPlayerTurnToAnswer,
@@ -683,6 +693,17 @@ function useNucaLogic() {
       activeLocalPlayerId,
       getRandomCardFromAvailablePool,
       lastCardThrowerGlobalIndex,
+      questionForModalDisplay, 
+      setPlayerAnswerFeedback, 
+      setCollectedGameHints, 
+      setShowGameOffcanvas, 
+      setCurrentGameState, 
+      setShouldShowQuestionModal, 
+      setQuestionForModalDisplay, 
+      setThrownCardData, 
+      setActiveGlobalPlayerIndex,
+      setCurrentActiveTurnPhase, 
+      setLastCardThrowerGlobalIndex
     ]
   );
 
@@ -691,14 +712,11 @@ function useNucaLogic() {
   }, [collectedGameHints, activeLocalPlayerId]);
 
   // Modal Management
-  const handleCloseQuestionPromptModal = useCallback(() => {
-    if (currentActiveTurnPhase === "answering") {
-      console.log("Modal pertanyaan ditutup secara manual.");
-    }
+  const handleCloseQuestionPromptModal = () => {
     setShouldShowQuestionModal(false);
     setQuestionForModalDisplay(null);
     setThrownCardData(null);
-  }, [currentActiveTurnPhase]);
+  };
 
   // Effects
   useEffect(() => {
@@ -869,9 +887,6 @@ function useNucaLogic() {
         console.log(`✅ Jawaban BENAR dari Player ${targetPlayerId}.`);
       }
 
-      // Transisi ke giliran berikutnya setelah jeda singkat
-      // Ini mengulangi bagian dari handleTurnTimeExpiration/handlePlayerAnswerSubmission
-      // tapi ini khusus untuk debug simulasinya.
       setTimeout(() => {
         setShouldShowQuestionModal(false);
         setQuestionForModalDisplay(null);

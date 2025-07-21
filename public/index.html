@@ -32,10 +32,11 @@
   <div id="root"></div>
 
   <script type="text/javascript">
-    if (location.hostname.indexOf('nusaquest.com') === -1) {
+    if (process.env.NODE_ENV !== 'development' && location.hostname.indexOf('nusaquest.com') === -1) {
       location.replace("https://nusaquest.com");
     }
   </script>
+
 </body>
 
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Row, Col, Image, Offcanvas } from "react-bootstrap";
+import { useState, useEffect, useRef } from "react";
+import { Row, Col, Image, Offcanvas, Modal } from "react-bootstrap";
 import btntemp from "../../assets/common/btnTemp.png";
 import iconmusik from "../../assets/common/icon_musik.png";
 import iconmusikOff from "../../assets/common/icon_musik_off.png";
@@ -18,89 +18,123 @@ function HeaderGame({
   onCloseOffcanvas,
 }) {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [isSfxPlaying, setIsSfxPlaying] = useState(false); // Changed to false
+  const [isSfxPlaying, setIsSfxPlaying] = useState(false);
   const audioRef = useRef(null);
   const playlist = [song1, song2, song3];
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
+  const [showAudioModal, setShowAudioModal] = useState(false);
 
+  // Coba autoplay saat pertama render
   useEffect(() => {
-    if (audioRef.current) {
-      if (isMusicPlaying) {
-        audioRef.current.play().catch((error) => {
-          console.log("Playback error:", error);
-        });
-      } else {
-        audioRef.current.pause();
+    const tryAutoplay = () => {
+      if (audioRef.current) {
+        audioRef.current.play()
+          .then(() => setIsMusicPlaying(true))
+          .catch(() => setShowAudioModal(true));
       }
-    }
-  }, [isMusicPlaying, currentSongIndex]);
+    };
 
-  const handleMusicClick = () => {
+    tryAutoplay();
+  }, []);
+
+  // Handle perubahan lagu
+  useEffect(() => {
+    if (audioRef.current && isMusicPlaying) {
+      audioRef.current.play().catch(console.error);
+    }
+  }, [currentSongIndex, isMusicPlaying]);
+
+  const toggleMusic = () => {
+    if (isMusicPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(() => setShowAudioModal(true));
+    }
     setIsMusicPlaying(!isMusicPlaying);
   };
 
-  const handleSfxClick = () => {
-    setIsSfxPlaying(!isSfxPlaying);
-  };
-
   const handleAudioEnded = () => {
-    const nextSongIndex = (currentSongIndex + 1) % playlist.length;
-    setCurrentSongIndex(nextSongIndex);
+    setCurrentSongIndex((prev) => (prev + 1) % playlist.length);
   };
 
-  const handleBtnTempClick = () => {
-    setShowOffcanvas(true);
-    if (toggleTemp) toggleTemp();
-  };
-
-  const handleCloseOffcanvas = () => {
-    if (onCloseOffcanvas) {
-      onCloseOffcanvas();
-    } else {
-      setShowOffcanvas(false);
-    }
+  const enableAudio = () => {
+    audioRef.current.play()
+      .then(() => {
+        setIsMusicPlaying(true);
+        setShowAudioModal(false);
+      })
+      .catch(console.error);
   };
 
   return (
-    <Row className="align-items-center my-4">
-      <Col className="d-flex justify-content-start">
-        <Image
-          src={btntemp}
-          alt="btn temp"
-          width={45}
-          className="ms-3"
-          onClick={handleBtnTempClick}
-          style={{ cursor: "pointer" }}
+    <>
+      <Row className="align-items-center my-4">
+        <Col className="d-flex justify-content-start">
+          <Image
+            src={btntemp}
+            alt="btn temp"
+            width={45}
+            className="ms-3"
+            onClick={() => setShowOffcanvas(true)}
+            style={{ cursor: "pointer" }}
+          />
+        </Col>
+        <Col className="d-flex justify-content-end">
+          <Image
+            src={isSfxPlaying ? iconsfx : iconsfxOff}
+            alt="icon sfx"
+            width={45}
+            className="me-3"
+            onClick={() => setIsSfxPlaying(!isSfxPlaying)}
+            style={{ cursor: "pointer" }}
+          />
+          <Image
+            src={isMusicPlaying ? iconmusik : iconmusikOff}
+            alt="icon music"
+            width={45}
+            className="me-3"
+            onClick={toggleMusic}
+            style={{ cursor: "pointer" }}
+          />
+        </Col>
+
+        <audio
+          ref={audioRef}
+          src={playlist[currentSongIndex]}
+          onEnded={handleAudioEnded}
+          loop={false}
         />
-      </Col>
-      <Col className="d-flex justify-content-end">
-        <Image
-          src={isSfxPlaying ? iconsfx : iconsfxOff}
-          alt="icon sfx"
-          width={45}
-          className="me-3"
-          onClick={handleSfxClick}
-          style={{ cursor: "pointer" }}
-        />
-        <Image
-          src={isMusicPlaying ? iconmusik : iconmusikOff}
-          alt="icon music"
-          width={45}
-          className="me-3"
-          onClick={handleMusicClick}
-          style={{ cursor: "pointer" }}
-        />
-      </Col>
-      <audio
-        ref={audioRef}
-        src={playlist[currentSongIndex]}
-        onEnded={handleAudioEnded}
-        autoPlay={false}
-        loop={false}
-      />
+      </Row>
+
+      {/* Modal untuk enable audio JANGAN LUPA DI AKTFIKAN DAN STYLE NANTI */}
+      {/* <Modal
+        show={showAudioModal}
+        onHide={() => setShowAudioModal(false)}
+        centered
+        size="sm"
+      >
+        <Modal.Body className="text-center p-4">
+          <h6>Aktifkan Audio?</h6>
+          <div className="d-flex justify-content-center gap-3 mt-3">
+            <button 
+              className="btn btn-sm btn-success"
+              onClick={enableAudio}
+            >
+              Ya
+            </button>
+            <button 
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setShowAudioModal(false)}
+            >
+              Nanti
+            </button>
+          </div>
+        </Modal.Body>
+      </Modal> */}
+
       <Offcanvas
         show={showOffcanvas}
-        onHide={handleCloseOffcanvas}
+        onHide={onCloseOffcanvas || (() => setShowOffcanvas(false))}
         placement="start"
         className="custom-offcanvas"
       >
@@ -108,21 +142,19 @@ function HeaderGame({
           <Offcanvas.Title>Kumpulan Jawaban</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
-          {hints && hints.length > 0 && (
+          {hints?.length > 0 && (
             <div className="hint-section">
               <h5>Hints</h5>
               <ul className="answer-section">
-                {hints.map((hint, index) => (
-                  <li key={index}>
-                    <strong>{index + 1}.</strong> {hint}
-                  </li>
+                {hints.map((hint, i) => (
+                  <li key={i}><strong>{i+1}.</strong> {hint}</li>
                 ))}
               </ul>
             </div>
           )}
         </Offcanvas.Body>
       </Offcanvas>
-    </Row>
+    </>
   );
 }
 

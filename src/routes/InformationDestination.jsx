@@ -4,6 +4,7 @@ import "../style/routes/InformationDestination.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CardInformation from "../components/CardInformation";
+import { TranslatedText } from '../components/TranslationHelper';
 import {
   fetchDestinations,
   fetchTopics,
@@ -12,25 +13,24 @@ import {
   getLocalStorageItem,
   setLocalStorageItem,
   removeLocalStorageItem,
-} from "../utils/localStorageUtil"; 
+} from "../utils/localStorageUtil";
 
-const InformationDestination = () => { 
+const InformationDestination = () => {
   const [destinations, setDestinations] = useState([]);
   const [topics, setTopics] = useState({});
   const [loadingTabs, setLoadingTabs] = useState({});
   const [activeTab, setActiveTab] = useState(
-    getLocalStorageItem('lastActiveTab') || "daerah_jawa_barat" 
+    getLocalStorageItem('lastActiveTab') || "daerah_jawa_barat"
   );
 
   useEffect(() => {
     // Simpan tab terakhir saat user beralih tab
     window.onbeforeunload = () => {
-      removeLocalStorageItem('lastActiveTab'); 
+      removeLocalStorageItem('lastActiveTab');
     };
 
     fetchTopics((fetchedTopics) => {
       setTopics(fetchedTopics);
-
       const initialLoadingTabs = Object.keys(fetchedTopics).reduce(
         (acc, key) => {
           acc[key] = true;
@@ -38,7 +38,6 @@ const InformationDestination = () => {
         },
         {}
       );
-
       setLoadingTabs(initialLoadingTabs);
 
       fetchDestinations((fetchedDestinations) => {
@@ -47,31 +46,24 @@ const InformationDestination = () => {
         Object.keys(fetchedTopics).forEach((topicKey) => {
           updatedLoadingTabs[topicKey] = false;
         });
-
         setLoadingTabs(updatedLoadingTabs);
       });
     });
   }, []);
 
-
   // Fungsi untuk mengelompokkan destinasi berdasarkan topik dan tipe
   const groupByTopicAndType = (destinations) => {
     const grouped = {};
-
     Object.entries(destinations).forEach(([key, destination]) => {
       const { topic, type } = destination;
-
       if (!grouped[topic]) {
         grouped[topic] = {};
       }
-
       if (!grouped[topic][type]) {
         grouped[topic][type] = [];
       }
-
       grouped[topic][type].push({ ...destination, id: key });
     });
-
     return grouped;
   };
 
@@ -84,10 +76,12 @@ const InformationDestination = () => {
 
   return (
     <Container fluid id="information-container">
-      <Header
-        showTextHeader="INFORMATION"
-        showLogoIcon={false}
-        showBackIcon={true}
+      <Header 
+        showTextHeader={
+          <TranslatedText originalLang="id">INFORMASI</TranslatedText>
+        }
+        showLogoIcon={false} 
+        showBackIcon={true} 
       />
       <Row className="information-content my-3">
         <Col md={12} className="px-5">
@@ -103,24 +97,31 @@ const InformationDestination = () => {
               <Tab
                 key={key}
                 eventKey={key}
-                title={topics[key].name}
+                title={
+                  <TranslatedText originalLang="id">
+                    {topics[key].name}
+                  </TranslatedText>
+                }
                 tabClassName="custom-tab"
               >
                 {loadingTabs[key] ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
-                    style={{ height: "200px"}}
+                    style={{ height: "200px" }}
                   >
                     <Spinner animation="border" variant="light" />
                   </div>
-                ) : Object.entries(groupedDestinations[key] || {}).length >
-                  0 ? (
+                ) : Object.entries(groupedDestinations[key] || {}).length > 0 ? (
                   Object.keys(groupedDestinations[key]).map((typeKey) => (
                     <div
                       key={typeKey}
                       className="d-grid align-items-center justify-content-start my-4 pb-3"
                     >
-                      <h3>{typeKey}</h3>
+                      <h3>
+                        <TranslatedText originalLang="id">
+                          {typeKey}
+                        </TranslatedText>
+                      </h3>
                       <CardInformation
                         type={typeKey}
                         destinations={groupedDestinations[key][typeKey] || []}
@@ -130,9 +131,17 @@ const InformationDestination = () => {
                 ) : (
                   <div
                     className="d-flex justify-content-center align-items-center"
-                    style={{ height: "200px", color: "#fff", fontWeight: "bold" }}
+                    style={{ 
+                      height: "200px", 
+                      color: "#fff", 
+                      fontWeight: "bold" 
+                    }}
                   >
-                    <h4>Data Not Found 😪</h4>
+                    <h4>
+                      <TranslatedText originalLang="id">
+                        Data Tidak Di Temukan 😪
+                      </TranslatedText>
+                    </h4>
                   </div>
                 )}
               </Tab>
@@ -140,7 +149,6 @@ const InformationDestination = () => {
           </Tabs>
         </Col>
       </Row>
-
       <Footer textColor="#fff" />
     </Container>
   );

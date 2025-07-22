@@ -7,7 +7,7 @@ import iconsfx from "../../assets/common/icon_sfx.png";
 import iconsfxOff from "../../assets/common/icon_sfx_off.png";
 import song1 from "../../assets/sound/song1.mp3";
 import song2 from "../../assets/sound/song2.mp3";
-import song3 from "../../assets/sound/song3.mp3";
+import song3 from "../../assets/sound/song3.MP3";
 import "../../style/components/games/HeaderGame.css";
 
 function HeaderGame({

@@ -2,9 +2,13 @@ import ReactDOM from 'react-dom/client';
 import React, { useState, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext'; 
+
 import Loader from './utils/Loader';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
+
+// routes
 import Login from './routes/Login';
 import Home from './routes/Home';
 import Credit from './routes/Credit';
@@ -20,20 +24,14 @@ import NucaVsAi from './routes/NucaVsAi';
 import NotFoundPage from './routes/404';
 import ProtectedRoute from './components/ProtectedRoute';
 
-
 const withLoader = (Component) => {
   return (props) => {
     const [isLoading, setIsLoading] = useState(true);
-
     useEffect(() => {
       const timer = setTimeout(() => setIsLoading(false), 1000);
       return () => clearTimeout(timer);
     }, []);
-
-    if (isLoading) {
-      return <Loader />;
-    }
-
+    if (isLoading) return <Loader />;
     return <Component {...props} />;
   };
 };
@@ -54,62 +52,34 @@ const App = () => {
         { path: '/login', element: withLoader(Login)() },
         {
           path: '/profile',
-          element: (
-            <ProtectedRoute>
-              {withLoader(Profile)()}
-            </ProtectedRoute>
-          )
+          element: <ProtectedRoute>{withLoader(Profile)()}</ProtectedRoute>
         },
         { path: '/information', element: withLoader(Information)() },
         { path: '/credit', element: withLoader(Credit)() },
         { path: '/destination/:id', element: withLoader(DestinationDetail)() },
         {
           path: '/lobby/:topicID/:gameID',
-          element: (
-            <ProtectedRoute>
-              {withLoader(LobbyGame)()}
-            </ProtectedRoute>
-          )
+          element: <ProtectedRoute>{withLoader(LobbyGame)()}</ProtectedRoute>
         },
         {
           path: '/:gameID/:topicID/:roomID',
-          element: (
-            <ProtectedRoute>
-              {withLoader(RoomPlayer)()}
-            </ProtectedRoute>
-          )
+          element: <ProtectedRoute>{withLoader(RoomPlayer)()}</ProtectedRoute>
         },
         {
           path: '/:gameID/:topicID/:roomID/playUTangga',
-          element: (
-            <ProtectedRoute>
-              {withLoader(UlarTangga)()}
-            </ProtectedRoute>
-          )
+          element: <ProtectedRoute>{withLoader(UlarTangga)()}</ProtectedRoute>
         },
         {
           path: '/:gameID/:topicID/:roomID/playUtanggaVsAi',
-          element: (
-            <ProtectedRoute>
-              {withLoader(UtanggaVsAi)()}
-            </ProtectedRoute>
-          )
+          element: <ProtectedRoute>{withLoader(UtanggaVsAi)()}</ProtectedRoute>
         },
         {
           path: '/:gameID/:topicID/:roomID/playNuca',
-          element: (
-            <ProtectedRoute>
-              {withLoader(NusaCard)()}
-            </ProtectedRoute>
-          )
+          element: <ProtectedRoute>{withLoader(NusaCard)()}</ProtectedRoute>
         },
         {
           path: '/:gameID/:topicID/:roomID/playNucaVsAi',
-          element: (
-            <ProtectedRoute>
-              {withLoader(NucaVsAi)()}
-            </ProtectedRoute>
-          )
+          element: <ProtectedRoute>{withLoader(NucaVsAi)()}</ProtectedRoute>
         },
         { path: '*', element: withLoader(NotFoundPage)() }
       ]
@@ -118,7 +88,9 @@ const App = () => {
 
   return (
     <React.StrictMode>
-      <RouterProvider router={router} />
+      <LanguageProvider> 
+        <RouterProvider router={router} />
+      </LanguageProvider>
     </React.StrictMode>
   );
 };

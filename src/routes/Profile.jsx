@@ -38,6 +38,7 @@ import {
   validatePhoto,
 } from "../utils/formValidationUtil";
 import "../style/routes/Profile.css";
+import { TranslatedText } from '../components/TranslationHelper';
 
 function Profile() {
   const { user, logout } = useAuth();
@@ -73,7 +74,7 @@ function Profile() {
           const achievements = await getUserAchievements(user.uid);
           setUserAchievements(achievements);
         }
-  
+
         // Cek apakah potion ada
         const potionExists = await checkIfPotionExists(user.uid);
         if (potionExists) {
@@ -88,10 +89,10 @@ function Profile() {
         setLoading(false);
       }
     };
-  
+
     fetchAchievementsAndPotion();
   }, [user.uid]);
-  
+
 
   const handleClose = () => {
     setShow(false);
@@ -227,8 +228,10 @@ function Profile() {
                   <UserPen /> Edit Profile
                 </Button>
                 <Button className="btn-logout" onClick={handleLogOut}>
-                  <LogOut /> Logout
+                  <LogOut />
+                  <TranslatedText originalLang="id">Keluar</TranslatedText>
                 </Button>
+
               </div>
             </Card.Body>
           </Card>
@@ -250,8 +253,11 @@ function Profile() {
                 <>
                   {/* Badges Section */}
                   <div className="text-white mb-3">
-                    <h4 className="fw-bold">Your Badges</h4>
+                    <h4 className="fw-bold">
+                      <TranslatedText originalLang="id">Lencana Kamu</TranslatedText>
+                    </h4>
                   </div>
+
                   <div className="badge-container d-flex flex-wrap align-items-center justify-content-between">
                     {Object.keys(userAchievements).map((game) =>
                       Object.keys(userAchievements[game]).map((topic) => {
@@ -284,15 +290,17 @@ function Profile() {
 
                   {/* Achievements Section */}
                   <div className="text-white mb-3 mt-4">
-                    <h4 className="fw-bold">Your Achievements</h4>
+                    <h4 className="fw-bold">
+                      <TranslatedText originalLang="id">Penghargaan Kamu</TranslatedText>
+                    </h4>
                   </div>
 
                   {Object.keys(userAchievements).length === 0 ||
-                  Object.keys(userAchievements).every((game) =>
-                    Object.keys(userAchievements[game]).every(
-                      (topic) => userAchievements[game][topic].totalWins < 5
-                    )
-                  ) ? (
+                    Object.keys(userAchievements).every((game) =>
+                      Object.keys(userAchievements[game]).every(
+                        (topic) => userAchievements[game][topic].totalWins < 5
+                      )
+                    ) ? (
                     <div className="text-white text-center">
                       <h5>You don’t have any achievements</h5>
                     </div>
@@ -313,7 +321,9 @@ function Profile() {
                                     width={70}
                                   />
                                   <div className="text-white fs-6">
+                                    <TranslatedText originalLang="id">
                                     {achievement.achievement_name}
+                                    </TranslatedText>
                                   </div>
                                 </div>
                               </div>
@@ -328,15 +338,17 @@ function Profile() {
 
                   {/* Potion Section */}
                   <div className="text-white mb-3 mt-4">
-                    <h4 className="fw-bold">Your Items</h4>
+                   <h4 className="fw-bold">
+                      <TranslatedText originalLang="id">Item Kamu</TranslatedText>
+                    </h4>
                   </div>
                   <div className="potion-container d-flex flex-wrap align-items-center justify-content-between">
                     <div className="potion-item">
                       <div className="potion-item d-flex justify-content-center align-items-center gap-2">
                         <Image src={potionData.item_img} alt={potionData.item_name} className="potion-image-profile" width={60} />
-                          <div className="text-white fs-6"> 
-                            x{potionData.item_count} {potionData.item_name}
-                          </div>
+                        <div className="text-white fs-6">
+                          x{potionData.item_count} {potionData.item_name}
+                        </div>
                       </div>
                     </div>
                   </div>

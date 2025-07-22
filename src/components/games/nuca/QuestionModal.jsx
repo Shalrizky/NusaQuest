@@ -1,3 +1,4 @@
+// 3. FIXED QuestionModal.jsx
 import React, { useMemo, useCallback } from "react";
 import { Modal } from "react-bootstrap";
 import QuestionForm from "../QuestionForm";
@@ -7,9 +8,6 @@ import "../../../style/components/games/nuca/QuestionModal.css";
 
 // Constants
 const PROFILE_RADIUS = 35;
-const MODAL_PLAYER_PROFILE = {
-  image: DefaultProfileImage,
-};
 
 function QuestionModal({
   show,
@@ -22,7 +20,15 @@ function QuestionModal({
   timeLeft,
   TIMER_ANSWER_DURATION,
   playerAnswerFeedback,
+  players, // ADDED: Array of player data
 }) {
+  // FIXED: Find the actual player data who is answering
+  const answeringPlayerData = useMemo(() => {
+    const answeringPlayerIndex = parseInt(playerAnsweringId.replace('player', '')) - 1;
+    const playerData = players.find((_, index) => index === answeringPlayerIndex);
+    return playerData || { photoURL: DefaultProfileImage };
+  }, [playerAnsweringId, players]);
+
   // Memoized player state calculation - called before early return
   const playerState = useMemo(
     () => ({
@@ -57,28 +63,29 @@ function QuestionModal({
     [show, handleModalClose]
   );
 
-  // Memoized timer profile component
+  // FIXED: Memoized timer profile component dengan player photo
   const timerProfile = useMemo(
     () => (
       <div className="modal-timer-container d-flex justify-content-center mt-3">
         <PlayerProfileNuca
-          userProfile={MODAL_PLAYER_PROFILE}
+          userProfile={{}} // Empty object
           position="center"
           totalCards={-1} 
-          isActive={playerState.isCurrentlyAnsweringPlayer}
+          isActive={true} // FIXED: Always show timer in modal
           timeLeft={timeLeft}
           maxTime={TIMER_ANSWER_DURATION}
           radius={PROFILE_RADIUS}
-          answerFeedback={playerAnswerFeedback[playerAnsweringId]} 
+          answerFeedback={playerAnswerFeedback[playerAnsweringId]}
+          playerData={answeringPlayerData} // ADDED: Pass actual player data
         />
       </div>
     ),
     [
-      playerState.isCurrentlyAnsweringPlayer,
       timeLeft,
       TIMER_ANSWER_DURATION,
       playerAnswerFeedback, 
-      playerAnsweringId, 
+      playerAnsweringId,
+      answeringPlayerData, // ADDED
     ]
   );
 

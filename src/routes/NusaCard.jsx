@@ -108,8 +108,9 @@ function NusaCard() {
   });
   const [triggerShuffleAnimation, setTriggerShuffleAnimation] = useState(false);
 
-  // Timer state
+  // Timer state - FIXED: Add shared timer state
   const [playerTimers, setPlayerTimers] = useState([]);
+  const [sharedTimeLeft, setSharedTimeLeft] = useState(0); // ADDED: shared timer
   const prevPlayerIndexRef = useRef(currentPlayerIndex);
 
   // Helper functions
@@ -311,6 +312,11 @@ function NusaCard() {
       players,
     }
   );
+
+  // FIXED: Update shared timer state
+  useEffect(() => {
+    setSharedTimeLeft(timeLeft);
+  }, [timeLeft]);
 
   // Game timer
   const { updateActivity } = useGameTimer(1800, handleGameOver, {
@@ -621,7 +627,7 @@ function NusaCard() {
       console.log(`✅ Correct answer from Player ${myPlayerId}.`);
     }
 
-    // Reset feedback and move to next turn after delay
+    // FIXED: Immediately close modal and reset feedback
     setTimeout(async () => {
       const resetFeedback = {
         player1: newFeedback.player1,
@@ -631,17 +637,16 @@ function NusaCard() {
       };
       resetFeedback[myPlayerId] = null;
       
-      await updateGameState(topicID, gameID, roomID, {
-        playerAnswerFeedback: resetFeedback
-      });
-
       const nextThrowerIndex = getNextPlayerIndex(lastCardThrowerIndex, players.length);
+      
+      // FIXED: Close modal immediately with game state update
       await updateGameState(topicID, gameID, roomID, {
+        playerAnswerFeedback: resetFeedback,
         currentPlayerIndex: nextThrowerIndex,
         currentActiveTurnPhase: "throwing",
         thrownCard: null,
         questionForModal: null,
-        shouldShowQuestionModal: false,
+        shouldShowQuestionModal: false, // FIXED: Close modal immediately
         lastCardThrowerIndex: null,
       });
       
@@ -649,14 +654,23 @@ function NusaCard() {
       setTimeout(() => {
         hasAddedPenalty.current = false;
       }, 1000);
-    }, 1500);
+    }, 500); // FIXED: Reduced delay to 500ms
   };
 
-  const handleCloseQuestionPromptModal = useCallback(() => {
+  // FIXED: Modal close handler
+  const handleCloseQuestionPromptModal = useCallback(async () => {
+    console.log("🔴 Closing modal manually");
     setShouldShowQuestionModal(false);
     setQuestionForModalDisplay(null);
     setThrownCardData(null);
-  }, []);
+    
+    // FIXED: Also update Firebase to ensure modal closes
+    await updateGameState(topicID, gameID, roomID, {
+      shouldShowQuestionModal: false,
+      questionForModal: null,
+      thrownCard: null,
+    });
+  }, [topicID, gameID, roomID]);
 
   const handleVictoryClose = useCallback(() => {
     setVictory(false);
@@ -694,18 +708,17 @@ function NusaCard() {
     [currentPlayerIndex]
   );
 
-  const getPlayerRemainingTime = useCallback(
-    (playerGlobalIndex) => {
-      if (isPlayerTurnStatus(playerGlobalIndex)) {
-        return timeLeft;
-      }
-      return currentActiveTurnPhase === "throwing"
-        ? GAME_CONSTANTS.THROW_TIMER_SECONDS
-        : GAME_CONSTANTS.ANSWER_TIMER_SECONDS;
-    },
-    [timeLeft, isPlayerTurnStatus, currentActiveTurnPhase]
-  );
-
+const getPlayerRemainingTime = useCallback(
+  (playerGlobalIndex) => {
+    if (isPlayerTurnStatus(playerGlobalIndex)) {
+      return sharedTimeLeft; // Return shared timer for active player
+    }
+    // FIXED: Return 0 for inactive players instead of default values
+    // This will make the SVG not show timer ring for inactive players
+    return 0;
+  },
+  [sharedTimeLeft, isPlayerTurnStatus]
+);
   // Render loading state - AFTER ALL HOOKS
   if (!isGameReady) {
     return (
@@ -737,7 +750,7 @@ function NusaCard() {
           playerAnswerFeedback={playerAnswerFeedback}
           currentPlayerGlobalIndex={currentPlayerIndex}
           cardCounts={cardCounts}
-          timeLeft={timeLeft}
+          timeLeft={sharedTimeLeft} // FIXED: Pass shared timer
           TIMER_PLAYER_DURATION={GAME_CONSTANTS.THROW_TIMER_SECONDS}
           throwCard={thrownCardData}
           handleCardClicked={handleCardPlayAttempt}
@@ -760,7 +773,7 @@ function NusaCard() {
         playerAnswerFeedback={playerAnswerFeedback}
         currentPlayerId={activeLocalPlayerId}
         playerAnsweringId={`player${currentPlayerIndex + 1}`}
-        timeLeft={timeLeft}
+        timeLeft={sharedTimeLeft} // FIXED: Use shared timer
         TIMER_ANSWER_DURATION={GAME_CONSTANTS.ANSWER_TIMER_SECONDS}
         players={players}
       />

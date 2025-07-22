@@ -26,11 +26,12 @@ const GameArea = ({
   isCurrentUserTurn,
   currentTurnPhase,
   TIMER_ANSWER_DURATION,
-  isPlayerTurn: isPlayerTurnFromHook,
-  getPlayerTimeLeft: getPlayerTimeLeftFromHook,
+  isPlayerTurn, // FIXED: renamed from isPlayerTurnFromHook
+  getPlayerTimeLeft, // FIXED: renamed from getPlayerTimeLeftFromHook
   triggerShuffleAnimation,
+  players, // ADDED: Array of player data with photos
 }) => {
-  // Memoized player data calculation to prevent recalculation on every render
+  // FIXED: Memoized player data calculation dengan photo support
   const playersData = useMemo(() => {
     const data = {};
     PLAYER_POSITIONS.forEach((position) => {
@@ -41,13 +42,24 @@ const GameArea = ({
       const playerCards = getPlayerCards(playerId, gameState);
       const playerStatus = getPlayerStatus(playerId, gameState);
       const playerGlobalIndex = getPlayerGlobalIndex(playerId);
-      const isCurrentPlayerActive = isPlayerTurnFromHook(playerGlobalIndex);
-      const currentPlayerTimeLeft =
-        getPlayerTimeLeftFromHook(playerGlobalIndex);
+      
+      // FIXED: Check if functions exist before calling
+      const isCurrentPlayerActive = typeof isPlayerTurn === 'function' 
+        ? isPlayerTurn(playerGlobalIndex) 
+        : false;
+      const currentPlayerTimeLeft = typeof getPlayerTimeLeft === 'function'
+        ? getPlayerTimeLeft(playerGlobalIndex)
+        : 0;
+        
       const currentMaxTimeForTurn =
         currentTurnPhase === "throwing"
           ? TIMER_PLAYER_DURATION
           : TIMER_ANSWER_DURATION;
+
+      // FIXED: Find actual player data for photos
+      const actualPlayerData = players && players.length > playerGlobalIndex 
+        ? players[playerGlobalIndex]
+        : null;
 
       data[position] = {
         playerId,
@@ -58,6 +70,7 @@ const GameArea = ({
         currentPlayerTimeLeft,
         currentMaxTimeForTurn,
         profileData: {},
+        playerData: actualPlayerData, // ADDED: actual player data
         cardCount: playerCards.length,
         answerFeedback: playerAnswerFeedback[playerId],
         lastUpdated: Date.now(),
@@ -71,9 +84,10 @@ const GameArea = ({
     currentTurnPhase,
     TIMER_PLAYER_DURATION,
     TIMER_ANSWER_DURATION,
-    isPlayerTurnFromHook,
-    getPlayerTimeLeftFromHook,
-    playerAnswerFeedback
+    isPlayerTurn, // FIXED
+    getPlayerTimeLeft, // FIXED
+    playerAnswerFeedback,
+    players // ADDED
   ]); 
 
   const renderBottomPlayer = useCallback(() => {
@@ -95,6 +109,7 @@ const GameArea = ({
           maxTime={playerData.currentMaxTimeForTurn}
           currentTurnPhase={currentTurnPhase}
           isCurrentPlayer={true}
+          playerData={playerData.playerData} // ADDED
         />
       </>
     );
@@ -105,7 +120,7 @@ const GameArea = ({
     currentTurnPhase
   ]);
 
-  // Memoized other players render (top, left, right)
+  // FIXED: Memoized other players render dengan photo dan timer fix
   const renderOtherPlayer = useCallback(
     (position) => {
       const playerData = playersData[position];
@@ -123,7 +138,8 @@ const GameArea = ({
               maxTime={playerData.currentMaxTimeForTurn}
               answerFeedback={playerData.answerFeedback}
               currentTurnPhase={currentTurnPhase}
-              isCurrentPlayer={playerData.playerId !== currentUserId}
+              isCurrentPlayer={false} // FIXED: should be false for other players
+              playerData={playerData.playerData} // ADDED
             />
           )}
           <PlayerBackStackCards

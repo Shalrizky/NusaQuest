@@ -32,20 +32,28 @@ const PlayerProfileNuca = memo(
     answerFeedback = null,
     currentTurnPhase = null,
     isCurrentPlayer = false,
+    playerData = null, // ADDED: untuk mengakses data player
   }) => {
-    const profileImage = useMemo(
-      () => userProfile?.image || DefaultProfileImage,
-      [userProfile?.image]
-    );
+    // FIXED: Gunakan photoURL dari playerData jika tersedia
+    const profileImage = useMemo(() => {
+      if (playerData?.photoURL) {
+        return playerData.photoURL;
+      }
+      if (playerData?.profileImageUrl) {
+        return playerData.profileImageUrl;
+      }
+      return userProfile?.image || DefaultProfileImage;
+    }, [userProfile?.image, playerData?.photoURL, playerData?.profileImageUrl]);
 
     // State untuk mengontrol jumlah titik (elipsis)
     const [dots, setDots] = useState("");
 
     const baseStatusText = useMemo(() => {
-      if (!isActive || !isCurrentPlayer) return null;
+      if (!isActive) return null;
 
+      // FIXED: Show status for all active players, not just current player
       return currentTurnPhase === "throwing" ? "Memilih" : "Menjawab";
-    }, [isActive, isCurrentPlayer, currentTurnPhase]);
+    }, [isActive, currentTurnPhase]);
 
     // Effect untuk animasi titik berjalan
     useEffect(() => {
@@ -192,6 +200,9 @@ const PlayerProfileNuca = memo(
           roundedCircle
           className="user-profile-image"
           alt="User Profile"
+          onError={(e) => {
+            e.target.src = DefaultProfileImage;
+          }}
         />
         {feedbackIcon}
       </div>

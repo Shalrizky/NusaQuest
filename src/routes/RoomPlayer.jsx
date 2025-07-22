@@ -46,7 +46,7 @@ function RoomPlayer() {
   const prevPlayers = useRef([]);
   const navigate = useNavigate();
 
-  // Route Url Untuk game agar dinamis
+  // Route Url Untuk game agar dinamis - Updated for NusaCard
   const getGamePath = (gameID, roomID, isSinglePlayer) => {
     // Check if it's room5 or VS AI mode
     if (roomID === "room5" || isSinglePlayer) {
@@ -54,7 +54,7 @@ function RoomPlayer() {
         case "game1":
           return "playUtanggaVsAi";
         case "game2":
-          return "playNucaVsAi";
+          return "playNucaVsAi"; // NusaCard VS AI route
         default:
           return "playUtanggaVsAi";
       }
@@ -65,7 +65,7 @@ function RoomPlayer() {
       case "game1":
         return "playUTangga";
       case "game2":
-        return "playNuca";
+        return "playNuca"; // Updated to use NusaCard route
       default:
         return "playUTangga";
     }
@@ -310,22 +310,64 @@ function RoomPlayer() {
     setAiCardsCount(newCount);
   };
 
-  // Update only the handleStartGame function in RoomPlayer.js
+  // Update handleStartGame function to support NusaCard
   const handleStartGame = async () => {
     if (
       (isFirstPlayer || isSinglePlayer) &&
       (aiCardsCount > 0 || !isSinglePlayer)
     ) {
       if (roomID === "room5") {
-        // For room5, navigate to VS AI page with aiCardsCount
-        navigate(`/${gameID}/${topicID}/${roomID}/playUtanggaVsAi`, {
+        // For room5, navigate to VS AI page based on game type
+        const vsAiPath = gameID === "game2" ? "playNucaVsAi" : "playUtanggaVsAi";
+        navigate(`/${gameID}/${topicID}/${roomID}/${vsAiPath}`, {
           state: { aiCardsCount },
         });
       } else {
+        // For multiplayer games, check minimum player requirements
+        const minPlayersRequired = gameID === "game2" ? 2 : 2; // NusaCard minimum 2 players, Ular Tangga minimum 2 players
+        
+        if (players.length < minPlayersRequired) {
+          alert(`Minimal ${minPlayersRequired} pemain diperlukan untuk memulai permainan ini.`);
+          return;
+        }
+        
         // Keep existing multiplayer logic unchanged
         await setGameStartStatus(topicID, gameID, roomID, true);
       }
     }
+  };
+
+  // Get appropriate button text based on game type and state
+  const getStartButtonText = () => {
+    if (!isFirstPlayer && !isSinglePlayer) {
+      return "Menunggu Host Memulai Permainan...";
+    }
+    
+    if (isSinglePlayer) {
+      if (aiCardsCount === 0) {
+        return gameID === "game2" ? "Tunggu AI Menyiapkan Kartu..." : "Start Game";
+      }
+      return "Start Game";
+    }
+    
+    const minPlayers = gameID === "game2" ? 2 : 2;
+    if (players.length < minPlayers) {
+      return `Menunggu ${minPlayers - players.length} Pemain Lagi...`;
+    }
+    
+    return "Start Game";
+  };
+
+  // Check if start button should be disabled
+  const isStartButtonDisabled = () => {
+    if (!isFirstPlayer && !isSinglePlayer) return true;
+    
+    if (isSinglePlayer) {
+      return gameID === "game2" ? aiCardsCount === 0 : false;
+    }
+    
+    const minPlayers = gameID === "game2" ? 2 : 2;
+    return players.length < minPlayers;
   };
 
   // Render Loading State
@@ -373,6 +415,7 @@ function RoomPlayer() {
       achievements={userAchievements}
       isAvailable={true}
       onAiCardsChange={handleAiCardsChange} // Pass the callback
+      gameType={gameID} // Pass game type to CardVsAi for different AI behaviors
     />
   ) : (
     playerArray.map((player, index) => {
@@ -416,6 +459,17 @@ function RoomPlayer() {
       <Row className="d-flex flex-column justify-content-center align-items-center text-center">
         <Col md={12} className="desc-title">
           <p>{roomData?.description}</p>
+          {/* Show game-specific info */}
+          {gameID === "game2" && (
+            <p className="text-muted mt-2">
+              <small>🃏 NusaCard - Buang semua kartu untuk menang!</small>
+            </p>
+          )}
+          {gameID === "game1" && (
+            <p className="text-muted mt-2">
+              <small>🎯 Ular Tangga - Capai kotak 99 untuk menang!</small>
+            </p>
+          )}
         </Col>
         <Col
           md={12}
@@ -430,16 +484,10 @@ function RoomPlayer() {
           <button
             className="btn-start-game d-flex align-items-center justify-content-center"
             onClick={handleStartGame}
-            disabled={
-              (!isFirstPlayer && !isSinglePlayer) ||
-              (isSinglePlayer && aiCardsCount === 0) ||
-              (!isSinglePlayer && players.length <= 1)
-            }
+            disabled={isStartButtonDisabled()}
           >
             <Image className="icon-start me-2" src={PlayGameIcon} />
-            {isFirstPlayer || isSinglePlayer
-              ? "Start Game"
-              : "Menunggu Host Memulai Permainan..."}
+            {getStartButtonText()}
           </button>
         </Col>
       </Row>

@@ -1,6 +1,13 @@
 import { database, ref, onValue, set, get } from "../firebaseConfig";
 import { resetRoom } from "./roomDataServices";
 
+// ========================================
+// UNIVERSAL FUNCTIONS (Both Games)
+// ========================================
+
+// Update queue for debouncing
+let updateQueue = {};
+
 // Fetch games data
 export const fetchGames = (callback) => {
   const gamesRef = ref(database, "games");
@@ -55,72 +62,31 @@ export const listenToGameStart = (topicID, gameID, roomID, callback) => {
   });
 };
 
-// Enhanced initialize game state - Support both Ular Tangga and NusaCard
-export const initializeGameState = async (topicID, gameID, roomID, players, questions, customInitialState = null) => {
+// Listen to game state (Universal)
+export const listenToGameState = (topicID, gameID, roomID, callback) => {
+  if (!topicID || !gameID || !roomID) return () => {};
+  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+  return onValue(gameStateRef, (snapshot) => {
+    const state = snapshot.val();
+    if (state) {
+      callback(state);
+    }
+  });
+};
+
+// Get current game state (Universal)
+export const getGameState = async (topicID, gameID, roomID) => {
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
   try {
     const snapshot = await get(gameStateRef);
-    if (!snapshot.exists()) {
-      const playerCount = Array.isArray(players) ? players.length : 0;
-      
-      let initialState;
-      
-      // Jika ada custom initial state (untuk NusaCard), gunakan itu
-      if (customInitialState) {
-        initialState = {
-          ...customInitialState,
-          gameCreatedAt: Date.now(),
-          playerActivity: players.reduce((acc, player, index) => {
-            acc[player.uid] = {
-              lastActivity: Date.now(),
-              isActive: true,
-              playerIndex: index
-            };
-            return acc;
-          }, {})
-        };
-      } else {
-        // Default untuk Ular Tangga
-        initialState = {
-          currentPlayerIndex: 0,
-          pionPositions: new Array(playerCount).fill(0),
-          isMoving: false,
-          showQuestion: false,
-          waitingForAnswer: false,
-          isCorrect: null,
-          allowExtraRoll: false,
-          potionUsable: false,
-          currentQuestionIndex: 0,
-          questions: questions,
-          gameStatus: 'playing',
-          gameType: 'ulartangga',
-          diceState: {
-            isRolling: false,
-            currentNumber: 1,
-            lastRoll: null
-          },
-          playerTimers: new Array(playerCount).fill(30),
-          playerActivity: players.reduce((acc, player, index) => {
-            acc[player.uid] = {
-              lastActivity: Date.now(),
-              isActive: true,
-              playerIndex: index
-            };
-            return acc;
-          }, {}),
-          gameCreatedAt: Date.now()
-        };
-      }
-
-      await set(gameStateRef, initialState);
-    }
+    return snapshot.val();
   } catch (error) {
-    console.error("Error initializing game state:", error);
-    throw error;
+    console.error("Error getting game state:", error);
+    return null;
   }
 };
 
-// Update player activity timestamp
+// Update player activity timestamp (Universal)
 export const updatePlayerActivity = async (topicID, gameID, roomID, userUID) => {
   if (!topicID || !gameID || !roomID || !userUID) return;
  
@@ -139,7 +105,7 @@ export const updatePlayerActivity = async (topicID, gameID, roomID, userUID) => 
   }
 };
 
-// Check for inactive players and handle game abandonment
+// Check for inactive players and handle game abandonment (Universal)
 export const checkInactivePlayers = async (topicID, gameID, roomID, inactivityTimeout = 600000) => {
   if (!topicID || !gameID || !roomID) return;
  
@@ -183,7 +149,7 @@ export const checkInactivePlayers = async (topicID, gameID, roomID, inactivityTi
   }
 };
 
-// Listen to player activity untuk monitor inactivity
+// Listen to player activity untuk monitor inactivity (Universal)
 export const listenToPlayerActivity = (topicID, gameID, roomID, callback, inactivityTimeout = 600000) => {
   if (!topicID || !gameID || !roomID) return () => {};
  
@@ -213,168 +179,46 @@ export const listenToPlayerActivity = (topicID, gameID, roomID, callback, inacti
   });
 };
 
-// Enhanced update game state - Support both game types
-export const updateGameState = async (topicID, gameID, roomID, updates) => {
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+// Check if game is active (Universal)
+export const checkGameActive = async (topicID, gameID, roomID) => {
+  const gameStatusRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameStatus`);
   try {
-    const snapshot = await get(gameStateRef);
-    const currentState = snapshot.val() || {};
-
-    // Validasi dan sanitasi data sebelum update
-    const sanitizedUpdates = { ...updates };
-    
-    // Detect game type
-    const gameType = currentState.gameType || updates.gameType || 'ulartangga';
-    
-    if (gameType === 'nusacard') {
-      // NusaCard specific validations
-      ['player1Cards', 'player2Cards', 'player3Cards', 'player4Cards'].forEach(cardField => {
-        if (updates[cardField]) {
-          sanitizedUpdates[cardField] = Array.isArray(updates[cardField])
-            ? updates[cardField]
-            : currentState[cardField] || [];
-        }
-      });
-      
-      if (updates.playerStatus) {
-        sanitizedUpdates.playerStatus = {
-          player1: updates.playerStatus.player1 || currentState.playerStatus?.player1 || "not_available",
-          player2: updates.playerStatus.player2 || currentState.playerStatus?.player2 || "not_available",
-          player3: updates.playerStatus.player3 || currentState.playerStatus?.player3 || "not_available",
-          player4: updates.playerStatus.player4 || currentState.playerStatus?.player4 || "not_available",
-        };
-      }
-      
-      if (updates.playerAnswerFeedback) {
-        sanitizedUpdates.playerAnswerFeedback = {
-          player1: updates.playerAnswerFeedback.player1 !== undefined ? updates.playerAnswerFeedback.player1 : null,
-          player2: updates.playerAnswerFeedback.player2 !== undefined ? updates.playerAnswerFeedback.player2 : null,
-          player3: updates.playerAnswerFeedback.player3 !== undefined ? updates.playerAnswerFeedback.player3 : null,
-          player4: updates.playerAnswerFeedback.player4 !== undefined ? updates.playerAnswerFeedback.player4 : null,
-        };
-      }
-      
-      if (updates.currentActiveTurnPhase) {
-        const validPhases = ["throwing", "answering"];
-        sanitizedUpdates.currentActiveTurnPhase = validPhases.includes(updates.currentActiveTurnPhase)
-          ? updates.currentActiveTurnPhase
-          : currentState.currentActiveTurnPhase || "throwing";
-      }
-      
-      // NusaCard specific fields
-      if (updates.thrownCard !== undefined) {
-        sanitizedUpdates.thrownCard = updates.thrownCard;
-      }
-      
-      if (updates.questionForModal !== undefined) {
-        sanitizedUpdates.questionForModal = updates.questionForModal;
-      }
-      
-      if (typeof updates.shouldShowQuestionModal === 'boolean') {
-        sanitizedUpdates.shouldShowQuestionModal = updates.shouldShowQuestionModal;
-      }
-      
-      if (typeof updates.lastCardThrowerIndex === 'number' || updates.lastCardThrowerIndex === null) {
-        sanitizedUpdates.lastCardThrowerIndex = updates.lastCardThrowerIndex;
-      }
-      
-    } else {
-      // Ular Tangga specific validations
-      if (updates.pionPositions) {
-        sanitizedUpdates.pionPositions = Array.isArray(updates.pionPositions)
-          ? updates.pionPositions
-          : currentState.pionPositions || [];
-      }
-     
-      if (updates.diceState) {
-        sanitizedUpdates.diceState = {
-          isRolling: Boolean(updates.diceState.isRolling),
-          currentNumber: Number(updates.diceState.currentNumber) || 1,
-          lastRoll: Number(updates.diceState.lastRoll) || null
-        };
-      }
-    }
-   
-    // Common validations for both games
-    if (updates.playerTimers) {
-      sanitizedUpdates.playerTimers = Array.isArray(updates.playerTimers)
-        ? updates.playerTimers.map(time => Number(time) || 0)
-        : currentState.playerTimers || [];
-    }
-
-    if (typeof updates.currentPlayerIndex === 'number') {
-      sanitizedUpdates.currentPlayerIndex = updates.currentPlayerIndex;
-    }
-    
-    // Common boolean fields
-    ['isMoving', 'showQuestion', 'waitingForAnswer', 'allowExtraRoll', 'potionUsable'].forEach(field => {
-      if (typeof updates[field] === 'boolean') {
-        sanitizedUpdates[field] = updates[field];
-      }
-    });
-    
-    if (updates.isCorrect !== undefined) {
-      sanitizedUpdates.isCorrect = updates.isCorrect;
-    }
-
-    // Filter out undefined values
-    const cleanUpdates = Object.fromEntries(
-      Object.entries(sanitizedUpdates).filter(([_, value]) => value !== undefined)
-    );
-
-    // Update ke Firebase dengan data yang sudah divalidasi
-    await set(gameStateRef, { ...currentState, ...cleanUpdates });
+    const snapshot = await get(gameStatusRef);
+    const status = snapshot.val();
+    return status === 'playing' && status !== 'abandoned';
   } catch (error) {
-    console.error("Error updating game state:", error);
-    throw error;
-  }
-};
-
-// Listen to game state
-export const listenToGameState = (topicID, gameID, roomID, callback) => {
-  if (!topicID || !gameID || !roomID) return () => {};
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
-  return onValue(gameStateRef, (snapshot) => {
-    const state = snapshot.val();
-    if (state) {
-      callback(state);
-    }
-  });
-};
-
-// Update dice state (Ular Tangga specific)
-export const updateDiceState = async (topicID, gameID, roomID, diceState) => {
-  try {
-    await updateGameState(topicID, gameID, roomID, { diceState });
-  } catch (error) {
-    console.error("Error updating dice state:", error);
-  }
-};
-
-// Get current game state
-export const getGameState = async (topicID, gameID, roomID) => {
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
-  try {
-    const snapshot = await get(gameStateRef);
-    return snapshot.val();
-  } catch (error) {
-    console.error("Error getting game state:", error);
-    return null;
-  }
-};
-
-// Check if game was abandoned
-export const checkGameAbandoned = async (topicID, gameID, roomID) => {
-  try {
-    const gameState = await getGameState(topicID, gameID, roomID);
-    return gameState?.gameStatus === 'abandoned';
-  } catch (error) {
-    console.error("Error checking if game abandoned:", error);
+    console.error("Error checking game status:", error);
     return false;
   }
 };
 
-// Inisialisasi timer game dengan durasi
+// Set winner (Universal)
+export const setGameWinner = async (topicID, gameID, roomID, winnerUID) => {
+  try {
+    await updateGameState(topicID, gameID, roomID, {
+      gameStatus: 'finished',
+      winner: winnerUID
+    });
+  } catch (error) {
+    console.error("Error setting game winner:", error);
+  }
+};
+
+// Reset game state (Universal)
+export const resetGameState = async (topicID, gameID, roomID) => {
+  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+  try {
+    await set(gameStateRef, null);
+  } catch (error) {
+    console.error("Error resetting game state:", error);
+  }
+};
+
+// ========================================
+// GAME TIMER FUNCTIONS (Universal)
+// ========================================
+
+// Initialize game timer
 export const initializeGameTimer = async (topicID, gameID, roomID, duration) => {
   const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
   try {
@@ -417,6 +261,7 @@ export const stopGameTimer = async (topicID, gameID, roomID) => {
   }
 };
 
+// Listen to game timer
 export const listenToGameTimer = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
   const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
@@ -430,7 +275,135 @@ export const listenToGameTimer = (topicID, gameID, roomID, callback) => {
   });
 };
 
-// Enhanced cleanup game dengan abandoned game handling
+// ========================================
+// UNIVERSAL GAME STATE MANAGEMENT (FIXED)
+// ========================================
+
+// Universal update game state - Auto-detect game type with debouncing
+export const updateGameState = async (topicID, gameID, roomID, updates) => {
+  const key = `${topicID}-${gameID}-${roomID}`;
+  
+  // Clear previous timeout to debounce updates
+  if (updateQueue[key]) {
+    clearTimeout(updateQueue[key]);
+  }
+  
+  return new Promise((resolve, reject) => {
+    updateQueue[key] = setTimeout(async () => {
+      try {
+        const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+        const snapshot = await get(gameStateRef);
+        const currentState = snapshot.val() || {};
+
+        // Validasi dan sanitasi data sebelum update
+        const sanitizedUpdates = { ...updates };
+        
+        // Detect game type
+        const gameType = currentState.gameType || updates.gameType || 'ulartangga';
+        
+        if (gameType === 'nusacard') {
+          // NusaCard specific validations
+          ['player1Cards', 'player2Cards', 'player3Cards', 'player4Cards'].forEach(cardField => {
+            if (updates[cardField]) {
+              sanitizedUpdates[cardField] = Array.isArray(updates[cardField])
+                ? updates[cardField]
+                : currentState[cardField] || [];
+            }
+          });
+          
+          if (updates.playerStatus) {
+            sanitizedUpdates.playerStatus = {
+              player1: updates.playerStatus.player1 || currentState.playerStatus?.player1 || "not_available",
+              player2: updates.playerStatus.player2 || currentState.playerStatus?.player2 || "not_available",
+              player3: updates.playerStatus.player3 || currentState.playerStatus?.player3 || "not_available",
+              player4: updates.playerStatus.player4 || currentState.playerStatus?.player4 || "not_available",
+            };
+          }
+          
+          if (updates.playerAnswerFeedback) {
+            sanitizedUpdates.playerAnswerFeedback = {
+              player1: updates.playerAnswerFeedback.player1 !== undefined ? updates.playerAnswerFeedback.player1 : (currentState.playerAnswerFeedback?.player1 || null),
+              player2: updates.playerAnswerFeedback.player2 !== undefined ? updates.playerAnswerFeedback.player2 : (currentState.playerAnswerFeedback?.player2 || null),
+              player3: updates.playerAnswerFeedback.player3 !== undefined ? updates.playerAnswerFeedback.player3 : (currentState.playerAnswerFeedback?.player3 || null),
+              player4: updates.playerAnswerFeedback.player4 !== undefined ? updates.playerAnswerFeedback.player4 : (currentState.playerAnswerFeedback?.player4 || null),
+            };
+          }
+          
+          if (updates.currentActiveTurnPhase) {
+            const validPhases = ["throwing", "answering"];
+            sanitizedUpdates.currentActiveTurnPhase = validPhases.includes(updates.currentActiveTurnPhase)
+              ? updates.currentActiveTurnPhase
+              : currentState.currentActiveTurnPhase || "throwing";
+          }
+          
+          // NusaCard specific fields
+          ['thrownCard', 'questionForModal', 'shouldShowQuestionModal', 'lastCardThrowerIndex'].forEach(field => {
+            if (updates[field] !== undefined) {
+              sanitizedUpdates[field] = updates[field];
+            }
+          });
+          
+        } else {
+          // Ular Tangga specific validations
+          if (updates.pionPositions) {
+            sanitizedUpdates.pionPositions = Array.isArray(updates.pionPositions)
+              ? updates.pionPositions
+              : currentState.pionPositions || [];
+          }
+         
+          if (updates.diceState) {
+            sanitizedUpdates.diceState = {
+              isRolling: Boolean(updates.diceState.isRolling),
+              currentNumber: Number(updates.diceState.currentNumber) || 1,
+              lastRoll: Number(updates.diceState.lastRoll) || null
+            };
+          }
+
+          // Ular Tangga specific boolean fields
+          ['isMoving', 'showQuestion', 'waitingForAnswer', 'allowExtraRoll', 'potionUsable'].forEach(field => {
+            if (typeof updates[field] === 'boolean') {
+              sanitizedUpdates[field] = updates[field];
+            }
+          });
+          
+          if (updates.isCorrect !== undefined) {
+            sanitizedUpdates.isCorrect = updates.isCorrect;
+          }
+        }
+       
+        // Common validations for both games
+        if (updates.playerTimers) {
+          sanitizedUpdates.playerTimers = Array.isArray(updates.playerTimers)
+            ? updates.playerTimers.map(time => Number(time) || 0)
+            : currentState.playerTimers || [];
+        }
+
+        if (typeof updates.currentPlayerIndex === 'number') {
+          sanitizedUpdates.currentPlayerIndex = updates.currentPlayerIndex;
+        }
+
+        // Add timestamp for tracking updates
+        sanitizedUpdates.lastUpdated = Date.now();
+
+        // Filter out undefined values
+        const cleanUpdates = Object.fromEntries(
+          Object.entries(sanitizedUpdates).filter(([_, value]) => value !== undefined)
+        );
+
+        // Update ke Firebase dengan data yang sudah divalidasi
+        await set(gameStateRef, { ...currentState, ...cleanUpdates });
+        delete updateQueue[key];
+        resolve();
+      } catch (error) {
+        console.error("Error updating game state:", error);
+        delete updateQueue[key];
+        reject(error);
+      }
+    }, 100); // 100ms debounce
+  });
+};
+
+// Universal cleanup game
 export const cleanupGame = async (topicID, gameID, roomID, user, reason = 'normal') => {
   if (!topicID || !gameID || !roomID || !user?.uid) return;
  
@@ -472,43 +445,67 @@ export const cleanupGame = async (topicID, gameID, roomID, user, reason = 'norma
   }
 };
 
-// Reset game state
-export const resetGameState = async (topicID, gameID, roomID) => {
+// ========================================
+// ULAR TANGGA SPECIFIC FUNCTIONS
+// ========================================
+
+// Initialize Ular Tangga game state
+export const initializeUlarTanggaGameState = async (topicID, gameID, roomID, players, questions) => {
   const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
   try {
-    await set(gameStateRef, null);
+    const snapshot = await get(gameStateRef);
+    if (!snapshot.exists()) {
+      const playerCount = Array.isArray(players) ? players.length : 0;
+      
+      const initialState = {
+        currentPlayerIndex: 0,
+        pionPositions: new Array(playerCount).fill(0),
+        isMoving: false,
+        showQuestion: false,
+        waitingForAnswer: false,
+        isCorrect: null,
+        allowExtraRoll: false,
+        potionUsable: false,
+        currentQuestionIndex: 0,
+        questions: questions,
+        gameStatus: 'playing',
+        gameType: 'ulartangga',
+        diceState: {
+          isRolling: false,
+          currentNumber: 1,
+          lastRoll: null
+        },
+        playerTimers: new Array(playerCount).fill(30),
+        playerActivity: players.reduce((acc, player, index) => {
+          acc[player.uid] = {
+            lastActivity: Date.now(),
+            isActive: true,
+            playerIndex: index
+          };
+          return acc;
+        }, {}),
+        gameCreatedAt: Date.now()
+      };
+
+      await set(gameStateRef, initialState);
+    }
   } catch (error) {
-    console.error("Error resetting game state:", error);
+    console.error("Error initializing Ular Tangga game state:", error);
+    throw error;
   }
 };
 
-// Check if game is active
-export const checkGameActive = async (topicID, gameID, roomID) => {
-  const gameStatusRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameStatus`);
+// Update dice state (Ular Tangga specific)
+export const updateDiceState = async (topicID, gameID, roomID, diceState) => {
   try {
-    const snapshot = await get(gameStatusRef);
-    const status = snapshot.val();
-    return status === 'playing' && status !== 'abandoned';
+    await updateGameState(topicID, gameID, roomID, { diceState });
   } catch (error) {
-    console.error("Error checking game status:", error);
-    return false;
+    console.error("Error updating dice state:", error);
   }
 };
 
-// Set winner
-export const setGameWinner = async (topicID, gameID, roomID, winnerUID) => {
-  try {
-    await updateGameState(topicID, gameID, roomID, {
-      gameStatus: 'finished',
-      winner: winnerUID
-    });
-  } catch (error) {
-    console.error("Error setting game winner:", error);
-  }
-};
-
-// Handle player timeout (Ular Tangga)
-export const handlePlayerTimeout = async (topicID, gameID, roomID, currentPlayerIndex, totalPlayers) => {
+// Handle player timeout (Ular Tangga specific)
+export const handleUlarTanggaPlayerTimeout = async (topicID, gameID, roomID, currentPlayerIndex, totalPlayers) => {
   try {
     await updateGameState(topicID, gameID, roomID, {
       currentPlayerIndex: (currentPlayerIndex + 1) % totalPlayers,
@@ -523,11 +520,11 @@ export const handlePlayerTimeout = async (topicID, gameID, roomID, currentPlayer
       }
     });
   } catch (error) {
-    console.error("Error handling player timeout:", error);
+    console.error("Error handling Ular Tangga player timeout:", error);
   }
 };
 
-// Update player position (Ular Tangga)
+// Update player position (Ular Tangga specific)
 export const updatePlayerPosition = async (topicID, gameID, roomID, playerIndex, newPosition) => {
   try {
     const state = await getGameState(topicID, gameID, roomID);
@@ -544,8 +541,58 @@ export const updatePlayerPosition = async (topicID, gameID, roomID, playerIndex,
 };
 
 // ========================================
-// NUSACARD SPECIFIC FUNCTIONS
+// NUSACARD SPECIFIC FUNCTIONS (FIXED)
 // ========================================
+
+// Initialize NusaCard game state - FIXED untuk hanya render player aktif
+export const initializeNusaCardGameState = async (topicID, gameID, roomID, players, questions, initialGameState) => {
+  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+  try {
+    const snapshot = await get(gameStateRef);
+    if (!snapshot.exists()) {
+      const playerCount = Array.isArray(players) ? players.length : 0;
+      
+      const nucaInitialState = {
+        ...initialGameState,
+        gameType: 'nusacard',
+        gameStatus: 'playing',
+        gameCreatedAt: Date.now(),
+        playerActivity: players.reduce((acc, player, index) => {
+          acc[player.uid] = {
+            lastActivity: Date.now(),
+            isActive: true,
+            playerIndex: index
+          };
+          return acc;
+        }, {}),
+        playerTimers: new Array(playerCount).fill(15), // NusaCard default timer
+      };
+
+      // Reset all player cards first
+      for (let i = 1; i <= 4; i++) {
+        nucaInitialState[`player${i}Cards`] = [];
+      }
+
+      // Only assign cards to ACTIVE players
+      for (let i = 0; i < playerCount; i++) {
+        const playerId = `player${i + 1}`;
+        nucaInitialState[`${playerId}Cards`] = initialGameState[`${playerId}Cards`] || [];
+        nucaInitialState.playerStatus[playerId] = "available";
+      }
+
+      // Set remaining players as not available  
+      for (let i = playerCount; i < 4; i++) {
+        const playerId = `player${i + 1}`;
+        nucaInitialState.playerStatus[playerId] = "not_available";
+      }
+
+      await set(gameStateRef, nucaInitialState);
+    }
+  } catch (error) {
+    console.error("Error initializing NusaCard game state:", error);
+    throw error;
+  }
+};
 
 // Check if any player has won in NusaCard (when they have 0 cards)
 export const checkNusaCardWinner = async (topicID, gameID, roomID) => {
@@ -568,66 +615,42 @@ export const checkNusaCardWinner = async (topicID, gameID, roomID) => {
   }
 };
 
-// Handle player timeout for NusaCard
+// Handle player timeout for NusaCard - DISABLED (Client handles timeouts)
 export const handleNusaCardPlayerTimeout = async (topicID, gameID, roomID, currentPlayerIndex, currentPhase, totalPlayers) => {
+  // DISABLED - Let client handle timeouts to prevent duplicate penalty cards
+  console.log("🔧 SERVER: NusaCard timeout handling disabled - client handles timeouts");
+  return;
+};
+
+// Add penalty card function - for server use if needed
+export const addPenaltyCard = async (topicID, gameID, roomID, playerIndex, penaltyCard) => {
   try {
-    if (currentPhase === "throwing") {
-      // Move to next player if throwing timeout
-      await updateGameState(topicID, gameID, roomID, {
-        currentPlayerIndex: (currentPlayerIndex + 1) % totalPlayers,
-        currentActiveTurnPhase: "throwing",
-        thrownCard: null,
-        questionForModal: null,
-        shouldShowQuestionModal: false,
-        lastCardThrowerIndex: null,
-      });
-    } else if (currentPhase === "answering") {
-      // Add penalty card and move to next turn if answering timeout
-      const gameState = await getGameState(topicID, gameID, roomID);
-      const playerAnsweringId = `player${currentPlayerIndex + 1}`;
-      const currentCards = gameState[`${playerAnsweringId}Cards`] || [];
-      
-      // Create penalty card from available questions
-      const availableQuestions = gameState.questions || [];
-      if (availableQuestions.length > 0) {
-        const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-        const penaltyCard = {
-          ...randomQuestion,
-          id: Date.now(),
-          isPenalty: true,
-        };
+    const gameState = await getGameState(topicID, gameID, roomID);
+    if (!gameState) return;
 
-        const updatedCards = [...currentCards, penaltyCard];
-        const nextThrowerIndex = gameState.lastCardThrowerIndex !== null 
-          ? (gameState.lastCardThrowerIndex + 1) % totalPlayers
-          : (currentPlayerIndex + 1) % totalPlayers;
-
-        await updateGameState(topicID, gameID, roomID, {
-          [`${playerAnsweringId}Cards`]: updatedCards,
-          currentPlayerIndex: nextThrowerIndex,
-          currentActiveTurnPhase: "throwing",
-          thrownCard: null,
-          questionForModal: null,
-          shouldShowQuestionModal: false,
-          lastCardThrowerIndex: null,
-          playerAnswerFeedback: {
-            ...gameState.playerAnswerFeedback,
-            [playerAnsweringId]: "incorrect"
-          }
-        });
-
-        // Reset feedback after delay
-        setTimeout(async () => {
-          await updateGameState(topicID, gameID, roomID, {
-            playerAnswerFeedback: {
-              ...gameState.playerAnswerFeedback,
-              [playerAnsweringId]: null
-            }
-          });
-        }, 2000);
-      }
+    const playerId = `player${playerIndex + 1}`;
+    const currentCards = gameState[`${playerId}Cards`] || [];
+    
+    // Check if penalty was already added recently (prevent duplicates)
+    const recentPenalty = currentCards.find(card => 
+      card.isPenalty && 
+      card.id && 
+      (Date.now() - parseInt(card.id.split('_')[1])) < 5000 // Within last 5 seconds
+    );
+    
+    if (recentPenalty) {
+      console.log("Penalty card already added recently, skipping");
+      return;
     }
+
+    const updatedCards = [...currentCards, penaltyCard];
+    
+    await updateGameState(topicID, gameID, roomID, {
+      [`${playerId}Cards`]: updatedCards,
+      penaltyAddedAt: Date.now(),
+      penaltyAddedFor: playerId
+    });
   } catch (error) {
-    console.error("Error handling NusaCard player timeout:", error);
+    console.error("Error adding penalty card:", error);
   }
 };

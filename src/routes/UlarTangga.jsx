@@ -12,7 +12,7 @@ import PlayerTurnBox from "../components/games/uTangga/PlayerTurnBox";
 import PlayerList from "../components/games/uTangga/PlayerList";
 import {
   fetchGamePlayers,
-  initializeGameState,
+  initializeUlarTanggaGameState,
   updateGameState,
   listenToGameState,
   setGameStatus,
@@ -117,7 +117,7 @@ function UlarTangga() {
             setQuestions(shuffledQuestions);
 
             // Inisialisasi game state dengan pertanyaan yang diacak
-            await initializeGameState(
+            await initializeUlarTanggaGameState(
               topicID,
               gameID,
               roomID,

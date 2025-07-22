@@ -9,7 +9,7 @@ import VictoryOverlay from "../components/games/VictoryOverlay";
 import LoseOverlay from "../components/games/LoseOverlay";
 import {
   fetchGamePlayers,
-  initializeGameState,
+  initializeNusaCardGameState,
   updateGameState,
   listenToGameState,
   setGameStatus,
@@ -36,6 +36,7 @@ const GAME_CONSTANTS = {
   TURN_FLOW_DIRECTION: "clockwise",
   THROW_TIMER_SECONDS: 15,
   ANSWER_TIMER_SECONDS: 30,
+  INITIAL_CARDS_PER_PLAYER: 5,
 };
 
 // Create initial cards for player
@@ -43,7 +44,7 @@ const createInitialCardsForPlayer = (questions, startIndex, count) => {
   const shuffledQuestions = shuffle([...questions]);
   return shuffledQuestions.slice(startIndex, startIndex + count).map((q, index) => ({
     ...q,
-    id: startIndex + index + 1,
+    id: `card_${startIndex}_${index}_${Date.now()}`,
   }));
 };
 
@@ -56,6 +57,10 @@ function NusaCard() {
   const topicIDRef = useRef(topicID);
   const roomIDRef = useRef(roomID);
   const hasCleanedUpRef = useRef(false);
+
+  // Penalty prevention refs
+  const hasAddedPenalty = useRef(false);
+  const lastTimeoutHandled = useRef(0);
 
   // Core Game State
   const [players, setPlayers] = useState([]);
@@ -138,7 +143,7 @@ function NusaCard() {
     if (availableQuestions.length === 0) {
       console.warn("Tidak ada pertanyaan tersedia untuk kartu penalti!");
       return {
-        id: Date.now(),
+        id: `penalty_${Date.now()}_${Math.random()}`,
         question_text: "Kartu Penalti Default",
         multiple_choices: [{ answer_text: "Default", is_correct: false }],
         hint: "Tidak ada hint tersedia",
@@ -149,7 +154,7 @@ function NusaCard() {
     const chosenQuestion = { ...availableQuestions[randomIndex] };
     return {
       ...chosenQuestion,
-      id: Date.now(),
+      id: `penalty_${Date.now()}_${Math.random()}`,
       isPenalty: true,
     };
   }, [gameState.questions]);
@@ -166,12 +171,22 @@ function NusaCard() {
     }
   }, [topicID, gameID, roomID, user, navigate]);
 
-  // Time out handler
+  // FIXED: Time out handler - CLIENT SIDE ONLY with penalty prevention
   const handleTimeOut = useCallback(async () => {
     if (!isMyTurn) return;
     
+    const now = Date.now();
+    
+    // Prevent multiple timeout handling within 2 seconds
+    if (now - lastTimeoutHandled.current < 2000) {
+      console.log("⏰ Timeout already handled recently, skipping");
+      return;
+    }
+    
+    lastTimeoutHandled.current = now;
+    
     if (currentActiveTurnPhase === "throwing") {
-      console.log(`⏰ Throwing timeout for player ${currentPlayerIndex + 1}`);
+      console.log(`⏰ CLIENT: Throwing timeout for player ${currentPlayerIndex + 1}`);
       // Switch to next player if throwing time expires
       const nextIndex = getNextPlayerIndex(currentPlayerIndex, players.length);
       await updateGameState(topicIDRef.current, gameIDRef.current, roomIDRef.current, {
@@ -180,12 +195,36 @@ function NusaCard() {
         thrownCard: null,
         questionForModal: null,
         shouldShowQuestionModal: false,
+        lastCardThrowerIndex: null,
       });
     } else if (currentActiveTurnPhase === "answering") {
-      console.log(`⏰ Answering timeout for player ${currentPlayerIndex + 1} - Adding penalty card`);
-      // Add penalty card if answer time expires
+      // Prevent multiple penalty additions
+      if (hasAddedPenalty.current) {
+        console.log("⏰ Penalty already added, skipping");
+        return;
+      }
+      
+      hasAddedPenalty.current = true;
+      console.log(`⏰ CLIENT: Answering timeout for player ${currentPlayerIndex + 1} - Adding penalty card`);
+      
       const myPlayerId = `player${getLocalPlayerGlobalIndex() + 1}`;
-      const currentCards = gameState[`${myPlayerId}Cards`] || [];
+      
+      // Get current state from server to check for recent penalties
+      const currentServerState = await getGameState(topicIDRef.current, gameIDRef.current, roomIDRef.current);
+      const currentCards = currentServerState[`${myPlayerId}Cards`] || [];
+      
+      // Check if penalty was already added recently
+      const recentPenalty = currentCards.find(card => 
+        card.isPenalty && 
+        card.id && 
+        (now - parseInt(card.id.split('_')[1])) < 5000 // Within last 5 seconds
+      );
+      
+      if (recentPenalty) {
+        console.log("⏰ Recent penalty detected, skipping penalty addition");
+        hasAddedPenalty.current = false;
+        return;
+      }
       
       const penaltyCard = getRandomCardFromAvailablePool();
       const updatedCards = [...currentCards, penaltyCard];
@@ -201,7 +240,9 @@ function NusaCard() {
       
       await updateGameState(topicIDRef.current, gameIDRef.current, roomIDRef.current, {
         [`${myPlayerId}Cards`]: updatedCards,
-        playerAnswerFeedback: newFeedback
+        playerAnswerFeedback: newFeedback,
+        penaltyAddedAt: now,
+        penaltyAddedBy: 'timeout'
       });
 
       // Add hint if available
@@ -233,14 +274,18 @@ function NusaCard() {
           shouldShowQuestionModal: false,
           lastCardThrowerIndex: null,
         });
-      }, 2000);
+        
+        // Reset penalty flag after successful turn change
+        setTimeout(() => {
+          hasAddedPenalty.current = false;
+        }, 1000);
+      }, 1500);
     }
   }, [
     isMyTurn,
     currentActiveTurnPhase,
     currentPlayerIndex,
     players.length,
-    gameState,
     lastCardThrowerIndex,
     playerAnswerFeedback,
     getLocalPlayerGlobalIndex,
@@ -275,7 +320,7 @@ function NusaCard() {
     user,
   });
 
-  // Initialize game
+  // FIXED: Initialize game - ensure only active players get cards
   useEffect(() => {
     const initGame = async () => {
       if (players.length === 0) return;
@@ -288,15 +333,8 @@ function NusaCard() {
           const fetchedQuestions = await getQuestions(topicID);
           const shuffledQuestions = shuffle(fetchedQuestions);
 
-          // Create initial game state for NusaCard
+          // Create initial game state for NusaCard - FIXED for active players only
           const initialGameState = {
-            player1Cards: createInitialCardsForPlayer(shuffledQuestions, 0, 5),
-            player2Cards: createInitialCardsForPlayer(shuffledQuestions, 5, 5),
-            player3Cards: createInitialCardsForPlayer(shuffledQuestions, 10, 5),
-            player4Cards: createInitialCardsForPlayer(shuffledQuestions, 15, 5),
-            playerStatus: {},
-            questions: shuffledQuestions,
-            currentQuestionIndex: 0,
             currentPlayerIndex: 0,
             currentActiveTurnPhase: "throwing",
             thrownCard: null,
@@ -309,23 +347,34 @@ function NusaCard() {
               player3: null,
               player4: null,
             },
-            gameType: 'nusacard',
-            gameStatus: 'playing',
+            questions: shuffledQuestions,
+            currentQuestionIndex: 0,
+            playerStatus: {},
           };
 
-          // Set player status based on actual players
+          // Initialize all player cards as empty first
+          for (let i = 1; i <= 4; i++) {
+            initialGameState[`player${i}Cards`] = [];
+          }
+
+          // Only assign cards to ACTIVE players
           players.forEach((player, index) => {
             const playerId = `player${index + 1}`;
+            initialGameState[`${playerId}Cards`] = createInitialCardsForPlayer(
+              shuffledQuestions, 
+              index * GAME_CONSTANTS.INITIAL_CARDS_PER_PLAYER, 
+              GAME_CONSTANTS.INITIAL_CARDS_PER_PLAYER
+            );
             initialGameState.playerStatus[playerId] = "available";
           });
 
-          // Fill remaining slots as not available
+          // Set remaining slots as not available
           for (let i = players.length; i < 4; i++) {
             const playerId = `player${i + 1}`;
             initialGameState.playerStatus[playerId] = "not_available";
           }
 
-          await initializeGameState(topicID, gameID, roomID, players, shuffledQuestions, initialGameState);
+          await initializeNusaCardGameState(topicID, gameID, roomID, players, shuffledQuestions, initialGameState);
           await initializeGameTimer(topicID, gameID, roomID, 1800);
           
           setGameState(initialGameState);
@@ -384,15 +433,19 @@ function NusaCard() {
         const isCurrentPlayerTurn = newGameState.currentPlayerIndex === myIndex;
         setIsMyTurn(isCurrentPlayerTurn);
 
-        // Check for winner - player with 0 cards
-        const playerCards = [
-          newGameState.player1Cards?.length || 0,
-          newGameState.player2Cards?.length || 0, 
-          newGameState.player3Cards?.length || 0,
-          newGameState.player4Cards?.length || 0
-        ];
+        // Reset penalty flag when turn changes
+        if (newGameState.currentPlayerIndex !== currentPlayerIndex) {
+          hasAddedPenalty.current = false;
+        }
 
-        const winnerIndex = playerCards.findIndex(count => count === 0);
+        // Check for winner - player with 0 cards (only check ACTIVE players)
+        const activePlayerCards = [];
+        for (let i = 0; i < players.length; i++) {
+          const playerId = `player${i + 1}`;
+          activePlayerCards.push(newGameState[`${playerId}Cards`]?.length || 0);
+        }
+
+        const winnerIndex = activePlayerCards.findIndex(count => count === 0);
         if (winnerIndex !== -1 && players.length > winnerIndex) {
           setVictory(true);
           setIsWinner(winnerIndex === myIndex);
@@ -411,7 +464,7 @@ function NusaCard() {
     });
 
     return () => unsubscribe();
-  }, [isGameReady, players, topicID, gameID, roomID, user?.uid]);
+  }, [isGameReady, players, topicID, gameID, roomID, user?.uid, currentPlayerIndex]);
 
   // Listen to game timer
   useEffect(() => {
@@ -431,6 +484,7 @@ function NusaCard() {
   useEffect(() => {
     if (prevPlayerIndexRef.current !== currentPlayerIndex) {
       resetPlayerTimer();
+      hasAddedPenalty.current = false; // Reset penalty flag on player change
     }
     prevPlayerIndexRef.current = currentPlayerIndex;
   }, [currentPlayerIndex, resetPlayerTimer]);
@@ -451,6 +505,13 @@ function NusaCard() {
       hasCleanedUpRef.current = true;
     }
   }, [victory, gameOver, topicID, gameID, roomID, user]);
+
+  // Game over effect - MOVED BEFORE CONDITIONAL RETURN
+  useEffect(() => {
+    if (gameOver) {
+      navigate("/");
+    }
+  }, [gameOver, navigate]);
 
   // Award victory potions
   const awardVictoryPotions = async () => {
@@ -476,7 +537,7 @@ function NusaCard() {
     }
   };
 
-  // Game actions
+  // FIXED: Game actions with penalty prevention
   const handleCardPlayAttempt = async (cardData) => {
     updateActivity();
     if (!isMyPlayerTurnToThrow()) {
@@ -512,6 +573,12 @@ function NusaCard() {
       return;
     }
 
+    // Prevent multiple answer submissions
+    if (hasAddedPenalty.current) {
+      console.log("Answer already processed, skipping");
+      return;
+    }
+
     const { isCorrect, hint } = result;
     const myIndex = getLocalPlayerGlobalIndex();
     const myPlayerId = `player${myIndex + 1}`;
@@ -530,6 +597,8 @@ function NusaCard() {
     });
 
     if (!isCorrect) {
+      hasAddedPenalty.current = true; // Prevent duplicate penalties
+      
       // Add penalty card
       const penaltyCard = getRandomCardFromAvailablePool();
       const currentCards = gameState[`${myPlayerId}Cards`] || [];
@@ -537,6 +606,8 @@ function NusaCard() {
 
       await updateGameState(topicID, gameID, roomID, {
         [`${myPlayerId}Cards`]: updatedCards,
+        penaltyAddedAt: Date.now(),
+        penaltyAddedBy: 'wrong_answer'
       });
 
       // Add hint
@@ -573,7 +644,12 @@ function NusaCard() {
         shouldShowQuestionModal: false,
         lastCardThrowerIndex: null,
       });
-    }, 2000);
+      
+      // Reset penalty flag after turn change
+      setTimeout(() => {
+        hasAddedPenalty.current = false;
+      }, 1000);
+    }, 1500);
   };
 
   const handleCloseQuestionPromptModal = useCallback(() => {
@@ -593,7 +669,7 @@ function NusaCard() {
     setShowGameOffcanvas(false);
   }, []);
 
-  // Computed values
+  // Computed values - FIXED for active players only
   const activeLocalPlayerId = `player${getLocalPlayerGlobalIndex() + 1}`;
   const cardCounts = {
     player1: gameState.player1Cards?.length || 0,
@@ -629,13 +705,6 @@ function NusaCard() {
     },
     [timeLeft, isPlayerTurnStatus, currentActiveTurnPhase]
   );
-
-  // Game over effect - MOVED BEFORE CONDITIONAL RETURN
-  useEffect(() => {
-    if (gameOver) {
-      navigate("/");
-    }
-  }, [gameOver, navigate]);
 
   // Render loading state - AFTER ALL HOOKS
   if (!isGameReady) {
@@ -678,6 +747,7 @@ function NusaCard() {
           isPlayerTurn={isPlayerTurnStatus}
           getPlayerTimeLeft={getPlayerRemainingTime}
           triggerShuffleAnimation={triggerShuffleAnimation}
+          players={players}
         />
       </Container>
 
@@ -692,6 +762,7 @@ function NusaCard() {
         playerAnsweringId={`player${currentPlayerIndex + 1}`}
         timeLeft={timeLeft}
         TIMER_ANSWER_DURATION={GAME_CONSTANTS.ANSWER_TIMER_SECONDS}
+        players={players}
       />
 
       {victory &&

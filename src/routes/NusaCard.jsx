@@ -107,7 +107,7 @@ function NusaCard() {
   const [thrownCardData, setThrownCardData] = useState(null);
   const [shouldShowQuestionModal, setShouldShowQuestionModal] = useState(false);
   const [questionForModalDisplay, setQuestionForModalDisplay] = useState(null);
-  const [lastCardThrowerIndex, setLastCardThrowerIndex] = useState(null);
+  // const [lastCardThrowerIndex, setLastCardThrowerIndex] = useState(null); // REMOVED: Unused
   const [isMyTurn, setIsMyTurn] = useState(false);
 
   // UI State
@@ -231,7 +231,7 @@ function NusaCard() {
           thrownCard: null,
           questionForModal: null,
           shouldShowQuestionModal: false,
-          lastCardThrowerIndex: null,
+          // lastCardThrowerIndex: null, // REMOVED: Unused
         }
       );
     } else if (currentActiveTurnPhase === "answering") {
@@ -281,7 +281,7 @@ function NusaCard() {
           [`${myPlayerId}Cards`]: updatedCards,
           playerAnswerFeedback: newFeedback,
           penaltyAddedAt: now,
-          penaltyAddedBy: "timeout",
+          penaltyAddedBy: "wrong_answer",
         }
       );
 
@@ -315,7 +315,7 @@ function NusaCard() {
             thrownCard: null,
             questionForModal: null,
             shouldShowQuestionModal: false,
-            lastCardThrowerIndex: null,
+            // lastCardThrowerIndex: null, // REMOVED: Unused
           }
         );
 
@@ -329,7 +329,6 @@ function NusaCard() {
     currentActiveTurnPhase,
     currentPlayerIndex,
     players.length,
-    lastCardThrowerIndex,
     playerAnswerFeedback,
     getLocalPlayerGlobalIndex,
     getNextPlayerIndex,
@@ -390,7 +389,7 @@ function NusaCard() {
             thrownCard: null,
             questionForModal: null,
             shouldShowQuestionModal: false,
-            lastCardThrowerIndex: null,
+            lastCardThrowerIndex: null, // This is for Firebase initial state, which is fine
             playerAnswerFeedback: {
               player1: null,
               player2: null,
@@ -492,7 +491,7 @@ function NusaCard() {
         setThrownCardData(newGameState.thrownCard);
         setShouldShowQuestionModal(newGameState.shouldShowQuestionModal || false);
         setQuestionForModalDisplay(newGameState.questionForModal);
-        setLastCardThrowerIndex(newGameState.lastCardThrowerIndex);
+        // setLastCardThrowerIndex(newGameState.lastCardThrowerIndex); // REMOVED: Unused
         setPlayerAnswerFeedback(newGameState.playerAnswerFeedback || {
           player1: null, player2: null, player3: null, player4: null
         });
@@ -581,7 +580,7 @@ function NusaCard() {
     });
 
     return () => unsubscribe();
-  }, [isGameReady, players, topicID, gameID, roomID, user?.uid, currentPlayerIndex]);
+  }, [isGameReady, players, topicID, gameID, roomID, user?.uid, currentPlayerIndex, victory, gameOver, showVictoryOverlay, user?.displayName]);
 
   // Reset refs saat component unmount
   useEffect(() => {
@@ -667,10 +666,10 @@ function NusaCard() {
       setGameStartStatus(topicID, gameID, roomID, false);
 
       if (!hasCleanedUpRef.current) {
+        hasCleanedUpRef.current = true; // Set to true immediately to prevent double cleanup
         cleanupGame(topicID, gameID, roomID, user)
           .then(() => {
             console.log("Firebase game data cleaned up.");
-            hasCleanedUpRef.current = true;
           })
           .catch((error) => {
             console.error("Error during cleanup:", error);
@@ -682,6 +681,7 @@ function NusaCard() {
       }, 1000);
     }
   }, [gameOver, victory, topicID, gameID, roomID, user, navigate]);
+
 
   // Game actions
   const handleCardPlayAttempt = async (cardData) => {
@@ -708,7 +708,7 @@ function NusaCard() {
       shouldShowQuestionModal: true,
       currentPlayerIndex: nextPlayerIndex,
       currentActiveTurnPhase: "answering",
-      lastCardThrowerIndex: currentPlayerIndex,
+      lastCardThrowerIndex: currentPlayerIndex, // This is okay as it's for Firebase state
     };
 
     // Check victory condition
@@ -787,9 +787,9 @@ function NusaCard() {
           setShowGameOffcanvas(true);
         }
 
-        console.log(`🃏 Penalty! Player ${myPlayerId} gets a card.`);
+        console.log(`Penalty! Player ${myPlayerId} gets a card.`);
       } else {
-        console.log(`✅ ${potionAlreadyReduced ? 'Potion used (already reduced)' : usedPotion ? 'Potion used' : 'Correct answer'} from Player ${myPlayerId}.`);
+        console.log(` ${potionAlreadyReduced ? 'Potion used (already reduced)' : usedPotion ? 'Potion used' : 'Correct answer'} from Player ${myPlayerId}.`);
       }
 
       setTimeout(async () => {
@@ -814,7 +814,7 @@ function NusaCard() {
             thrownCard: null,
             questionForModal: null,
             shouldShowQuestionModal: false,
-            lastCardThrowerIndex: null,
+            // lastCardThrowerIndex: null, // REMOVED: Unused
           }
         );
 
@@ -834,7 +834,6 @@ function NusaCard() {
       topicIDRef,
       gameIDRef,
       roomIDRef,
-      user.uid,
     ]
   );
 

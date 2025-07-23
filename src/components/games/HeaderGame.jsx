@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Row, Col, Image, Offcanvas, Modal } from "react-bootstrap";
+import { Row, Col, Image, Offcanvas } from "react-bootstrap";
 import btntemp from "../../assets/common/btnTemp.png";
 import iconmusik from "../../assets/common/icon_musik.png";
 import iconmusikOff from "../../assets/common/icon_musik_off.png";
@@ -11,7 +11,6 @@ import song3 from "../../assets/sound/song3.mp3";
 import "../../style/components/games/HeaderGame.css";
 
 function HeaderGame({
-  toggleTemp,
   hints,
   showOffcanvas,
   setShowOffcanvas,
@@ -22,7 +21,7 @@ function HeaderGame({
   const audioRef = useRef(null);
   const playlist = [song1, song2, song3];
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
-  const [showAudioModal, setShowAudioModal] = useState(false);
+  const [setShowAudioModal] = useState(false);
 
   // Coba autoplay saat pertama render
   useEffect(() => {
@@ -35,7 +34,7 @@ function HeaderGame({
     };
 
     tryAutoplay();
-  }, []);
+  }, [setShowAudioModal]);
 
   // Handle perubahan lagu
   useEffect(() => {
@@ -55,15 +54,6 @@ function HeaderGame({
 
   const handleAudioEnded = () => {
     setCurrentSongIndex((prev) => (prev + 1) % playlist.length);
-  };
-
-  const enableAudio = () => {
-    audioRef.current.play()
-      .then(() => {
-        setIsMusicPlaying(true);
-        setShowAudioModal(false);
-      })
-      .catch(console.error);
   };
 
   return (
@@ -105,32 +95,6 @@ function HeaderGame({
           loop={false}
         />
       </Row>
-
-      {/* Modal untuk enable audio JANGAN LUPA DI AKTFIKAN DAN STYLE NANTI */}
-      {/* <Modal
-        show={showAudioModal}
-        onHide={() => setShowAudioModal(false)}
-        centered
-        size="sm"
-      >
-        <Modal.Body className="text-center p-4">
-          <h6>Aktifkan Audio?</h6>
-          <div className="d-flex justify-content-center gap-3 mt-3">
-            <button 
-              className="btn btn-sm btn-success"
-              onClick={enableAudio}
-            >
-              Ya
-            </button>
-            <button 
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => setShowAudioModal(false)}
-            >
-              Nanti
-            </button>
-          </div>
-        </Modal.Body>
-      </Modal> */}
 
       <Offcanvas
         show={showOffcanvas}

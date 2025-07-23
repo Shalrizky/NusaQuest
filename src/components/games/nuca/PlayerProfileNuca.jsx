@@ -46,14 +46,12 @@ const PlayerProfileNuca = memo(
       return userProfile?.image || DefaultProfileImage;
     }, [userProfile?.image, playerData?.photoURL, playerData?.profileImageUrl]);
 
-    // State untuk mengontrol jumlah titik (elipsis)
     const [dots, setDots] = useState("");
 
     const baseStatusText = useMemo(() => {
       if (!isActive) return null;
       if (hideStatusText) return null; 
 
-      // FIXED: Show status for all active players, not just current player
       return currentTurnPhase === "throwing" ? "Memilih" : "Menjawab";
     }, [isActive, currentTurnPhase, hideStatusText]);
 
@@ -114,7 +112,6 @@ const PlayerProfileNuca = memo(
       }
     }, [position]);
 
-    // Memoized CSS classes dan custom properties
     const styling = useMemo(
       () => ({
         className: `player-profile-container player-profile-${position} ${statusTextPositionClass}`,
@@ -136,7 +133,6 @@ const PlayerProfileNuca = memo(
     }, [radius]);
 
     const timerData = useMemo(() => {
-      // KUNCI: Hanya lakukan perhitungan jika isActive
       if (!isActive || maxTime === 0) {
         return {
           strokeDashoffset: svgCalculations.circleCircumference,
@@ -166,7 +162,6 @@ const PlayerProfileNuca = memo(
     }, [timeLeft, maxTime, isActive, svgCalculations.circleCircumference]);
 
     const timerSvg = useMemo(() => {
-      // KUNCI: Hanya render SVG jika isActive adalah true
       if (!isActive) return null;
 
       return (

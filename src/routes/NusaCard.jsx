@@ -19,7 +19,6 @@ import {
   stopGameTimer,
   listenToGameTimer,
   getGameState,
-  checkNusaCardWinner,
 } from "../services/gameDataServices";
 import {
   getPotionData,
@@ -43,10 +42,12 @@ const GAME_CONSTANTS = {
 // Create initial cards for player
 const createInitialCardsForPlayer = (questions, startIndex, count) => {
   const shuffledQuestions = shuffle([...questions]);
-  return shuffledQuestions.slice(startIndex, startIndex + count).map((q, index) => ({
-    ...q,
-    id: `card_${startIndex}_${index}_${Date.now()}`,
-  }));
+  return shuffledQuestions
+    .slice(startIndex, startIndex + count)
+    .map((q, index) => ({
+      ...q,
+      id: `card_${startIndex}_${index}_${Date.now()}`,
+    }));
 };
 
 function NusaCard() {
@@ -67,7 +68,8 @@ function NusaCard() {
   const [players, setPlayers] = useState([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [isGameReady, setIsGameReady] = useState(false);
-  const [currentActiveTurnPhase, setCurrentActiveTurnPhase] = useState("throwing");
+  const [currentActiveTurnPhase, setCurrentActiveTurnPhase] =
+    useState("throwing");
   const [victory, setVictory] = useState(false);
   const [winner, setWinner] = useState("");
   const [gameOver, setGameOver] = useState(false);
@@ -102,6 +104,8 @@ function NusaCard() {
   const [questionForModalDisplay, setQuestionForModalDisplay] = useState(null);
   const [lastCardThrowerIndex, setLastCardThrowerIndex] = useState(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
+  const hasAwardedAchievementRef = useRef(false);
+  const isProcessingVictoryRef = useRef(false);
 
   // UI State
   const [collectedGameHints, setCollectedGameHints] = useState([]);
@@ -116,19 +120,13 @@ function NusaCard() {
 
   // Timer state
   const [syncedPlayerTimeLeft, setSyncedPlayerTimeLeft] = useState(0);
-  const [localVisualTimeLeft, setLocalVisualTimeLeft] = useState(0); 
+  const [localVisualTimeLeft, setLocalVisualTimeLeft] = useState(0);
   const prevPlayerIndexRef = useRef(currentPlayerIndex);
-
   const visualTimerIntervalRef = useRef(null);
-
-  // Helper functions
-  const getPlayerGlobalIndex = useCallback((playerId) => {
-    return parseInt(playerId.replace('player', '')) - 1;
-  }, []);
 
   const getLocalPlayerGlobalIndex = useCallback(() => {
     if (!user?.uid || !players.length) return 0;
-    const myPlayerIndex = players.findIndex(p => p.uid === user.uid);
+    const myPlayerIndex = players.findIndex((p) => p.uid === user.uid);
     return myPlayerIndex !== -1 ? myPlayerIndex : 0;
   }, [players, user?.uid]);
 
@@ -138,12 +136,16 @@ function NusaCard() {
 
   const isMyPlayerTurnToThrow = useCallback(() => {
     const myIndex = getLocalPlayerGlobalIndex();
-    return currentPlayerIndex === myIndex && currentActiveTurnPhase === "throwing";
+    return (
+      currentPlayerIndex === myIndex && currentActiveTurnPhase === "throwing"
+    );
   }, [currentPlayerIndex, getLocalPlayerGlobalIndex, currentActiveTurnPhase]);
 
   const isMyPlayerTurnToAnswer = useCallback(() => {
     const myIndex = getLocalPlayerGlobalIndex();
-    return currentPlayerIndex === myIndex && currentActiveTurnPhase === "answering";
+    return (
+      currentPlayerIndex === myIndex && currentActiveTurnPhase === "answering"
+    );
   }, [currentPlayerIndex, getLocalPlayerGlobalIndex, currentActiveTurnPhase]);
 
   // Get random card from available pool for penalty
@@ -177,9 +179,9 @@ function NusaCard() {
       setHasLost(false);
       setShowVictoryOverlay(false);
       setWinner("");
-      
+
       await cleanupGame(topicID, gameID, roomID, user);
-      setTimeout(() => navigate("/"), 1000);
+      setTimeout(() => navigate("/"));
     } catch (error) {
       console.error("Error handling game over:", error);
       navigate("/");
@@ -198,18 +200,31 @@ function NusaCard() {
     lastTimeoutHandled.current = now;
 
     if (currentActiveTurnPhase === "throwing") {
-      console.log(`⏰ CLIENT: Throwing timeout for player ${currentPlayerIndex + 1}. Moving to next player.`);
+      console.log(
+        `⏰ CLIENT: Throwing timeout for player ${
+          currentPlayerIndex + 1
+        }. Moving to next player.`
+      );
       const nextIndex = getNextPlayerIndex(currentPlayerIndex, players.length);
-      await updateGameState(topicIDRef.current, gameIDRef.current, roomIDRef.current, {
-        currentPlayerIndex: nextIndex,
-        currentActiveTurnPhase: "throwing",
-        thrownCard: null,
-        questionForModal: null,
-        shouldShowQuestionModal: false,
-        lastCardThrowerIndex: null,
-      });
+      await updateGameState(
+        topicIDRef.current,
+        gameIDRef.current,
+        roomIDRef.current,
+        {
+          currentPlayerIndex: nextIndex,
+          currentActiveTurnPhase: "throwing",
+          thrownCard: null,
+          questionForModal: null,
+          shouldShowQuestionModal: false,
+          lastCardThrowerIndex: null,
+        }
+      );
     } else if (currentActiveTurnPhase === "answering") {
-      console.log(`⏰ CLIENT: Answering timeout for player ${currentPlayerIndex + 1}. Adding penalty card.`);
+      console.log(
+        `⏰ CLIENT: Answering timeout for player ${
+          currentPlayerIndex + 1
+        }. Adding penalty card.`
+      );
 
       if (hasAddedPenalty.current) {
         console.log("⏰ Penalty already added, skipping duplicate penalty.");
@@ -218,13 +233,18 @@ function NusaCard() {
       hasAddedPenalty.current = true;
 
       const myPlayerId = `player${getLocalPlayerGlobalIndex() + 1}`;
-      const currentServerState = await getGameState(topicIDRef.current, gameIDRef.current, roomIDRef.current);
+      const currentServerState = await getGameState(
+        topicIDRef.current,
+        gameIDRef.current,
+        roomIDRef.current
+      );
       const currentCards = currentServerState[`${myPlayerId}Cards`] || [];
 
-      const recentPenalty = currentCards.find(card =>
-        card.isPenalty &&
-        card.id &&
-        (now - parseInt(card.id.split('_')[1])) < 5000
+      const recentPenalty = currentCards.find(
+        (card) =>
+          card.isPenalty &&
+          card.id &&
+          now - parseInt(card.id.split("_")[1]) < 5000
       );
       if (recentPenalty) {
         console.log("⏰ Recent penalty detected, skipping penalty addition.");
@@ -238,35 +258,52 @@ function NusaCard() {
       const newFeedback = { ...playerAnswerFeedback };
       newFeedback[myPlayerId] = "incorrect";
 
-      await updateGameState(topicIDRef.current, gameIDRef.current, roomIDRef.current, {
-        [`${myPlayerId}Cards`]: updatedCards,
-        playerAnswerFeedback: newFeedback,
-        penaltyAddedAt: now, 
-        penaltyAddedBy: 'timeout'
-      });
+      await updateGameState(
+        topicIDRef.current,
+        gameIDRef.current,
+        roomIDRef.current,
+        {
+          [`${myPlayerId}Cards`]: updatedCards,
+          playerAnswerFeedback: newFeedback,
+          penaltyAddedAt: now,
+          penaltyAddedBy: "timeout",
+        }
+      );
 
       if (questionForModalDisplay?.hint) {
-        setCollectedGameHints(prev => [...prev, questionForModalDisplay.hint]);
+        setCollectedGameHints((prev) => [
+          ...prev,
+          questionForModalDisplay.hint,
+        ]);
         setShowGameOffcanvas(true);
       }
 
       setTimeout(async () => {
         const resetFeedback = { ...newFeedback };
         resetFeedback[myPlayerId] = null;
-        
+
         const playerWhoJustAnswered = currentPlayerIndex;
-        
-        console.log(`↩️ Player ${playerWhoJustAnswered + 1} (who just timed out) now gets turn to throw.`);
-        await updateGameState(topicIDRef.current, gameIDRef.current, roomIDRef.current, {
-          playerAnswerFeedback: resetFeedback,
-          currentPlayerIndex: playerWhoJustAnswered,
-          currentActiveTurnPhase: "throwing",
-          thrownCard: null,
-          questionForModal: null,
-          shouldShowQuestionModal: false,
-          lastCardThrowerIndex: null,
-        });
-        
+
+        console.log(
+          `↩️ Player ${
+            playerWhoJustAnswered + 1
+          } (who just timed out) now gets turn to throw.`
+        );
+        await updateGameState(
+          topicIDRef.current,
+          gameIDRef.current,
+          roomIDRef.current,
+          {
+            playerAnswerFeedback: resetFeedback,
+            currentPlayerIndex: playerWhoJustAnswered,
+            currentActiveTurnPhase: "throwing",
+            thrownCard: null,
+            questionForModal: null,
+            shouldShowQuestionModal: false,
+            lastCardThrowerIndex: null,
+          }
+        );
+
         setTimeout(() => {
           hasAddedPenalty.current = false;
         }, 500);
@@ -283,13 +320,13 @@ function NusaCard() {
     getNextPlayerIndex,
     getRandomCardFromAvailablePool,
     questionForModalDisplay?.hint,
-    topicIDRef, 
-    gameIDRef, 
-    roomIDRef, 
+    topicIDRef,
+    gameIDRef,
+    roomIDRef,
   ]);
 
   // Use usePlayerTimer hook
-  const [localPlayerTimeLeft, resetPlayerTimer] = usePlayerTimer(
+  usePlayerTimer(
     currentActiveTurnPhase === "throwing"
       ? GAME_CONSTANTS.THROW_TIMER_SECONDS
       : GAME_CONSTANTS.ANSWER_TIMER_SECONDS,
@@ -313,49 +350,6 @@ function NusaCard() {
     user,
   });
 
-  // Award victory potions - DIPERBAIKI untuk konsisten dengan UlarTangga
-  const awardVictoryPotions = useCallback(async () => {
-    if (!user?.uid) {
-      console.error("No user UID available for potion award");
-      return false;
-    }
-
-    try {
-      console.log("🏆 Awarding victory potions to:", user.displayName);
-      
-      // Update achievement - gunakan gameID dinamis, bukan hardcoded
-      const isAchievementUpdated = await updateWinningAchievement(
-        user.uid,
-        gameID, // Gunakan gameID dari params, bukan hardcoded "game1" 
-        topicID
-      );
-
-      console.log("Achievement updated:", isAchievementUpdated);
-
-      if (isAchievementUpdated) {
-        // Award potion - sama seperti UlarTangga
-        const currentPotionData = await getPotionData(user.uid);
-        if (currentPotionData) {
-          await saveNewPotionData(user.uid, {
-            item_name: currentPotionData.item_name,
-            item_count: (currentPotionData.item_count || 0) + 1,
-            item_img: currentPotionData.item_img,
-          });
-          console.log("🧪 Potion awarded successfully");
-        } else {
-          console.warn("No potion data found for user");
-        }
-        return true;
-      }
-
-      console.log("Achievement was not updated (possibly already exists)");
-      return false;
-    } catch (error) {
-      console.error("Error awarding victory potions:", error);
-      return false;
-    }
-  }, [user?.uid, gameID, topicID]); // Pastikan dependency benar
-
   // Initialize game
   useEffect(() => {
     const initGame = async () => {
@@ -365,7 +359,12 @@ function NusaCard() {
         await setGameStatus(topicID, gameID, roomID, "playing");
         const existingGameState = await getGameState(topicID, gameID, roomID);
 
-        if (!existingGameState || !existingGameState.questions || !existingGameState.playerTimers || existingGameState.playerTimers.length === 0) {
+        if (
+          !existingGameState ||
+          !existingGameState.questions ||
+          !existingGameState.playerTimers ||
+          existingGameState.playerTimers.length === 0
+        ) {
           console.log("Initializing new game state for NusaCard...");
           const fetchedQuestions = await getQuestions(topicID);
           const shuffledQuestions = shuffle(fetchedQuestions);
@@ -386,15 +385,18 @@ function NusaCard() {
             questions: shuffledQuestions,
             currentQuestionIndex: 0,
             playerStatus: {},
-            playerTimers: new Array(players.length).fill(GAME_CONSTANTS.THROW_TIMER_SECONDS),
+            playerTimers: new Array(players.length).fill(
+              GAME_CONSTANTS.THROW_TIMER_SECONDS
+            ),
             gameWinnerUID: null,
             gameWinnerDisplayName: null,
             gameWonAt: null,
             achievementAwarded: false,
           };
-          
+
           if (players.length > 0) {
-            initialGameState.playerTimers[0] = GAME_CONSTANTS.THROW_TIMER_SECONDS;
+            initialGameState.playerTimers[0] =
+              GAME_CONSTANTS.THROW_TIMER_SECONDS;
           }
 
           for (let i = 1; i <= 4; i++) {
@@ -416,7 +418,14 @@ function NusaCard() {
             initialGameState.playerStatus[playerId] = "not_available";
           }
 
-          await initializeNusaCardGameState(topicID, gameID, roomID, players, shuffledQuestions, initialGameState);
+          await initializeNusaCardGameState(
+            topicID,
+            gameID,
+            roomID,
+            players,
+            shuffledQuestions,
+            initialGameState
+          );
           await initializeGameTimer(topicID, gameID, roomID, 1800);
 
           setGameState(initialGameState);
@@ -439,14 +448,19 @@ function NusaCard() {
   useEffect(() => {
     if (!topicID || !gameID || !roomID) return;
 
-    const unsubscribe = fetchGamePlayers(topicID, gameID, roomID, (playersData) => {
-      setPlayers(playersData);
-      if (playersData.length === 0 && !hasCleanedUpRef.current) {
-        console.log("No players found or all left, cleaning up game...");
-        cleanupGame(topicID, gameID, roomID, user);
-        navigate("/");
+    const unsubscribe = fetchGamePlayers(
+      topicID,
+      gameID,
+      roomID,
+      (playersData) => {
+        setPlayers(playersData);
+        if (playersData.length === 0 && !hasCleanedUpRef.current) {
+          console.log("No players found or all left, cleaning up game...");
+          cleanupGame(topicID, gameID, roomID, user);
+          navigate("/");
+        }
       }
-    });
+    );
 
     return () => unsubscribe();
   }, [topicID, gameID, roomID, user, navigate, victory]);
@@ -455,121 +469,170 @@ function NusaCard() {
   useEffect(() => {
     if (!isGameReady) return;
 
-    const unsubscribe = listenToGameState(topicID, gameID, roomID, (newGameState) => {
-      if (newGameState) {
-        setGameState(newGameState);
-        setCurrentPlayerIndex(newGameState.currentPlayerIndex || 0);
-        setCurrentActiveTurnPhase(newGameState.currentActiveTurnPhase || "throwing");
-        setThrownCardData(newGameState.thrownCard);
-        setShouldShowQuestionModal(newGameState.shouldShowQuestionModal || false);
-        setQuestionForModalDisplay(newGameState.questionForModal);
-        setLastCardThrowerIndex(newGameState.lastCardThrowerIndex);
-        setPlayerAnswerFeedback(newGameState.playerAnswerFeedback || {
-          player1: null, player2: null, player3: null, player4: null
-        });
+    const unsubscribe = listenToGameState(
+      topicID,
+      gameID,
+      roomID,
+      async (newGameState) => {
+        if (newGameState) {
+          setGameState(newGameState);
+          setCurrentPlayerIndex(newGameState.currentPlayerIndex || 0);
+          setCurrentActiveTurnPhase(
+            newGameState.currentActiveTurnPhase || "throwing"
+          );
+          setThrownCardData(newGameState.thrownCard);
+          setShouldShowQuestionModal(
+            newGameState.shouldShowQuestionModal || false
+          );
+          setQuestionForModalDisplay(newGameState.questionForModal);
+          setLastCardThrowerIndex(newGameState.lastCardThrowerIndex);
+          setPlayerAnswerFeedback(
+            newGameState.playerAnswerFeedback || {
+              player1: null,
+              player2: null,
+              player3: null,
+              player4: null,
+            }
+          );
 
-        const firebaseTime = newGameState.playerTimers?.[newGameState.currentPlayerIndex];
-        if (firebaseTime !== undefined) {
+          const firebaseTime =
+            newGameState.playerTimers?.[newGameState.currentPlayerIndex];
+          if (firebaseTime !== undefined) {
             setSyncedPlayerTimeLeft(firebaseTime);
-        } else {
+          } else {
             setSyncedPlayerTimeLeft(0);
-        }
+          }
 
-        const myIndex = players.findIndex(p => p.uid === user?.uid);
-        const isCurrentPlayerTurn = newGameState.currentPlayerIndex === myIndex;
-        setIsMyTurn(isCurrentPlayerTurn);
+          const myIndex = players.findIndex((p) => p.uid === user?.uid);
+          const isCurrentPlayerTurn =
+            newGameState.currentPlayerIndex === myIndex;
+          setIsMyTurn(isCurrentPlayerTurn);
 
-        if (newGameState.currentPlayerIndex !== currentPlayerIndex) {
-          hasAddedPenalty.current = false;
-        }
+          if (newGameState.currentPlayerIndex !== currentPlayerIndex) {
+            hasAddedPenalty.current = false;
+          }
 
-        // --- LOGIKA KEMENANGAN YANG DIPERBAIKI ---
-        const playerCardCounts = {};
-        for (let i = 0; i < players.length; i++) {
-          const playerId = `player${i + 1}`;
-          playerCardCounts[playerId] = newGameState[`${playerId}Cards`]?.length || 0;
-        }
+          // --- LOGIKA KEMENANGAN YANG DIPERBAIKI ---
+          if (newGameState.gameWinnerUID && !isProcessingVictoryRef.current) {
+            console.log(
+              `🏆 Pemenang terdeteksi: ${newGameState.gameWinnerDisplayName}`
+            );
 
-        const potentialWinnerIndex = Object.keys(playerCardCounts).findIndex(
-          (playerId, index) => playerCardCounts[playerId] === 0 && newGameState.playerStatus?.[playerId] === "available"
-        );
+            // Set victory states
+            setVictory(true);
+            setWinner(newGameState.gameWinnerDisplayName || "Player");
+            setIsWinner(user?.uid === newGameState.gameWinnerUID);
+            setHasLost(user?.uid !== newGameState.gameWinnerUID);
+            setShowVictoryOverlay(true);
 
-        if (potentialWinnerIndex !== -1) {
-          if (!newGameState.gameWinnerUID) {
-              const winnerPlayer = players[potentialWinnerIndex];
-              if (winnerPlayer) {
-                  if (user?.uid === winnerPlayer.uid) {
-                      console.log(`🎉 Saya (${user?.displayName}) menang! Mengupdate pemenang di Firebase.`);
-                      
-                      // Update Firebase dengan status kemenangan
-                      updateGameState(topicID, gameID, roomID, {
-                          gameStatus: 'finished',
-                          gameWinnerUID: winnerPlayer.uid,
-                          gameWinnerDisplayName: winnerPlayer.displayName,
-                          gameWonAt: Date.now()
-                      }).then(async () => {
-                        // Award achievement dan potion - SAMA SEPERTI ULAR TANGGA
-                        try {
-                          const potionAwarded = await awardVictoryPotions();
-                          console.log("🏆 Victory rewards processing completed");
-                          
-                          // Set victory states
-                          setVictory(true);
-                          setIsWinner(true);
-                          setWinner(winnerPlayer.displayName);
-                          setShowVictoryOverlay(true);
-                          
-                          // Update achievement awarded flag di Firebase
-                          await updateGameState(topicID, gameID, roomID, { 
-                            achievementAwarded: true 
-                          });
-                        } catch (error) {
-                          console.error("Error awarding victory rewards:", error);
-                          // Tetap tampilkan victory meski ada error
-                          setVictory(true);
-                          setIsWinner(true);
-                          setWinner(winnerPlayer.displayName);
-                          setShowVictoryOverlay(true);
-                        }
-                      });
+            // HANYA proses achievement jika:
+            // 1. Saya adalah pemenang
+            // 2. Achievement belum pernah di-award untuk game ini
+            // 3. Belum dalam proses awarding
+            const shouldAwardAchievement =
+              user?.uid === newGameState.gameWinnerUID &&
+              !newGameState.achievementAwarded &&
+              !hasAwardedAchievementRef.current;
+
+            if (shouldAwardAchievement) {
+              console.log(
+                `🌟 Memproses achievement untuk ${user?.displayName}...`
+              );
+              isProcessingVictoryRef.current = true;
+              hasAwardedAchievementRef.current = true;
+
+              try {
+                // LANGKAH 1: Update achievement
+                const isAchievementUpdated = await updateWinningAchievement(
+                  user.uid,
+                  gameID,
+                  topicID
+                );
+
+                console.log("Achievement update result:", isAchievementUpdated);
+
+                if (isAchievementUpdated) {
+                  // LANGKAH 2: Award potion
+                  const currentPotionData = await getPotionData(user.uid);
+                  if (currentPotionData) {
+                    await saveNewPotionData(user.uid, {
+                      item_name: currentPotionData.item_name,
+                      item_count: (currentPotionData.item_count || 0) + 1,
+                      item_img: currentPotionData.item_img,
+                    });
+                    console.log("🧪 Potion berhasil diberikan");
                   }
-              }
-          }
 
-          // Setelah pemenang teridentifikasi di Firebase, setiap klien akan menampilkan overlay
-          if (newGameState.gameWinnerUID) {
-              setVictory(true);
-              setWinner(newGameState.gameWinnerDisplayName || "Player");
-              setIsWinner(user?.uid === newGameState.gameWinnerUID);
-              setHasLost(user?.uid !== newGameState.gameWinnerUID);
-              setShowVictoryOverlay(true);
+                  // LANGKAH 3: Set flag di Firebase (HANYA setelah semua berhasil)
+                  await updateGameState(topicID, gameID, roomID, {
+                    achievementAwarded: true,
+                  });
+                  console.log("✅ Flag achievement awarded di-set ke Firebase");
+                } else {
+                  console.log(
+                    "⚠️ Achievement sudah ada sebelumnya, skip award"
+                  );
+                  // Reset flag jika achievement sudah ada
+                  hasAwardedAchievementRef.current = false;
+                }
+              } catch (error) {
+                console.error("❌ Error saat award achievement:", error);
+                // Reset flag jika ada error
+                hasAwardedAchievementRef.current = false;
+              } finally {
+                isProcessingVictoryRef.current = false;
+              }
+            }
+          } else if (!newGameState.gameWinnerUID) {
+            // Reset jika tidak ada pemenang
+            if (victory || gameOver || showVictoryOverlay) {
+              console.log("🔄 Reset status kemenangan");
+              setVictory(false);
+              setIsWinner(false);
+              setHasLost(false);
+              setShowVictoryOverlay(false);
+              setWinner("");
+              // JANGAN reset hasAwardedAchievementRef di sini
+            }
           }
-        } else {
-          if (victory || gameOver) {
-            console.log("Resetting local victory/game over state as no winner found in Firebase.");
-            setVictory(false);
-            setIsWinner(false);
-            setHasLost(false);
-            setShowVictoryOverlay(false);
-            setWinner("");
-          }
+          // --- AKHIR LOGIKA KEMENANGAN ---
         }
-        // --- AKHIR LOGIKA KEMENANGAN YANG DIPERBAIKI ---
       }
-    });
+    );
 
     return () => unsubscribe();
-  }, [isGameReady, players, topicID, gameID, roomID, user?.uid, currentPlayerIndex, victory, gameOver, awardVictoryPotions]);
+  }, [
+    isGameReady,
+    players,
+    topicID,
+    gameID,
+    roomID,
+    user?.uid,
+    currentPlayerIndex,
+  ]);
+
+  // Tambahan: Reset refs saat component unmount
+  useEffect(() => {
+    return () => {
+      hasAwardedAchievementRef.current = false;
+      isProcessingVictoryRef.current = false;
+    };
+  }, []);
 
   // Listen to game timer
   useEffect(() => {
     if (!topicID || !gameID || !roomID) return;
-    const unsubscribe = listenToGameTimer(topicID, gameID, roomID, (remainingTime) => {
-      if (remainingTime <= 0) {
-        stopGameTimer(topicID, gameID, roomID);
-        handleGameOver();
+    const unsubscribe = listenToGameTimer(
+      topicID,
+      gameID,
+      roomID,
+      (remainingTime) => {
+        if (remainingTime <= 0) {
+          stopGameTimer(topicID, gameID, roomID);
+          handleGameOver();
+        }
       }
-    });
+    );
     return () => unsubscribe();
   }, [topicID, gameID, roomID, handleGameOver]);
 
@@ -583,35 +646,38 @@ function NusaCard() {
 
   // Client-side visual timer logic
   useEffect(() => {
-      if (visualTimerIntervalRef.current) {
-          clearInterval(visualTimerIntervalRef.current);
-      }
+    if (visualTimerIntervalRef.current) {
+      clearInterval(visualTimerIntervalRef.current);
+    }
 
-      setLocalVisualTimeLeft(syncedPlayerTimeLeft);
+    setLocalVisualTimeLeft(syncedPlayerTimeLeft);
 
-      const isAnyPlayerActive = currentPlayerIndex !== null && currentPlayerIndex >= 0 && players.length > 0;
-      
-      if (syncedPlayerTimeLeft > 0 && isAnyPlayerActive) {
-          visualTimerIntervalRef.current = setInterval(() => {
-              setLocalVisualTimeLeft(prevTime => {
-                  const newTime = Math.max(0, prevTime - 1);
-                  if (newTime <= 0) {
-                      clearInterval(visualTimerIntervalRef.current);
-                      visualTimerIntervalRef.current = null;
-                  }
-                  return newTime;
-              });
-          }, 1000);
-      } else {
-          setLocalVisualTimeLeft(0);
-      }
+    const isAnyPlayerActive =
+      currentPlayerIndex !== null &&
+      currentPlayerIndex >= 0 &&
+      players.length > 0;
 
-      return () => {
-          if (visualTimerIntervalRef.current) {
-              clearInterval(visualTimerIntervalRef.current);
-              visualTimerIntervalRef.current = null;
+    if (syncedPlayerTimeLeft > 0 && isAnyPlayerActive) {
+      visualTimerIntervalRef.current = setInterval(() => {
+        setLocalVisualTimeLeft((prevTime) => {
+          const newTime = Math.max(0, prevTime - 1);
+          if (newTime <= 0) {
+            clearInterval(visualTimerIntervalRef.current);
+            visualTimerIntervalRef.current = null;
           }
-      };
+          return newTime;
+        });
+      }, 1000);
+    } else {
+      setLocalVisualTimeLeft(0);
+    }
+
+    return () => {
+      if (visualTimerIntervalRef.current) {
+        clearInterval(visualTimerIntervalRef.current);
+        visualTimerIntervalRef.current = null;
+      }
+    };
   }, [syncedPlayerTimeLeft, currentPlayerIndex, players.length]);
 
   // Victory overlay effect - sama seperti UlarTangga
@@ -628,16 +694,18 @@ function NusaCard() {
       console.log("Cleaning up game due to: Game Over (time up)");
       stopGameTimer(topicID, gameID, roomID);
       setGameStartStatus(topicID, gameID, roomID, false);
-      
+
       if (!hasCleanedUpRef.current) {
-        cleanupGame(topicID, gameID, roomID, user).then(() => {
-          console.log("Firebase game data cleaned up.");
-          hasCleanedUpRef.current = true;
-        }).catch(error => {
-          console.error("Error during cleanup:", error);
-        });
+        cleanupGame(topicID, gameID, roomID, user)
+          .then(() => {
+            console.log("Firebase game data cleaned up.");
+            hasCleanedUpRef.current = true;
+          })
+          .catch((error) => {
+            console.error("Error during cleanup:", error);
+          });
       }
-      
+
       // Langsung navigate untuk gameOver
       setTimeout(() => {
         navigate("/");
@@ -656,14 +724,17 @@ function NusaCard() {
     const myIndex = getLocalPlayerGlobalIndex();
     const myPlayerId = `player${myIndex + 1}`;
     const myCards = gameState[`${myPlayerId}Cards`] || [];
-    const updatedCards = myCards.filter(card => card.id !== cardData.id);
+    const updatedCards = myCards.filter((card) => card.id !== cardData.id);
 
     setTriggerShuffleAnimation(true);
     setTimeout(() => setTriggerShuffleAnimation(false), 500);
 
-    const nextPlayerIndex = getNextPlayerIndex(currentPlayerIndex, players.length);
+    const nextPlayerIndex = getNextPlayerIndex(
+      currentPlayerIndex,
+      players.length
+    );
 
-    await updateGameState(topicID, gameID, roomID, {
+    const updatePayload = {
       [`${myPlayerId}Cards`]: updatedCards,
       thrownCard: cardData,
       questionForModal: cardData,
@@ -671,88 +742,125 @@ function NusaCard() {
       currentPlayerIndex: nextPlayerIndex,
       currentActiveTurnPhase: "answering",
       lastCardThrowerIndex: currentPlayerIndex,
-    });
+    };
+
+    // Check victory condition
+    if (updatedCards.length === 0) {
+      console.log(`🎉 ${user?.displayName} menang dengan kartu terakhir!`);
+      updatePayload.gameStatus = "finished";
+      updatePayload.gameWinnerUID = user.uid;
+      updatePayload.gameWinnerDisplayName = user.displayName;
+      updatePayload.gameWonAt = Date.now();
+      updatePayload.achievementAwarded = false; // PENTING: Set ke false, biar logic di useEffect yang handle
+      updatePayload.shouldShowQuestionModal = false;
+      updatePayload.questionForModal = null;
+      updatePayload.thrownCard = null;
+    }
+
+    await updateGameState(topicID, gameID, roomID, updatePayload);
   };
 
-  const handlePlayerAnswerSubmission = useCallback(async (result) => {
-    updateActivity();
-    if (!isMyPlayerTurnToAnswer()) {
-      console.log("Not your turn to answer!");
-      return;
-    }
-
-    if (hasAddedPenalty.current) {
-      console.log("Answer already processed, skipping");
-      return;
-    }
-
-    const { isCorrect, hint } = result;
-    const myIndex = getLocalPlayerGlobalIndex();
-    const myPlayerId = `player${myIndex + 1}`;
-
-    const newFeedback = { ...playerAnswerFeedback };
-    newFeedback[myPlayerId] = isCorrect ? "correct" : "incorrect";
-
-    await updateGameState(topicIDRef.current, gameIDRef.current, roomIDRef.current, { 
-      playerAnswerFeedback: newFeedback
-    });
-
-    if (!isCorrect) {
-      hasAddedPenalty.current = true;
-
-      const penaltyCard = getRandomCardFromAvailablePool();
-      const currentCards = gameState[`${myPlayerId}Cards`] || [];
-      const updatedCards = [...currentCards, penaltyCard];
-
-      await updateGameState(topicIDRef.current, gameIDRef.current, roomIDRef.current, { 
-        [`${myPlayerId}Cards`]: updatedCards,
-        penaltyAddedAt: Date.now(),
-        penaltyAddedBy: 'wrong_answer'
-      });
-
-      if (hint) {
-        setCollectedGameHints(prev => [...prev, hint]);
-        setShowGameOffcanvas(true);
+  const handlePlayerAnswerSubmission = useCallback(
+    async (result) => {
+      updateActivity();
+      if (!isMyPlayerTurnToAnswer()) {
+        console.log("Not your turn to answer!");
+        return;
       }
 
-      console.log(`🃏 Penalty! Player ${myPlayerId} gets a card.`);
-    } else {
-      console.log(`✅ Correct answer from Player ${myPlayerId}.`);
-    }
+      if (hasAddedPenalty.current) {
+        console.log("Answer already processed, skipping");
+        return;
+      }
 
-    setTimeout(async () => {
-      const resetFeedback = { ...newFeedback };
-      resetFeedback[myPlayerId] = null;
-      
-      const playerWhoJustAnswered = currentPlayerIndex;
-      
-      console.log(`↩️ Player ${playerWhoJustAnswered + 1} (who just answered) now gets turn to throw.`);
-      await updateGameState(topicIDRef.current, gameIDRef.current, roomIDRef.current, {
-        playerAnswerFeedback: resetFeedback,
-        currentPlayerIndex: playerWhoJustAnswered,
-        currentActiveTurnPhase: "throwing",
-        thrownCard: null,
-        questionForModal: null,
-        shouldShowQuestionModal: false,
-        lastCardThrowerIndex: null,
-      });
+      const { isCorrect, hint } = result;
+      const myIndex = getLocalPlayerGlobalIndex();
+      const myPlayerId = `player${myIndex + 1}`;
 
-      setTimeout(() => {
-        hasAddedPenalty.current = false;
+      const newFeedback = { ...playerAnswerFeedback };
+      newFeedback[myPlayerId] = isCorrect ? "correct" : "incorrect";
+
+      await updateGameState(
+        topicIDRef.current,
+        gameIDRef.current,
+        roomIDRef.current,
+        {
+          playerAnswerFeedback: newFeedback,
+        }
+      );
+
+      if (!isCorrect) {
+        hasAddedPenalty.current = true;
+
+        const penaltyCard = getRandomCardFromAvailablePool();
+        const currentCards = gameState[`${myPlayerId}Cards`] || [];
+        const updatedCards = [...currentCards, penaltyCard];
+
+        await updateGameState(
+          topicIDRef.current,
+          gameIDRef.current,
+          roomIDRef.current,
+          {
+            [`${myPlayerId}Cards`]: updatedCards,
+            penaltyAddedAt: Date.now(),
+            penaltyAddedBy: "wrong_answer",
+          }
+        );
+
+        if (hint) {
+          setCollectedGameHints((prev) => [...prev, hint]);
+          setShowGameOffcanvas(true);
+        }
+
+        console.log(`🃏 Penalty! Player ${myPlayerId} gets a card.`);
+      } else {
+        console.log(`✅ Correct answer from Player ${myPlayerId}.`);
+      }
+
+      setTimeout(async () => {
+        const resetFeedback = { ...newFeedback };
+        resetFeedback[myPlayerId] = null;
+
+        const playerWhoJustAnswered = currentPlayerIndex;
+
+        console.log(
+          `↩️ Player ${
+            playerWhoJustAnswered + 1
+          } (who just answered) now gets turn to throw.`
+        );
+        await updateGameState(
+          topicIDRef.current,
+          gameIDRef.current,
+          roomIDRef.current,
+          {
+            playerAnswerFeedback: resetFeedback,
+            currentPlayerIndex: playerWhoJustAnswered,
+            currentActiveTurnPhase: "throwing",
+            thrownCard: null,
+            questionForModal: null,
+            shouldShowQuestionModal: false,
+            lastCardThrowerIndex: null,
+          }
+        );
+
+        setTimeout(() => {
+          hasAddedPenalty.current = false;
+        }, 500);
       }, 500);
-    }, 500);
-  }, [
-    updateActivity,
-    isMyPlayerTurnToAnswer,
-    getLocalPlayerGlobalIndex,
-    playerAnswerFeedback,
-    gameState,
-    getRandomCardFromAvailablePool,
-    currentPlayerIndex,
-    topicIDRef,
-    gameIDRef,
-    roomIDRef,
-  ]);
+    },
+    [
+      updateActivity,
+      isMyPlayerTurnToAnswer,
+      getLocalPlayerGlobalIndex,
+      playerAnswerFeedback,
+      gameState,
+      getRandomCardFromAvailablePool,
+      currentPlayerIndex,
+      topicIDRef,
+      gameIDRef,
+      roomIDRef,
+    ]
+  );
 
   const handleCloseQuestionPromptModal = useCallback(async () => {
     console.log("🔴 Closing modal manually");
@@ -767,32 +875,37 @@ function NusaCard() {
     });
   }, [topicID, gameID, roomID]);
 
-  // Handle victory close - SAMA SEPERTI ULAR TANGGA
+  useEffect(() => {
+    if (victory) {
+      setShowVictoryOverlay(true);
+    }
+  }, [victory]);
+
+  // GANTI handleVictoryClose dengan versi yang LANGSUNG redirect:
   const handleVictoryClose = useCallback(() => {
-    console.log("🏆 Victory overlay closed, cleaning up and navigating...");
-    
-    // Cleanup saat user close overlay
+    console.log("🏆 Victory overlay closing - immediate redirect");
+
+    // Firebase cleanup (jalankan di background)
     stopGameTimer(topicID, gameID, roomID);
     setGameStartStatus(topicID, gameID, roomID, false);
-    
-    // Reset victory states
+
+    // Reset states
     setVictory(false);
     setHasLost(false);
     setShowVictoryOverlay(false);
-    
-    // Cleanup game dan navigate
+
+    // Cleanup Firebase di background dan LANGSUNG navigate
     if (!hasCleanedUpRef.current) {
-      cleanupGame(topicID, gameID, roomID, user).then(() => {
-        console.log("Firebase game data cleaned up on victory close.");
-        hasCleanedUpRef.current = true;
-        navigate("/");
-      }).catch(error => {
-        console.error("Error during cleanup on victory close:", error);
-        navigate("/"); // Navigate anyway jika ada error
-      });
-    } else {
-      navigate("/");
+      hasCleanedUpRef.current = true;
+
+      // Jalankan cleanup async tanpa blocking navigation
+      cleanupGame(topicID, gameID, roomID, user)
+        .then(() => console.log("✅ Firebase cleaned up"))
+        .catch((error) => console.error("❌ Cleanup error:", error));
     }
+
+    // LANGSUNG navigate tanpa setTimeout atau delay apapun
+    navigate("/");
   }, [topicID, gameID, roomID, user, navigate]);
 
   const handleCloseGameOffcanvas = useCallback(() => {
@@ -808,17 +921,10 @@ function NusaCard() {
     player4: gameState.player4Cards?.length || 0,
   };
 
-  const displayQuestionModalForMe = shouldShowQuestionModal && isMyPlayerTurnToAnswer();
+  const displayQuestionModalForMe =
+    shouldShowQuestionModal && isMyPlayerTurnToAnswer();
 
   // Utility functions for GameArea
-  const getPlayerCards = useCallback((playerId) => {
-    return gameState[`${playerId}Cards`] || [];
-  }, [gameState]);
-
-  const getPlayerStatus = useCallback((playerId) => {
-    return gameState.playerStatus?.[playerId] || "not_available";
-  }, [gameState.playerStatus]);
-
   const isPlayerTurnStatus = useCallback(
     (playerGlobalIndex) => currentPlayerIndex === playerGlobalIndex,
     [currentPlayerIndex]

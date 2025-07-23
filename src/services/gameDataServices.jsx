@@ -332,24 +332,8 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
         };
 
         applyUpdates(newState, updates);
-        // === AKHIR KUNCI PERBAIKAN ===
-
-
-        // Validasi dan sanitasi data sebelum update (pertahankan logika Anda)
-        // Note: Sebagian besar validasi ini mungkin tidak lagi diperlukan
-        // jika applyUpdates sudah sangat spesifik.
-        // Namun, jika Anda ingin mempertahankan validasi kuat Anda, biarkan saja.
-        // Saya hanya akan mencantumkan bagian yang relevan dengan `playerTimers`
-        // dan `gameWinnerUID` dll. yang baru Anda tambahkan.
-
-        const sanitizedUpdates = { ...newState }; // Gunakan newState yang sudah di-merge
-
-        const gameType = currentState.gameType || updates.gameType || 'ulartangga';
-        // ... (validasi NusaCard dan Ular Tangga lainnya) ...
-
-        // PENTING: Struktur playerTimers dipertahankan seperti yang Anda inginkan
-        // Ini akan menerima array angka, bukan objek {startTime, duration}.
-        // Karena kita tidak mengubah timerUtils.js, ini akan tetap mengirim array angka.
+        
+        const sanitizedUpdates = { ...newState }; 
         if (updates.playerTimers) { // Cek dari input asli `updates`
           sanitizedUpdates.playerTimers = Array.isArray(updates.playerTimers)
             ? updates.playerTimers.map(time => Number(time) || 0) // Kembali ke array angka
@@ -535,7 +519,6 @@ export const updatePlayerPosition = async (topicID, gameID, roomID, playerIndex,
 export const updateCurrentPlayerTime = async (topicID, gameID, roomID, currentPlayerIndex, timeLeft, currentPhase) => {
   if (!topicID || !gameID || !roomID) return;
 
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
   try {
     // Kita akan update field baru di gameState: activePlayerTimer
     await set(ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState/activePlayerTimer`), {

@@ -42,7 +42,7 @@ function RoomPlayer() {
   const [userBadge, setUserBadge] = useState(null);
   const [lastMessage, setLastMessage] = useState("Chat With Others");
   const [isFirstPlayer, setIsFirstPlayer] = useState(false);
-  const [aiCardsCount, setAiCardsCount] = useState(0); // Added state for AI cards
+  const [aiCardsCount, setAiCardsCount] = useState(0); 
   const prevPlayers = useRef([]);
   const navigate = useNavigate();
 
@@ -54,7 +54,7 @@ function RoomPlayer() {
         case "game1":
           return "playUtanggaVsAi";
         case "game2":
-          return "playNucaVsAi"; // NusaCard VS AI route
+          return "playNucaVsAi";
         default:
           return "playUtanggaVsAi";
       }
@@ -65,7 +65,7 @@ function RoomPlayer() {
       case "game1":
         return "playUTangga";
       case "game2":
-        return "playNuca"; // Updated to use NusaCard route
+        return "playNuca"; 
       default:
         return "playUTangga";
     }
@@ -324,14 +324,12 @@ function RoomPlayer() {
         });
       } else {
         // For multiplayer games, check minimum player requirements
-        const minPlayersRequired = gameID === "game2" ? 2 : 2; // NusaCard minimum 2 players, Ular Tangga minimum 2 players
+        const minPlayersRequired = gameID === "game2" ? 2 : 2;
         
         if (players.length < minPlayersRequired) {
           alert(`Minimal ${minPlayersRequired} pemain diperlukan untuk memulai permainan ini.`);
           return;
         }
-        
-        // Keep existing multiplayer logic unchanged
         await setGameStartStatus(topicID, gameID, roomID, true);
       }
     }
@@ -414,8 +412,8 @@ function RoomPlayer() {
       badge={userBadge}
       achievements={userAchievements}
       isAvailable={true}
-      onAiCardsChange={handleAiCardsChange} // Pass the callback
-      gameType={gameID} // Pass game type to CardVsAi for different AI behaviors
+      onAiCardsChange={handleAiCardsChange} 
+      gameType={gameID} 
     />
   ) : (
     playerArray.map((player, index) => {
@@ -459,17 +457,6 @@ function RoomPlayer() {
       <Row className="d-flex flex-column justify-content-center align-items-center text-center">
         <Col md={12} className="desc-title">
           <p>{roomData?.description}</p>
-          {/* Show game-specific info */}
-          {gameID === "game2" && (
-            <p className="text-muted mt-2">
-              <small>🃏 NusaCard - Buang semua kartu untuk menang!</small>
-            </p>
-          )}
-          {gameID === "game1" && (
-            <p className="text-muted mt-2">
-              <small>🎯 Ular Tangga - Capai kotak 99 untuk menang!</small>
-            </p>
-          )}
         </Col>
         <Col
           md={12}

@@ -17,7 +17,7 @@
 
 .card-stack .card:hover {
   transform: translateY(-30px) translateX(calc((var(--index) - var(--total-cards) / 2) * 65px * var(--spacing-factor) + 20px));
-  z-index: var(--total-cards);
+  z-index: 999;
   width: auto;
   height: auto;
   min-width: 120px;

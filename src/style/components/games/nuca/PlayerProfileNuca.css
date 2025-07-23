@@ -26,7 +26,7 @@
 }
 
 .player-profile-top-left {
-  left: calc(-100px - var(--total-player-cards) * 8px);
+  left: calc(-100px - var(--total-player-cards) * 10px);
   transform: translateY(-35%);
 }
 
@@ -42,7 +42,7 @@
 }
 
 .player-profile-bottom-right {
-  left: calc(var(--total-player-cards, 1) * 30px + 6vh);
+  left: calc(var(--total-player-cards, 1) * 32px + 6vh);
   transform: translateY(-168%);
 }
 

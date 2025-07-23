@@ -78,6 +78,7 @@ function QuestionModal({
           radius={PROFILE_RADIUS}
           answerFeedback={playerAnswerFeedback[playerAnsweringId]}
           playerData={answeringPlayerData}
+          hideStatusText = {true}
         />
       </div>
     ),
@@ -98,7 +99,7 @@ function QuestionModal({
       <div
         className="potion-overlay position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
         style={{
-          backgroundColor: "rgba(35, 145, 81, 0.9)",
+          backgroundColor: "#162b4df0",
           zIndex: 999,
            top: 0,
           left: 0,
@@ -110,8 +111,8 @@ function QuestionModal({
              <Image width={50} src={CheckIcon}/> 
              <Image width={50} src={PotionImage}/> 
           </div>
-          <h4 className="mb-1">Potion Used!</h4>
-          <p className="mb-0">Auto-correct answer activated</p>
+          <h4 className="mb-1">POTION DIGUNAKAN!</h4>
+          <p className="mb-0">Melewati Pertanyaan Aktif</p>
         </div>
       </div>
     );

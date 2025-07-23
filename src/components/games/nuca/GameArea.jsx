@@ -26,8 +26,8 @@ const GameArea = ({
   isCurrentUserTurn,
   currentTurnPhase,
   TIMER_ANSWER_DURATION,
-  isPlayerTurn, // FIXED: renamed from isPlayerTurnFromHook
-  getPlayerTimeLeft, // FIXED: renamed from getPlayerTimeLeftFromHook
+  isPlayerTurn,
+  getPlayerTimeLeft, 
   triggerShuffleAnimation,
   players, // ADDED: Array of player data with photos
 }) => {
@@ -109,7 +109,7 @@ const GameArea = ({
           maxTime={playerData.currentMaxTimeForTurn}
           currentTurnPhase={currentTurnPhase}
           isCurrentPlayer={true}
-          playerData={playerData.playerData} // ADDED
+          playerData={playerData.playerData} 
         />
       </>
     );
@@ -138,8 +138,8 @@ const GameArea = ({
               maxTime={playerData.currentMaxTimeForTurn}
               answerFeedback={playerData.answerFeedback}
               currentTurnPhase={currentTurnPhase}
-              isCurrentPlayer={false} // FIXED: should be false for other players
-              playerData={playerData.playerData} // ADDED
+              isCurrentPlayer={false} 
+              playerData={playerData.playerData} 
             />
           )}
           <PlayerBackStackCards

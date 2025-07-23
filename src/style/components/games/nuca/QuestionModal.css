@@ -3,9 +3,9 @@
 }
 
 .modal-content .profile-border-svg {
-    top: -12px !important;
+    top: -11px !important;
     left: -5px !important;
-    width: 68px;
+    width: 67px;
     transform-origin: center center;
     z-index: 1;
 }
@@ -25,7 +25,7 @@
 (max-width: 576px) {
     .modal-content .profile-border-svg {
         top: -21px !important;
-        left: -3px !important;
+        left: -2px !important;
         width: 44px;
         transform-origin: center center;
         z-index: 1;

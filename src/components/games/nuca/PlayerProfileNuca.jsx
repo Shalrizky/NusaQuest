@@ -26,14 +26,15 @@ const PlayerProfileNuca = memo(
     position,
     totalCards,
     radius = DEFAULT_RADIUS,
-    isActive = false, // Ini akan true jika itu adalah pemain yang gilirannya
-    timeLeft = 0, // Ini akan menjadi sisa waktu dari Firebase jika isActive true
+    isActive = false, 
+    timeLeft = 0,
     maxTime = 0,
     answerFeedback = null,
     currentTurnPhase = null,
-    isCurrentPlayer = false,
-    playerData = null, // ADDED: untuk mengakses data player
+    playerData = null, 
+     hideStatusText = false,
   }) => {
+
     // FIXED: Gunakan photoURL dari playerData jika tersedia
     const profileImage = useMemo(() => {
       if (playerData?.photoURL) {
@@ -50,10 +51,11 @@ const PlayerProfileNuca = memo(
 
     const baseStatusText = useMemo(() => {
       if (!isActive) return null;
+      if (hideStatusText) return null; 
 
       // FIXED: Show status for all active players, not just current player
       return currentTurnPhase === "throwing" ? "Memilih" : "Menjawab";
-    }, [isActive, currentTurnPhase]);
+    }, [isActive, currentTurnPhase, hideStatusText]);
 
     // Effect untuk animasi titik berjalan
     useEffect(() => {
@@ -191,7 +193,6 @@ const PlayerProfileNuca = memo(
 
     return (
       <div className={styling.className} style={styling.customCssVars}>
-        {/* Render animatedStatusText */}
         {animatedStatusText && (
           <div className="player-status-text">{animatedStatusText}</div>
         )}

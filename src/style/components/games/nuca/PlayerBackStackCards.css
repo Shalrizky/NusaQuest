@@ -50,15 +50,17 @@
 }
 
 .not-avail-card-item.top {
-  left: calc(50% - var(--total-cards) * 16px);
+  left: -80px;
   top: -70px;
 }
 
 .not-avail-card-item.left {
+   top: -100px;
   left: -25px;
 }
 
 .not-avail-card-item.right {
+  top: -110px;
   right: 50px;
 }
 

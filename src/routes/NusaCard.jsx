@@ -514,8 +514,6 @@ function NusaCard() {
 
         // Victory logic
         if (newGameState.gameWinnerUID && !isProcessingVictoryRef.current) {
-          console.log(`🏆 Pemenang terdeteksi: ${newGameState.gameWinnerDisplayName}`);
-          
           setVictory(true);
           setWinner(newGameState.gameWinnerDisplayName || "Player");
           setIsWinner(user?.uid === newGameState.gameWinnerUID);
@@ -758,29 +756,12 @@ function NusaCard() {
         }
       );
 
-      // Handle potion usage - ONLY reduce if not already reduced
+      // Handle potion usage - Skip completely since Potion component handles it
       if (usedPotion && !potionAlreadyReduced) {
-        console.log("🧪 Potion used, reducing count...");
-        try {
-          const currentPotionData = await getPotionData(user.uid);
-          console.log("🧪 Current potion count before reduction:", currentPotionData?.item_count);
-          
-          if (currentPotionData && currentPotionData.item_count > 0) {
-            const newCount = Math.max(0, (currentPotionData.item_count || 0) - 1);
-            await saveNewPotionData(user.uid, {
-              item_name: currentPotionData.item_name,
-              item_count: newCount,
-              item_img: currentPotionData.item_img,
-            });
-            console.log("🧪 Potion count reduced to:", newCount);
-          } else {
-            console.log("🧪 No potion available to reduce");
-          }
-        } catch (error) {
-          console.error("Error reducing potion count:", error);
-        }
+        console.log("🧪 Potion used, but should be handled by Potion component");
+        // This should not happen anymore since Potion component reduces count
       } else if (potionAlreadyReduced) {
-        console.log("🧪 Potion already reduced earlier, skipping reduction");
+        console.log("🧪 Potion already reduced by Potion component, skipping reduction");
       }
 
       if (!isCorrect && !usedPotion) {
@@ -891,52 +872,33 @@ function NusaCard() {
     
     console.log("🧪 Potion used during question - starting process");
     
-    // IMMEDIATELY reduce potion count BEFORE any timeout
-    try {
-      const currentPotionData = await getPotionData(user.uid);
-      console.log("🧪 Current potion count before reduction:", currentPotionData?.item_count);
-      
-      if (currentPotionData && currentPotionData.item_count > 0) {
-        const newCount = Math.max(0, (currentPotionData.item_count || 0) - 1);
-        await saveNewPotionData(user.uid, {
-          item_name: currentPotionData.item_name,
-          item_count: newCount,
-          item_img: currentPotionData.item_img,
-        });
-        console.log("🧪 Potion count IMMEDIATELY reduced to:", newCount);
-      } else {
-        console.log("🧪 No potion available to reduce");
-      }
-    } catch (error) {
-      console.error("Error reducing potion count:", error);
-    }
-    
-    // Show overlay feedback, then submit answer WITHOUT reducing potion again
+    // DON'T reduce database here - let Potion component handle it
+    // Show overlay feedback, then submit answer
     setTimeout(() => {
       const potionResult = {
         isCorrect: true,
         hint: questionForModalDisplay?.hint || null,
-        usedPotion: false, // CHANGED: Set to false to prevent double reduction
-        potionAlreadyReduced: true // ADDED: Flag for logging
+        usedPotion: false, // Database already reduced by Potion component
+        potionAlreadyReduced: true // Flag for logging
       };
       
       handlePlayerAnswerSubmission(potionResult);
       
-      // Reset states setelah submit dengan delay lebih lama
+      // Reset states setelah submit
       setTimeout(() => {
         setIsPotionUsedInModal(false);
         potionUsageRef.current = false;
         potionSubmittedRef.current = false;
-      }, 500); // Increased delay
-    }, 1500);
-  }, [displayQuestionModalForMe, questionForModalDisplay?.hint, handlePlayerAnswerSubmission, isPotionUsedInModal, user.uid]);
+      }, 500);
+    }, 500);
+  }, [displayQuestionModalForMe, questionForModalDisplay?.hint, handlePlayerAnswerSubmission, isPotionUsedInModal]);
 
   // Reset potion state saat modal tutup
   useEffect(() => {
     if (!displayQuestionModalForMe) {
       setIsPotionUsedInModal(false);
       potionUsageRef.current = false;
-      potionSubmittedRef.current = false; // ADDED: Reset submitted flag juga
+      potionSubmittedRef.current = false;
     }
   }, [displayQuestionModalForMe]);
 
@@ -986,12 +948,6 @@ function NusaCard() {
     [localVisualTimeLeft, currentPlayerIndex]
   );
 
-  const handleModalBackgroundClick = useCallback((e) => {
-  // Prevent modal close on background click untuk tidak mengganggu timer
-  e.stopPropagation();
-  console.log("🎯 Modal background clicked - timer continues");
-}, []);
-
   // Render loading
   if (!isGameReady) {
     return (
@@ -1034,11 +990,9 @@ function NusaCard() {
           getPlayerTimeLeft={getPlayerRemainingTime}
           triggerShuffleAnimation={triggerShuffleAnimation}
           players={players}
-          onBackgroundClick={handleModalBackgroundClick}
         />
       </Container>
 
-      {/* Potion component - positioned to appear over modal */}
       {displayQuestionModalForMe && (
         <div 
           style={{ 

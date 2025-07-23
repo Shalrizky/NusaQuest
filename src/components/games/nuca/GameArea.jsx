@@ -42,22 +42,22 @@ const GameArea = ({
       const playerCards = getPlayerCards(playerId, gameState);
       const playerStatus = getPlayerStatus(playerId, gameState);
       const playerGlobalIndex = getPlayerGlobalIndex(playerId);
-      
+
       // FIXED: Check if functions exist before calling
-      const isCurrentPlayerActive = typeof isPlayerTurn === 'function' 
-        ? isPlayerTurn(playerGlobalIndex) 
+      const isCurrentPlayerActive = typeof isPlayerTurn === 'function'
+        ? isPlayerTurn(playerGlobalIndex)
         : false;
       const currentPlayerTimeLeft = typeof getPlayerTimeLeft === 'function'
         ? getPlayerTimeLeft(playerGlobalIndex)
         : 0;
-        
+
       const currentMaxTimeForTurn =
         currentTurnPhase === "throwing"
           ? TIMER_PLAYER_DURATION
           : TIMER_ANSWER_DURATION;
 
       // FIXED: Find actual player data for photos
-      const actualPlayerData = players && players.length > playerGlobalIndex 
+      const actualPlayerData = players && players.length > playerGlobalIndex
         ? players[playerGlobalIndex]
         : null;
 
@@ -80,7 +80,7 @@ const GameArea = ({
     return data;
   }, [
     currentUserId,
-    gameState, 
+    gameState,
     currentTurnPhase,
     TIMER_PLAYER_DURATION,
     TIMER_ANSWER_DURATION,
@@ -88,7 +88,7 @@ const GameArea = ({
     getPlayerTimeLeft, // FIXED
     playerAnswerFeedback,
     players // ADDED
-  ]); 
+  ]);
 
   const renderBottomPlayer = useCallback(() => {
     const playerData = playersData.bottom;
@@ -114,9 +114,9 @@ const GameArea = ({
       </>
     );
   }, [
-    playersData.bottom, 
-    handleCardClicked, 
-    isCurrentUserTurn, 
+    playersData.bottom,
+    handleCardClicked,
+    isCurrentUserTurn,
     currentTurnPhase
   ]);
 
@@ -151,7 +151,7 @@ const GameArea = ({
         </>
       );
     },
-    [playersData, currentTurnPhase, currentUserId]
+    [playersData, currentTurnPhase]
   );
 
   const renderCenterArea = useMemo(

@@ -8,12 +8,12 @@ import "../../style/components/games/victoryOverlay.css";
 
 function VictoryOverlay({ winner, onClose }) {
   const { user } = useAuth();
-  const { topicID } = useParams();
+  const { topicID, gameID } = useParams(); // Tambahkan gameID dari params
   const [potionData, setPotionData] = useState(null);
   const [achievementData, setAchievementData] = useState(null);
   const [badge, setBadge] = useState(null);
   const [totalWins, setTotalWins] = useState(0);
-  const [loading, setLoading] = useState(true); // Tambahkan loading state
+  const [loading, setLoading] = useState(true);
 
   // Fetch potion data
   useEffect(() => {
@@ -31,10 +31,13 @@ function VictoryOverlay({ winner, onClose }) {
 
   // Listen to real-time achievement updates
   useEffect(() => {
-    if (!user?.uid || !topicID) return;
+    if (!user?.uid || !topicID || !gameID) return;
 
-    // Gunakan listener real-time untuk memantau perubahan achievement
-    const unsubscribe = listenToAchievementUpdates(user.uid, "game1", topicID, (data) => {
+    console.log("Listening to achievements for:", { gameID, topicID, userUID: user.uid });
+
+    // Gunakan gameID dinamis dari params, bukan hardcoded "game1"
+    const unsubscribe = listenToAchievementUpdates(user.uid, gameID, topicID, (data) => {
+      console.log("Achievement data received:", data);
       setAchievementData(data);
       const wins = data.totalWins || 0;
       setTotalWins(wins);
@@ -45,11 +48,11 @@ function VictoryOverlay({ winner, onClose }) {
       } else {
         setBadge(null);
       }
-      setLoading(false); // Set loading ke false setelah data diterima
+      setLoading(false);
     });
 
-    return () => unsubscribe(); // Hentikan listener saat komponen di-unmount
-  }, [user?.uid, topicID]);
+    return () => unsubscribe();
+  }, [user?.uid, topicID, gameID]); // Tambahkan gameID ke dependency
 
   // Auto close after 10 seconds
   useEffect(() => {
@@ -60,7 +63,7 @@ function VictoryOverlay({ winner, onClose }) {
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  if (loading) return <p>Loading...</p>; // Tampilkan loading saat data belum siap
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="victory-overlay" onClick={onClose}>
@@ -68,7 +71,7 @@ function VictoryOverlay({ winner, onClose }) {
       <h2>
         {winner} <span>Wins!</span>
       </h2>
-      <p>Total Wins: {totalWins}</p> {/* Tampilkan totalWins */}
+      <p>Total Wins: {totalWins}</p>
       <p>Selamat Kamu mendapatkan:</p>
       <div className="rewards mb-4" onClick={(e) => e.stopPropagation()}>
 

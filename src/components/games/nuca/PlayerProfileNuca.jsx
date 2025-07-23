@@ -5,7 +5,7 @@ import CheckIcon from "../../../assets/games/nuca/checklist.png";
 import CrossIcon from "../../../assets/games/nuca/cross.png";
 import "../../../style/components/games/nuca/PlayerProfileNuca.css";
 
-// Constants 
+// Constants
 const DEFAULT_RADIUS = 29;
 const STROKE_WIDTH = 6;
 const TIME_THRESHOLDS = {
@@ -26,8 +26,8 @@ const PlayerProfileNuca = memo(
     position,
     totalCards,
     radius = DEFAULT_RADIUS,
-    isActive = false,
-    timeLeft = 0,
+    isActive = false, // Ini akan true jika itu adalah pemain yang gilirannya
+    timeLeft = 0, // Ini akan menjadi sisa waktu dari Firebase jika isActive true
     maxTime = 0,
     answerFeedback = null,
     currentTurnPhase = null,
@@ -102,7 +102,7 @@ const PlayerProfileNuca = memo(
     const statusTextPositionClass = useMemo(() => {
       switch (position) {
         case "top-left":
-           return "player-status-text-bottom";
+          return "player-status-text-bottom";
         case "left":
           return "player-status-text-bottom";
         case "right":
@@ -118,7 +118,7 @@ const PlayerProfileNuca = memo(
         className: `player-profile-container player-profile-${position} ${statusTextPositionClass}`,
         customCssVars: { "--total-player-cards": totalCards },
       }),
-      [position, totalCards, statusTextPositionClass] 
+      [position, totalCards, statusTextPositionClass]
     );
 
     const svgCalculations = useMemo(() => {
@@ -134,7 +134,8 @@ const PlayerProfileNuca = memo(
     }, [radius]);
 
     const timerData = useMemo(() => {
-      if (maxTime === 0) {
+      // KUNCI: Hanya lakukan perhitungan jika isActive
+      if (!isActive || maxTime === 0) {
         return {
           strokeDashoffset: svgCalculations.circleCircumference,
           strokeColor: STROKE_COLORS.TRANSPARENT,
@@ -160,9 +161,10 @@ const PlayerProfileNuca = memo(
           svgCalculations.circleCircumference * (1 - progressPercentage),
         strokeColor,
       };
-    }, [timeLeft, maxTime, svgCalculations.circleCircumference]);
+    }, [timeLeft, maxTime, isActive, svgCalculations.circleCircumference]);
 
     const timerSvg = useMemo(() => {
+      // KUNCI: Hanya render SVG jika isActive adalah true
       if (!isActive) return null;
 
       return (

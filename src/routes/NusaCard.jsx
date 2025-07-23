@@ -7,6 +7,8 @@ import QuestionModal from "../components/games/nuca/QuestionModal";
 import GameArea from "../components/games/nuca/GameArea";
 import VictoryOverlay from "../components/games/VictoryOverlay";
 import LoseOverlay from "../components/games/LoseOverlay";
+import Potion from "../components/games/potion"
+
 import {
   fetchGamePlayers,
   initializeNusaCardGameState,
@@ -59,6 +61,8 @@ function NusaCard() {
   const topicIDRef = useRef(topicID);
   const roomIDRef = useRef(roomID);
   const hasCleanedUpRef = useRef(false);
+  const hasAwardedAchievementRef = useRef(false);
+  const isProcessingVictoryRef = useRef(false);
 
   // Penalty prevention refs
   const hasAddedPenalty = useRef(false);
@@ -76,6 +80,7 @@ function NusaCard() {
   const [isWinner, setIsWinner] = useState(false);
   const [hasLost, setHasLost] = useState(false);
   const [showVictoryOverlay, setShowVictoryOverlay] = useState(false);
+  const [isPotionUsedInModal, setIsPotionUsedInModal] = useState(false);
 
   // Game Data State
   const [gameState, setGameState] = useState({
@@ -104,8 +109,6 @@ function NusaCard() {
   const [questionForModalDisplay, setQuestionForModalDisplay] = useState(null);
   const [lastCardThrowerIndex, setLastCardThrowerIndex] = useState(null);
   const [isMyTurn, setIsMyTurn] = useState(false);
-  const hasAwardedAchievementRef = useRef(false);
-  const isProcessingVictoryRef = useRef(false);
 
   // UI State
   const [collectedGameHints, setCollectedGameHints] = useState([]);
@@ -147,6 +150,18 @@ function NusaCard() {
       currentPlayerIndex === myIndex && currentActiveTurnPhase === "answering"
     );
   }, [currentPlayerIndex, getLocalPlayerGlobalIndex, currentActiveTurnPhase]);
+
+  // Calculated values - MOVED UP before usage
+  const activeLocalPlayerId = `player${getLocalPlayerGlobalIndex() + 1}`;
+  const cardCounts = {
+    player1: gameState.player1Cards?.length || 0,
+    player2: gameState.player2Cards?.length || 0,
+    player3: gameState.player3Cards?.length || 0,
+    player4: gameState.player4Cards?.length || 0,
+  };
+
+  const displayQuestionModalForMe =
+    shouldShowQuestionModal && isMyPlayerTurnToAnswer();
 
   // Get random card from available pool for penalty
   const getRandomCardFromAvailablePool = useCallback(() => {
@@ -469,149 +484,108 @@ function NusaCard() {
   useEffect(() => {
     if (!isGameReady) return;
 
-    const unsubscribe = listenToGameState(
-      topicID,
-      gameID,
-      roomID,
-      async (newGameState) => {
-        if (newGameState) {
-          setGameState(newGameState);
-          setCurrentPlayerIndex(newGameState.currentPlayerIndex || 0);
-          setCurrentActiveTurnPhase(
-            newGameState.currentActiveTurnPhase || "throwing"
-          );
-          setThrownCardData(newGameState.thrownCard);
-          setShouldShowQuestionModal(
-            newGameState.shouldShowQuestionModal || false
-          );
-          setQuestionForModalDisplay(newGameState.questionForModal);
-          setLastCardThrowerIndex(newGameState.lastCardThrowerIndex);
-          setPlayerAnswerFeedback(
-            newGameState.playerAnswerFeedback || {
-              player1: null,
-              player2: null,
-              player3: null,
-              player4: null,
-            }
-          );
+    const unsubscribe = listenToGameState(topicID, gameID, roomID, async (newGameState) => {
+      if (newGameState) {
+        setGameState(newGameState);
+        setCurrentPlayerIndex(newGameState.currentPlayerIndex || 0);
+        setCurrentActiveTurnPhase(newGameState.currentActiveTurnPhase || "throwing");
+        setThrownCardData(newGameState.thrownCard);
+        setShouldShowQuestionModal(newGameState.shouldShowQuestionModal || false);
+        setQuestionForModalDisplay(newGameState.questionForModal);
+        setLastCardThrowerIndex(newGameState.lastCardThrowerIndex);
+        setPlayerAnswerFeedback(newGameState.playerAnswerFeedback || {
+          player1: null, player2: null, player3: null, player4: null
+        });
 
-          const firebaseTime =
-            newGameState.playerTimers?.[newGameState.currentPlayerIndex];
-          if (firebaseTime !== undefined) {
+        const firebaseTime = newGameState.playerTimers?.[newGameState.currentPlayerIndex];
+        if (firebaseTime !== undefined) {
             setSyncedPlayerTimeLeft(firebaseTime);
-          } else {
+        } else {
             setSyncedPlayerTimeLeft(0);
-          }
+        }
 
-          const myIndex = players.findIndex((p) => p.uid === user?.uid);
-          const isCurrentPlayerTurn =
-            newGameState.currentPlayerIndex === myIndex;
-          setIsMyTurn(isCurrentPlayerTurn);
+        const myIndex = players.findIndex(p => p.uid === user?.uid);
+        const isCurrentPlayerTurn = newGameState.currentPlayerIndex === myIndex;
+        setIsMyTurn(isCurrentPlayerTurn);
 
-          if (newGameState.currentPlayerIndex !== currentPlayerIndex) {
-            hasAddedPenalty.current = false;
-          }
+        if (newGameState.currentPlayerIndex !== currentPlayerIndex) {
+          hasAddedPenalty.current = false;
+        }
 
-          // --- LOGIKA KEMENANGAN YANG DIPERBAIKI ---
-          if (newGameState.gameWinnerUID && !isProcessingVictoryRef.current) {
-            console.log(
-              `🏆 Pemenang terdeteksi: ${newGameState.gameWinnerDisplayName}`
-            );
+        // Victory logic
+        if (newGameState.gameWinnerUID && !isProcessingVictoryRef.current) {
+          console.log(`🏆 Pemenang terdeteksi: ${newGameState.gameWinnerDisplayName}`);
+          
+          setVictory(true);
+          setWinner(newGameState.gameWinnerDisplayName || "Player");
+          setIsWinner(user?.uid === newGameState.gameWinnerUID);
+          setHasLost(user?.uid !== newGameState.gameWinnerUID);
+          setShowVictoryOverlay(true);
 
-            // Set victory states
-            setVictory(true);
-            setWinner(newGameState.gameWinnerDisplayName || "Player");
-            setIsWinner(user?.uid === newGameState.gameWinnerUID);
-            setHasLost(user?.uid !== newGameState.gameWinnerUID);
-            setShowVictoryOverlay(true);
+          const shouldAwardAchievement = (
+            user?.uid === newGameState.gameWinnerUID && 
+            !newGameState.achievementAwarded && 
+            !hasAwardedAchievementRef.current
+          );
 
-            // HANYA proses achievement jika:
-            // 1. Saya adalah pemenang
-            // 2. Achievement belum pernah di-award untuk game ini
-            // 3. Belum dalam proses awarding
-            const shouldAwardAchievement =
-              user?.uid === newGameState.gameWinnerUID &&
-              !newGameState.achievementAwarded &&
-              !hasAwardedAchievementRef.current;
-
-            if (shouldAwardAchievement) {
-              console.log(
-                `🌟 Memproses achievement untuk ${user?.displayName}...`
+          if (shouldAwardAchievement) {
+            console.log(`🌟 Memproses achievement untuk ${user?.displayName}...`);
+            isProcessingVictoryRef.current = true;
+            hasAwardedAchievementRef.current = true;
+            
+            try {
+              const isAchievementUpdated = await updateWinningAchievement(
+                user.uid,
+                gameID, 
+                topicID
               );
-              isProcessingVictoryRef.current = true;
-              hasAwardedAchievementRef.current = true;
 
-              try {
-                // LANGKAH 1: Update achievement
-                const isAchievementUpdated = await updateWinningAchievement(
-                  user.uid,
-                  gameID,
-                  topicID
-                );
+              console.log("Achievement update result:", isAchievementUpdated);
 
-                console.log("Achievement update result:", isAchievementUpdated);
-
-                if (isAchievementUpdated) {
-                  // LANGKAH 2: Award potion
-                  const currentPotionData = await getPotionData(user.uid);
-                  if (currentPotionData) {
-                    await saveNewPotionData(user.uid, {
-                      item_name: currentPotionData.item_name,
-                      item_count: (currentPotionData.item_count || 0) + 1,
-                      item_img: currentPotionData.item_img,
-                    });
-                    console.log("🧪 Potion berhasil diberikan");
-                  }
-
-                  // LANGKAH 3: Set flag di Firebase (HANYA setelah semua berhasil)
-                  await updateGameState(topicID, gameID, roomID, {
-                    achievementAwarded: true,
+              if (isAchievementUpdated) {
+                const currentPotionData = await getPotionData(user.uid);
+                if (currentPotionData) {
+                  await saveNewPotionData(user.uid, {
+                    item_name: currentPotionData.item_name,
+                    item_count: (currentPotionData.item_count || 0) + 1,
+                    item_img: currentPotionData.item_img,
                   });
-                  console.log("✅ Flag achievement awarded di-set ke Firebase");
-                } else {
-                  console.log(
-                    "⚠️ Achievement sudah ada sebelumnya, skip award"
-                  );
-                  // Reset flag jika achievement sudah ada
-                  hasAwardedAchievementRef.current = false;
+                  console.log("🧪 Potion berhasil diberikan");
                 }
-              } catch (error) {
-                console.error("❌ Error saat award achievement:", error);
-                // Reset flag jika ada error
+
+                await updateGameState(topicID, gameID, roomID, { 
+                  achievementAwarded: true 
+                });
+                console.log("✅ Flag achievement awarded di-set ke Firebase");
+
+              } else {
+                console.log("⚠️ Achievement sudah ada sebelumnya, skip award");
                 hasAwardedAchievementRef.current = false;
-              } finally {
-                isProcessingVictoryRef.current = false;
               }
-            }
-          } else if (!newGameState.gameWinnerUID) {
-            // Reset jika tidak ada pemenang
-            if (victory || gameOver || showVictoryOverlay) {
-              console.log("🔄 Reset status kemenangan");
-              setVictory(false);
-              setIsWinner(false);
-              setHasLost(false);
-              setShowVictoryOverlay(false);
-              setWinner("");
-              // JANGAN reset hasAwardedAchievementRef di sini
+            } catch (error) {
+              console.error("❌ Error saat award achievement:", error);
+              hasAwardedAchievementRef.current = false;
+            } finally {
+              isProcessingVictoryRef.current = false;
             }
           }
-          // --- AKHIR LOGIKA KEMENANGAN ---
+        } else if (!newGameState.gameWinnerUID) {
+          if (victory || gameOver || showVictoryOverlay) {
+            console.log("🔄 Reset status kemenangan");
+            setVictory(false);
+            setIsWinner(false);
+            setHasLost(false);
+            setShowVictoryOverlay(false);
+            setWinner("");
+          }
         }
       }
-    );
+    });
 
     return () => unsubscribe();
-  }, [
-    isGameReady,
-    players,
-    topicID,
-    gameID,
-    roomID,
-    user?.uid,
-    currentPlayerIndex,
-  ]);
+  }, [isGameReady, players, topicID, gameID, roomID, user?.uid, currentPlayerIndex]);
 
-  // Tambahan: Reset refs saat component unmount
+  // Reset refs saat component unmount
   useEffect(() => {
     return () => {
       hasAwardedAchievementRef.current = false;
@@ -680,16 +654,15 @@ function NusaCard() {
     };
   }, [syncedPlayerTimeLeft, currentPlayerIndex, players.length]);
 
-  // Victory overlay effect - sama seperti UlarTangga
+  // Victory overlay effect
   useEffect(() => {
     if (victory) {
       setShowVictoryOverlay(true);
     }
   }, [victory]);
 
-  // Cleanup effect - HANYA untuk gameOver, bukan victory
+  // Cleanup effect
   useEffect(() => {
-    // HANYA cleanup untuk gameOver (waktu habis), BUKAN untuk victory
     if (gameOver && !victory) {
       console.log("Cleaning up game due to: Game Over (time up)");
       stopGameTimer(topicID, gameID, roomID);
@@ -706,7 +679,6 @@ function NusaCard() {
           });
       }
 
-      // Langsung navigate untuk gameOver
       setTimeout(() => {
         navigate("/");
       }, 1000);
@@ -724,15 +696,12 @@ function NusaCard() {
     const myIndex = getLocalPlayerGlobalIndex();
     const myPlayerId = `player${myIndex + 1}`;
     const myCards = gameState[`${myPlayerId}Cards`] || [];
-    const updatedCards = myCards.filter((card) => card.id !== cardData.id);
+    const updatedCards = myCards.filter(card => card.id !== cardData.id);
 
     setTriggerShuffleAnimation(true);
     setTimeout(() => setTriggerShuffleAnimation(false), 500);
 
-    const nextPlayerIndex = getNextPlayerIndex(
-      currentPlayerIndex,
-      players.length
-    );
+    const nextPlayerIndex = getNextPlayerIndex(currentPlayerIndex, players.length);
 
     const updatePayload = {
       [`${myPlayerId}Cards`]: updatedCards,
@@ -747,18 +716,18 @@ function NusaCard() {
     // Check victory condition
     if (updatedCards.length === 0) {
       console.log(`🎉 ${user?.displayName} menang dengan kartu terakhir!`);
-      updatePayload.gameStatus = "finished";
+      updatePayload.gameStatus = 'finished';
       updatePayload.gameWinnerUID = user.uid;
       updatePayload.gameWinnerDisplayName = user.displayName;
       updatePayload.gameWonAt = Date.now();
-      updatePayload.achievementAwarded = false; // PENTING: Set ke false, biar logic di useEffect yang handle
+      updatePayload.achievementAwarded = false;
       updatePayload.shouldShowQuestionModal = false;
       updatePayload.questionForModal = null;
       updatePayload.thrownCard = null;
     }
 
     await updateGameState(topicID, gameID, roomID, updatePayload);
-  };
+  }
 
   const handlePlayerAnswerSubmission = useCallback(
     async (result) => {
@@ -773,7 +742,7 @@ function NusaCard() {
         return;
       }
 
-      const { isCorrect, hint } = result;
+      const { isCorrect, hint, usedPotion, potionAlreadyReduced } = result;
       const myIndex = getLocalPlayerGlobalIndex();
       const myPlayerId = `player${myIndex + 1}`;
 
@@ -789,7 +758,32 @@ function NusaCard() {
         }
       );
 
-      if (!isCorrect) {
+      // Handle potion usage - ONLY reduce if not already reduced
+      if (usedPotion && !potionAlreadyReduced) {
+        console.log("🧪 Potion used, reducing count...");
+        try {
+          const currentPotionData = await getPotionData(user.uid);
+          console.log("🧪 Current potion count before reduction:", currentPotionData?.item_count);
+          
+          if (currentPotionData && currentPotionData.item_count > 0) {
+            const newCount = Math.max(0, (currentPotionData.item_count || 0) - 1);
+            await saveNewPotionData(user.uid, {
+              item_name: currentPotionData.item_name,
+              item_count: newCount,
+              item_img: currentPotionData.item_img,
+            });
+            console.log("🧪 Potion count reduced to:", newCount);
+          } else {
+            console.log("🧪 No potion available to reduce");
+          }
+        } catch (error) {
+          console.error("Error reducing potion count:", error);
+        }
+      } else if (potionAlreadyReduced) {
+        console.log("🧪 Potion already reduced earlier, skipping reduction");
+      }
+
+      if (!isCorrect && !usedPotion) {
         hasAddedPenalty.current = true;
 
         const penaltyCard = getRandomCardFromAvailablePool();
@@ -814,7 +808,7 @@ function NusaCard() {
 
         console.log(`🃏 Penalty! Player ${myPlayerId} gets a card.`);
       } else {
-        console.log(`✅ Correct answer from Player ${myPlayerId}.`);
+        console.log(`✅ ${potionAlreadyReduced ? 'Potion used (already reduced)' : usedPotion ? 'Potion used' : 'Correct answer'} from Player ${myPlayerId}.`);
       }
 
       setTimeout(async () => {
@@ -859,6 +853,7 @@ function NusaCard() {
       topicIDRef,
       gameIDRef,
       roomIDRef,
+      user.uid,
     ]
   );
 
@@ -875,35 +870,98 @@ function NusaCard() {
     });
   }, [topicID, gameID, roomID]);
 
-  useEffect(() => {
-    if (victory) {
-      setShowVictoryOverlay(true);
-    }
-  }, [victory]);
+  // Ref untuk prevent double potion usage - MOVED UP
+  const potionUsageRef = useRef(false);
+  const potionSubmittedRef = useRef(false); // ADDED: Track if already submitted
 
-  // GANTI handleVictoryClose dengan versi yang LANGSUNG redirect:
+  // Handle potion usage in modal
+  const handlePotionUseInModal = useCallback(async () => {
+    if (!displayQuestionModalForMe) return;
+    
+    // STRONG prevention dengan multiple checks
+    if (isPotionUsedInModal || potionUsageRef.current || potionSubmittedRef.current) {
+      console.log("🧪 Potion already being used, skipping");
+      return;
+    }
+    
+    // Set ALL flags immediately untuk prevent any double execution
+    potionUsageRef.current = true;
+    potionSubmittedRef.current = true;
+    setIsPotionUsedInModal(true);
+    
+    console.log("🧪 Potion used during question - starting process");
+    
+    // IMMEDIATELY reduce potion count BEFORE any timeout
+    try {
+      const currentPotionData = await getPotionData(user.uid);
+      console.log("🧪 Current potion count before reduction:", currentPotionData?.item_count);
+      
+      if (currentPotionData && currentPotionData.item_count > 0) {
+        const newCount = Math.max(0, (currentPotionData.item_count || 0) - 1);
+        await saveNewPotionData(user.uid, {
+          item_name: currentPotionData.item_name,
+          item_count: newCount,
+          item_img: currentPotionData.item_img,
+        });
+        console.log("🧪 Potion count IMMEDIATELY reduced to:", newCount);
+      } else {
+        console.log("🧪 No potion available to reduce");
+      }
+    } catch (error) {
+      console.error("Error reducing potion count:", error);
+    }
+    
+    // Show overlay feedback, then submit answer WITHOUT reducing potion again
+    setTimeout(() => {
+      const potionResult = {
+        isCorrect: true,
+        hint: questionForModalDisplay?.hint || null,
+        usedPotion: false, // CHANGED: Set to false to prevent double reduction
+        potionAlreadyReduced: true // ADDED: Flag for logging
+      };
+      
+      handlePlayerAnswerSubmission(potionResult);
+      
+      // Reset states setelah submit dengan delay lebih lama
+      setTimeout(() => {
+        setIsPotionUsedInModal(false);
+        potionUsageRef.current = false;
+        potionSubmittedRef.current = false;
+      }, 500); // Increased delay
+    }, 1500);
+  }, [displayQuestionModalForMe, questionForModalDisplay?.hint, handlePlayerAnswerSubmission, isPotionUsedInModal, user.uid]);
+
+  // Reset potion state saat modal tutup
+  useEffect(() => {
+    if (!displayQuestionModalForMe) {
+      setIsPotionUsedInModal(false);
+      potionUsageRef.current = false;
+      potionSubmittedRef.current = false; // ADDED: Reset submitted flag juga
+    }
+  }, [displayQuestionModalForMe]);
+
   const handleVictoryClose = useCallback(() => {
     console.log("🏆 Victory overlay closing - immediate redirect");
-
+    
     // Firebase cleanup (jalankan di background)
     stopGameTimer(topicID, gameID, roomID);
     setGameStartStatus(topicID, gameID, roomID, false);
-
+    
     // Reset states
     setVictory(false);
     setHasLost(false);
     setShowVictoryOverlay(false);
-
+    
     // Cleanup Firebase di background dan LANGSUNG navigate
     if (!hasCleanedUpRef.current) {
       hasCleanedUpRef.current = true;
-
+      
       // Jalankan cleanup async tanpa blocking navigation
       cleanupGame(topicID, gameID, roomID, user)
         .then(() => console.log("✅ Firebase cleaned up"))
-        .catch((error) => console.error("❌ Cleanup error:", error));
+        .catch(error => console.error("❌ Cleanup error:", error));
     }
-
+    
     // LANGSUNG navigate tanpa setTimeout atau delay apapun
     navigate("/");
   }, [topicID, gameID, roomID, user, navigate]);
@@ -911,18 +969,6 @@ function NusaCard() {
   const handleCloseGameOffcanvas = useCallback(() => {
     setShowGameOffcanvas(false);
   }, []);
-
-  // Calculated values
-  const activeLocalPlayerId = `player${getLocalPlayerGlobalIndex() + 1}`;
-  const cardCounts = {
-    player1: gameState.player1Cards?.length || 0,
-    player2: gameState.player2Cards?.length || 0,
-    player3: gameState.player3Cards?.length || 0,
-    player4: gameState.player4Cards?.length || 0,
-  };
-
-  const displayQuestionModalForMe =
-    shouldShowQuestionModal && isMyPlayerTurnToAnswer();
 
   // Utility functions for GameArea
   const isPlayerTurnStatus = useCallback(
@@ -939,6 +985,12 @@ function NusaCard() {
     },
     [localVisualTimeLeft, currentPlayerIndex]
   );
+
+  const handleModalBackgroundClick = useCallback((e) => {
+  // Prevent modal close on background click untuk tidak mengganggu timer
+  e.stopPropagation();
+  console.log("🎯 Modal background clicked - timer continues");
+}, []);
 
   // Render loading
   if (!isGameReady) {
@@ -982,8 +1034,25 @@ function NusaCard() {
           getPlayerTimeLeft={getPlayerRemainingTime}
           triggerShuffleAnimation={triggerShuffleAnimation}
           players={players}
+          onBackgroundClick={handleModalBackgroundClick}
         />
       </Container>
+
+      {/* Potion component - positioned to appear over modal */}
+      {displayQuestionModalForMe && (
+        <div 
+          style={{ 
+            zIndex: 9999, 
+          }}
+        >
+          <div style={{ pointerEvents: 'auto' }}> 
+            <Potion 
+              onUsePotion={handlePotionUseInModal}
+              isUsable={true && !isPotionUsedInModal}
+            />
+          </div>
+        </div>
+      )}
 
       <QuestionModal
         show={displayQuestionModalForMe}
@@ -997,6 +1066,7 @@ function NusaCard() {
         timeLeft={localVisualTimeLeft}
         TIMER_ANSWER_DURATION={GAME_CONSTANTS.ANSWER_TIMER_SECONDS}
         players={players}
+        isPotionUsed={isPotionUsedInModal}
       />
 
       {victory &&

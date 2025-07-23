@@ -23,7 +23,10 @@ export const fetchGamePlayers = (topicID, gameID, roomID, callback) => {
     console.error("Missing required parameters for fetchGamePlayers");
     return () => {};
   }
-  const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
+  const playersRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/players`
+  );
   return onValue(playersRef, (snapshot) => {
     const playersData = snapshot.val() || {};
     const playersArray = Object.values(playersData);
@@ -34,7 +37,10 @@ export const fetchGamePlayers = (topicID, gameID, roomID, callback) => {
 // Set game status
 export const setGameStatus = async (topicID, gameID, roomID, status) => {
   if (!topicID || !gameID || !roomID) return;
-  const gameStatusRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameStatus`);
+  const gameStatusRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameStatus`
+  );
   try {
     await set(gameStatusRef, status);
   } catch (error) {
@@ -43,9 +49,17 @@ export const setGameStatus = async (topicID, gameID, roomID, status) => {
 };
 
 // Set game start status
-export const setGameStartStatus = async (topicID, gameID, roomID, isStarting) => {
+export const setGameStartStatus = async (
+  topicID,
+  gameID,
+  roomID,
+  isStarting
+) => {
   if (!topicID || !gameID || !roomID) return;
-  const gameStartRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameStarted`);
+  const gameStartRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameStarted`
+  );
   try {
     await set(gameStartRef, isStarting);
   } catch (error) {
@@ -56,7 +70,10 @@ export const setGameStartStatus = async (topicID, gameID, roomID, isStarting) =>
 // Listen to game start status
 export const listenToGameStart = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
-  const gameStartRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameStarted`);
+  const gameStartRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameStarted`
+  );
   return onValue(gameStartRef, (snapshot) => {
     callback(snapshot.val());
   });
@@ -65,7 +82,10 @@ export const listenToGameStart = (topicID, gameID, roomID, callback) => {
 // Listen to game state (Universal)
 export const listenToGameState = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+  const gameStateRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameState`
+  );
   return onValue(gameStateRef, (snapshot) => {
     const state = snapshot.val();
     if (state) {
@@ -76,7 +96,10 @@ export const listenToGameState = (topicID, gameID, roomID, callback) => {
 
 // Get current game state (Universal)
 export const getGameState = async (topicID, gameID, roomID) => {
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+  const gameStateRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameState`
+  );
   try {
     const snapshot = await get(gameStateRef);
     return snapshot.val();
@@ -87,17 +110,25 @@ export const getGameState = async (topicID, gameID, roomID) => {
 };
 
 // Update player activity timestamp (Universal)
-export const updatePlayerActivity = async (topicID, gameID, roomID, userUID) => {
+export const updatePlayerActivity = async (
+  topicID,
+  gameID,
+  roomID,
+  userUID
+) => {
   if (!topicID || !gameID || !roomID || !userUID) return;
 
-  const activityRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState/playerActivity/${userUID}`);
+  const activityRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameState/playerActivity/${userUID}`
+  );
   try {
     const snapshot = await get(activityRef);
     if (snapshot.exists()) {
       await set(activityRef, {
         ...snapshot.val(),
         lastActivity: Date.now(),
-        isActive: true
+        isActive: true,
       });
     }
   } catch (error) {
@@ -106,10 +137,18 @@ export const updatePlayerActivity = async (topicID, gameID, roomID, userUID) => 
 };
 
 // Check for inactive players and handle game abandonment (Universal)
-export const checkInactivePlayers = async (topicID, gameID, roomID, inactivityTimeout = 600000) => {
+export const checkInactivePlayers = async (
+  topicID,
+  gameID,
+  roomID,
+  inactivityTimeout = 600000
+) => {
   if (!topicID || !gameID || !roomID) return;
 
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+  const gameStateRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameState`
+  );
   try {
     const snapshot = await get(gameStateRef);
     const gameState = snapshot.val();
@@ -124,15 +163,17 @@ export const checkInactivePlayers = async (topicID, gameID, roomID, inactivityTi
       const timeSinceLastActivity = now - activity.lastActivity;
 
       if (timeSinceLastActivity >= inactivityTimeout && activity.isActive) {
-        console.log(`Player ${userUID} tidak aktif selama ${timeSinceLastActivity}ms, mengakhiri game...`);
+        console.log(
+          `Player ${userUID} tidak aktif selama ${timeSinceLastActivity}ms, mengakhiri game...`
+        );
 
         // Mark game as abandoned
         await updateGameState(topicID, gameID, roomID, {
-          gameStatus: 'abandoned',
+          gameStatus: "abandoned",
           abandonedBy: userUID,
           abandonedAt: now,
-          reason: 'player_inactive',
-          [`playerActivity/${userUID}/isActive`]: false
+          reason: "player_inactive",
+          [`playerActivity/${userUID}/isActive`]: false,
         });
 
         // Stop game timer
@@ -150,10 +191,19 @@ export const checkInactivePlayers = async (topicID, gameID, roomID, inactivityTi
 };
 
 // Listen to player activity untuk monitor inactivity (Universal)
-export const listenToPlayerActivity = (topicID, gameID, roomID, callback, inactivityTimeout = 600000) => {
+export const listenToPlayerActivity = (
+  topicID,
+  gameID,
+  roomID,
+  callback,
+  inactivityTimeout = 600000
+) => {
   if (!topicID || !gameID || !roomID) return () => {};
 
-  const activityRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState/playerActivity`);
+  const activityRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameState/playerActivity`
+  );
 
   return onValue(activityRef, (snapshot) => {
     const playerActivity = snapshot.val();
@@ -168,7 +218,7 @@ export const listenToPlayerActivity = (topicID, gameID, roomID, callback, inacti
         inactivePlayers.push({
           userUID,
           timeSinceLastActivity,
-          playerIndex: activity.playerIndex
+          playerIndex: activity.playerIndex,
         });
       }
     });
@@ -181,11 +231,14 @@ export const listenToPlayerActivity = (topicID, gameID, roomID, callback, inacti
 
 // Check if game is active (Universal)
 export const checkGameActive = async (topicID, gameID, roomID) => {
-  const gameStatusRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameStatus`);
+  const gameStatusRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameStatus`
+  );
   try {
     const snapshot = await get(gameStatusRef);
     const status = snapshot.val();
-    return status === 'playing' && status !== 'abandoned';
+    return status === "playing" && status !== "abandoned";
   } catch (error) {
     console.error("Error checking game status:", error);
     return false;
@@ -196,8 +249,8 @@ export const checkGameActive = async (topicID, gameID, roomID) => {
 export const setGameWinner = async (topicID, gameID, roomID, winnerUID) => {
   try {
     await updateGameState(topicID, gameID, roomID, {
-      gameStatus: 'finished',
-      winner: winnerUID
+      gameStatus: "finished",
+      winner: winnerUID,
     });
   } catch (error) {
     console.error("Error setting game winner:", error);
@@ -206,7 +259,10 @@ export const setGameWinner = async (topicID, gameID, roomID, winnerUID) => {
 
 // Reset game state (Universal)
 export const resetGameState = async (topicID, gameID, roomID) => {
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+  const gameStateRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameState`
+  );
   try {
     await set(gameStateRef, null);
   } catch (error) {
@@ -219,15 +275,23 @@ export const resetGameState = async (topicID, gameID, roomID) => {
 // ========================================
 
 // Initialize game timer
-export const initializeGameTimer = async (topicID, gameID, roomID, duration) => {
-  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+export const initializeGameTimer = async (
+  topicID,
+  gameID,
+  roomID,
+  duration
+) => {
+  const gameTimerRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameTimer`
+  );
   try {
     const snapshot = await get(gameTimerRef);
     if (!snapshot.exists()) {
       await set(gameTimerRef, {
         startTime: Date.now(),
         duration: duration,
-        isActive: true
+        isActive: true,
       });
     }
   } catch (error) {
@@ -237,12 +301,15 @@ export const initializeGameTimer = async (topicID, gameID, roomID, duration) => 
 
 // Update game timer
 export const updateGameTimer = async (topicID, gameID, roomID, timeLeft) => {
-  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+  const gameTimerRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameTimer`
+  );
   try {
     await set(gameTimerRef, {
       startTime: Date.now(),
       duration: timeLeft,
-      isActive: true
+      isActive: true,
     });
   } catch (error) {
     console.error("Error updating game timer:", error);
@@ -251,10 +318,13 @@ export const updateGameTimer = async (topicID, gameID, roomID, timeLeft) => {
 
 // Stop game timer
 export const stopGameTimer = async (topicID, gameID, roomID) => {
-  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+  const gameTimerRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameTimer`
+  );
   try {
     await set(gameTimerRef, {
-      isActive: false
+      isActive: false,
     });
   } catch (error) {
     console.error("Error stopping game timer:", error);
@@ -264,7 +334,10 @@ export const stopGameTimer = async (topicID, gameID, roomID) => {
 // Listen to game timer
 export const listenToGameTimer = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
-  const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+  const gameTimerRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameTimer`
+  );
   return onValue(gameTimerRef, (snapshot) => {
     const timerData = snapshot.val();
     if (timerData && timerData.isActive) {
@@ -291,7 +364,10 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
   return new Promise((resolve, reject) => {
     updateQueue[key] = setTimeout(async () => {
       try {
-        const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+        const gameStateRef = ref(
+          database,
+          `rooms/${topicID}/${gameID}/${roomID}/gameState`
+        );
         const snapshot = await get(gameStateRef);
         const currentState = snapshot.val() || {};
 
@@ -303,8 +379,8 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
         const applyUpdates = (target, source) => {
           for (const key in source) {
             // Periksa jika key mengandung path (misalnya "playerActivity/uid/isActive")
-            if (key.includes('/')) {
-              const pathParts = key.split('/');
+            if (key.includes("/")) {
+              const pathParts = key.split("/");
               let currentTarget = target;
               for (let i = 0; i < pathParts.length; i++) {
                 const part = pathParts[i];
@@ -313,13 +389,22 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
                   currentTarget[part] = source[key];
                 } else {
                   // Buat objek baru jika tidak ada atau bukan objek
-                  if (!currentTarget[part] || typeof currentTarget[part] !== 'object') {
+                  if (
+                    !currentTarget[part] ||
+                    typeof currentTarget[part] !== "object"
+                  ) {
                     currentTarget[part] = {};
                   }
                   currentTarget = currentTarget[part];
                 }
               }
-            } else if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key]) && typeof target[key] === 'object' && target[key] !== null) {
+            } else if (
+              typeof source[key] === "object" &&
+              source[key] !== null &&
+              !Array.isArray(source[key]) &&
+              typeof target[key] === "object" &&
+              target[key] !== null
+            ) {
               // Jika properti adalah objek dan target juga objek, lakukan merge rekursif
               target[key] = { ...target[key], ...source[key] };
               // Atau jika kita ingin overwrite, cukup target[key] = source[key];
@@ -332,24 +417,28 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
         };
 
         applyUpdates(newState, updates);
-        
-        const sanitizedUpdates = { ...newState }; 
-        if (updates.playerTimers) { // Cek dari input asli `updates`
+
+        const sanitizedUpdates = { ...newState };
+        if (updates.playerTimers) {
+          // Cek dari input asli `updates`
           sanitizedUpdates.playerTimers = Array.isArray(updates.playerTimers)
-            ? updates.playerTimers.map(time => Number(time) || 0) // Kembali ke array angka
+            ? updates.playerTimers.map((time) => Number(time) || 0) // Kembali ke array angka
             : currentState.playerTimers || [];
         }
 
-
         // Pastikan field baru untuk kemenangan NusaCard juga disanitasi
-        ['gameWinnerUID', 'gameWinnerDisplayName', 'gameWonAt', 'achievementAwarded'].forEach(field => {
-            if (updates[field] !== undefined) {
-                sanitizedUpdates[field] = updates[field];
-            }
+        [
+          "gameWinnerUID",
+          "gameWinnerDisplayName",
+          "gameWonAt",
+          "achievementAwarded",
+        ].forEach((field) => {
+          if (updates[field] !== undefined) {
+            sanitizedUpdates[field] = updates[field];
+          }
         });
 
-
-        if (typeof updates.currentPlayerIndex === 'number') {
+        if (typeof updates.currentPlayerIndex === "number") {
           sanitizedUpdates.currentPlayerIndex = updates.currentPlayerIndex;
         }
 
@@ -357,7 +446,9 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
 
         // Filter out undefined values
         const cleanUpdates = Object.fromEntries(
-          Object.entries(sanitizedUpdates).filter(([_, value]) => value !== undefined)
+          Object.entries(sanitizedUpdates).filter(
+            ([_, value]) => value !== undefined
+          )
         );
         // PENTING: Gunakan `newState` yang sudah di-merge dan divalidasi
         await set(gameStateRef, cleanUpdates); // Menggunakan cleanUpdates yang sudah diproses
@@ -369,32 +460,43 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
         delete updateQueue[key];
         reject(error);
       }
-    }); 
+    });
   });
 };
 
-
 // Universal cleanup game
-export const cleanupGame = async (topicID, gameID, roomID, user, reason = 'normal') => {
+export const cleanupGame = async (
+  topicID,
+  gameID,
+  roomID,
+  user,
+  reason = "normal"
+) => {
   if (!topicID || !gameID || !roomID || !user?.uid) return;
 
   try {
     // Jika cleanup karena player inactivity, mark as abandoned dulu
-    if (reason === 'inactivity') {
+    if (reason === "inactivity") {
       await updateGameState(topicID, gameID, roomID, {
-        gameStatus: 'abandoned',
+        gameStatus: "abandoned",
         abandonedBy: user.uid,
         abandonedAt: Date.now(),
-        reason: 'player_inactive'
+        reason: "player_inactive",
       });
     }
 
     // Reset gameState
-    const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+    const gameStateRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/gameState`
+    );
     await set(gameStateRef, null);
 
     // Reset gameTimer
-    const gameTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameTimer`);
+    const gameTimerRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/gameTimer`
+    );
     await set(gameTimerRef, null);
 
     // Reset game status and start status
@@ -402,11 +504,17 @@ export const cleanupGame = async (topicID, gameID, roomID, user, reason = 'norma
     await setGameStartStatus(topicID, gameID, roomID, false);
 
     // Hapus semua pesan chat dalam room
-    const chatRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/chatMessages`);
+    const chatRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/chatMessages`
+    );
     await set(chatRef, null);
 
     // Reset player data dalam room
-    const playersRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/players`);
+    const playersRef = ref(
+      database,
+      `rooms/${topicID}/${gameID}/${roomID}/players`
+    );
     await set(playersRef, null);
 
     // Reset keseluruhan room data
@@ -421,8 +529,17 @@ export const cleanupGame = async (topicID, gameID, roomID, user, reason = 'norma
 // ========================================
 
 // Initialize Ular Tangga game state
-export const initializeUlarTanggaGameState = async (topicID, gameID, roomID, players, questions) => {
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+export const initializeUlarTanggaGameState = async (
+  topicID,
+  gameID,
+  roomID,
+  players,
+  questions
+) => {
+  const gameStateRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameState`
+  );
   try {
     const snapshot = await get(gameStateRef);
     if (!snapshot.exists()) {
@@ -439,23 +556,23 @@ export const initializeUlarTanggaGameState = async (topicID, gameID, roomID, pla
         potionUsable: false,
         currentQuestionIndex: 0,
         questions: questions,
-        gameStatus: 'playing',
-        gameType: 'ulartangga',
+        gameStatus: "playing",
+        gameType: "ulartangga",
         diceState: {
           isRolling: false,
           currentNumber: 1,
-          lastRoll: null
+          lastRoll: null,
         },
         // Removed playerTimers from here as well, use activePlayerTimer
         playerActivity: players.reduce((acc, player, index) => {
           acc[player.uid] = {
             lastActivity: Date.now(),
             isActive: true,
-            playerIndex: index
+            playerIndex: index,
           };
           return acc;
         }, {}),
-        gameCreatedAt: Date.now()
+        gameCreatedAt: Date.now(),
       };
 
       await set(gameStateRef, initialState);
@@ -476,7 +593,13 @@ export const updateDiceState = async (topicID, gameID, roomID, diceState) => {
 };
 
 // Handle player timeout (Ular Tangga specific)
-export const handleUlarTanggaPlayerTimeout = async (topicID, gameID, roomID, currentPlayerIndex, totalPlayers) => {
+export const handleUlarTanggaPlayerTimeout = async (
+  topicID,
+  gameID,
+  roomID,
+  currentPlayerIndex,
+  totalPlayers
+) => {
   try {
     await updateGameState(topicID, gameID, roomID, {
       currentPlayerIndex: (currentPlayerIndex + 1) % totalPlayers,
@@ -487,8 +610,8 @@ export const handleUlarTanggaPlayerTimeout = async (topicID, gameID, roomID, cur
       diceState: {
         isRolling: false,
         currentNumber: 1,
-        lastRoll: null
-      }
+        lastRoll: null,
+      },
     });
   } catch (error) {
     console.error("Error handling Ular Tangga player timeout:", error);
@@ -496,14 +619,20 @@ export const handleUlarTanggaPlayerTimeout = async (topicID, gameID, roomID, cur
 };
 
 // Update player position (Ular Tangga specific)
-export const updatePlayerPosition = async (topicID, gameID, roomID, playerIndex, newPosition) => {
+export const updatePlayerPosition = async (
+  topicID,
+  gameID,
+  roomID,
+  playerIndex,
+  newPosition
+) => {
   try {
     const state = await getGameState(topicID, gameID, roomID);
     if (state) {
       const newPositions = [...state.pionPositions];
       newPositions[playerIndex] = newPosition;
       await updateGameState(topicID, gameID, roomID, {
-        pionPositions: newPositions
+        pionPositions: newPositions,
       });
     }
   } catch (error) {
@@ -516,26 +645,47 @@ export const updatePlayerPosition = async (topicID, gameID, roomID, playerIndex,
 // ========================================
 
 // Update the active player's current remaining time in Firebase
-export const updateCurrentPlayerTime = async (topicID, gameID, roomID, currentPlayerIndex, timeLeft, currentPhase) => {
+export const updateCurrentPlayerTime = async (
+  topicID,
+  gameID,
+  roomID,
+  currentPlayerIndex,
+  timeLeft,
+  currentPhase
+) => {
   if (!topicID || !gameID || !roomID) return;
 
   try {
     // Kita akan update field baru di gameState: activePlayerTimer
-    await set(ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState/activePlayerTimer`), {
-      playerIndex: currentPlayerIndex,
-      timeLeft: timeLeft,
-      phase: currentPhase,
-      lastUpdated: Date.now(), // Tambahkan timestamp agar klien bisa menghitung delta
-    });
+    await set(
+      ref(
+        database,
+        `rooms/${topicID}/${gameID}/${roomID}/gameState/activePlayerTimer`
+      ),
+      {
+        playerIndex: currentPlayerIndex,
+        timeLeft: timeLeft,
+        phase: currentPhase,
+        lastUpdated: Date.now(), // Tambahkan timestamp agar klien bisa menghitung delta
+      }
+    );
   } catch (error) {
     console.error("Error updating active player timer:", error);
   }
 };
 
 // Listen to the active player's timer in Firebase
-export const listenToActivePlayerTimer = (topicID, gameID, roomID, callback) => {
+export const listenToActivePlayerTimer = (
+  topicID,
+  gameID,
+  roomID,
+  callback
+) => {
   if (!topicID || !gameID || !roomID) return () => {};
-  const activePlayerTimerRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState/activePlayerTimer`);
+  const activePlayerTimerRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameState/activePlayerTimer`
+  );
   return onValue(activePlayerTimerRef, (snapshot) => {
     const timerData = snapshot.val();
     if (timerData) {
@@ -547,8 +697,18 @@ export const listenToActivePlayerTimer = (topicID, gameID, roomID, callback) => 
 };
 
 // Initialize NusaCard game state - FIXED untuk hanya render player aktif
-export const initializeNusaCardGameState = async (topicID, gameID, roomID, players, questions, initialGameState) => {
-  const gameStateRef = ref(database, `rooms/${topicID}/${gameID}/${roomID}/gameState`);
+export const initializeNusaCardGameState = async (
+  topicID,
+  gameID,
+  roomID,
+  players,
+  questions,
+  initialGameState
+) => {
+  const gameStateRef = ref(
+    database,
+    `rooms/${topicID}/${gameID}/${roomID}/gameState`
+  );
   try {
     const snapshot = await get(gameStateRef);
     if (!snapshot.exists()) {
@@ -556,18 +716,19 @@ export const initializeNusaCardGameState = async (topicID, gameID, roomID, playe
 
       const nucaInitialState = {
         ...initialGameState,
-        gameType: 'nusacard',
-        gameStatus: 'playing',
+        gameType: "nusacard",
+        gameStatus: "playing",
         gameCreatedAt: Date.now(),
         playerActivity: players.reduce((acc, player, index) => {
           acc[player.uid] = {
             lastActivity: Date.now(),
             isActive: true,
-            playerIndex: index
+            playerIndex: index,
           };
           return acc;
         }, {}),
-        activePlayerTimer: { // Inisialisasi timer aktif untuk pemain pertama
+        activePlayerTimer: {
+          // Inisialisasi timer aktif untuk pemain pertama
           playerIndex: 0, // Pemain pertama
           timeLeft: 15, // Waktu awal
           phase: "throwing",
@@ -583,7 +744,8 @@ export const initializeNusaCardGameState = async (topicID, gameID, roomID, playe
       // Only assign cards to ACTIVE players
       for (let i = 0; i < playerCount; i++) {
         const playerId = `player${i + 1}`;
-        nucaInitialState[`${playerId}Cards`] = initialGameState[`${playerId}Cards`] || [];
+        nucaInitialState[`${playerId}Cards`] =
+          initialGameState[`${playerId}Cards`] || [];
         nucaInitialState.playerStatus[playerId] = "available";
       }
 
@@ -605,16 +767,16 @@ export const initializeNusaCardGameState = async (topicID, gameID, roomID, playe
 export const checkNusaCardWinner = async (topicID, gameID, roomID) => {
   try {
     const gameState = await getGameState(topicID, gameID, roomID);
-    if (!gameState || gameState.gameType !== 'nusacard') return null;
+    if (!gameState || gameState.gameType !== "nusacard") return null;
 
     const cardCounts = [
       gameState.player1Cards?.length || 0,
       gameState.player2Cards?.length || 0,
       gameState.player3Cards?.length || 0,
-      gameState.player4Cards?.length || 0
+      gameState.player4Cards?.length || 0,
     ];
 
-    const winnerIndex = cardCounts.findIndex(count => count === 0);
+    const winnerIndex = cardCounts.findIndex((count) => count === 0);
     return winnerIndex !== -1 ? winnerIndex : null;
   } catch (error) {
     console.error("Error checking NusaCard winner:", error);
@@ -623,14 +785,29 @@ export const checkNusaCardWinner = async (topicID, gameID, roomID) => {
 };
 
 // Handle player timeout for NusaCard - DISABLED (Client handles timeouts)
-export const handleNusaCardPlayerTimeout = async (topicID, gameID, roomID, currentPlayerIndex, currentPhase, totalPlayers) => {
+export const handleNusaCardPlayerTimeout = async (
+  topicID,
+  gameID,
+  roomID,
+  currentPlayerIndex,
+  currentPhase,
+  totalPlayers
+) => {
   // DISABLED - Let client handle timeouts to prevent duplicate penalty cards
-  console.log("🔧 SERVER: NusaCard timeout handling disabled - client handles timeouts");
+  console.log(
+    "🔧 SERVER: NusaCard timeout handling disabled - client handles timeouts"
+  );
   return;
 };
 
 // Add penalty card function - for server use if needed
-export const addPenaltyCard = async (topicID, gameID, roomID, playerIndex, penaltyCard) => {
+export const addPenaltyCard = async (
+  topicID,
+  gameID,
+  roomID,
+  playerIndex,
+  penaltyCard
+) => {
   try {
     const gameState = await getGameState(topicID, gameID, roomID);
     if (!gameState) return;
@@ -639,10 +816,11 @@ export const addPenaltyCard = async (topicID, gameID, roomID, playerIndex, penal
     const currentCards = gameState[`${playerId}Cards`] || [];
 
     // Check if penalty was already added recently (prevent duplicates)
-    const recentPenalty = currentCards.find(card =>
-      card.isPenalty &&
-      card.id &&
-      (Date.now() - parseInt(card.id.split('_')[1])) < 5000 // Within last 5 seconds
+    const recentPenalty = currentCards.find(
+      (card) =>
+        card.isPenalty &&
+        card.id &&
+        Date.now() - parseInt(card.id.split("_")[1]) < 5000 // Within last 5 seconds
     );
 
     if (recentPenalty) {
@@ -655,7 +833,7 @@ export const addPenaltyCard = async (topicID, gameID, roomID, playerIndex, penal
     await updateGameState(topicID, gameID, roomID, {
       [`${playerId}Cards`]: updatedCards,
       penaltyAddedAt: Date.now(),
-      penaltyAddedFor: playerId
+      penaltyAddedFor: playerId,
     });
   } catch (error) {
     console.error("Error adding penalty card:", error);

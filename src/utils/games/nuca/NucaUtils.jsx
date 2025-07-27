@@ -1,28 +1,27 @@
-// Constants
 const PLAYER_POSITIONS = ["player1", "player2", "player3", "player4"];
 const POSITION_OFFSET_MAP = {
-  left: 1,
-  top: 2,
-  right: 3,
+  left: 1, 
+  top: 2, 
+  right: 3, 
 };
 const PLAYER_INDEX_MAP = {
-  player1: 0,
+  player1: 0, 
   player2: 1,
   player3: 2,
   player4: 3,
 };
 
 /**
- * Gets the player ID at a relative position from the current user
- * @param {string} currentUserId - Current user's player ID (e.g., "player1")
- * @param {string} relativePos - Relative position ("left", "top", "right")
- * @returns {string|null} Player ID at the relative position or null if invalid
+ * @function getPlayerAtRelativePosition
+ * @description Mendapatkan ID pemain pada posisi relatif tertentu (kiri, atas, kanan) dari pemain saat ini.
+ * Fungsi ini mengasumsikan urutan pemain melingkar.
+ * @param {string} currentUserId - ID pemain saat ini (misalnya "player1").
+ * @param {string} relativePos - Posisi relatif yang diinginkan ("left", "top", atau "right").
+ * @returns {string|null} ID pemain pada posisi relatif yang ditentukan, atau `null` jika input tidak valid.
  */
 export const getPlayerAtRelativePosition = (currentUserId, relativePos) => {
-  const currentIndex = PLAYER_POSITIONS.indexOf(currentUserId);
-  const offset = POSITION_OFFSET_MAP[relativePos];
-
-  // Validate inputs
+  const currentIndex = PLAYER_POSITIONS.indexOf(currentUserId); 
+  const offset = POSITION_OFFSET_MAP[relativePos]; 
   if (currentIndex === -1 || offset === undefined) {
     return null;
   }
@@ -32,116 +31,79 @@ export const getPlayerAtRelativePosition = (currentUserId, relativePos) => {
 };
 
 /**
- * Gets the global index (0-3) from player ID
- * @param {string} playerId - Player ID (e.g., "player1")
- * @returns {number} Global index (0-3) or undefined if invalid
+ * @function getPlayerGlobalIndex
+ * @description Mendapatkan indeks global (0-3) dari ID pemain.
+ * @param {string} playerId - ID pemain (misalnya "player1", "player2").
+ * @returns {number|undefined} Indeks global pemain (0-3) jika ID valid, atau `undefined` jika ID tidak valid.
  */
 export const getPlayerGlobalIndex = (playerId) => {
-  return PLAYER_INDEX_MAP[playerId];
+  return PLAYER_INDEX_MAP[playerId]; 
 };
 
 /**
- * Gets player's cards from game state
- * @param {string} playerId - Player ID (e.g., "player1")
- * @param {Object} gameState - Current game state object
- * @returns {Array} Array of player's cards or empty array if not found
+ * @function getPlayerCards
+ * @description Mengambil array kartu yang dimiliki oleh pemain tertentu dari objek `gameState`.
+ * @param {string} playerId - ID pemain (misalnya "player1").
+ * @param {Object} gameState - Objek state permainan saat ini yang berisi data kartu pemain (misalnya `player1Cards`).
+ * @returns {Array} Array objek kartu pemain, atau array kosong jika pemain atau kartunya tidak ditemukan.
  */
 export const getPlayerCards = (playerId, gameState) => {
   if (!playerId || !gameState) {
-    return [];
+    return []; 
   }
-
-  const cardKey = `${playerId}Cards`;
+  const cardKey = `${playerId}Cards`; 
   return gameState[cardKey] || [];
 };
 
 /**
- * Gets player's status from game state
- * @param {string} playerId - Player ID (e.g., "player1")
- * @param {Object} gameState - Current game state object
- * @returns {string} Player status ("available" or "not_available")
+ * @function getPlayerStatus
+ * @description Mengambil status seorang pemain (tersedia atau tidak tersedia) dari objek `gameState`.
+ * @param {string} playerId - ID pemain (misalnya "player1").
+ * @param {Object} gameState - Objek state permainan saat ini yang berisi status pemain (`gameState.playerStatus`).
+ * @returns {string} Status pemain ("available" atau "not_available"). Mengembalikan "not_available" jika input tidak valid atau status tidak ditemukan.
  */
 export const getPlayerStatus = (playerId, gameState) => {
   if (!playerId || !gameState?.playerStatus) {
-    return "not_available";
+    return "not_available"; 
   }
-
   return gameState.playerStatus[playerId] || "not_available";
 };
 
 /**
- * Determines the next player index in turn order
- * @param {number} currentPlayerGlobalIndex - Current player's global index (0-3)
- * @param {Array<number>} activePlayerIndices - Array of active player indices
- * @param {string} turnDirection - Turn direction ("clockwise" or "counterclockwise")
- * @returns {number} Next player's global index or -1 if no active players
+ * @function getNextPlayerIndex
+ * @description Menentukan indeks global pemain berikutnya dalam urutan giliran, dengan mempertimbangkan hanya pemain aktif dan arah giliran.
+ * @param {number} currentPlayerGlobalIndex - Indeks global pemain yang gilirannya saat ini (0-3).
+ * @param {Array<number>} activePlayerIndices - Array berisi indeks global dari semua pemain yang saat ini aktif dalam game.
+ * @param {string} [turnDirection="clockwise"] - Arah giliran ("clockwise" atau "counterclockwise").
+ * @returns {number} Indeks global pemain berikutnya, atau `-1` jika tidak ada pemain aktif.
  */
-export const getNextPlayerIndex = (currentPlayerGlobalIndex, activePlayerIndices, turnDirection = "clockwise") => {
-  // Validate inputs
+export const getNextPlayerIndex = (
+  currentPlayerGlobalIndex,
+  activePlayerIndices,
+  turnDirection = "clockwise"
+) => {
   if (!Array.isArray(activePlayerIndices) || activePlayerIndices.length === 0) {
-    return -1;
+    return -1; 
   }
 
-  const currentIndexInActiveList = activePlayerIndices.indexOf(currentPlayerGlobalIndex);
-  
-  // If current player not in active list, return first active player
+  const currentIndexInActiveList = activePlayerIndices.indexOf(
+    currentPlayerGlobalIndex
+  );
+
   if (currentIndexInActiveList === -1) {
     return activePlayerIndices[0];
   }
 
-  // Calculate next index based on turn direction
   let nextIndexInActiveList;
   if (turnDirection === "clockwise") {
-    nextIndexInActiveList = (currentIndexInActiveList + 1) % activePlayerIndices.length;
+    nextIndexInActiveList =
+      (currentIndexInActiveList + 1) % activePlayerIndices.length;
   } else {
-    nextIndexInActiveList = (currentIndexInActiveList - 1 + activePlayerIndices.length) % activePlayerIndices.length;
+    nextIndexInActiveList =
+      (currentIndexInActiveList - 1 + activePlayerIndices.length) %
+      activePlayerIndices.length;
   }
 
   return activePlayerIndices[nextIndexInActiveList];
 };
 
-/**
- * Validates if a player ID is valid
- * @param {string} playerId - Player ID to validate
- * @returns {boolean} True if valid player ID
- */
-export const isValidPlayerId = (playerId) => {
-  return PLAYER_POSITIONS.includes(playerId);
-};
-
-/**
- * Gets all available player IDs from game state
- * @param {Object} gameState - Current game state object
- * @returns {Array<string>} Array of available player IDs
- */
-export const getAvailablePlayerIds = (gameState) => {
-  if (!gameState?.playerStatus) {
-    return [];
-  }
-
-  return PLAYER_POSITIONS.filter(playerId => 
-    gameState.playerStatus[playerId] === "available"
-  );
-};
-
-/**
- * Gets total number of cards for a player
- * @param {string} playerId - Player ID
- * @param {Object} gameState - Current game state object
- * @returns {number} Number of cards the player has
- */
-export const getPlayerCardCount = (playerId, gameState) => {
-  const cards = getPlayerCards(playerId, gameState);
-  return cards.length;
-};
-
-/**
- * Checks if a player is currently active (their turn)
- * @param {string} playerId - Player ID to check
- * @param {number} activePlayerGlobalIndex - Currently active player's global index
- * @returns {boolean} True if the player is currently active
- */
-export const isPlayerActive = (playerId, activePlayerGlobalIndex) => {
-  const playerGlobalIndex = getPlayerGlobalIndex(playerId);
-  return playerGlobalIndex === activePlayerGlobalIndex;
-};

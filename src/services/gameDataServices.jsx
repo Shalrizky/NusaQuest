@@ -47,7 +47,7 @@ export const fetchGamePlayers = (topicID, gameID, roomID, callback) => {
   );
   return onValue(playersRef, (snapshot) => {
     const playersData = snapshot.val() || {};
-    const playersArray = Object.values(playersData); // Mengubah objek pemain menjadi array
+    const playersArray = Object.values(playersData); 
     callback(playersArray);
   });
 };
@@ -603,8 +603,10 @@ export const initializeUlarTanggaGameState = async (
  * @param {string} gameID - ID unik jenis permainan.
  * @param {string} roomID - ID unik ruangan permainan.
  * @param {Array<Object>} players - Array objek pemain yang berpartisipasi dalam game.
+ * @param {Array<Object>} questions - Array objek pertanyaan yang digunakan dalam game.
+ * (Catatan: Parameter ini mungkin tidak sepenuhnya digunakan di sini karena `initialGameState` sudah berisi data kartu per pemain).
  * @param {Object} initialGameState - Objek status permainan awal yang dihasilkan di sisi klien (dari `NusaCard.jsx`),
- * yang berisi data kartu per pemain yang sudah diacak di nusacard.
+ * yang berisi data kartu per pemain.
  * @returns {Promise<void>} Sebuah Promise yang akan selesai setelah status permainan berhasil diinisialisasi.
  * Jika status sudah ada, fungsi ini tidak akan melakukan inisialisasi ulang.
  */
@@ -613,6 +615,7 @@ export const initializeNusaCardGameState = async (
   gameID,
   roomID,
   players,
+  questions,
   initialGameState
 ) => {
   const gameStateRef = ref(

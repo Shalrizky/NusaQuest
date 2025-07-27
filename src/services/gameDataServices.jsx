@@ -222,7 +222,7 @@ export const checkInactivePlayers = async (
   topicID,
   gameID,
   roomID,
-  inactivityTimeout = 600000
+  inactivityTimeout = 300000
 ) => {
   if (!topicID || !gameID || !roomID) return;
 

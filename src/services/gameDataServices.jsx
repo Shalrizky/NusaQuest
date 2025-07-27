@@ -1,14 +1,21 @@
 import { database, ref, onValue, set, get } from "../firebaseConfig";
-import { resetRoom } from "./roomDataServices";
+import { resetRoom } from "./roomDataServices"; 
 
-// ========================================
-// UNIVERSAL FUNCTIONS (Both Games)
-// ========================================
-
-// Update queue for debouncing
+// Menyimpan referensi timer setTimeout agar pembaruan ke Firebase tidak terlalu sering terjadi.
 let updateQueue = {};
 
-// Fetch games data
+// ? ========================================
+// ? FUNGSI UNIVERSAL (Untuk Kedua Jenis Permainan)
+// ? ========================================
+
+/**
+ * @function fetchGames
+ * @description Mendengarkan dan mengambil semua data permainan dari Firebase secara real-time.
+ * Data ini biasanya mewakili daftar game yang tersedia atau sedang berjalan.
+ * @param {function(Object): void} callback - Fungsi callback yang akan dipanggil setiap kali data permainan berubah.
+ * Parameter callback akan menerima objek yang berisi data semua game.
+ * @returns {function(): void} Fungsi untuk berhenti mendengarkan perubahan (unsubscribe) saat tidak lagi diperlukan.
+ */
 export const fetchGames = (callback) => {
   const gamesRef = ref(database, "games");
   onValue(gamesRef, (snapshot) => {
@@ -17,7 +24,18 @@ export const fetchGames = (callback) => {
   });
 };
 
-// Fetch game players
+/**
+ * @function fetchGamePlayers
+ * @description Mendengarkan dan mengambil data pemain dalam suatu ruangan permainan tertentu secara real-time.
+ * Data ini mencakup daftar pemain yang saat ini berada dalam ruangan game tersebut.
+ * @param {string} topicID - ID unik topik permainan (misalnya "MateriSejarah").
+ * @param {string} gameID - ID unik jenis permainan (misalnya "NusaCard", "UlarTangga").
+ * @param {string} roomID - ID unik ruangan permainan spesifik.
+ * @param {function(Array): void} callback - Fungsi callback yang akan dipanggil setiap kali data pemain berubah.
+ * Parameter callback akan menerima array objek pemain.
+ * @returns {function(): void} Fungsi untuk berhenti mendengarkan perubahan (unsubscribe).
+ * Mengembalikan fungsi kosong jika parameter yang diperlukan tidak ada.
+ */
 export const fetchGamePlayers = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) {
     console.error("Missing required parameters for fetchGamePlayers");
@@ -29,12 +47,21 @@ export const fetchGamePlayers = (topicID, gameID, roomID, callback) => {
   );
   return onValue(playersRef, (snapshot) => {
     const playersData = snapshot.val() || {};
-    const playersArray = Object.values(playersData);
+    const playersArray = Object.values(playersData); // Mengubah objek pemain menjadi array
     callback(playersArray);
   });
 };
 
-// Set game status
+/**
+ * @function setGameStatus
+ * @description Mengatur status keseluruhan dari sebuah ruangan permainan.
+ * Contoh status: "playing", "finished", "abandoned", atau `null` untuk menghapus status.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {string|null} status - Status permainan yang akan diatur.
+ * @returns {Promise<void>} Sebuah Promise yang akan selesai ketika operasi `set` berhasil atau gagal.
+ */
 export const setGameStatus = async (topicID, gameID, roomID, status) => {
   if (!topicID || !gameID || !roomID) return;
   const gameStatusRef = ref(
@@ -48,7 +75,15 @@ export const setGameStatus = async (topicID, gameID, roomID, status) => {
   }
 };
 
-// Set game start status
+/**
+ * @function setGameStartStatus
+ * @description Mengatur status apakah permainan telah dimulai atau belum.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {boolean} isStarting - `true` jika permainan telah dimulai, `false` jika belum.
+ * @returns {Promise<void>} Sebuah Promise yang akan selesai ketika operasi `set` berhasil atau gagal.
+ */
 export const setGameStartStatus = async (
   topicID,
   gameID,
@@ -67,7 +102,16 @@ export const setGameStartStatus = async (
   }
 };
 
-// Listen to game start status
+/**
+ * @function listenToGameStart
+ * @description Mendengarkan perubahan status `gameStarted` untuk ruangan permainan tertentu secara real-time.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {function(boolean): void} callback - Fungsi callback yang akan dipanggil dengan status `gameStarted` (boolean).
+ * @returns {function(): void} Fungsi untuk berhenti mendengarkan perubahan (unsubscribe).
+ * Mengembalikan fungsi kosong jika parameter yang diperlukan tidak ada.
+ */
 export const listenToGameStart = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
   const gameStartRef = ref(
@@ -79,7 +123,17 @@ export const listenToGameStart = (topicID, gameID, roomID, callback) => {
   });
 };
 
-// Listen to game state (Universal)
+/**
+ * @function listenToGameState
+ * @description Mendengarkan perubahan status permainan (gameState) universal secara real-time.
+ * `gameState` biasanya menyimpan semua data dinamis tentang jalannya permainan (misalnya, posisi pion, kartu, giliran).
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {function(Object): void} callback - Fungsi callback yang akan dipanggil dengan objek `gameState` yang diperbarui.
+ * @returns {function(): void} Fungsi untuk berhenti mendengarkan perubahan (unsubscribe).
+ * Mengembalikan fungsi kosong jika parameter yang diperlukan tidak ada.
+ */
 export const listenToGameState = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
   const gameStateRef = ref(
@@ -94,7 +148,16 @@ export const listenToGameState = (topicID, gameID, roomID, callback) => {
   });
 };
 
-// Get current game state (Universal)
+/**
+ * @function getGameState
+ * @description Mengambil status permainan (gameState) saat ini satu kali dari Firebase.
+ * Tidak mendengarkan perubahan real-time.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @returns {Promise<Object|null>} Sebuah Promise yang akan selesai dengan objek `gameState` atau `null` jika tidak ada data.
+ * Mengembalikan `null` jika terjadi error.
+ */
 export const getGameState = async (topicID, gameID, roomID) => {
   const gameStateRef = ref(
     database,
@@ -109,7 +172,16 @@ export const getGameState = async (topicID, gameID, roomID) => {
   }
 };
 
-// Update player activity timestamp (Universal)
+/**
+ * @function updatePlayerActivity
+ * @description Memperbarui timestamp aktivitas terakhir pemain tertentu di Firebase.
+ * Ini penting untuk mekanisme deteksi pemain tidak aktif atau AFK.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {string} userUID - UID (User ID) dari pemain yang aktivitasnya akan diperbarui.
+ * @returns {Promise<void>} Sebuah Promise yang akan selesai ketika aktivitas pemain berhasil diperbarui.
+ */
 export const updatePlayerActivity = async (
   topicID,
   gameID,
@@ -136,7 +208,16 @@ export const updatePlayerActivity = async (
   }
 };
 
-// Check for inactive players and handle game abandonment (Universal)
+/**
+ * @function checkInactivePlayers
+ * @description Memeriksa semua pemain dalam ruangan untuk mendeteksi siapa yang tidak aktif.
+ * Jika ada pemain yang tidak aktif melebihi `inactivityTimeout`, permainan akan ditandai sebagai `abandoned`.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {number} [inactivityTimeout=600000] - Batas waktu tidak aktif dalam milidetik (default: 10 menit atau 600.000 ms).
+ * @returns {Promise<boolean>} Sebuah Promise yang selesai dengan `true` jika permainan diakhiri karena ketidakaktifan, `false` jika permainan masih aktif.
+ */
 export const checkInactivePlayers = async (
   topicID,
   gameID,
@@ -158,7 +239,6 @@ export const checkInactivePlayers = async (
     const now = Date.now();
     const playerActivity = gameState.playerActivity;
 
-    // Check setiap player apakah sudah tidak aktif lebih dari timeout
     for (const [userUID, activity] of Object.entries(playerActivity)) {
       const timeSinceLastActivity = now - activity.lastActivity;
 
@@ -167,114 +247,35 @@ export const checkInactivePlayers = async (
           `Player ${userUID} tidak aktif selama ${timeSinceLastActivity}ms, mengakhiri game...`
         );
 
-        // Mark game as abandoned
         await updateGameState(topicID, gameID, roomID, {
           gameStatus: "abandoned",
           abandonedBy: userUID,
           abandonedAt: now,
           reason: "player_inactive",
-          [`playerActivity/${userUID}/isActive`]: false,
+          [`playerActivity/${userUID}/isActive`]: false, 
         });
-
-        // Stop game timer
         await stopGameTimer(topicID, gameID, roomID);
-
-        return true; // Game ended due to inactivity
+        return true;
       }
     }
 
-    return false; // Game masih aktif
+    return false; 
   } catch (error) {
     console.error("Error checking inactive players:", error);
     return false;
   }
 };
 
-// Listen to player activity untuk monitor inactivity (Universal)
-export const listenToPlayerActivity = (
-  topicID,
-  gameID,
-  roomID,
-  callback,
-  inactivityTimeout = 600000
-) => {
-  if (!topicID || !gameID || !roomID) return () => {};
-
-  const activityRef = ref(
-    database,
-    `rooms/${topicID}/${gameID}/${roomID}/gameState/playerActivity`
-  );
-
-  return onValue(activityRef, (snapshot) => {
-    const playerActivity = snapshot.val();
-    if (!playerActivity) return;
-
-    const now = Date.now();
-    const inactivePlayers = [];
-
-    Object.entries(playerActivity).forEach(([userUID, activity]) => {
-      const timeSinceLastActivity = now - activity.lastActivity;
-      if (timeSinceLastActivity >= inactivityTimeout && activity.isActive) {
-        inactivePlayers.push({
-          userUID,
-          timeSinceLastActivity,
-          playerIndex: activity.playerIndex,
-        });
-      }
-    });
-
-    if (inactivePlayers.length > 0) {
-      callback(inactivePlayers);
-    }
-  });
-};
-
-// Check if game is active (Universal)
-export const checkGameActive = async (topicID, gameID, roomID) => {
-  const gameStatusRef = ref(
-    database,
-    `rooms/${topicID}/${gameID}/${roomID}/gameStatus`
-  );
-  try {
-    const snapshot = await get(gameStatusRef);
-    const status = snapshot.val();
-    return status === "playing" && status !== "abandoned";
-  } catch (error) {
-    console.error("Error checking game status:", error);
-    return false;
-  }
-};
-
-// Set winner (Universal)
-export const setGameWinner = async (topicID, gameID, roomID, winnerUID) => {
-  try {
-    await updateGameState(topicID, gameID, roomID, {
-      gameStatus: "finished",
-      winner: winnerUID,
-    });
-  } catch (error) {
-    console.error("Error setting game winner:", error);
-  }
-};
-
-// Reset game state (Universal)
-export const resetGameState = async (topicID, gameID, roomID) => {
-  const gameStateRef = ref(
-    database,
-    `rooms/${topicID}/${gameID}/${roomID}/gameState`
-  );
-  try {
-    await set(gameStateRef, null);
-  } catch (error) {
-    console.error("Error resetting game state:", error);
-  }
-};
-
-// ========================================
-// GAME TIMER FUNCTIONS (Universal)
-// ========================================
-
-// Initialize game timer
+/**
+ * @function initializeGameTimer
+ * @description Menginisialisasi timer global untuk permainan.
+ * Jika timer sudah ada di Firebase, fungsi ini tidak akan melakukan apa-apa.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {number} duration - Durasi total permainan yang diinginkan dalam detik.
+ * @returns {Promise<void>} Sebuah Promise yang akan selesai ketika timer berhasil diinisialisasi atau jika sudah ada.
+ */
 export const initializeGameTimer = async (
   topicID,
   gameID,
@@ -287,7 +288,7 @@ export const initializeGameTimer = async (
   );
   try {
     const snapshot = await get(gameTimerRef);
-    if (!snapshot.exists()) {
+    if (!snapshot.exists()) { 
       await set(gameTimerRef, {
         startTime: Date.now(),
         duration: duration,
@@ -299,24 +300,14 @@ export const initializeGameTimer = async (
   }
 };
 
-// Update game timer
-export const updateGameTimer = async (topicID, gameID, roomID, timeLeft) => {
-  const gameTimerRef = ref(
-    database,
-    `rooms/${topicID}/${gameID}/${roomID}/gameTimer`
-  );
-  try {
-    await set(gameTimerRef, {
-      startTime: Date.now(),
-      duration: timeLeft,
-      isActive: true,
-    });
-  } catch (error) {
-    console.error("Error updating game timer:", error);
-  }
-};
-
-// Stop game timer
+/**
+ * @function stopGameTimer
+ * @description Menghentikan timer global permainan dengan mengatur properti `isActive` menjadi `false` di Firebase.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @returns {Promise<void>} Sebuah Promise yang akan selesai ketika timer berhasil dihentikan.
+ */
 export const stopGameTimer = async (topicID, gameID, roomID) => {
   const gameTimerRef = ref(
     database,
@@ -324,14 +315,24 @@ export const stopGameTimer = async (topicID, gameID, roomID) => {
   );
   try {
     await set(gameTimerRef, {
-      isActive: false,
+      isActive: false, 
     });
   } catch (error) {
     console.error("Error stopping game timer:", error);
   }
 };
 
-// Listen to game timer
+/**
+ * @function listenToGameTimer
+ * @description Mendengarkan perubahan timer global permainan secara real-time.
+ * Fungsi ini menghitung sisa waktu berdasarkan `startTime` dan `duration` yang disimpan di Firebase.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {function(number): void} callback - Fungsi callback yang akan dipanggil dengan sisa waktu dalam detik.
+ * @returns {function(): void} Fungsi untuk berhenti mendengarkan perubahan (unsubscribe).
+ * Mengembalikan fungsi kosong jika parameter yang diperlukan tidak ada.
+ */
 export const listenToGameTimer = (topicID, gameID, roomID, callback) => {
   if (!topicID || !gameID || !roomID) return () => {};
   const gameTimerRef = ref(
@@ -348,11 +349,18 @@ export const listenToGameTimer = (topicID, gameID, roomID, callback) => {
   });
 };
 
-// ========================================
-// UNIVERSAL GAME STATE MANAGEMENT (FIXED)
-// ========================================
-
-// Universal update game state - Auto-detect game type with debouncing
+/**
+ * @function updateGameState
+ * @description Memperbarui status permainan secara universal dengan menerapkan debouncing.
+ * Fungsi ini dirancang untuk menangani pembaruan data yang bertingkat (nested) menggunakan notasi path
+ * (misalnya `playerActivity/uid/isActive`) dan melakukan merge data yang bijaksana.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {Object} updates - Objek yang berisi pembaruan status permainan. Kunci dapat berupa path bertingkat.
+ * @returns {Promise<void>} Sebuah Promise yang akan selesai setelah pembaruan diterapkan ke Firebase.
+ * Promise akan ditolak jika terjadi error.
+ */
 export const updateGameState = async (topicID, gameID, roomID, updates) => {
   const key = `${topicID}-${gameID}-${roomID}`;
 
@@ -371,24 +379,18 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
         const snapshot = await get(gameStateRef);
         const currentState = snapshot.val() || {};
 
-        // === KUNCI PERBAIKAN DI SINI ===
-        // Menerapkan updates secara bertingkat ke currentState
-        let newState = { ...currentState }; // Buat salinan state saat ini
+        let newState = { ...currentState }; 
 
-        // Fungsi helper untuk menerapkan update bertingkat
         const applyUpdates = (target, source) => {
           for (const key in source) {
-            // Periksa jika key mengandung path (misalnya "playerActivity/uid/isActive")
             if (key.includes("/")) {
               const pathParts = key.split("/");
               let currentTarget = target;
               for (let i = 0; i < pathParts.length; i++) {
                 const part = pathParts[i];
                 if (i === pathParts.length - 1) {
-                  // Bagian terakhir dari path adalah properti yang akan diupdate
                   currentTarget[part] = source[key];
                 } else {
-                  // Buat objek baru jika tidak ada atau bukan objek
                   if (
                     !currentTarget[part] ||
                     typeof currentTarget[part] !== "object"
@@ -405,12 +407,8 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
               typeof target[key] === "object" &&
               target[key] !== null
             ) {
-              // Jika properti adalah objek dan target juga objek, lakukan merge rekursif
               target[key] = { ...target[key], ...source[key] };
-              // Atau jika kita ingin overwrite, cukup target[key] = source[key];
-              // Namun, untuk game state, merge lebih umum untuk menghindari kehilangan data
             } else {
-              // Untuk properti non-objek atau array, langsung timpa
               target[key] = source[key];
             }
           }
@@ -420,13 +418,10 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
 
         const sanitizedUpdates = { ...newState };
         if (updates.playerTimers) {
-          // Cek dari input asli `updates`
           sanitizedUpdates.playerTimers = Array.isArray(updates.playerTimers)
-            ? updates.playerTimers.map((time) => Number(time) || 0) // Kembali ke array angka
+            ? updates.playerTimers.map((time) => Number(time) || 0) 
             : currentState.playerTimers || [];
         }
-
-        // Pastikan field baru untuk kemenangan NusaCard juga disanitasi
         [
           "gameWinnerUID",
           "gameWinnerDisplayName",
@@ -444,14 +439,12 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
 
         sanitizedUpdates.lastUpdated = Date.now();
 
-        // Filter out undefined values
         const cleanUpdates = Object.fromEntries(
           Object.entries(sanitizedUpdates).filter(
             ([_, value]) => value !== undefined
           )
         );
-        // PENTING: Gunakan `newState` yang sudah di-merge dan divalidasi
-        await set(gameStateRef, cleanUpdates); // Menggunakan cleanUpdates yang sudah diproses
+        await set(gameStateRef, cleanUpdates); 
 
         delete updateQueue[key];
         resolve();
@@ -464,7 +457,18 @@ export const updateGameState = async (topicID, gameID, roomID, updates) => {
   });
 };
 
-// Universal cleanup game
+/**
+ * @function cleanupGame
+ * @description Melakukan pembersihan menyeluruh untuk data permainan di Firebase.
+ * Ini termasuk mereset `gameState`, `gameTimer`, `gameStatus`, `gameStarted`,
+ * menghapus pesan chat, data pemain, dan mereset data ruangan secara keseluruhan.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {Object} user - Objek pengguna yang memicu cleanup (harus memiliki `uid`).
+ * @param {string} [reason="normal"] - Alasan pembersihan (misalnya "inactivity" jika disebabkan oleh pemain tidak aktif).
+ * @returns {Promise<void>} Sebuah Promise yang akan selesai setelah pembersihan selesai.
+ */
 export const cleanupGame = async (
   topicID,
   gameID,
@@ -475,7 +479,6 @@ export const cleanupGame = async (
   if (!topicID || !gameID || !roomID || !user?.uid) return;
 
   try {
-    // Jika cleanup karena player inactivity, mark as abandoned dulu
     if (reason === "inactivity") {
       await updateGameState(topicID, gameID, roomID, {
         gameStatus: "abandoned",
@@ -485,50 +488,55 @@ export const cleanupGame = async (
       });
     }
 
-    // Reset gameState
     const gameStateRef = ref(
       database,
       `rooms/${topicID}/${gameID}/${roomID}/gameState`
     );
     await set(gameStateRef, null);
 
-    // Reset gameTimer
     const gameTimerRef = ref(
       database,
       `rooms/${topicID}/${gameID}/${roomID}/gameTimer`
     );
     await set(gameTimerRef, null);
 
-    // Reset game status and start status
     await setGameStatus(topicID, gameID, roomID, null);
     await setGameStartStatus(topicID, gameID, roomID, false);
 
-    // Hapus semua pesan chat dalam room
     const chatRef = ref(
       database,
       `rooms/${topicID}/${gameID}/${roomID}/chatMessages`
     );
     await set(chatRef, null);
 
-    // Reset player data dalam room
     const playersRef = ref(
       database,
       `rooms/${topicID}/${gameID}/${roomID}/players`
     );
     await set(playersRef, null);
 
-    // Reset keseluruhan room data
     await resetRoom(topicID, gameID, roomID);
   } catch (error) {
     console.error("Error cleaning up game:", error);
   }
 };
 
-// ========================================
-// ULAR TANGGA SPECIFIC FUNCTIONS
-// ========================================
+// ? ========================================
+// ? FUNGSI KHUSUS ULAR TANGGA
+// ? ========================================
 
-// Initialize Ular Tangga game state
+/**
+ * @function initializeUlarTanggaGameState
+ * @description Menginisialisasi status permainan awal untuk game Ular Tangga.
+ * Ini membuat struktur data dasar yang diperlukan untuk game Ular Tangga di Firebase.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {Array<Object>} players - Array objek pemain yang berpartisipasi dalam game.
+ * @param {Array<Object>} questions - Array objek pertanyaan yang akan digunakan dalam game.
+ * @returns {Promise<void>} Sebuah Promise yang akan selesai setelah status permainan berhasil diinisialisasi.
+ * Jika status sudah ada, fungsi ini tidak akan melakukan apa-apa.
+ */
 export const initializeUlarTanggaGameState = async (
   topicID,
   gameID,
@@ -563,7 +571,6 @@ export const initializeUlarTanggaGameState = async (
           currentNumber: 1,
           lastRoll: null,
         },
-        // Removed playerTimers from here as well, use activePlayerTimer
         playerActivity: players.reduce((acc, player, index) => {
           acc[player.uid] = {
             lastActivity: Date.now(),
@@ -583,126 +590,29 @@ export const initializeUlarTanggaGameState = async (
   }
 };
 
-// Update dice state (Ular Tangga specific)
-export const updateDiceState = async (topicID, gameID, roomID, diceState) => {
-  try {
-    await updateGameState(topicID, gameID, roomID, { diceState });
-  } catch (error) {
-    console.error("Error updating dice state:", error);
-  }
-};
+// ? ========================================
+// ? FUNGSI KHUSUS NUSACARD 
+// ? ========================================
 
-// Handle player timeout (Ular Tangga specific)
-export const handleUlarTanggaPlayerTimeout = async (
-  topicID,
-  gameID,
-  roomID,
-  currentPlayerIndex,
-  totalPlayers
-) => {
-  try {
-    await updateGameState(topicID, gameID, roomID, {
-      currentPlayerIndex: (currentPlayerIndex + 1) % totalPlayers,
-      waitingForAnswer: false,
-      showQuestion: false,
-      isCorrect: null,
-      potionUsable: false,
-      diceState: {
-        isRolling: false,
-        currentNumber: 1,
-        lastRoll: null,
-      },
-    });
-  } catch (error) {
-    console.error("Error handling Ular Tangga player timeout:", error);
-  }
-};
-
-// Update player position (Ular Tangga specific)
-export const updatePlayerPosition = async (
-  topicID,
-  gameID,
-  roomID,
-  playerIndex,
-  newPosition
-) => {
-  try {
-    const state = await getGameState(topicID, gameID, roomID);
-    if (state) {
-      const newPositions = [...state.pionPositions];
-      newPositions[playerIndex] = newPosition;
-      await updateGameState(topicID, gameID, roomID, {
-        pionPositions: newPositions,
-      });
-    }
-  } catch (error) {
-    console.error("Error updating player position:", error);
-  }
-};
-
-// ========================================
-// NUSACARD SPECIFIC FUNCTIONS (FIXED)
-// ========================================
-
-// Update the active player's current remaining time in Firebase
-export const updateCurrentPlayerTime = async (
-  topicID,
-  gameID,
-  roomID,
-  currentPlayerIndex,
-  timeLeft,
-  currentPhase
-) => {
-  if (!topicID || !gameID || !roomID) return;
-
-  try {
-    // Kita akan update field baru di gameState: activePlayerTimer
-    await set(
-      ref(
-        database,
-        `rooms/${topicID}/${gameID}/${roomID}/gameState/activePlayerTimer`
-      ),
-      {
-        playerIndex: currentPlayerIndex,
-        timeLeft: timeLeft,
-        phase: currentPhase,
-        lastUpdated: Date.now(), // Tambahkan timestamp agar klien bisa menghitung delta
-      }
-    );
-  } catch (error) {
-    console.error("Error updating active player timer:", error);
-  }
-};
-
-// Listen to the active player's timer in Firebase
-export const listenToActivePlayerTimer = (
-  topicID,
-  gameID,
-  roomID,
-  callback
-) => {
-  if (!topicID || !gameID || !roomID) return () => {};
-  const activePlayerTimerRef = ref(
-    database,
-    `rooms/${topicID}/${gameID}/${roomID}/gameState/activePlayerTimer`
-  );
-  return onValue(activePlayerTimerRef, (snapshot) => {
-    const timerData = snapshot.val();
-    if (timerData) {
-      callback(timerData);
-    } else {
-      callback(null); // No active timer data
-    }
-  });
-};
-
-// Initialize NusaCard game state - FIXED untuk hanya render player aktif
+/**
+ * @function initializeNusaCardGameState
+ * @description Menginisialisasi status permainan awal untuk game NusaCard.
+ * Fungsi ini memastikan bahwa hanya pemain yang benar-benar aktif dalam game (berdasarkan array `players`)
+ * yang mendapatkan kartu awal dan status yang relevan.
+ * @param {string} topicID - ID unik topik permainan.
+ * @param {string} gameID - ID unik jenis permainan.
+ * @param {string} roomID - ID unik ruangan permainan.
+ * @param {Array<Object>} players - Array objek pemain yang berpartisipasi dalam game.
+ * @param {Object} initialGameState - Objek status permainan awal yang dihasilkan di sisi klien (dari `NusaCard.jsx`),
+ * yang berisi data kartu per pemain yang sudah diacak di nusacard.
+ * @returns {Promise<void>} Sebuah Promise yang akan selesai setelah status permainan berhasil diinisialisasi.
+ * Jika status sudah ada, fungsi ini tidak akan melakukan inisialisasi ulang.
+ */
 export const initializeNusaCardGameState = async (
   topicID,
   gameID,
   roomID,
   players,
-  questions,
   initialGameState
 ) => {
   const gameStateRef = ref(
@@ -711,7 +621,7 @@ export const initializeNusaCardGameState = async (
   );
   try {
     const snapshot = await get(gameStateRef);
-    if (!snapshot.exists()) {
+    if (!snapshot.exists()) { 
       const playerCount = Array.isArray(players) ? players.length : 0;
 
       const nucaInitialState = {
@@ -726,30 +636,26 @@ export const initializeNusaCardGameState = async (
             playerIndex: index,
           };
           return acc;
-        }, {}),
+        }, {}), 
         activePlayerTimer: {
-          // Inisialisasi timer aktif untuk pemain pertama
-          playerIndex: 0, // Pemain pertama
-          timeLeft: 15, // Waktu awal
+          playerIndex: 0, 
+          timeLeft: 15, 
           phase: "throwing",
           lastUpdated: Date.now(),
         },
       };
 
-      // Reset all player cards first
       for (let i = 1; i <= 4; i++) {
         nucaInitialState[`player${i}Cards`] = [];
       }
 
-      // Only assign cards to ACTIVE players
       for (let i = 0; i < playerCount; i++) {
         const playerId = `player${i + 1}`;
         nucaInitialState[`${playerId}Cards`] =
-          initialGameState[`${playerId}Cards`] || [];
-        nucaInitialState.playerStatus[playerId] = "available";
+          initialGameState[`${playerId}Cards`] || []; 
+        nucaInitialState.playerStatus[playerId] = "available"; 
       }
 
-      // Set remaining players as not available
       for (let i = playerCount; i < 4; i++) {
         const playerId = `player${i + 1}`;
         nucaInitialState.playerStatus[playerId] = "not_available";
@@ -760,82 +666,5 @@ export const initializeNusaCardGameState = async (
   } catch (error) {
     console.error("Error initializing NusaCard game state:", error);
     throw error;
-  }
-};
-
-// Check if any player has won in NusaCard (when they have 0 cards)
-export const checkNusaCardWinner = async (topicID, gameID, roomID) => {
-  try {
-    const gameState = await getGameState(topicID, gameID, roomID);
-    if (!gameState || gameState.gameType !== "nusacard") return null;
-
-    const cardCounts = [
-      gameState.player1Cards?.length || 0,
-      gameState.player2Cards?.length || 0,
-      gameState.player3Cards?.length || 0,
-      gameState.player4Cards?.length || 0,
-    ];
-
-    const winnerIndex = cardCounts.findIndex((count) => count === 0);
-    return winnerIndex !== -1 ? winnerIndex : null;
-  } catch (error) {
-    console.error("Error checking NusaCard winner:", error);
-    return null;
-  }
-};
-
-// Handle player timeout for NusaCard - DISABLED (Client handles timeouts)
-export const handleNusaCardPlayerTimeout = async (
-  topicID,
-  gameID,
-  roomID,
-  currentPlayerIndex,
-  currentPhase,
-  totalPlayers
-) => {
-  // DISABLED - Let client handle timeouts to prevent duplicate penalty cards
-  console.log(
-    "🔧 SERVER: NusaCard timeout handling disabled - client handles timeouts"
-  );
-  return;
-};
-
-// Add penalty card function - for server use if needed
-export const addPenaltyCard = async (
-  topicID,
-  gameID,
-  roomID,
-  playerIndex,
-  penaltyCard
-) => {
-  try {
-    const gameState = await getGameState(topicID, gameID, roomID);
-    if (!gameState) return;
-
-    const playerId = `player${playerIndex + 1}`;
-    const currentCards = gameState[`${playerId}Cards`] || [];
-
-    // Check if penalty was already added recently (prevent duplicates)
-    const recentPenalty = currentCards.find(
-      (card) =>
-        card.isPenalty &&
-        card.id &&
-        Date.now() - parseInt(card.id.split("_")[1]) < 5000 // Within last 5 seconds
-    );
-
-    if (recentPenalty) {
-      console.log("Penalty card already added recently, skipping");
-      return;
-    }
-
-    const updatedCards = [...currentCards, penaltyCard];
-
-    await updateGameState(topicID, gameID, roomID, {
-      [`${playerId}Cards`]: updatedCards,
-      penaltyAddedAt: Date.now(),
-      penaltyAddedFor: playerId,
-    });
-  } catch (error) {
-    console.error("Error adding penalty card:", error);
   }
 };

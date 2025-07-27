@@ -18,35 +18,76 @@ function HeaderGame({
 }) {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [isSfxPlaying, setIsSfxPlaying] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const audioRef = useRef(null);
   const playlist = [song1, song2, song3];
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
 
-  // Coba autoplay saat pertama render
+  // Deteksi user interaction pertama kali dan auto play musik
   useEffect(() => {
-    const tryAutoplay = () => {
-      if (audioRef.current) {
-        audioRef.current.play().then(() => setIsMusicPlaying(true));
+    const handleFirstInteraction = async () => {
+      setHasUserInteracted(true);
+      
+      // Auto play musik setelah user interaction pertama
+      if (!hasAutoPlayed && audioRef.current) {
+        try {
+          await audioRef.current.play();
+          setIsMusicPlaying(true);
+          setHasAutoPlayed(true);
+        } catch (error) {
+          console.log("Auto play musik gagal:", error);
+        }
       }
+      
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('scroll', handleFirstInteraction);
     };
 
-    tryAutoplay();
-  }, [setIsMusicPlaying]);
+    // Add event listeners untuk berbagai jenis interaksi
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('keydown', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
+    document.addEventListener('scroll', handleFirstInteraction); 
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('scroll', handleFirstInteraction);
+    };
+  }, [hasAutoPlayed]);
 
   // Handle perubahan lagu
   useEffect(() => {
-    if (audioRef.current && isMusicPlaying) {
+    if (audioRef.current && isMusicPlaying && hasUserInteracted) {
       audioRef.current.play().catch(console.error);
     }
-  }, [currentSongIndex, isMusicPlaying]);
+  }, [currentSongIndex, isMusicPlaying, hasUserInteracted]);
 
-  const toggleMusic = () => {
-    if (isMusicPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play().catch(() => setIsMusicPlaying(true));
+  const toggleMusic = async () => {
+    if (!hasUserInteracted) {
+      console.log("User belum berinteraksi, musik tidak bisa diputar");
+      return;
     }
-    setIsMusicPlaying(!isMusicPlaying);
+
+    try {
+      if (isMusicPlaying) {
+        audioRef.current.pause();
+        setIsMusicPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsMusicPlaying(true);
+        if (!hasAutoPlayed) {
+          setHasAutoPlayed(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      setIsMusicPlaying(false);
+    }
   };
 
   const handleAudioEnded = () => {
@@ -81,15 +122,14 @@ function HeaderGame({
             width={45}
             className="me-3"
             onClick={toggleMusic}
-            style={{ cursor: "pointer" }}
           />
         </Col>
-
         <audio
           ref={audioRef}
           src={playlist[currentSongIndex]}
           onEnded={handleAudioEnded}
           loop={false}
+          preload="auto" 
         />
       </Row>
 

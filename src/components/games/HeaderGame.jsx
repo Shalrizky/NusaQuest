@@ -26,8 +26,8 @@ function HeaderGame({
   useEffect(() => {
     const tryAutoplay = () => {
       if (audioRef.current) {
-        audioRef.current.play()
-          .then(() => setIsMusicPlaying(true))      }
+        audioRef.current.play().then(() => setIsMusicPlaying(true));
+      }
     };
 
     tryAutoplay();
@@ -108,7 +108,9 @@ function HeaderGame({
               <h5>Hints</h5>
               <ul className="answer-section">
                 {hints.map((hint, i) => (
-                  <li key={i}><strong>{i+1}.</strong> {hint}</li>
+                  <li key={i}>
+                    <strong>{i + 1}.</strong> {hint}
+                  </li>
                 ))}
               </ul>
             </div>

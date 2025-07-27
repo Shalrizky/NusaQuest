@@ -109,6 +109,7 @@ export const usePlayerActivity = (onInactivity, inactivityTimeout = 60000, gameD
   const checkIntervalRef = useRef(null);
   const isActiveRef = useRef(true);
   const inactivityTimeoutRef = useRef(null);
+  const lastFirebaseActivityUpdate = useRef(0);
 
   // Update aktivitas terakhir
   const updateActivity = useCallback(async () => {
@@ -117,8 +118,12 @@ export const usePlayerActivity = (onInactivity, inactivityTimeout = 60000, gameD
       isActiveRef.current = true;
     }
 
-    // Update activity di Firebase jika game data tersedia
-    if (gameData?.topicID && gameData?.gameID && gameData?.roomID && gameData?.user?.uid) {
+     // Update Firebase activity hanya setiap 30 detik (bukan setiap klik)
+    const now = Date.now();
+    const shouldUpdateFirebase = (now - lastFirebaseActivityUpdate.current) > 30000; 
+
+    if (gameData?.topicID && gameData?.gameID && gameData?.roomID && gameData?.user?.uid && shouldUpdateFirebase) {
+      lastFirebaseActivityUpdate.current = now;
       try {
         await updatePlayerActivity(
           gameData.topicID, 
@@ -142,7 +147,8 @@ export const usePlayerActivity = (onInactivity, inactivityTimeout = 60000, gameD
         onInactivity?.();
       }
     }, inactivityTimeout);
-  }, [gameData?.topicID, gameData?.gameID, gameData?.roomID, gameData?.user?.uid, onInactivity, inactivityTimeout]);
+
+  }, [onInactivity, inactivityTimeout, gameData?.topicID, gameData?.gameID, gameData?.roomID, gameData?.user?.uid]);
 
   // Setup event listeners untuk mendeteksi aktivitas
   useEffect(() => {

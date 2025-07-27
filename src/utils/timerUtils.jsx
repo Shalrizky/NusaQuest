@@ -291,7 +291,7 @@ export const useGameTimer = (initialTime, onGameEnd, { topicID, gameID, roomID, 
       }
     );
 
-    return () => {
+    return () => {  
       clearInterval(interval);
       unsubscribe();
     };

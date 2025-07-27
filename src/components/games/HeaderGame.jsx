@@ -21,20 +21,17 @@ function HeaderGame({
   const audioRef = useRef(null);
   const playlist = [song1, song2, song3];
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
-  const [setShowAudioModal] = useState(false);
 
   // Coba autoplay saat pertama render
   useEffect(() => {
     const tryAutoplay = () => {
       if (audioRef.current) {
         audioRef.current.play()
-          .then(() => setIsMusicPlaying(true))
-          .catch(() => setShowAudioModal(true));
-      }
+          .then(() => setIsMusicPlaying(true))      }
     };
 
     tryAutoplay();
-  }, [setShowAudioModal]);
+  }, [setIsMusicPlaying]);
 
   // Handle perubahan lagu
   useEffect(() => {
@@ -47,7 +44,7 @@ function HeaderGame({
     if (isMusicPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(() => setShowAudioModal(true));
+      audioRef.current.play().catch(() => setIsMusicPlaying(true));
     }
     setIsMusicPlaying(!isMusicPlaying);
   };

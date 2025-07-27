@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Row, Col, Image, Offcanvas } from "react-bootstrap";
 import btntemp from "../../assets/common/btnTemp.png";
 import iconmusik from "../../assets/common/icon_musik.png";
@@ -11,110 +11,145 @@ import song3 from "../../assets/sound/song3.mp3";
 import "../../style/components/games/HeaderGame.css";
 
 function HeaderGame({
-  toggleTemp,
   hints,
   showOffcanvas,
   setShowOffcanvas,
   onCloseOffcanvas,
 }) {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [isSfxPlaying, setIsSfxPlaying] = useState(false); // Changed to false
+  const [isSfxPlaying, setIsSfxPlaying] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const audioRef = useRef(null);
   const playlist = [song1, song2, song3];
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
 
+  // Deteksi user interaction pertama kali dan auto play musik
   useEffect(() => {
-    if (audioRef.current) {
-      if (isMusicPlaying) {
-        audioRef.current.play().catch((error) => {
-          console.log("Playback error:", error);
-        });
-      } else {
-        audioRef.current.pause();
+    const handleFirstInteraction = async () => {
+      setHasUserInteracted(true);
+      
+      // Auto play musik setelah user interaction pertama
+      if (!hasAutoPlayed && audioRef.current) {
+        try {
+          await audioRef.current.play();
+          setIsMusicPlaying(true);
+          setHasAutoPlayed(true);
+        } catch (error) {
+          console.log("Auto play musik gagal:", error);
+        }
       }
+      
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('scroll', handleFirstInteraction);
+    };
+
+    // Add event listeners untuk berbagai jenis interaksi
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('keydown', handleFirstInteraction);
+    document.addEventListener('touchstart', handleFirstInteraction);
+    document.addEventListener('scroll', handleFirstInteraction); 
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('scroll', handleFirstInteraction);
+    };
+  }, [hasAutoPlayed]);
+
+  // Handle perubahan lagu
+  useEffect(() => {
+    if (audioRef.current && isMusicPlaying && hasUserInteracted) {
+      audioRef.current.play().catch(console.error);
     }
-  }, [isMusicPlaying, currentSongIndex]);
+  }, [currentSongIndex, isMusicPlaying, hasUserInteracted]);
 
-  const handleMusicClick = () => {
-    setIsMusicPlaying(!isMusicPlaying);
-  };
+  const toggleMusic = async () => {
+    if (!hasUserInteracted) {
+      console.log("User belum berinteraksi, musik tidak bisa diputar");
+      return;
+    }
 
-  const handleSfxClick = () => {
-    setIsSfxPlaying(!isSfxPlaying);
+    try {
+      if (isMusicPlaying) {
+        audioRef.current.pause();
+        setIsMusicPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsMusicPlaying(true);
+        if (!hasAutoPlayed) {
+          setHasAutoPlayed(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      setIsMusicPlaying(false);
+    }
   };
 
   const handleAudioEnded = () => {
-    const nextSongIndex = (currentSongIndex + 1) % playlist.length;
-    setCurrentSongIndex(nextSongIndex);
-  };
-
-  const handleBtnTempClick = () => {
-    setShowOffcanvas(true);
-    if (toggleTemp) toggleTemp();
-  };
-
-  const handleCloseOffcanvas = () => {
-    if (onCloseOffcanvas) {
-      onCloseOffcanvas();
-    } else {
-      setShowOffcanvas(false);
-    }
+    setCurrentSongIndex((prev) => (prev + 1) % playlist.length);
   };
 
   return (
-    <Row className="align-items-center my-4">
-      <Col className="d-flex justify-content-start">
-        <Image
-          src={btntemp}
-          alt="btn temp"
-          width={45}
-          className="ms-3"
-          onClick={handleBtnTempClick}
-          style={{ cursor: "pointer" }}
+    <>
+      <Row className="align-items-center my-4">
+        <Col className="d-flex justify-content-start">
+          <Image
+            src={btntemp}
+            alt="btn temp"
+            width={45}
+            className="ms-3"
+            onClick={() => setShowOffcanvas(true)}
+            style={{ cursor: "pointer" }}
+          />
+        </Col>
+        <Col className="d-flex justify-content-end">
+          <Image
+            src={isSfxPlaying ? iconsfx : iconsfxOff}
+            alt="icon sfx"
+            width={45}
+            className="me-3"
+            onClick={() => setIsSfxPlaying(!isSfxPlaying)}
+            style={{ cursor: "pointer" }}
+          />
+          <Image
+            src={isMusicPlaying ? iconmusik : iconmusikOff}
+            alt="icon music"
+            width={45}
+            className="me-3"
+            onClick={toggleMusic}
+          />
+        </Col>
+        <audio
+          ref={audioRef}
+          src={playlist[currentSongIndex]}
+          onEnded={handleAudioEnded}
+          loop={false}
+          preload="auto" 
         />
-      </Col>
-      <Col className="d-flex justify-content-end">
-        <Image
-          src={isSfxPlaying ? iconsfx : iconsfxOff}
-          alt="icon sfx"
-          width={45}
-          className="me-3"
-          onClick={handleSfxClick}
-          style={{ cursor: "pointer" }}
-        />
-        <Image
-          src={isMusicPlaying ? iconmusik : iconmusikOff}
-          alt="icon music"
-          width={45}
-          className="me-3"
-          onClick={handleMusicClick}
-          style={{ cursor: "pointer" }}
-        />
-      </Col>
-      <audio
-        ref={audioRef}
-        src={playlist[currentSongIndex]}
-        onEnded={handleAudioEnded}
-        autoPlay={false}
-        loop={false}
-      />
+      </Row>
+
       <Offcanvas
         show={showOffcanvas}
-        onHide={handleCloseOffcanvas}
+        onHide={onCloseOffcanvas || (() => setShowOffcanvas(false))}
         placement="start"
         className="custom-offcanvas"
       >
-        <Offcanvas.Header closeButton>
+        <Offcanvas.Header closeButton closeVariant="white">
           <Offcanvas.Title>Kumpulan Jawaban</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
-          {hints && hints.length > 0 && (
+          {hints?.length > 0 && (
             <div className="hint-section">
               <h5>Hints</h5>
               <ul className="answer-section">
-                {hints.map((hint, index) => (
-                  <li key={index}>
-                    <strong>{index + 1}.</strong> {hint}
+                {hints.map((hint, i) => (
+                  <li key={i}>
+                    <strong>{i + 1}.</strong> {hint}
                   </li>
                 ))}
               </ul>
@@ -122,7 +157,7 @@ function HeaderGame({
           )}
         </Offcanvas.Body>
       </Offcanvas>
-    </Row>
+    </>
   );
 }
 

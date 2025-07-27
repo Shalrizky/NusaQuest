@@ -1,5 +1,4 @@
-import React from "react";
-import QuestionForm from "./QuestionForm";
+import QuestionForm from "../QuestionForm";
 import "../../../style/components/games/uTangga/playerTurnBox.css";
 
 function PlayerTurnBox({ 

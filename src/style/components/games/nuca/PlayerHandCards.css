@@ -15,18 +15,21 @@
   z-index: calc(var(--total-cards) - var(--index));
 }
 
-.card-stack .card.throwing {
-  left: calc(50%); /* Center position */
-  transform: translateY(200px) scale(1.2); /* Move up and scale for throwing effect */
-  transition: transform 0.3s ease; /* Match this duration with the timeout in the click handler */
-}
-
-.card-stack .card.no-hover:hover {
-  transform: none; /* Disable hover transformation */
-  cursor: default; /* Change cursor to default */
-}
-
 .card-stack .card:hover {
+  transform: translateY(-30px) translateX(calc((var(--index) - var(--total-cards) / 2) * 65px * var(--spacing-factor) + 20px));
+  z-index: 999;
+  width: auto;
+  height: auto;
+  min-width: 120px;
+  min-height: 150px;
+}
+
+.card-stack .card.disabled-throwing {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.card-stack .card.disabled-throwing:hover {
   transform: translateY(-30px) translateX(calc((var(--index) - var(--total-cards) / 2) * 65px * var(--spacing-factor) + 20px));
   z-index: var(--total-cards);
   width: auto;
@@ -62,6 +65,30 @@
   white-space: normal;
 }
 
+.card-stack .card.throwing {
+  animation: throwUpAndShrink 1s forwards ease-out;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Define Keyframes untuk animasi "melayang ke atas, mengecil, dan berputar-putar" */
+@keyframes throwUpAndShrink {
+  0% {
+    transform: translateX(calc((var(--index) - var(--total-cards) / 2) * 65px * var(--spacing-factor))) translateY(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateX(25vh) translateY(-30vh) scale(0.8) rotate(360deg);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: translateX(30vh) translateY(-35vh) scale(0.5) rotate(720deg);
+    opacity: 0.4;
+  }
+}
+
 /* Responsive Styles */
 @media (max-width: 1200px),
 (max-width: 992px) {
@@ -73,6 +100,12 @@
   }
 
   .card-stack .card:hover {
+    transform: translateY(-25px) translateX(calc((var(--index) - var(--total-cards) / 2) * 70px * var(--spacing-factor) + 15px));
+    min-width: 110px;
+    min-height: 140px;
+  }
+
+  .card-stack .card.disabled-throwing:hover {
     transform: translateY(-25px) translateX(calc((var(--index) - var(--total-cards) / 2) * 70px * var(--spacing-factor) + 15px));
     min-width: 110px;
     min-height: 140px;
@@ -93,6 +126,12 @@
   }
 
   .card-stack .card:hover {
+    transform: translateY(-15px) translateX(calc((var(--index) - var(--total-cards) / 2) * 50px * var(--spacing-factor) + 15px));
+    min-width: 90px;
+    min-height: 120px;
+  }
+
+  .card-stack .card.disabled-throwing:hover {
     transform: translateY(-15px) translateX(calc((var(--index) - var(--total-cards) / 2) * 50px * var(--spacing-factor) + 15px));
     min-width: 90px;
     min-height: 120px;

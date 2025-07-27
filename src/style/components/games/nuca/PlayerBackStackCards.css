@@ -3,19 +3,19 @@
   height: 100%;
 }
 
-.back-card-item, .not-avail-card-item {
+.back-card-item,
+.not-avail-card-item {
   position: absolute;
   width: 100px;
   height: 150px;
   transition: transform 0.3s ease;
   transform-style: preserve-3d;
   transform-origin: center center;
-   --card-stack-gap: calc((var(--index) - var(--total-cards) / 2) * 10px ); 
-   --wide-stack-gap: calc((var(--index) - var(--total-cards) / 2) * 18px );
-   --card-gap: calc(10px / var(--total-cards));
+  --card-stack-gap: calc((var(--index) - var(--total-cards) / 2) * 10px);
+  --wide-stack-gap: calc((var(--index) - var(--total-cards) / 2) * 18px);
+  --card-gap: calc(10px / var(--total-cards));
 }
 
-/* Style untuk gambar back card */
 .back-card-item img {
   width: 100%;
   height: auto;
@@ -50,15 +50,17 @@
 }
 
 .not-avail-card-item.top {
-  left: calc(50% - var(--total-cards) * 16px);
+  left: -80px;
   top: -70px;
 }
 
 .not-avail-card-item.left {
+   top: -100px;
   left: -25px;
 }
 
 .not-avail-card-item.right {
+  top: -110px;
   right: 50px;
 }
 
@@ -73,8 +75,23 @@
   transform: translateX(-50%);
 }
 
+.shuffle-image.rotate-once {
+  animation: shuffleRotate 0.5s ease-out forwards;
+}
+
+@keyframes shuffleRotate {
+  0% {
+    transform: translateX(-50%) rotate(0deg);
+  }
+
+  100% {
+    transform: translateX(-50%) rotate(90deg);
+  }
+}
+
 /* Responsive Styles */
-@media (max-width: 1200px), (max-width: 992px) {
+@media (max-width: 1200px),
+(max-width: 992px) {
   .back-card-item {
     width: 80px;
     height: 110px;
@@ -100,7 +117,8 @@
   }
 }
 
-@media (max-width: 768px), (max-width: 576px) {
+@media (max-width: 768px),
+(max-width: 576px) {
   .back-card-item {
     width: 70px;
     height: 80px;
@@ -112,7 +130,8 @@
   }
 
   .back-card-item.middle {
-    top: calc(50% - 94px);
+    top: calc(50% - 90px);
+    width: 40px;
   }
 
   .back-card-item.right {
@@ -139,8 +158,8 @@
   }
 
   .shuffle-image {
-    width: 180px;
-    top: -138px;
+    width: 120px;
+    top: -125px;
     left: 49%;
   }
 }

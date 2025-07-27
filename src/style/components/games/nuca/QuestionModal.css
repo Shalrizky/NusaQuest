@@ -1,0 +1,33 @@
+#modal-question-nuca .modal-content {
+    background-color: #81B0FF !important;
+}
+
+.modal-content .profile-border-svg {
+    top: -11px !important;
+    left: -5px !important;
+    width: 67px;
+    transform-origin: center center;
+    z-index: 1;
+}
+
+@media (max-width: 1200px),
+(max-width: 992px) {
+    .modal-content .profile-border-svg {
+        top: -16px !important;
+        left: -3px !important;
+        width: 56px;
+        transform-origin: center center;
+        z-index: 1;
+    }
+}
+
+@media (max-width: 768px),
+(max-width: 576px) {
+    .modal-content .profile-border-svg {
+        top: -21px !important;
+        left: -2px !important;
+        width: 44px;
+        transform-origin: center center;
+        z-index: 1;
+    }
+}

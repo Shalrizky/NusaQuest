@@ -1,17 +1,32 @@
 .player-profile-container {
   position: absolute;
-  transition: top 0.3s ease;
+  transition: top 0.3s ease, bottom 0.3s ease, left 0.3s ease, right 0.3s ease, transform 0.3s ease;
+}
+
+.profile-border-svg {
+  position: absolute;
+  top: -5px !important;
+  left: -5px;
+  transform: rotate(-90deg);
+  transform-origin: center center;
+  z-index: 20;
+}
+
+.profile-border-svg circle {
+  transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+  will-change: stroke-dashoffset;
 }
 
 .user-profile-image {
   width: 60px;
   border: 3px solid #CECDAB;
-  border-radius: 20px;
+  border-radius: 50%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1;
 }
 
 .player-profile-top-left {
-  left: calc(-100px - var(--total-player-cards) * 8px);
+  left: calc(-100px - var(--total-player-cards) * 10px);
   transform: translateY(-35%);
 }
 
@@ -27,12 +42,106 @@
 }
 
 .player-profile-bottom-right {
-  left: calc(var(--total-player-cards, 1) * 34px + 1px);
+  left: calc(var(--total-player-cards, 1) * 32px + 6vh);
   transform: translateY(-168%);
 }
 
+.answer-feedback-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.feedback-icon {
+  width: 40px;
+  height: 40px;
+  animation: feedbackPulse 0.6s ease-out;
+}
+
+.feedback-correct {
+  filter: drop-shadow(0 0 8px rgba(77, 255, 0, 0.8));
+}
+
+.feedback-incorrect {
+  filter: drop-shadow(0 0 8px rgba(178, 34, 34, 0.8));
+}
+
+@keyframes feedbackPulse {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+.player-status-text {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #083288;
+  border: 1px solid #fff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  z-index: 10;
+  animation: pulse-smooth 2.6s infinite alternate ease-in-out;
+  transition: top 0.3s ease, bottom 0.3s ease, opacity 0.3s ease;
+}
+
+.player-profile-container.player-status-text-top .player-status-text {
+  top: -34px;
+  bottom: auto;
+}
+
+.player-profile-container.player-status-text-bottom .player-status-text {
+  top: auto;
+  bottom: -34px;
+}
+
+@keyframes pulse-smooth {
+  0% {
+    opacity: 0.7;
+    transform: translateX(-50%) scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.03);
+  }
+
+  100% {
+    opacity: 0.7;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+
 /* Responsive Styles */
-@media (max-width: 1200px), (max-width: 992px) {
+@media (max-width: 1200px),
+(max-width: 992px) {
+  .profile-border-svg {
+    position: absolute;
+    top: -10px !important;
+    left: -6px;
+    width: 62px;
+  }
+
   .user-profile-image {
     width: 50px;
   }
@@ -41,26 +150,34 @@
     left: calc(50% - 90px - var(--total-player-cards) * 8px);
     transform: translateY(-45%);
   }
-  
+
   .player-profile-left {
     bottom: calc(-45px - var(--total-player-cards) * 8px);
     transform: translateX(30%);
   }
-  
+
   .player-profile-right {
     top: calc(-154px - var(--total-player-cards) * 8px);
     transform: translateX(-35%);
     right: 0px;
   }
-  
+
   .player-profile-bottom-right {
-    left: calc(var(--total-player-cards, 1) * 32px + 1px);
+    left: calc(var(--total-player-cards, 1) * 25px + 7vh);
     transform: translateY(-180%);
   }
 
 }
 
-@media (max-width: 768px), (max-width: 576px) {
+@media (max-width: 768px),
+(max-width: 576px) {
+  .profile-border-svg {
+    position: absolute;
+    top: -15px !important;
+    left: -2px;
+    width: 45px;
+  }
+
   .user-profile-image {
     width: 40px;
   }
@@ -69,20 +186,25 @@
     left: calc(50% - 70px - var(--total-player-cards) * 8px);
     transform: translateY(-65%);
   }
-  
+
   .player-profile-left {
     bottom: calc(-25px - var(--total-player-cards) * 8px);
     transform: translateX(15%);
   }
-  
+
   .player-profile-right {
     top: calc(-122px - var(--total-player-cards) * 8px);
     transform: translateX(-18%);
     right: 0px;
   }
-  
-  .player-profile-bottom-right  {
-    left: calc(var(--total-player-cards, 1) * 25px + 1px);
+
+  .player-profile-bottom-right {
+    left: calc(var(--total-player-cards, 1) * 17px + 8vh);
     transform: translateY(-190%);
+  }
+
+  .feedback-icon {
+    width: 32px;
+    height: 32px;
   }
 }

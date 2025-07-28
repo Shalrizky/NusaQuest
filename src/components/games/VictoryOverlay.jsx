@@ -33,10 +33,7 @@ function VictoryOverlay({ winner, onClose, isVsAiGame }) {
   useEffect(() => {
     if (!user?.uid || !topicID || !gameID) return;
 
-    console.log("Listening to achievements for:", { gameID, topicID, userUID: user.uid });
-
     const unsubscribe = listenToAchievementUpdates(user.uid, gameID, topicID, (data) => {
-      console.log("Achievement data received:", data);
       setAchievementData(data);
       const wins = data.totalWins || 0;
       setTotalWins(wins);

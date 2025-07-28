@@ -6,9 +6,9 @@ import { listenToAchievementUpdates } from "../../services/achievementDataServic
 import { getPotionData } from "../../services/itemsDataServices";
 import "../../style/components/games/victoryOverlay.css";
 
-function VictoryOverlay({ winner, onClose }) {
+function VictoryOverlay({ winner, onClose, isVsAiGame }) {
   const { user } = useAuth();
-  const { topicID, gameID } = useParams(); // Tambahkan gameID dari params
+  const { topicID, gameID } = useParams();
   const [potionData, setPotionData] = useState(null);
   const [achievementData, setAchievementData] = useState(null);
   const [badge, setBadge] = useState(null);
@@ -35,7 +35,6 @@ function VictoryOverlay({ winner, onClose }) {
 
     console.log("Listening to achievements for:", { gameID, topicID, userUID: user.uid });
 
-    // Gunakan gameID dinamis dari params, bukan hardcoded "game1"
     const unsubscribe = listenToAchievementUpdates(user.uid, gameID, topicID, (data) => {
       console.log("Achievement data received:", data);
       setAchievementData(data);
@@ -52,7 +51,7 @@ function VictoryOverlay({ winner, onClose }) {
     });
 
     return () => unsubscribe();
-  }, [user?.uid, topicID, gameID]); // Tambahkan gameID ke dependency
+  }, [user?.uid, topicID, gameID]);
 
   // Auto close after 10 seconds
   useEffect(() => {
@@ -71,48 +70,51 @@ function VictoryOverlay({ winner, onClose }) {
       <h2>
         {winner} <span>Wins!</span>
       </h2>
-      <p>Total Wins: {totalWins}</p>
-      <p>Selamat Kamu mendapatkan:</p>
-      <div className="rewards mb-4" onClick={(e) => e.stopPropagation()}>
+      {!isVsAiGame && ( // Only show this section if it's NOT a Vs AI game
+        <>
+          <p>Total Wins: {totalWins}</p>
+          <p>Selamat Kamu mendapatkan:</p>
+          <div className="rewards mb-4" onClick={(e) => e.stopPropagation()}>
+            {/* Tampilkan Achievement Trophy hanya jika mencapai tingkat yang baru */}
+            {achievementData?.totalWins === 5 && (
+              <div className="reward-item">
+                <img
+                  src={achievementData.achievement_trophy}
+                  alt="Achievement Trophy"
+                  width={80}
+                />
+                <p>{achievementData.achievement_name}</p>
+              </div>
+            )}
 
-        {/* Tampilkan Achievement Trophy hanya jika mencapai tingkat yang baru */}
-        {achievementData?.totalWins === 5 && (
-          <div className="reward-item">
-            <img
-              src={achievementData.achievement_trophy}
-              alt="Achievement Trophy"
-              width={80}
-            />
-            <p>{achievementData.achievement_name}</p>
-          </div>
-        )}
+            {/* Badge - Tampilkan jika mencapai level bronze, silver, atau gold */}
+            {badge && (
+              <div className="reward-item">
+                <img
+                  src={badge.iconURL}
+                  alt="Badge Icon"
+                  className="badge-item"
+                  width={80}
+                />
+                <p>{badge.badgeName}</p>
+              </div>
+            )}
 
-        {/* Badge - Tampilkan jika mencapai level bronze, silver, atau gold */}
-        {badge && (
-          <div className="reward-item">
-            <img
-              src={badge.iconURL}
-              alt="Badge Icon"
-              className="badge-item"
-              width={80}
-            />
-            <p>{badge.badgeName}</p>
+            {/* Potion Reward - selalu tampil */}
+            {potionData && (
+              <div className="reward-item">
+                <img
+                  src={potionData.item_img}
+                  alt="Potion"
+                  className="potion-img"
+                  width={70}
+                />
+                <p>+1 {potionData.item_name}</p>
+              </div>
+            )}
           </div>
-        )}
-
-        {/* Potion Reward - selalu tampil */}
-        {potionData && (
-          <div className="reward-item">
-            <img
-              src={potionData.item_img}
-              alt="Potion"
-              className="potion-img"
-              width={70}
-            />
-            <p>+1 {potionData.item_name}</p>
-          </div>
-        )}
-      </div>
+        </>
+      )}
       <p>Sentuh di mana saja untuk keluar /</p>
       <p className="auto-redirect-info">
         Anda akan diarahkan keluar dalam waktu 10 detik...

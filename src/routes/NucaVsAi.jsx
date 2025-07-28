@@ -198,8 +198,6 @@ function NusaCardVsAi() {
     };
   }, [gameState.questions]);
 
-
-
   /**
    * @function handleTimeOut
    * @description Mengelola batas waktu giliran pemain manusia - DIPERBAIKI
@@ -235,7 +233,7 @@ function NusaCardVsAi() {
       // Player timeout saat melempar - pindah giliran
       const nextIndex = getNextPlayerIndex(currentPlayerIndex, players.length);
       console.log(`🔄 Giliran beralih ke pemain ${nextIndex + 1} karena timeout melempar.`);
-      
+
       setGameState((prev) => ({
         ...prev,
         currentPlayerIndex: nextIndex,
@@ -246,9 +244,9 @@ function NusaCardVsAi() {
         triggerShuffleAnimation: false,
         localVisualTimeLeft: GAME_CONSTANTS.THROW_TIMER_SECONDS,
         syncedPlayerTimeLeft: GAME_CONSTANTS.THROW_TIMER_SECONDS,
-        playerAnswerFeedback: { 
-          ...prev.playerAnswerFeedback, 
-          [`player${prev.currentPlayerIndex + 1}`]: null 
+        playerAnswerFeedback: {
+          ...prev.playerAnswerFeedback,
+          [`player${prev.currentPlayerIndex + 1}`]: null
         },
       }));
 
@@ -256,25 +254,25 @@ function NusaCardVsAi() {
       // Player timeout saat menjawab - anggap salah dan berikan penalty
       const myPlayerId = `player${getLocalPlayerGlobalIndex() + 1}`;
       const penaltyCard = getRandomCardFromAvailablePool();
-      
+
       setGameState((prev) => {
         const currentCards = prev[`${myPlayerId}Cards`] || [];
         const updatedCards = [...currentCards, penaltyCard];
-        
+
         const newFeedback = { ...prev.playerAnswerFeedback };
         newFeedback[myPlayerId] = "incorrect";
-        
+
         let updatedHints = prev.collectedGameHints;
         let showOffcanvas = prev.showGameOffcanvas;
-        
+
         // Tampilkan hint jika tersedia
         if (questionForModal?.hint) {
           updatedHints = [...updatedHints, questionForModal.hint];
           showOffcanvas = true;
         }
-        
+
         console.log(`❌ Pemain ${activePlayer.displayName} timeout menjawab. Menambahkan penalty card.`);
-        
+
         // Set feedback display timer
         setTimeout(() => {
           setGameState((current) => ({
@@ -293,7 +291,7 @@ function NusaCardVsAi() {
           }));
           hasAddedPenalty.current = false;
         }, GAME_CONSTANTS.FEEDBACK_DISPLAY_DURATION);
-        
+
         return {
           ...prev,
           [`${myPlayerId}Cards`]: updatedCards,
@@ -306,9 +304,9 @@ function NusaCardVsAi() {
 
       // Reset shuffle animation
       setTimeout(() => {
-        setGameState((current) => ({ 
-          ...current, 
-          triggerShuffleAnimation: false 
+        setGameState((current) => ({
+          ...current,
+          triggerShuffleAnimation: false
         }));
       }, GAME_CONSTANTS.PENALTY_ANIMATION_DURATION);
     }
@@ -621,7 +619,7 @@ function NusaCardVsAi() {
           console.warn(
             `🤖 AI ${prev.players[aiPlayerIndex]?.displayName} has no question to answer. Skipping answer phase.`
           );
-          
+
           const penaltyCard = getRandomCardFromAvailablePool();
           const updatedCards = [...(prev[`${aiPlayerId}Cards`] || []), penaltyCard];
           const newFeedback = { ...prev.playerAnswerFeedback };
@@ -792,7 +790,7 @@ function NusaCardVsAi() {
     const maxBots = 3;
     const numBotsToCreate = Math.min(aiCardsCount, maxBots);
 
- 
+
     for (let i = 0; i < numBotsToCreate; i++) {
       aiPlayers.push({
         uid: `ai_${i + 1}`,
@@ -938,7 +936,7 @@ function NusaCardVsAi() {
       // Schedule AI action
       currentTurnActionTimeoutRef.current = setTimeout(() => {
         console.log(`🤖 Bot ${activePlayer.displayName} performing action for phase: ${currentActiveTurnPhase}`);
-        
+
         if (currentActiveTurnPhase === "throwing") {
           handleAIThrowCard(activePlayer.uid);
         } else if (currentActiveTurnPhase === "answering") {
@@ -953,18 +951,18 @@ function NusaCardVsAi() {
       visualTimerIntervalRef.current = setInterval(() => {
         setGameState((prev) => {
           const newTime = Math.max(0, prev.localVisualTimeLeft - 1);
-          
+
           if (newTime <= 0) {
             clearInterval(visualTimerIntervalRef.current);
             visualTimerIntervalRef.current = null;
             console.log(`Visual timer for Human (${activePlayer.displayName}) reached 0. Triggering handleTimeOut.`);
-            
+
             // Use setTimeout to avoid state update during render
             setTimeout(() => {
               handleTimeOut();
             }, 0);
           }
-          
+
           return { ...prev, localVisualTimeLeft: newTime };
         });
       }, 1000);
@@ -1111,7 +1109,7 @@ function NusaCardVsAi() {
       {victory &&
         showVictoryOverlay &&
         (isWinner ? (
-          <VictoryOverlay winner={winner} onClose={handleVictoryClose} />
+          <VictoryOverlay winner={winner} onClose={handleVictoryClose} isVsAiGame={true} /> 
         ) : hasLost ? (
           <LoseOverlay loser={user.displayName} onClose={handleVictoryClose} />
         ) : null)}

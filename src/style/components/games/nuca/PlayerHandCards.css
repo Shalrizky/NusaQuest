@@ -25,7 +25,7 @@
 }
 
 .card-stack .card.disabled-throwing {
-  opacity: 0.8;
+  opacity: 0.9;
   cursor: not-allowed;
 }
 

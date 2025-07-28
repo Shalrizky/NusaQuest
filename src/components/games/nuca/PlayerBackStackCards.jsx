@@ -70,10 +70,6 @@ function PlayerBackStackCards({
    */
   useEffect(() => {
     if (triggerShuffleAnimation && shuffleImageRef.current) {
-      console.log(
-        "PlayerBackStackCards: triggerShuffleAnimation changed to",
-        triggerShuffleAnimation
-      );
       shuffleImageRef.current.classList.add(ANIMATION_CLASS);
       shuffleImageRef.current.addEventListener(
         ANIMATION_EVENT,

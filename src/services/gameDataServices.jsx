@@ -215,7 +215,7 @@ export const updatePlayerActivity = async (
  * @param {string} topicID - ID unik topik permainan.
  * @param {string} gameID - ID unik jenis permainan.
  * @param {string} roomID - ID unik ruangan permainan.
- * @param {number} [inactivityTimeout=600000] - Batas waktu tidak aktif dalam milidetik (default: 10 menit atau 600.000 ms).
+ * @param {number} [inactivityTimeout=300000] - Batas waktu tidak aktif dalam milidetik (default: 5 menit atau 300.000 ms).
  * @returns {Promise<boolean>} Sebuah Promise yang selesai dengan `true` jika permainan diakhiri karena ketidakaktifan, `false` jika permainan masih aktif.
  */
 export const checkInactivePlayers = async (

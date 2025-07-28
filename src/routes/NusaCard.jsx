@@ -30,7 +30,7 @@ import { usePlayerTimer, useGameTimer } from "../utils/timerUtils";
 import { getQuestions, shuffle } from "../services/questionDataServices";
 import "../style/routes/NusaCard.css";
 
-// Konstanta permainan
+// Konstanta Permainan
 const GAME_CONSTANTS = {
   FIRST_PLAYER_INDEX: 0,
   TURN_FLOW_DIRECTION: "clockwise",
@@ -42,10 +42,10 @@ const GAME_CONSTANTS = {
 /**
  * @function createInitialCardsForPlayer
  * @description Membuat array kartu awal untuk pemain dengan mengacak dan membagi pertanyaan.
- * @param {Array} questions - Array semua pertanyaan yang tersedia.
+ * @param {Array<Object>} questions - Array semua pertanyaan yang tersedia.
  * @param {number} startIndex - Indeks awal untuk membagi pertanyaan.
  * @param {number} count - Jumlah kartu yang akan diberikan kepada pemain.
- * @returns {Array} Array objek kartu.
+ * @returns {Array<Object>} Array objek kartu.
  */
 const createInitialCardsForPlayer = (questions, startIndex, count) => {
   const shuffledQuestions = shuffle([...questions]);
@@ -144,7 +144,7 @@ function NusaCard() {
 
   /**
    * @function getLocalPlayerGlobalIndex
-   * @description Mengembalikan indeks global pengguna saat ini dalam array pemain.
+   * @description Mengembalikan indeks global (0-based) dari pengguna saat ini di array pemain.
    * @returns {number} Indeks global pemain lokal, atau 0 jika tidak ditemukan.
    */
   const getLocalPlayerGlobalIndex = useCallback(() => {
@@ -155,7 +155,7 @@ function NusaCard() {
 
   /**
    * @function getNextPlayerIndex
-   * @description Menghitung indeks pemain berikutnya dalam urutan giliran.
+   * @description Menghitung indeks pemain berikutnya dalam urutan giliran melingkar.
    * @param {number} currentIndex - Indeks pemain saat ini.
    * @param {number} totalPlayers - Jumlah total pemain dalam permainan.
    * @returns {number} Indeks pemain berikutnya.
@@ -167,7 +167,7 @@ function NusaCard() {
   /**
    * @function isMyPlayerTurnToThrow
    * @description Memeriksa apakah giliran pengguna saat ini untuk melempar kartu.
-   * @returns {boolean} True jika giliran melempar kartu pengguna saat ini, false jika tidak.
+   * @returns {boolean} `true` jika ini adalah giliran melempar kartu pengguna saat ini, `false` jika tidak.
    */
   const isMyPlayerTurnToThrow = useCallback(() => {
     const myIndex = getLocalPlayerGlobalIndex();
@@ -179,7 +179,7 @@ function NusaCard() {
   /**
    * @function isMyPlayerTurnToAnswer
    * @description Memeriksa apakah giliran pengguna saat ini untuk menjawab pertanyaan.
-   * @returns {boolean} True jika giliran menjawab pertanyaan pengguna saat ini, false jika tidak.
+   * @returns {boolean} `true` jika ini adalah giliran menjawab pertanyaan pengguna saat ini, `false` jika tidak.
    */
   const isMyPlayerTurnToAnswer = useCallback(() => {
     const myIndex = getLocalPlayerGlobalIndex();
@@ -188,6 +188,7 @@ function NusaCard() {
     );
   }, [currentPlayerIndex, getLocalPlayerGlobalIndex, currentActiveTurnPhase]);
 
+  // ID pemain lokal yang aktif (misalnya "player1" jika indeks globalnya 0)
   const activeLocalPlayerId = `player${getLocalPlayerGlobalIndex() + 1}`;
   const cardCounts = {
     player1: gameState.player1Cards?.length || 0,
@@ -200,33 +201,49 @@ function NusaCard() {
 
   /**
    * @function getRandomCardFromAvailablePool
-   * @description Memilih pertanyaan acak dari kumpulan yang tersedia untuk digunakan sebagai kartu penalti.
+   * @description Memilih pertanyaan acak dari kumpulan yang tersedia untuk digunakan sebagai kartu penalti,
+   * memastikan tidak ada kartu duplikat yang saat ini ada di tangan pemain penerima.
+   * @param {string} receivingPlayerId - ID string pemain yang akan menerima kartu penalti (misalnya "player1").
    * @returns {Object} Objek pertanyaan yang ditandai sebagai kartu penalti.
    */
-  const getRandomCardFromAvailablePool = useCallback(() => {
-    const availableQuestions = gameState.questions || [];
-    if (availableQuestions.length === 0) {
-      console.warn("Tidak ada pertanyaan tersedia untuk kartu penalti!");
+  const getRandomCardFromAvailablePool = useCallback(
+    (receivingPlayerId) => {
+      const availableQuestions = gameState.questions || [];
+      if (availableQuestions.length === 0) {
+        console.warn("Tidak ada pertanyaan tersedia untuk kartu penalti!");
+        return {
+          id: `penalty_${Date.now()}_${Math.random()}`,
+          question_text: "Kartu Penalti Default",
+          multiple_choices: [{ answer_text: "Default", is_correct: false }],
+          hint: "Tidak ada hint tersedia",
+        };
+      }
+      const currentPlayerCards = gameState[`${receivingPlayerId}Cards`] || [];
+      const currentPlayerQuestionTexts = new Set(
+        currentPlayerCards.map((card) => card.question_text)
+      );
+      const uniqueAvailableQuestions = availableQuestions.filter(
+        (q) => !currentPlayerQuestionTexts.has(q.question_text)
+      );
+      const poolToDrawFrom =
+        uniqueAvailableQuestions.length > 0
+          ? uniqueAvailableQuestions
+          : availableQuestions;
+      const randomIndex = Math.floor(Math.random() * poolToDrawFrom.length);
+      const chosenQuestion = { ...poolToDrawFrom[randomIndex] };
       return {
+        ...chosenQuestion,
         id: `penalty_${Date.now()}_${Math.random()}`,
-        question_text: "Kartu Penalti Default",
-        multiple_choices: [{ answer_text: "Default", is_correct: false }],
-        hint: "Tidak ada hint tersedia",
+        isPenalty: true,
       };
-    }
-
-    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-    const chosenQuestion = { ...availableQuestions[randomIndex] };
-    return {
-      ...chosenQuestion,
-      id: `penalty_${Date.now()}_${Math.random()}`,
-      isPenalty: true,
-    };
-  }, [gameState.questions]);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [gameState.questions, gameState]
+  );
 
   /**
    * @function handleGameOver
-   * @description Menangani akhir permainan, membersihkan sumber data, dan menavigasi.
+   * @description Menangani akhir permainan, membersihkan sumber data di Firebase, dan menavigasi ke halaman utama.
    * @returns {Promise<void>}
    */
   const handleGameOver = useCallback(async () => {
@@ -237,7 +254,6 @@ function NusaCard() {
       setHasLost(false);
       setShowVictoryOverlay(false);
       setWinner("");
-
       await cleanupGame(topicID, gameID, roomID, user);
       setTimeout(() => navigate("/"));
     } catch (error) {
@@ -248,8 +264,11 @@ function NusaCard() {
 
   /**
    * @hook useGameTimer
-   * @description Custom hook untuk mengelola durasi permainan global, memicu `handleGameOver`.
-   * **PENTING:** Dideklarasikan di sini agar `handleGameOver` sudah tersedia saat dipanggil.
+   * @description Custom hook untuk mengelola durasi permainan global, memicu `handleGameOver` ketika waktu habis.
+   * @param {number} 1800 - Durasi total game dalam detik (30 menit).
+   * @param {function(): void} handleGameOver - Callback yang dipanggil saat waktu game habis.
+   * @param {Object} gameData - Objek berisi parameter game (topicID, gameID, roomID, user).
+   * @returns {{ updateActivity: function(): void }} Objek yang berisi fungsi `updateActivity` untuk memperbarui aktivitas pemain.
    */
   const { updateActivity } = useGameTimer(1800, handleGameOver, {
     topicID: topicIDRef.current,
@@ -260,25 +279,16 @@ function NusaCard() {
 
   /**
    * @function handleTimeOut
-   * @description Mengelola batas waktu giliran, baik berpindah ke pemain berikutnya atau menambahkan kartu penalti.
+   * @description Mengelola batas waktu giliran pemain. Jika pemain timeout saat melempar, giliran pindah.
+   * Jika timeout saat menjawab, pemain diberi kartu penalti.
    * @returns {Promise<void>}
    */
   const handleTimeOut = useCallback(async () => {
     if (!isMyTurn) return;
-
     const now = Date.now();
-    if (now - lastTimeoutHandled.current < 2000) {
-      console.log("⏰ Timeout sudah ditangani baru-baru ini, dilewati");
-      return;
-    }
+    if (now - lastTimeoutHandled.current < 2000) return;
     lastTimeoutHandled.current = now;
-
     if (currentActiveTurnPhase === "throwing") {
-      console.log(
-        `⏰ KLIEN: Timeout melempar untuk pemain ${
-          currentPlayerIndex + 1
-        }. Berpindah ke pemain berikutnya.`
-      );
       const nextIndex = getNextPlayerIndex(currentPlayerIndex, players.length);
       await updateGameState(
         topicIDRef.current,
@@ -293,20 +303,8 @@ function NusaCard() {
         }
       );
     } else if (currentActiveTurnPhase === "answering") {
-      console.log(
-        `⏰ KLIEN: Timeout menjawab untuk pemain ${
-          currentPlayerIndex + 1
-        }. Menambahkan kartu penalti.`
-      );
-
-      if (hasAddedPenalty.current) {
-        console.log(
-          "⏰ Penalti sudah ditambahkan, melewatkan penalti duplikat."
-        );
-        return;
-      }
+      if (hasAddedPenalty.current) return;
       hasAddedPenalty.current = true;
-
       const myPlayerId = `player${getLocalPlayerGlobalIndex() + 1}`;
       const currentServerState = await getGameState(
         topicIDRef.current,
@@ -314,27 +312,10 @@ function NusaCard() {
         roomIDRef.current
       );
       const currentCards = currentServerState[`${myPlayerId}Cards`] || [];
-
-      const recentPenalty = currentCards.find(
-        (card) =>
-          card.isPenalty &&
-          card.id &&
-          now - parseInt(card.id.split("_")[1]) < 5000
-      );
-      if (recentPenalty) {
-        console.log(
-          "⏰ Penalti baru terdeteksi, melewatkan penambahan penalti."
-        );
-        hasAddedPenalty.current = false;
-        return;
-      }
-
-      const penaltyCard = getRandomCardFromAvailablePool();
+      const penaltyCard = getRandomCardFromAvailablePool(myPlayerId);
       const updatedCards = [...currentCards, penaltyCard];
-
       const newFeedback = { ...playerAnswerFeedback };
       newFeedback[myPlayerId] = "incorrect";
-
       await updateGameState(
         topicIDRef.current,
         gameIDRef.current,
@@ -346,7 +327,6 @@ function NusaCard() {
           penaltyAddedBy: "wrong_answer",
         }
       );
-
       if (questionForModalDisplay?.hint) {
         setCollectedGameHints((prev) => [
           ...prev,
@@ -354,18 +334,10 @@ function NusaCard() {
         ]);
         setShowGameOffcanvas(true);
       }
-
       setTimeout(async () => {
         const resetFeedback = { ...newFeedback };
         resetFeedback[myPlayerId] = null;
-
         const playerWhoJustAnswered = currentPlayerIndex;
-
-        console.log(
-          `↩️ Pemain ${
-            playerWhoJustAnswered + 1
-          } (yang baru saja timeout) sekarang mendapat giliran melempar.`
-        );
         await updateGameState(
           topicIDRef.current,
           gameIDRef.current,
@@ -379,7 +351,6 @@ function NusaCard() {
             shouldShowQuestionModal: false,
           }
         );
-
         setTimeout(() => {
           hasAddedPenalty.current = false;
         }, 500);
@@ -408,24 +379,20 @@ function NusaCard() {
    */
   const handleCardPlayAttempt = async (cardData) => {
     updateActivity();
-    if (!isMyPlayerTurnToThrow()) {
-      console.log("Bukan giliranmu untuk melempar kartu!");
-      return;
-    }
-
+    if (!isMyPlayerTurnToThrow()) return;
     const myIndex = getLocalPlayerGlobalIndex();
     const myPlayerId = `player${myIndex + 1}`;
     const myCards = gameState[`${myPlayerId}Cards`] || [];
     const updatedCards = myCards.filter((card) => card.id !== cardData.id);
 
     setTriggerShuffleAnimation(true);
+
     setTimeout(() => setTriggerShuffleAnimation(false), 500);
 
     const nextPlayerIndex = getNextPlayerIndex(
       currentPlayerIndex,
       players.length
     );
-
     const updatePayload = {
       [`${myPlayerId}Cards`]: updatedCards,
       thrownCard: cardData,
@@ -435,10 +402,7 @@ function NusaCard() {
       currentActiveTurnPhase: "answering",
       lastCardThrowerIndex: currentPlayerIndex,
     };
-
-    // Periksa kondisi kemenangan
     if (updatedCards.length === 0) {
-      console.log(`🎉 ${user?.displayName} menang dengan kartu terakhir!`);
       updatePayload.gameStatus = "finished";
       updatePayload.gameWinnerUID = user.uid;
       updatePayload.gameWinnerDisplayName = user.displayName;
@@ -448,56 +412,43 @@ function NusaCard() {
       updatePayload.questionForModal = null;
       updatePayload.thrownCard = null;
     }
-
-    await updateGameState(topicID, gameID, roomID, updatePayload);
+    await updateGameState(topicID, gameID, roomID, updatePayload); 
   };
 
   /**
    * @function handlePlayerAnswerSubmission
    * @description Menangani penyerahan jawaban pemain atas sebuah pertanyaan.
-   * @param {Object} result - Hasil jawaban, termasuk kebenaran dan petunjuk.
-   * @param {boolean} result.isCorrect - Apakah jawaban benar.
-   * @param {string} result.hint - Petunjuk untuk pertanyaan (jika ada).
-   * @param {boolean} result.usedPotion - Apakah ramuan digunakan.
-   * @param {boolean} result.potionAlreadyReduced - Apakah jumlah ramuan sudah dikurangi oleh komponen Potion.
+   * Mengecek kebenaran jawaban dan memberikan penalti jika salah.
+   * @param {Object} result - Hasil jawaban, termasuk kebenaran (`isCorrect`), petunjuk (`hint`),
+   * penggunaan ramuan (`usedPotion`), dan apakah ramuan sudah dikurangi (`potionAlreadyReduced`).
    * @returns {Promise<void>}
    */
   const handlePlayerAnswerSubmission = useCallback(
     async (result) => {
-      updateActivity();
-      if (!isMyPlayerTurnToAnswer()) {
-        console.log("Bukan giliranmu untuk menjawab!");
-        return;
-      }
+      updateActivity(); 
+      if (!isMyPlayerTurnToAnswer()) return;
+      if (hasAddedPenalty.current) return;
 
-      if (hasAddedPenalty.current) {
-        console.log("Jawaban sudah diproses, dilewati");
-        return;
-      }
-
-      const { isCorrect, hint, usedPotion, potionAlreadyReduced } = result;
+      const { isCorrect, hint, usedPotion,  } = result;
       const myIndex = getLocalPlayerGlobalIndex();
       const myPlayerId = `player${myIndex + 1}`;
-
       const newFeedback = { ...playerAnswerFeedback };
-      newFeedback[myPlayerId] = isCorrect ? "correct" : "incorrect";
+      newFeedback[myPlayerId] = isCorrect ? "correct" : "incorrect"; 
 
       await updateGameState(
         topicIDRef.current,
         gameIDRef.current,
         roomIDRef.current,
         {
-          playerAnswerFeedback: newFeedback,
+          playerAnswerFeedback: newFeedback, 
         }
       );
 
       if (!isCorrect && !usedPotion) {
-        hasAddedPenalty.current = true;
-
-        const penaltyCard = getRandomCardFromAvailablePool();
+        hasAddedPenalty.current = true; 
+        const penaltyCard = getRandomCardFromAvailablePool(myPlayerId); 
         const currentCards = gameState[`${myPlayerId}Cards`] || [];
         const updatedCards = [...currentCards, penaltyCard];
-
         await updateGameState(
           topicIDRef.current,
           gameIDRef.current,
@@ -508,53 +459,31 @@ function NusaCard() {
             penaltyAddedBy: "wrong_answer",
           }
         );
-
         if (hint) {
           setCollectedGameHints((prev) => [...prev, hint]);
           setShowGameOffcanvas(true);
         }
-
-        console.log(`Penalti! Pemain ${myPlayerId} mendapat kartu.`);
-      } else {
-        console.log(
-          ` ${
-            potionAlreadyReduced
-              ? "Ramuan digunakan (sudah dikurangi)"
-              : usedPotion
-              ? "Ramuan digunakan"
-              : "Jawaban benar"
-          } dari Pemain ${myPlayerId}.`
-        );
-      }
-
+      } 
       setTimeout(async () => {
         const resetFeedback = { ...newFeedback };
         resetFeedback[myPlayerId] = null;
-
         const playerWhoJustAnswered = currentPlayerIndex;
-
-        console.log(
-          `↩️ Pemain ${
-            playerWhoJustAnswered + 1
-          } (yang baru saja menjawab) sekarang mendapat giliran melempar.`
-        );
         await updateGameState(
           topicIDRef.current,
           gameIDRef.current,
           roomIDRef.current,
           {
-            playerAnswerFeedback: resetFeedback,
-            currentPlayerIndex: playerWhoJustAnswered,
-            currentActiveTurnPhase: "throwing",
+            playerAnswerFeedback: resetFeedback, 
+            currentPlayerIndex: playerWhoJustAnswered, 
+            currentActiveTurnPhase: "throwing", 
             thrownCard: null,
             questionForModal: null,
             shouldShowQuestionModal: false,
           }
         );
-
         setTimeout(() => {
-          hasAddedPenalty.current = false;
-        }, 500);
+          hasAddedPenalty.current = false; 
+        }, 500); 
       }, 500);
     },
     [
@@ -563,7 +492,7 @@ function NusaCard() {
       getLocalPlayerGlobalIndex,
       playerAnswerFeedback,
       gameState,
-      getRandomCardFromAvailablePool,
+      getRandomCardFromAvailablePool, 
       currentPlayerIndex,
       topicIDRef,
       gameIDRef,
@@ -573,11 +502,10 @@ function NusaCard() {
 
   /**
    * @function handleCloseQuestionPromptModal
-   * @description Menutup modal pertanyaan dan mengatur ulang status permainan terkait.
+   * @description Menutup modal pertanyaan secara manual dan mengatur ulang state terkait.
    * @returns {Promise<void>}
    */
   const handleCloseQuestionPromptModal = useCallback(async () => {
-    console.log("Menutup modal secara manual");
     setShouldShowQuestionModal(false);
     setQuestionForModalDisplay(null);
     setThrownCardData(null);
@@ -591,34 +519,30 @@ function NusaCard() {
 
   /**
    * @function handlePotionUseInModal
-   * @description Menangani peristiwa ketika pemain menggunakan Potion selama fase pertanyaan.
+   * @description Menangani peristiwa ketika pemain menggunakan Ramuan selama fase pertanyaan.
    * Mencegah penggunaan ganda dan mensimulasikan jawaban yang benar.
    * @returns {Promise<void>}
    */
   const handlePotionUseInModal = useCallback(async () => {
     if (!displayQuestionModalForMe) return;
-
     if (
       isPotionUsedInModal ||
       potionUsageRef.current ||
       potionSubmittedRef.current
-    ) {
-      return;
-    }
-
+    ) return;
     potionUsageRef.current = true;
     potionSubmittedRef.current = true;
     setIsPotionUsedInModal(true);
 
     setTimeout(() => {
       const potionResult = {
-        isCorrect: true,
+        isCorrect: true, 
         hint: questionForModalDisplay?.hint || null,
-        usedPotion: false,
+        usedPotion: false, 
         potionAlreadyReduced: true,
       };
 
-      handlePlayerAnswerSubmission(potionResult);
+      handlePlayerAnswerSubmission(potionResult); 
 
       setTimeout(() => {
         setIsPotionUsedInModal(false);
@@ -635,28 +559,23 @@ function NusaCard() {
 
   /**
    * @function handleVictoryClose
-   * @description Menangani penutupan overlay kemenangan/kekalahan, melakukan pembersihan dan pengalihan.
+   * @description Menangani penutupan overlay kemenangan/kekalahan, melakukan pembersihan Firebase, dan menavigasi.
    * @returns {void}
    */
   const handleVictoryClose = useCallback(() => {
-    console.log("🏆 Overlay kemenangan ditutup - pengalihan segera");
-
-    // Pembersihan Firebase (jalankan di latar belakang)
     stopGameTimer(topicID, gameID, roomID);
     setGameStartStatus(topicID, gameID, roomID, false);
-
-    // Reset status
     setVictory(false);
     setHasLost(false);
     setShowVictoryOverlay(false);
 
     if (!hasCleanedUpRef.current) {
-      hasCleanedUpRef.current = true;
+      hasCleanedUpRef.current = true; 
       cleanupGame(topicID, gameID, roomID, user)
-        .then(() => console.log("✅ Firebase dibersihkan"))
-        .catch((error) => console.error("❌ Kesalahan pembersihan:", error));
+        .then(() => console.log("Database dibersihkan."))
+        .catch((error) => console.error("Kesalahan pembersihan:", error));
     }
-    navigate("/");
+    navigate("/"); 
   }, [topicID, gameID, roomID, user, navigate]);
 
   /**
@@ -670,9 +589,10 @@ function NusaCard() {
 
   /**
    * @function isPlayerTurnStatus
-   * @description Memeriksa apakah pemain tertentu adalah pemain saat ini yang gilirannya.
+   * @description Memeriksa apakah pemain tertentu adalah pemain yang gilirannya saat ini.
+   * Digunakan oleh komponen `GameArea` untuk menentukan indikator giliran.
    * @param {number} playerGlobalIndex - Indeks global pemain yang akan diperiksa.
-   * @returns {boolean} True jika giliran pemain, false jika tidak.
+   * @returns {boolean} `true` jika giliran pemain tersebut, `false` jika tidak.
    */
   const isPlayerTurnStatus = useCallback(
     (playerGlobalIndex) => currentPlayerIndex === playerGlobalIndex,
@@ -682,8 +602,9 @@ function NusaCard() {
   /**
    * @function getPlayerRemainingTime
    * @description Mengembalikan sisa waktu untuk giliran pemain tertentu.
+   * Digunakan oleh komponen `GameArea` untuk menampilkan timer.
    * @param {number} playerGlobalIndex - Indeks global pemain yang akan diperiksa.
-   * @returns {number} Sisa waktu dalam detik.
+   * @returns {number} Sisa waktu dalam detik. Akan 0 jika bukan giliran pemain tersebut.
    */
   const getPlayerRemainingTime = useCallback(
     (playerGlobalIndex) => {
@@ -695,31 +616,28 @@ function NusaCard() {
     [localVisualTimeLeft, currentPlayerIndex]
   );
 
+  // --- Efek (Hooks) ---
+
   /**
    * @effect Inisialisasi Permainan
-   * @description Mengambil pemain, menginisialisasi status permainan di Firebase jika tidak ada,
-   * dan menyiapkan timer permainan awal. Berjalan sekali saat data pemain tersedia.
+   * @description Mengambil data pemain, menginisialisasi status permainan di Firebase jika belum ada,
+   * dan menyiapkan timer permainan awal. Efek ini berjalan sekali ketika data pemain tersedia.
    */
   useEffect(() => {
     const initGame = async () => {
-      if (players.length === 0) return;
+      if (players.length === 0) return; 
 
       try {
         await setGameStatus(topicID, gameID, roomID, "playing");
         const existingGameState = await getGameState(topicID, gameID, roomID);
-
         if (
           !existingGameState ||
           !existingGameState.questions ||
           !existingGameState.playerTimers ||
           existingGameState.playerTimers.length === 0
         ) {
-          console.log(
-            "Menginisialisasi status permainan baru untuk NusaCard..."
-          );
           const fetchedQuestions = await getQuestions(topicID);
-          const shuffledQuestions = shuffle(fetchedQuestions);
-
+          const shuffledQuestions = shuffle(fetchedQuestions); 
           const initialGameState = {
             currentPlayerIndex: 0,
             currentActiveTurnPhase: "throwing",
@@ -733,7 +651,7 @@ function NusaCard() {
               player3: null,
               player4: null,
             },
-            questions: shuffledQuestions,
+            questions: shuffledQuestions, 
             currentQuestionIndex: 0,
             playerStatus: {},
             playerTimers: new Array(players.length).fill(
@@ -744,16 +662,13 @@ function NusaCard() {
             gameWonAt: null,
             achievementAwarded: false,
           };
-
           if (players.length > 0) {
             initialGameState.playerTimers[0] =
               GAME_CONSTANTS.THROW_TIMER_SECONDS;
           }
-
           for (let i = 1; i <= 4; i++) {
             initialGameState[`player${i}Cards`] = [];
           }
-
           players.forEach((player, index) => {
             const playerId = `player${index + 1}`;
             initialGameState[`${playerId}Cards`] = createInitialCardsForPlayer(
@@ -763,52 +678,50 @@ function NusaCard() {
             );
             initialGameState.playerStatus[playerId] = "available";
           });
-
           for (let i = players.length; i < 4; i++) {
             const playerId = `player${i + 1}`;
             initialGameState.playerStatus[playerId] = "not_available";
           }
-
           await initializeNusaCardGameState(
             topicID,
             gameID,
             roomID,
             players,
-            shuffledQuestions,
+            shuffledQuestions, 
             initialGameState
           );
-          await initializeGameTimer(topicID, gameID, roomID, 1800);
+          await initializeGameTimer(topicID, gameID, roomID, 1800); 
 
-          setGameState(initialGameState);
+          setGameState(initialGameState); // Perbarui state lokal
         } else {
           console.log("Status permainan yang ada ditemukan, memuat...");
-          setGameState(existingGameState);
+          setGameState(existingGameState); 
         }
 
-        setIsGameReady(true);
+        setIsGameReady(true); 
       } catch (error) {
         console.error("Error saat menginisialisasi permainan:", error);
-        setIsGameReady(true);
+        setIsGameReady(true); 
       }
     };
 
-    initGame();
-  }, [topicID, gameID, roomID, players]);
+    initGame(); 
+  }, [topicID, gameID, roomID, players]); 
 
   /**
    * @effect Ambil Pemain Permainan
-   * @description Berlangganan pembaruan real-time pemain permainan dari Firebase.
-   * Jika tidak ada pemain yang ditemukan, itu memicu pembersihan permainan dan navigasi kembali ke beranda.
+   * @description Berlangganan pembaruan real-time daftar pemain dari Firebase.
+   * Jika tidak ada pemain ditemukan atau semua pemain keluar, picu pembersihan game dan navigasi kembali ke beranda.
    */
   useEffect(() => {
-    if (!topicID || !gameID || !roomID) return;
+    if (!topicID || !gameID || !roomID) return; 
 
     const unsubscribe = fetchGamePlayers(
       topicID,
       gameID,
       roomID,
       (playersData) => {
-        setPlayers(playersData);
+        setPlayers(playersData); 
         if (playersData.length === 0 && !hasCleanedUpRef.current) {
           console.log(
             "Tidak ada pemain ditemukan atau semua pergi, membersihkan permainan..."
@@ -819,7 +732,7 @@ function NusaCard() {
       }
     );
 
-    return () => unsubscribe();
+    return () => unsubscribe(); 
   }, [topicID, gameID, roomID, user, navigate, victory]);
 
   /**
@@ -854,7 +767,6 @@ function NusaCard() {
               player4: null,
             }
           );
-
           const firebaseTime =
             newGameState.playerTimers?.[newGameState.currentPlayerIndex];
           if (firebaseTime !== undefined) {
@@ -862,48 +774,32 @@ function NusaCard() {
           } else {
             setSyncedPlayerTimeLeft(0);
           }
-
           const myIndex = players.findIndex((p) => p.uid === user?.uid);
           const isCurrentPlayerTurn =
             newGameState.currentPlayerIndex === myIndex;
           setIsMyTurn(isCurrentPlayerTurn);
-
           if (newGameState.currentPlayerIndex !== currentPlayerIndex) {
             hasAddedPenalty.current = false;
           }
-
-          // Logika kemenangan
           if (newGameState.gameWinnerUID && !isProcessingVictoryRef.current) {
             setVictory(true);
             setWinner(newGameState.gameWinnerDisplayName || "Pemain");
             setIsWinner(user?.uid === newGameState.gameWinnerUID);
             setHasLost(user?.uid !== newGameState.gameWinnerUID);
             setShowVictoryOverlay(true);
-
             const shouldAwardAchievement =
               user?.uid === newGameState.gameWinnerUID &&
-              !newGameState.achievementAwarded &&
-              !hasAwardedAchievementRef.current;
-
+              !newGameState.achievementAwarded && 
+              !hasAwardedAchievementRef.current; 
             if (shouldAwardAchievement) {
-              console.log(
-                `🌟 Memproses pencapaian untuk ${user?.displayName}...`
-              );
-              isProcessingVictoryRef.current = true;
+              isProcessingVictoryRef.current = true; 
               hasAwardedAchievementRef.current = true;
-
               try {
                 const isAchievementUpdated = await updateWinningAchievement(
                   user.uid,
                   gameID,
                   topicID
                 );
-
-                console.log(
-                  "Hasil pembaruan pencapaian:",
-                  isAchievementUpdated
-                );
-
                 if (isAchievementUpdated) {
                   const currentPotionData = await getPotionData(user.uid);
                   if (currentPotionData) {
@@ -912,31 +808,22 @@ function NusaCard() {
                       item_count: (currentPotionData.item_count || 0) + 1,
                       item_img: currentPotionData.item_img,
                     });
-                    console.log("🧪 Ramuan berhasil diberikan");
                   }
-
                   await updateGameState(topicID, gameID, roomID, {
                     achievementAwarded: true,
                   });
-                  console.log(
-                    "✅ Flag pencapaian diberikan diatur ke Firebase"
-                  );
                 } else {
-                  console.log(
-                    "⚠️ Pencapaian sudah ada sebelumnya, lewati penghargaan"
-                  );
-                  hasAwardedAchievementRef.current = false;
+                  hasAwardedAchievementRef.current = false; // Reset jika tidak jadi diberikan
                 }
               } catch (error) {
-                console.error("❌ Error saat memberikan pencapaian:", error);
-                hasAwardedAchievementRef.current = false;
+                console.error("Error saat memberikan pencapaian:", error);
+                hasAwardedAchievementRef.current = false; 
               } finally {
                 isProcessingVictoryRef.current = false;
               }
             }
           } else if (!newGameState.gameWinnerUID) {
             if (victory || gameOver || showVictoryOverlay) {
-              console.log("🔄 Reset status kemenangan");
               setVictory(false);
               setIsWinner(false);
               setHasLost(false);
@@ -966,56 +853,57 @@ function NusaCard() {
   /**
    * @effect Reset Refs saat Komponen Tidak Dipasang
    * @description Mengatur ulang `hasAwardedAchievementRef` dan `isProcessingVictoryRef` saat komponen dilepas.
+   * Ini memastikan status internal bersih untuk instance komponen berikutnya.
    */
   useEffect(() => {
     return () => {
       hasAwardedAchievementRef.current = false;
       isProcessingVictoryRef.current = false;
     };
-  }, []);
+  }, []); 
 
   /**
    * @effect Dengarkan Timer Permainan Global
-   * @description Berlangganan timer permainan global dari Firebase dan menangani permainan berakhir saat waktu habis.
+   * @description Berlangganan timer permainan global dari Firebase dan menangani game over ketika waktu habis.
    */
   useEffect(() => {
-    if (!topicID || !gameID || !roomID) return;
+    if (!topicID || !gameID || !roomID) return; 
     const unsubscribe = listenToGameTimer(
       topicID,
       gameID,
       roomID,
       (remainingTime) => {
         if (remainingTime <= 0) {
-          stopGameTimer(topicID, gameID, roomID);
-          handleGameOver();
+          stopGameTimer(topicID, gameID, roomID); 
+          handleGameOver(); 
         }
       }
     );
-    return () => unsubscribe();
-  }, [topicID, gameID, roomID, handleGameOver]);
+    return () => unsubscribe(); 
+  }, [topicID, gameID, roomID, handleGameOver]); 
 
   /**
    * @effect Reset Bendera Penalti saat Perubahan Pemain
-   * @description Mengatur ulang ref `hasAddedPenalty` saat pemain saat ini berubah untuk mencegah status penalti yang basi.
+   * @description Mengatur ulang ref `hasAddedPenalty` setiap kali indeks pemain saat ini berubah.
+   * Ini mencegah penalti ganda jika pemain timeout, lalu giliran pindah.
    */
   useEffect(() => {
     if (prevPlayerIndexRef.current !== currentPlayerIndex) {
-      hasAddedPenalty.current = false;
+      hasAddedPenalty.current = false; 
     }
     prevPlayerIndexRef.current = currentPlayerIndex;
-  }, [currentPlayerIndex]);
+  }, [currentPlayerIndex]); 
 
   /**
    * @effect Timer Visual Sisi Klien
    * @description Mengelola timer hitung mundur visual sisi klien, menyinkronkannya dengan `syncedPlayerTimeLeft`.
+   * Ini untuk tampilan UI yang halus, terlepas dari pembaruan Firebase.
    */
   useEffect(() => {
     if (visualTimerIntervalRef.current) {
       clearInterval(visualTimerIntervalRef.current);
     }
-
-    setLocalVisualTimeLeft(syncedPlayerTimeLeft);
-
+    setLocalVisualTimeLeft(syncedPlayerTimeLeft); 
     const isAnyPlayerActive =
       currentPlayerIndex !== null &&
       currentPlayerIndex >= 0 &&
@@ -1026,14 +914,14 @@ function NusaCard() {
         setLocalVisualTimeLeft((prevTime) => {
           const newTime = Math.max(0, prevTime - 1);
           if (newTime <= 0) {
-            clearInterval(visualTimerIntervalRef.current);
+            clearInterval(visualTimerIntervalRef.current); 
             visualTimerIntervalRef.current = null;
           }
           return newTime;
         });
-      }, 1000);
+      }, 1000); 
     } else {
-      setLocalVisualTimeLeft(0);
+      setLocalVisualTimeLeft(0); 
     }
 
     return () => {
@@ -1046,29 +934,29 @@ function NusaCard() {
 
   /**
    * @effect Picu Overlay Kemenangan
-   * @description Menampilkan overlay kemenangan saat status `victory` menjadi true.
+   * @description Menampilkan overlay kemenangan ketika state `victory` menjadi `true`.
    */
   useEffect(() => {
     if (victory) {
       setShowVictoryOverlay(true);
     }
-  }, [victory]);
+  }, [victory]); 
 
   /**
    * @effect Pembersihan Permainan saat Permainan Berakhir (Waktu Habis)
-   * @description Melakukan pembersihan akhir saat permainan berakhir karena waktu habis,
-   * menghentikan timer, memperbarui status permainan, dan menavigasi.
+   * @description Melakukan pembersihan akhir ketika game berakhir karena waktu habis
+   * (bukan karena kemenangan). Menghentikan timer, memperbarui status game, dan menavigasi.
    */
   useEffect(() => {
     if (gameOver && !victory) {
       console.log(
         "Membersihkan permainan karena: Permainan Berakhir (waktu habis)"
       );
-      stopGameTimer(topicID, gameID, roomID);
+      stopGameTimer(topicID, gameID, roomID); 
       setGameStartStatus(topicID, gameID, roomID, false);
 
       if (!hasCleanedUpRef.current) {
-        hasCleanedUpRef.current = true; 
+        hasCleanedUpRef.current = true
         cleanupGame(topicID, gameID, roomID, user)
           .then(() => {
             console.log("Data permainan Firebase dibersihkan.");
@@ -1077,16 +965,16 @@ function NusaCard() {
             console.error("Error selama pembersihan:", error);
           });
       }
-
       setTimeout(() => {
         navigate("/");
       }, 1000);
     }
-  }, [gameOver, victory, topicID, gameID, roomID, user, navigate]);
+  }, [gameOver, victory, topicID, gameID, roomID, user, navigate]); 
 
   /**
    * @effect Reset Status Ramuan saat Modal Ditutup
-   * @description Mengatur ulang status terkait ramuan saat modal pertanyaan tidak lagi ditampilkan.
+   * @description Mengatur ulang status terkait ramuan (potionUsageRef, potionSubmittedRef, isPotionUsedInModal)
+   * setiap kali modal pertanyaan tidak lagi ditampilkan.
    */
   useEffect(() => {
     if (!displayQuestionModalForMe) {
@@ -1098,7 +986,8 @@ function NusaCard() {
 
   /**
    * @hook usePlayerTimer
-   * @description Custom hook untuk mengelola timer giliran pemain individu, memicu `handleTimeOut`.
+   * @description Custom hook untuk mengelola timer giliran pemain individu, memicu `handleTimeOut`
+   * ketika waktu giliran habis.
    */
   usePlayerTimer(
     currentActiveTurnPhase === "throwing"
@@ -1135,7 +1024,7 @@ function NusaCard() {
         setShowOffcanvas={setShowGameOffcanvas}
         onCloseOffcanvas={handleCloseGameOffcanvas}
       />
-
+      
       <Container
         fluid
         id="nuca-container"

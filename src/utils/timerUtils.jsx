@@ -168,7 +168,7 @@ export const usePlayerTimer = (initialTime, onTimeEnd, gameData) => {
  * dan memicu callback `onInactivity` jika tidak ada aktivitas selama batas waktu tertentu.
  * Hook ini juga memperbarui timestamp aktivitas pemain di Firebase secara berkala.
  * @param {function(): void} onInactivity - Fungsi callback yang akan dipanggil ketika pemain terdeteksi tidak aktif.
- * @param {number} [inactivityTimeout=300000] - Batas waktu tidak aktif dalam milidetik (default: 60 detik / 1 menit).
+ * @param {number} [inactivityTimeout=300000] - Batas waktu tidak aktif dalam milidetik (default: 5 menit).
  * @param {Object} gameData - Objek berisi data permainan yang diperlukan untuk memperbarui Firebase.
  * @param {string} gameData.topicID - ID topik permainan.
  * @param {string} gameData.gameID - ID permainan.
@@ -356,7 +356,7 @@ export const useGameTimer = (
   const handlePlayerInactivity = useCallback(async () => {
     if (gameEndedRef.current) return;
 
-    console.log("Player tidak aktif selama 1 menit, mengakhiri game...");
+    console.log("Player tidak aktif selama 5 menit, mengakhiri game...");
 
     try {
       await cleanupGame(topicID, gameID, roomID, user, "inactivity");
@@ -407,7 +407,7 @@ export const useGameTimer = (
       } catch (error) {
         console.error("Error checking inactive players:", error);
       }
-    }, 50000); 
+    }, 30000); 
 
     return () => {
       if (inactivityCheckIntervalRef.current) {
